@@ -506,3 +506,22 @@ def test_family_dialog_shows_the_shortened_endfed_matching_context(
 
     assert dialog._context_note.isVisibleTo(dialog) is True
     assert "matching capacitor" in dialog._context_note.text()
+
+
+def test_family_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = _dialog(
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    dialog._max_boom_field.configure(0.25)
+    dialog._max_turning_field.configure(0.25)
+
+    assert dialog._max_boom_field.unit == "cm"
+    assert dialog._max_turning_field.unit == "cm"
+
+    dialog._max_boom_field.configure(2.0)
+
+    assert dialog._max_boom_field.unit == "m"

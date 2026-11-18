@@ -45,12 +45,13 @@ from ..fonts import scaled_dialog_size
 from ..help import apply_row_help
 from ..i18n import Translator
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_bounds,
-    length_from_m,
-    length_to_m,
     length_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.synthesis_worker import SynthesisWorker
 
@@ -66,12 +67,18 @@ class SynthesisDialog(QDialog):
         base_parameters: AntennaDesignParameters,
         base_spec: SimulationSpec,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         if not isinstance(base_parameters, (OCFDParameters, JPoleParameters)):
             raise TypeError("synthesis supports OCFD, J Pole and Slim Jim designs")
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._solver = solver
         self._base_parameters = base_parameters
         self._base_spec = base_spec
@@ -115,9 +122,40 @@ class SynthesisDialog(QDialog):
         self._min_b = self._length_spin(length_min, length_max)
         self._max_b = self._length_spin(length_min, length_max)
 
+        self._min_a_field = LengthField(
+            self._min_a,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._max_a_field = LengthField(
+            self._max_a,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._min_b_field = LengthField(
+            self._min_b,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._max_b_field = LengthField(
+            self._max_b,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+
         if isinstance(base_parameters, OCFDParameters):
             center = base_parameters.total_length_m * scale
-            self._set_length_pair(self._min_a, self._max_a, center, 0.85, 1.15)
+            self._set_length_pair(
+                self._min_a_field,
+                self._max_a_field,
+                center,
+                0.85,
+                1.15,
+            )
             self._set_ratio_pair(self._min_b, self._max_b, base_parameters.feed_ratio)
             self._label_a_key = "field.length"
             self._label_b_key = "ocfd.feed_offset"
@@ -127,40 +165,36 @@ class SynthesisDialog(QDialog):
             if not self._folded:
                 minimum = max(minimum, base_parameters.stub_length_m * 1.001)
             maximum = max(1.15 * center, minimum * 1.05)
-            self._set_length_pair(self._min_a, self._max_a, center, 0.85, 1.15)
-            self._min_a.setValue(length_from_m(minimum, unit_system))
-            self._max_a.setValue(length_from_m(maximum, unit_system))
+            self._min_a_field.configure(minimum)
+            self._max_a_field.configure(maximum)
             if self._folded:
                 self._set_length_pair(
-                    self._min_b,
-                    self._max_b,
+                    self._min_b_field,
+                    self._max_b_field,
                     base_parameters.stub_length_m * scale,
                     0.8,
                     1.2,
                 )
-                self._min_b.setValue(
-                    max(
-                        self._min_b.value(),
-                        length_from_m(base_parameters.feed_offset_m + 0.01, unit_system),
-                    )
-                )
+                required = base_parameters.feed_offset_m + 0.01
+                if self._min_b_field.value_m() < required:
+                    self._min_b_field.configure(required)
                 self._label_a_key = "j_pole.radiator_height"
                 self._label_b_key = "j_pole.stub_length"
             else:
                 self._set_length_pair(
-                    self._min_b,
-                    self._max_b,
+                    self._min_b_field,
+                    self._max_b_field,
                     base_parameters.feed_offset_m * scale,
                     0.25,
                     3.0,
                 )
-                self._max_b.setValue(
-                    min(
-                        self._max_b.value(),
-                        length_from_m(base_parameters.stub_length_m * 0.95, unit_system),
-                    )
+                maximum_b = min(
+                    self._max_b_field.value_m(),
+                    base_parameters.stub_length_m * 0.95,
                 )
-                self._min_b.setValue(max(self._min_b.value(), length_from_m(0.01, unit_system)))
+                self._max_b_field.configure(maximum_b)
+                minimum_b = max(self._min_b_field.value_m(), 0.01)
+                self._min_b_field.configure(minimum_b)
                 self._label_a_key = "j_pole.radiator_height"
                 self._label_b_key = "j_pole.feed_offset"
         else:
@@ -282,14 +316,14 @@ class SynthesisDialog(QDialog):
 
     def _set_length_pair(
         self,
-        minimum: QDoubleSpinBox,
-        maximum: QDoubleSpinBox,
+        minimum: LengthField,
+        maximum: LengthField,
         center_m: float,
         low_factor: float,
         high_factor: float,
     ) -> None:
-        minimum.setValue(length_from_m(center_m * low_factor, self._unit_system))
-        maximum.setValue(length_from_m(center_m * high_factor, self._unit_system))
+        minimum.configure(center_m * low_factor)
+        maximum.configure(center_m * high_factor)
 
     def _set_ratio_pair(
         self,
@@ -336,17 +370,17 @@ class SynthesisDialog(QDialog):
         if self._is_ocfd:
             a = "length_m"
             b = "feed_ratio"
-            min_a = length_to_m(self._min_a.value(), self._unit_system)
-            max_a = length_to_m(self._max_a.value(), self._unit_system)
+            min_a = self._min_a_field.value_m()
+            max_a = self._max_a_field.value_m()
             min_b = self._min_b.value() / 100.0
             max_b = self._max_b.value() / 100.0
         else:
             a = "radiator_height_m"
             b = "stub_length_m" if self._folded else "feed_offset_m"
-            min_a = length_to_m(self._min_a.value(), self._unit_system)
-            max_a = length_to_m(self._max_a.value(), self._unit_system)
-            min_b = length_to_m(self._min_b.value(), self._unit_system)
-            max_b = length_to_m(self._max_b.value(), self._unit_system)
+            min_a = self._min_a_field.value_m()
+            max_a = self._max_a_field.value_m()
+            min_b = self._min_b_field.value_m()
+            max_b = self._max_b_field.value_m()
         return (
             SynthesisVariable(a, min_a, max_a),
             SynthesisVariable(b, min_b, max_b),
@@ -518,9 +552,9 @@ class SynthesisDialog(QDialog):
         return self._length_display(value)
 
     def _length_display(self, value_m: float) -> str:
-        value = length_from_m(value_m, self._unit_system)
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        return f"{value:.4f} {unit}"
+        unit = self._display_units.unit_for(value_m)
+        value = value_m / self._display_units.meters_per_unit(unit)
+        return f"{value:.4f} {self._translator.t(f'unit.{unit}')}"
 
     def _populate_evaluations(self, evaluations: tuple[SynthesisEvaluation, ...]) -> None:
         ordered = (

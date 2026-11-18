@@ -48,12 +48,14 @@ from ..fonts import scaled_dialog_size
 from ..help import apply_help, apply_row_help
 from ..i18n import Translator
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.optimization_worker import OptimizationWorker
 
@@ -67,10 +69,16 @@ class OptimizationDialog(QDialog):
         base_parameters: AntennaDesignParameters,
         base_spec: SimulationSpec,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._solver = solver
         self._base_parameters = base_parameters
         self._base_spec = base_spec
@@ -121,6 +129,21 @@ class OptimizationDialog(QDialog):
         self._max_length.setDecimals(3)
         self._max_length.setSuffix(f" {unit}")
         self._max_length.setValue(length_from_m(default_max, unit_system))
+
+        self._min_length_field = LengthField(
+            self._min_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._max_length_field = LengthField(
+            self._max_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._min_length_field.configure(default_min)
+        self._max_length_field.configure(default_max)
 
         self._target_r = QDoubleSpinBox(self)
         self._target_r.setRange(1.0, 10_000.0)
@@ -303,14 +326,14 @@ class OptimizationDialog(QDialog):
         self._update_table_headers()
 
     def _length_display(self, length_m: float) -> str:
-        value = length_from_m(length_m, self._unit_system)
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        return f"{value:.3f} {unit}"
+        unit = self._display_units.unit_for(length_m)
+        value = length_m / self._display_units.meters_per_unit(unit)
+        return f"{value:.3f} {self._translator.t(f'unit.{unit}')}"
 
     def _offset_display(self, offset_m: float) -> str:
-        value = length_from_m(offset_m, self._unit_system)
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        return f"{value:+.3f} {unit}"
+        unit = self._display_units.unit_for(abs(offset_m))
+        value = offset_m / self._display_units.meters_per_unit(unit)
+        return f"{value:+.3f} {self._translator.t(f'unit.{unit}')}"
 
     def _objective_value(self) -> OptimizationObjective:
         return OptimizationObjective(self._objective.currentData())
@@ -379,8 +402,8 @@ class OptimizationDialog(QDialog):
     def _optimization_spec(self) -> LengthOptimizationSpec:
         objective = self._objective_value()
         return LengthOptimizationSpec(
-            min_length_m=length_to_m(self._min_length.value(), self._unit_system),
-            max_length_m=length_to_m(self._max_length.value(), self._unit_system),
+            min_length_m=self._min_length_field.value_m(),
+            max_length_m=self._max_length_field.value_m(),
             objective=objective,
             target_resistance_ohm=self._target_r.value(),
             target_reactance_ohm=self._target.value(),

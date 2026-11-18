@@ -163,3 +163,24 @@ def test_feed_line_dialog_catalog_is_translated(qtbot: QtBot) -> None:
     assert dialog._catalog.itemText(0) == "Personalizado"
     assert dialog._catalog.currentText() == "RG-213/U"
     assert "Atenuación de hoja de datos" in dialog._catalog_hint.text()
+
+
+def test_feed_line_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.feed_line import FeedLine
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = FeedLineDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FeedLine(
+            characteristic_impedance_ohm=50.0,
+            length_m=0.25,
+            velocity_factor=0.66,
+            matched_loss_db_per_100m=0.0,
+        ),
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._length_field.unit == "cm"
+    assert dialog.feed_line().length_m == pytest.approx(0.25)

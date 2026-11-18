@@ -62,12 +62,14 @@ from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..template_identity import label_key_for
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 
 
 def _vertical_form_for(height_m: float, frequency_hz: float) -> VerticalForm:
@@ -90,10 +92,15 @@ class DesignFromFrequencyDialog(QDialog):
         initial_parameters: AntennaDesignParameters,
         can_refine: bool = True,
         parent: QWidget | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._estimate_use_case = EstimateAntennaDimensions()
         self._estimate: DimensionEstimate | None = None
         self._estimator_type = estimator_type_for(initial_parameters)
@@ -229,6 +236,28 @@ class DesignFromFrequencyDialog(QDialog):
         self._end_height.setDecimals(3)
         self._end_height.setSuffix(f" {unit}")
         self._end_height.setValue(length_from_m(end_height_m, unit_system))
+
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._base_height_field = LengthField(
+            self._base_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._end_height_field = LengthField(
+            self._end_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._height_field.configure(height_m)
+        self._base_height_field.configure(base_height_m)
+        self._end_height_field.configure(end_height_m)
 
         self._orientation = QComboBox(self)
         self._orientation.addItem("", DipoleOrientation.HORIZONTAL.value)
@@ -459,9 +488,9 @@ class DesignFromFrequencyDialog(QDialog):
         return DesignIntent(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             antenna_type=family,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
-            end_height_m=length_to_m(self._end_height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
+            base_height_m=self._base_height_field.value_m(),
+            end_height_m=self._end_height_field.value_m(),
             orientation=DipoleOrientation(str(self._orientation.currentData())),
             polarization=Polarization(str(self._polarization.currentData())),
             azimuth_deg=self._azimuth_deg,

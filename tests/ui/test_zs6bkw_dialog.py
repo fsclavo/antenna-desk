@@ -48,3 +48,18 @@ def test_zs6bkw_dialog_can_select_the_commercial_variant(qtbot: QtBot) -> None:
         ZS6BKW_VARIANTS[1].characteristic_impedance_ohm
     )
     assert line.length_m == pytest.approx(ZS6BKW_VARIANTS[1].line_length_m)
+
+
+def test_zs6bkw_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = ZS6BKWDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+    dialog._feed_height_field.configure(0.25)
+
+    assert dialog._height_field.unit == "m"
+    assert dialog._feed_height_field.unit == "cm"

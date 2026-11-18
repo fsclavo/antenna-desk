@@ -458,3 +458,26 @@ def test_optimization_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
 
     assert dialog._task_progress.state is TaskProgressState.CANCELLING
     assert dialog._task_progress.text == "Cancelling..."
+
+
+def test_optimization_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    parameters = DipoleParameters(
+        frequency_hz=435_000_000.0,
+        total_length_m=0.33,
+        height_m=8.0,
+    )
+    base_spec = SimulationSpec(frequency_plan=FrequencyPlan.single(435_000_000.0))
+    dialog = OptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalSolver(),
+        parameters,
+        base_spec,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._min_length_field.unit == "cm"
+    assert dialog._max_length_field.unit == "m"

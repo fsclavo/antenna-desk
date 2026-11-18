@@ -43,3 +43,18 @@ def test_g5rv_dialog_can_select_the_300_ohm_line(qtbot: QtBot) -> None:
     assert line.characteristic_impedance_ohm == pytest.approx(300.0)
     assert line.length_m == pytest.approx(8.84)
     assert line.velocity_factor == pytest.approx(0.9)
+
+
+def test_g5rv_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = G5RVDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+    dialog._feed_height_field.configure(0.25)
+
+    assert dialog._height_field.unit == "m"
+    assert dialog._feed_height_field.unit == "cm"

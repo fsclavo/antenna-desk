@@ -36,14 +36,15 @@ from ..material_combo import (
     populate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
-from ..widgets.form_units import apply_radius_units
+from ..widgets.form_units import LengthField, LengthFieldSpec, apply_radius_units
 from ..widgets.ground_presets import GroundPresetController
 
 
@@ -55,10 +56,15 @@ class G5RVDialog(QDialog):
         parent: QWidget | None = None,
         *,
         frequency_hz: float | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._parameters: CustomAntennaParameters | None = None
         self.setWindowTitle(translator.t("g5rv.title"))
         self.resize(*scaled_dialog_size(620, 700))
@@ -80,6 +86,21 @@ class G5RVDialog(QDialog):
         self._feed_height.setDecimals(3)
         self._feed_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._feed_height.setValue(length_from_m(1.0, unit_system))
+
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._feed_height_field = LengthField(
+            self._feed_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._height_field.configure(10.0)
+        self._feed_height_field.configure(1.0)
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -238,8 +259,8 @@ class G5RVDialog(QDialog):
         option = self._selected_line()
         return g5rv_parameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
+            feed_height_m=self._feed_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             line_impedance_ohm=option.characteristic_impedance_ohm,
             line_length_m=option.length_m,
@@ -255,8 +276,8 @@ class G5RVDialog(QDialog):
             frequency_hz=self._frequency.value() * 1_000_000.0,
             preset=DoubletPreset.G5RV,
             dipole_total_length_m=G5RV_DIPOLE_TOTAL_LENGTH_M,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
+            feed_height_m=self._feed_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             line_impedance_ohm=option.characteristic_impedance_ohm,
             line_length_m=option.length_m,

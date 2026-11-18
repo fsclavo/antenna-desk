@@ -24,7 +24,14 @@ from ...domain.design.materials_reference import COAX_REFERENCES, CoaxReference
 from ..fonts import scaled_dialog_size
 from ..help import apply_help, apply_row_help
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    UnitSystem,
+    length_from_m,
+    length_unit_key,
+)
+from ..widgets.form_units import LengthField, LengthFieldSpec
 
 
 class FeedLineDialog(QDialog):
@@ -34,10 +41,16 @@ class FeedLineDialog(QDialog):
         unit_system: UnitSystem,
         feed_line: FeedLine | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._feed_line = feed_line
         self._catalog_updating = False
         self._attenuation_points = feed_line.attenuation_points if feed_line else ()
@@ -66,6 +79,14 @@ class FeedLineDialog(QDialog):
         self._length.setRange(0.0, 100_000.0)
         self._length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._length.setValue(length_from_m(feed_line.length_m if feed_line else 10.0, unit_system))
+
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.0, 100_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._length_field.configure(feed_line.length_m if feed_line else 10.0)
 
         self._velocity_factor = QDoubleSpinBox(self)
         self._velocity_factor.setRange(0.1, 1.0)
@@ -246,7 +267,7 @@ class FeedLineDialog(QDialog):
             return None
         return FeedLine(
             characteristic_impedance_ohm=self._impedance.value(),
-            length_m=length_to_m(self._length.value(), self._unit_system),
+            length_m=self._length_field.value_m(),
             velocity_factor=self._velocity_factor.value(),
             matched_loss_db_per_100m=self._loss.value(),
             attenuation_points=self._attenuation_points,

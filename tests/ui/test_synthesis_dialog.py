@@ -172,3 +172,30 @@ def test_synthesis_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:
 
     assert dialog._task_progress.state is TaskProgressState.CANCELLING
     assert dialog._task_progress.text == "Cancelling..."
+
+
+def test_synthesis_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    parameters = JPoleParameters(
+        frequency_hz=145_000_000.0,
+        radiator_height_m=1.0,
+        stub_length_m=0.5,
+        spacing_m=0.05,
+        feed_offset_m=0.1,
+        folded=True,
+    )
+    dialog = SynthesisDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        AnalyticalOCFDSolver(),
+        parameters,
+        SimulationSpec(frequency_plan=FrequencyPlan.single(145_000_000.0)),
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._min_a_field.unit == "cm"
+    assert dialog._max_a_field.unit == "m"
+    assert dialog._min_b_field.unit == "cm"
+    assert dialog._max_b_field.unit == "cm"

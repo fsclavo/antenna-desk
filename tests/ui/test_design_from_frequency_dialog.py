@@ -336,3 +336,23 @@ def test_dialog_estimates_every_supported_family(
     assert dialog._results.rowCount() > 0
     assert dialog._apply.isEnabled() is True
     assert antenna_type_for(dialog.estimated_parameters()) == family
+
+
+def test_design_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = DesignFromFrequencyDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        initial_parameters=DipoleParameters(
+            frequency_hz=146_000_000.0,
+            total_length_m=1.0,
+            height_m=12.0,
+        ),
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._height_field.unit == "m"
+    assert dialog._base_height_field.unit == "cm"
+    assert dialog._end_height_field.unit == "m"

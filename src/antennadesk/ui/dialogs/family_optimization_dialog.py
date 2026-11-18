@@ -62,14 +62,16 @@ from ..help import apply_help
 from ..i18n import Translator
 from ..parallelism import MAX_UI_PARALLEL_WORKERS, default_parallel_workers
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.family_optimization_worker import FamilyOptimizationWorker
 
@@ -102,10 +104,15 @@ class FamilyOptimizationDialog(QDialog):
         band_edges_hz: tuple[float, ...] = (),
         operating_frequencies_hz: tuple[float, ...] = (),
         last_summary: OptimizationSummary | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._solver = solver
         self._descriptor = descriptor
         self._base_spec = base_spec
@@ -210,6 +217,21 @@ class FamilyOptimizationDialog(QDialog):
         self._max_turning.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._max_turning.setSpecialValueText(translator.t("optimize.no_limit"))
         self._max_boom.setVisible(descriptor.supports_boom_constraint)
+
+        self._max_boom_field = LengthField(
+            self._max_boom,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._max_turning_field = LengthField(
+            self._max_turning,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._max_boom_field.configure(0.0)
+        self._max_turning_field.configure(0.0)
 
         self._max_swr = QDoubleSpinBox(self)
         self._max_swr.setRange(1.0, 20.0)
@@ -853,13 +875,14 @@ class FamilyOptimizationDialog(QDialog):
                     else 0.0
                 ),
                 max_boom_length_m=(
-                    length_to_m(self._max_boom.value(), self._unit_system)
-                    if self._descriptor.supports_boom_constraint and self._max_boom.value() > 0.0
+                    self._max_boom_field.value_m()
+                    if self._descriptor.supports_boom_constraint
+                    and self._max_boom_field.value_m() > 0.0
                     else None
                 ),
                 max_turning_radius_m=(
-                    length_to_m(self._max_turning.value(), self._unit_system)
-                    if self._max_turning.value() > 0.0
+                    self._max_turning_field.value_m()
+                    if self._max_turning_field.value_m() > 0.0
                     else None
                 ),
                 budget_profile=self._budget_profile(),
