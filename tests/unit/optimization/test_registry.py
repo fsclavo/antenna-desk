@@ -429,6 +429,7 @@ _CONTEXT_FIELDS = {
     "polarization",
     "driven_index",
     "driven_folded",
+    "driven_tip_m",
     "match_type",
     "driven_fold_spacing_m",
     "match_length_m",
@@ -488,6 +489,33 @@ def test_every_field_is_optimized_or_explicitly_classified_as_context() -> None:
         assert not unclassified, (
             f"{type(parameters).__name__} has unclassified fields: {unclassified}"
         )
+
+
+def test_moxon_optimizer_exposes_the_gap_and_rejects_non_moxon_geometry() -> None:
+    parameters = MoxonParameters(
+        frequency_hz=14_170_000.0,
+        width_m=25.0 * 0.3048,
+        depth_m=9.57 * 0.3048,
+        reflector_tip_m=4.85 * 0.3048,
+        driven_tip_m=4.00 * 0.3048,
+        height_m=10.0,
+        wire_radius_m=0.000912,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    assert "gap_m" in {variable.name for variable in descriptor.variables}
+    assert "driven_tip_m" not in {variable.name for variable in descriptor.variables}
+    assert descriptor.initial_values["gap_m"] == pytest.approx(parameters.gap_m)
+    rebuilt = descriptor.build_parameters(descriptor.initial_values)
+    assert rebuilt == parameters
+
+    too_open = dict(descriptor.initial_values)
+    too_open["gap_m"] = 1.22
+    violations = descriptor.validate(too_open)
+
+    assert any(item.message_key == "optimize.constraint.moxon_geometry" for item in violations)
 
 
 def test_only_array_descriptors_support_a_boom_constraint() -> None:

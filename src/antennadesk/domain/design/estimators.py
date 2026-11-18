@@ -654,6 +654,13 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
             ground=intent.ground,
         )
     except ValueError as exc:
+        detail = str(exc)
+        if "conductor diameter" in detail or "gap_m ratio" in detail:
+            raise UnsupportedEstimateError(
+                f"the scaled Moxon at {intent.frequency_hz / 1e6:.3f} MHz does "
+                f"not clear a {intent.wire_radius_m * 1000.0:.3f} mm wire radius; "
+                "reduce wire_radius_m or use a higher frequency"
+            ) from exc
         raise UnsupportedEstimateError(
             f"a vertical Moxon at {intent.frequency_hz / 1e6:.3f} MHz needs "
             "a higher height_m; increase height_m or use horizontal polarization"

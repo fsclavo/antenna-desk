@@ -369,6 +369,18 @@ def test_yagi_supports_two_through_thirty_two_elements() -> None:
         estimate_intent(_intent("yagi", yagi_elements=33))
 
 
+def test_moxon_estimate_rejects_a_wire_radius_that_does_not_clear_the_scaled_gap() -> None:
+    with pytest.raises(UnsupportedEstimateError, match="wire radius"):
+        estimate_intent(
+            _intent(
+                "moxon",
+                frequency_hz=450_000_000.0,
+                height_m=10.0,
+                wire_radius_m=0.01,
+            )
+        )
+
+
 def test_yagi_and_moxon_estimates_keep_the_requested_polarization() -> None:
     yagi = estimate_intent(
         _intent(

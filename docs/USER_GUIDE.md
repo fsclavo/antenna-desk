@@ -570,6 +570,13 @@ are reference-backed for impedance, gain, and front-to-back ratio; the 28.500
 MHz default and any scaled or edited geometry are heuristic starting points
 with no independent reference.
 
+The editor warns when the gap or tip proportions leave the Moxon geometry
+envelope: gap/λ, gap/depth, gap/width, width/depth, tip/depth, and tip-sum/depth
+must stay within the documented construction limits, and the gap must clear the
+conductor diameter. The same check runs in the domain model and the family
+optimizer. A scaled reference whose gap cannot clear a thick wire is reported
+as unsupported rather than silently changing the conductor.
+
 ## Create a log-periodic array
 
 Choose **File → New Antenna... → Log-periodic (LPDA)** to generate a

@@ -16,7 +16,11 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.materials import COPPER, ConductorMaterial
-from ...domain.antennas.moxon import MoxonParameters, moxon_20m_wire
+from ...domain.antennas.moxon import (
+    MoxonParameters,
+    moxon_20m_wire,
+    validate_moxon_geometry,
+)
 from ...domain.antennas.polarization import Polarization
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
@@ -138,6 +142,14 @@ class MoxonForm(QWidget):
             translator,
             self._display_units,
         )
+        # The initial spin-box values were set in the construction unit. Apply
+        # the display-unit policy now so an AUTO field does not reinterpret
+        # metres as millimetres.
+        self._width_field.configure(default_geometry.width_m)
+        self._depth_field.configure(default_geometry.depth_m)
+        self._reflector_tip_field.configure(default_geometry.reflector_tip_m)
+        self._driven_tip_field.configure(default_geometry.driven_tip_m)
+        self._height_field.configure(MOXON_DEFAULT_HEIGHT_M)
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -298,6 +310,21 @@ class MoxonForm(QWidget):
         return Polarization(str(self._polarization.currentData()))
 
     def _update_clearance_warning(self) -> None:
+        geometry_issues = validate_moxon_geometry(
+            frequency_hz=self._frequency.value() * 1_000_000.0,
+            width_m=self._width_field.value_m(),
+            depth_m=self._depth_field.value_m(),
+            reflector_tip_m=self._reflector_tip_field.value_m(),
+            driven_tip_m=self._driven_tip_field.value_m(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+        )
+        if geometry_issues:
+            issue = geometry_issues[0]
+            self._clearance_warning.setText(
+                self._translator.t(issue.message_key, **issue.message_values())
+            )
+            self._clearance_warning.setVisible(True)
+            return
         vertical = self._selected_polarization() is Polarization.VERTICAL
         required = self._width_field.value_m() / 2.0
         current = self._height_field.value_m()

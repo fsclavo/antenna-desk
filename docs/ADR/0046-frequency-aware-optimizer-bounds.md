@@ -219,7 +219,7 @@ The implementation is sliced in
 | HF1 | This ADR and the bound contract | Implemented 2026-11-18 |
 | HF2 | Descriptor invariant and no silent initial clamp | Implemented 2026-11-18 |
 | HF3 | Frequency-aware bounds across all families | Implemented 2026-11-18 |
-| HF4 | Moxon geometry contract, gap variable, and constraints | Queued |
+| HF4 | Moxon geometry contract, gap variable, and constraints | Implemented 2026-11-18 |
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | Queued |
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Queued |
 | HF7 | Thin-wire model-quality gate | Queued |
@@ -259,6 +259,28 @@ No universal frequency cutoff or invented family envelope was added. A family
 that violates a genuine physical floor remains available at the registry level
 but returns the HF2 translated bound reason for that design; a family-specific
 envelope can be added later only from traceable evidence.
+
+### HF4 implementation note
+
+The Moxon geometry contract is implemented once in
+`validate_moxon_geometry()` and shared by `MoxonParameters`, the optimizer
+descriptor, and the editor warning. The optimizer exposes `gap_m` and derives
+the driven tip; it no longer moves two redundant tip variables.
+
+The geometry-validity envelope is gap/λ 0.004–0.10, gap/depth 0.03–0.40,
+gap/width 0.01–0.15, width/depth 1.5–4.5, each tip/depth 0.20–0.75, tip-sum/depth
+0.50–0.97, and gap greater than one conductor diameter. These limits are
+anchored to the Cebik 14.17 MHz reference (gap/λ 0.0104, gap/depth 0.075,
+gap/width 0.029) and the exploratory 2.4 GHz control (gap/λ 0.039, gap/depth
+0.282, gap/width 0.108), with margin. They are construction-validity limits,
+not gain/SWR references, and they do not encode the control's 4.86 mm gap.
+
+The 0.67λ failure is rejected by the gap/λ and gap/depth checks. Tests cover
+the exact Cebik dimensions, 28.5/144/435/1500/2400 MHz scaled references, the
+0.67λ and conductor-clearance rejections, the optimizer rebuild, and the UI
+warning. Until HF6, the estimator scales the Cebik gap directly; if the scaled
+gap cannot clear the conductor, it reports an explicit unsupported estimate
+instead of silently changing the wire radius.
 
 ## Test contract
 

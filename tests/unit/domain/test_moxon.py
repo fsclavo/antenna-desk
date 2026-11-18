@@ -5,8 +5,13 @@ from __future__ import annotations
 import pytest
 
 from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
-from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
+from antennadesk.domain.antennas.moxon import (
+    MoxonParameters,
+    moxon_20m_wire,
+    validate_moxon_geometry,
+)
 from antennadesk.domain.antennas.polarization import Polarization
+from antennadesk.domain.common import units
 from antennadesk.domain.environment.ground import GroundModel
 
 
@@ -61,11 +66,11 @@ def test_moxon_vertical_rejects_a_rectangle_below_ground() -> None:
     with pytest.raises(ValueError, match="below ground"):
         MoxonParameters(
             frequency_hz=14_100_000.0,
-            width_m=20.0,
+            width_m=10.0,
             depth_m=2.5,
             reflector_tip_m=1.0,
             driven_tip_m=1.0,
-            height_m=10.0,
+            height_m=4.0,
             polarization=Polarization.VERTICAL,
         )
 
@@ -107,4 +112,79 @@ def test_moxon_rejects_overlapping_tips() -> None:
             depth_m=1.0,
             reflector_tip_m=0.6,
             driven_tip_m=0.6,
+        )
+
+
+@pytest.mark.parametrize(
+    "frequency_hz",
+    [14_170_000.0, 28_500_000.0, 144_000_000.0, 435_000_000.0, 1_500_000_000.0, 2_400_000_000.0],
+)
+def test_moxon_scaled_reference_stays_inside_the_geometry_envelope(
+    frequency_hz: float,
+) -> None:
+    scale = 14_170_000.0 / frequency_hz
+    radius = max(1e-4, 0.000912 * scale)
+    parameters = MoxonParameters(
+        frequency_hz=frequency_hz,
+        width_m=25.00 * 0.3048 * scale,
+        depth_m=9.57 * 0.3048 * scale,
+        reflector_tip_m=4.85 * 0.3048 * scale,
+        driven_tip_m=4.00 * 0.3048 * scale,
+        height_m=10.0,
+        wire_radius_m=radius,
+    )
+
+    assert parameters.gap_m == pytest.approx(0.72 * 0.3048 * scale)
+    assert (
+        validate_moxon_geometry(
+            frequency_hz=parameters.frequency_hz,
+            width_m=parameters.width_m,
+            depth_m=parameters.depth_m,
+            reflector_tip_m=parameters.reflector_tip_m,
+            driven_tip_m=parameters.driven_tip_m,
+            wire_radius_m=parameters.wire_radius_m,
+        )
+        == ()
+    )
+
+
+def test_moxon_rejects_a_067_wavelength_gap() -> None:
+    frequency_hz = 144_000_000.0
+    wavelength = units.SPEED_OF_LIGHT_M_PER_S / frequency_hz
+
+    with pytest.raises(ValueError, match="gap_m ratio"):
+        MoxonParameters(
+            frequency_hz=frequency_hz,
+            width_m=0.5 * wavelength,
+            depth_m=wavelength,
+            reflector_tip_m=0.15 * wavelength,
+            driven_tip_m=0.18 * wavelength,
+            height_m=10.0,
+            wire_radius_m=0.0005,
+        )
+
+
+def test_moxon_rejects_a_gap_below_the_conductor_clearance() -> None:
+    with pytest.raises(ValueError, match="conductor diameter"):
+        MoxonParameters(
+            frequency_hz=14_170_000.0,
+            width_m=25.00 * 0.3048,
+            depth_m=9.57 * 0.3048,
+            reflector_tip_m=4.85 * 0.3048,
+            driven_tip_m=4.00 * 0.3048,
+            height_m=10.0,
+            wire_radius_m=0.2,
+        )
+
+
+def test_moxon_rejects_a_non_moxon_width_depth_ratio() -> None:
+    with pytest.raises(ValueError, match="width_m ratio"):
+        MoxonParameters(
+            frequency_hz=14_100_000.0,
+            width_m=20.0,
+            depth_m=2.5,
+            reflector_tip_m=1.0,
+            driven_tip_m=1.0,
+            height_m=10.0,
+            wire_radius_m=0.001,
         )

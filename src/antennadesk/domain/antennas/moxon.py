@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common import units
 from ..common.units import ensure_positive
@@ -21,6 +22,191 @@ from .wire import Wire
 ANTENNA_TYPE_MOXON = "moxon"
 REFLECTOR_ID = "reflector"
 DRIVEN_ID = "driven"
+
+# Geometry-validity envelope, not a performance target. The reference is the
+# Cebik 20 m Moxon (14.17 MHz, 25.00 ft width, 9.57 ft depth, 4.85/4.00 ft
+# tips, gap/lambda 0.0104, gap/depth 0.075, gap/width 0.029). The exploratory
+# 2.4 GHz high-frequency control has gap/lambda 0.039, gap/depth 0.282, and
+# gap/width 0.108. The limits below keep both inside with margin and reject the
+# old 0.67 lambda failure mode. Do not use this envelope as a gain/SWR claim.
+MOXON_GAP_MIN_WAVELENGTH_RATIO = 0.004
+MOXON_GAP_MAX_WAVELENGTH_RATIO = 0.10
+MOXON_GAP_MIN_DEPTH_RATIO = 0.03
+MOXON_GAP_MAX_DEPTH_RATIO = 0.40
+MOXON_GAP_MIN_WIDTH_RATIO = 0.01
+MOXON_GAP_MAX_WIDTH_RATIO = 0.15
+MOXON_WIDTH_MIN_DEPTH_RATIO = 1.5
+MOXON_WIDTH_MAX_DEPTH_RATIO = 4.5
+MOXON_REFLECTOR_TIP_MIN_DEPTH_RATIO = 0.20
+MOXON_REFLECTOR_TIP_MAX_DEPTH_RATIO = 0.75
+MOXON_DRIVEN_TIP_MIN_DEPTH_RATIO = 0.20
+MOXON_DRIVEN_TIP_MAX_DEPTH_RATIO = 0.75
+MOXON_TIPS_SUM_MIN_DEPTH_RATIO = 0.50
+MOXON_TIPS_SUM_MAX_DEPTH_RATIO = 0.97
+
+
+class MoxonGeometryIssueKind(StrEnum):
+    POSITIVE = "positive"
+    GAP_POSITIVE = "gap_positive"
+    GAP_CLEARANCE = "gap_clearance"
+    GAP_WAVELENGTH = "gap_wavelength"
+    GAP_DEPTH = "gap_depth"
+    GAP_WIDTH = "gap_width"
+    WIDTH_DEPTH = "width_depth"
+    REFLECTOR_TIP_DEPTH = "reflector_tip_depth"
+    DRIVEN_TIP_DEPTH = "driven_tip_depth"
+    TIPS_SUM_DEPTH = "tips_sum_depth"
+
+
+@dataclass(frozen=True, slots=True)
+class MoxonGeometryIssue:
+    """One violated Moxon geometry-validity limit."""
+
+    field: str
+    kind: MoxonGeometryIssueKind
+    actual: float
+    minimum: float = 0.0
+    maximum: float = 0.0
+
+    @property
+    def message_key(self) -> str:
+        return f"moxon.constraint.{self.kind.value}"
+
+    def message_values(self) -> dict[str, object]:
+        values: dict[str, object] = {"actual": self.actual}
+        if self.kind is not MoxonGeometryIssueKind.POSITIVE:
+            values["minimum"] = self.minimum
+        if self.kind not in {
+            MoxonGeometryIssueKind.POSITIVE,
+            MoxonGeometryIssueKind.GAP_POSITIVE,
+            MoxonGeometryIssueKind.GAP_CLEARANCE,
+        }:
+            values["maximum"] = self.maximum
+        return values
+
+    def describe(self) -> str:
+        if self.kind is MoxonGeometryIssueKind.POSITIVE:
+            return f"Moxon {self.field} must be positive"
+        if self.kind is MoxonGeometryIssueKind.GAP_POSITIVE:
+            return "Moxon tip lengths must leave a positive gap between elements"
+        if self.kind is MoxonGeometryIssueKind.GAP_CLEARANCE:
+            return (
+                f"Moxon gap {self.actual:.6g} m must exceed the conductor "
+                f"diameter {self.minimum:.6g} m"
+            )
+        return (
+            f"Moxon {self.field} ratio {self.actual:.6g} is outside "
+            f"[{self.minimum:.6g}, {self.maximum:.6g}]"
+        )
+
+
+def validate_moxon_geometry(
+    *,
+    frequency_hz: float,
+    width_m: float,
+    depth_m: float,
+    reflector_tip_m: float,
+    driven_tip_m: float,
+    wire_radius_m: float,
+) -> tuple[MoxonGeometryIssue, ...]:
+    """Return every geometry-validity violation for a Moxon rectangle.
+
+    The limits are anchored to the Cebik 20 m reference and the exploratory
+    2.4 GHz control described in ADR-0046. They are construction-validity
+    limits, not published performance values.
+    """
+
+    for field, value in (
+        ("frequency_hz", frequency_hz),
+        ("width_m", width_m),
+        ("depth_m", depth_m),
+        ("reflector_tip_m", reflector_tip_m),
+        ("driven_tip_m", driven_tip_m),
+        ("wire_radius_m", wire_radius_m),
+    ):
+        if not math.isfinite(value) or value <= 0.0:
+            return (MoxonGeometryIssue(field, MoxonGeometryIssueKind.POSITIVE, value),)
+
+    gap = depth_m - reflector_tip_m - driven_tip_m
+    if gap <= 0.0:
+        return (MoxonGeometryIssue("gap_m", MoxonGeometryIssueKind.GAP_POSITIVE, gap),)
+
+    issues: list[MoxonGeometryIssue] = []
+    clearance = 2.0 * wire_radius_m
+    if gap <= clearance:
+        issues.append(
+            MoxonGeometryIssue(
+                "gap_m",
+                MoxonGeometryIssueKind.GAP_CLEARANCE,
+                gap,
+                minimum=clearance,
+            )
+        )
+
+    wavelength = units.SPEED_OF_LIGHT_M_PER_S / frequency_hz
+    checks = (
+        (
+            "gap_m",
+            MoxonGeometryIssueKind.GAP_WAVELENGTH,
+            gap / wavelength,
+            MOXON_GAP_MIN_WAVELENGTH_RATIO,
+            MOXON_GAP_MAX_WAVELENGTH_RATIO,
+        ),
+        (
+            "gap_m",
+            MoxonGeometryIssueKind.GAP_DEPTH,
+            gap / depth_m,
+            MOXON_GAP_MIN_DEPTH_RATIO,
+            MOXON_GAP_MAX_DEPTH_RATIO,
+        ),
+        (
+            "gap_m",
+            MoxonGeometryIssueKind.GAP_WIDTH,
+            gap / width_m,
+            MOXON_GAP_MIN_WIDTH_RATIO,
+            MOXON_GAP_MAX_WIDTH_RATIO,
+        ),
+        (
+            "width_m",
+            MoxonGeometryIssueKind.WIDTH_DEPTH,
+            width_m / depth_m,
+            MOXON_WIDTH_MIN_DEPTH_RATIO,
+            MOXON_WIDTH_MAX_DEPTH_RATIO,
+        ),
+        (
+            "reflector_tip_m",
+            MoxonGeometryIssueKind.REFLECTOR_TIP_DEPTH,
+            reflector_tip_m / depth_m,
+            MOXON_REFLECTOR_TIP_MIN_DEPTH_RATIO,
+            MOXON_REFLECTOR_TIP_MAX_DEPTH_RATIO,
+        ),
+        (
+            "driven_tip_m",
+            MoxonGeometryIssueKind.DRIVEN_TIP_DEPTH,
+            driven_tip_m / depth_m,
+            MOXON_DRIVEN_TIP_MIN_DEPTH_RATIO,
+            MOXON_DRIVEN_TIP_MAX_DEPTH_RATIO,
+        ),
+        (
+            "reflector_tip_m",
+            MoxonGeometryIssueKind.TIPS_SUM_DEPTH,
+            (reflector_tip_m + driven_tip_m) / depth_m,
+            MOXON_TIPS_SUM_MIN_DEPTH_RATIO,
+            MOXON_TIPS_SUM_MAX_DEPTH_RATIO,
+        ),
+    )
+    for field, kind, actual, minimum, maximum in checks:
+        if actual < minimum or actual > maximum:
+            issues.append(
+                MoxonGeometryIssue(
+                    field,
+                    kind,
+                    actual,
+                    minimum=minimum,
+                    maximum=maximum,
+                )
+            )
+    return tuple(issues)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,8 +233,16 @@ class MoxonParameters:
         ensure_positive(self.driven_tip_m, name="driven_tip_m")
         ensure_positive(self.height_m, name="height_m")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
-        if self.reflector_tip_m + self.driven_tip_m >= self.depth_m:
-            raise ValueError("Moxon tip lengths must leave a gap between elements")
+        issues = validate_moxon_geometry(
+            frequency_hz=self.frequency_hz,
+            width_m=self.width_m,
+            depth_m=self.depth_m,
+            reflector_tip_m=self.reflector_tip_m,
+            driven_tip_m=self.driven_tip_m,
+            wire_radius_m=self.wire_radius_m,
+        )
+        if issues:
+            raise ValueError(issues[0].describe())
         object.__setattr__(
             self,
             "azimuth_deg",

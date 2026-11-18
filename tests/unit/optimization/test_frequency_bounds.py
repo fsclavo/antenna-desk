@@ -153,6 +153,10 @@ def _biquad(frequency_hz: float) -> object:
 
 def _moxon(frequency_hz: float) -> MoxonParameters:
     scale = 14_170_000.0 / frequency_hz
+    radius = max(
+        1e-4,
+        min(_WIRE_RADIUS_M, _WIRE_RADIUS_M * 2_400_000_000.0 / frequency_hz),
+    )
     return MoxonParameters(
         frequency_hz=frequency_hz,
         width_m=25.00 * _FOOT_M * scale,
@@ -160,7 +164,7 @@ def _moxon(frequency_hz: float) -> MoxonParameters:
         reflector_tip_m=4.85 * _FOOT_M * scale,
         driven_tip_m=4.00 * _FOOT_M * scale,
         height_m=max(1.0, 0.25 * _wavelength(frequency_hz)),
-        wire_radius_m=_WIRE_RADIUS_M,
+        wire_radius_m=radius,
     )
 
 

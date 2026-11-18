@@ -164,25 +164,22 @@ def test_optimize_biquad_applies_to_the_biquad_form(
 def test_optimize_tooltip_explains_a_physical_bound_violation(
     window: MainWindow,
 ) -> None:
-    from antennadesk.domain.antennas.moxon import MoxonParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 
-    foot = 0.3048
-    scale = 14_170_000.0 / 2_400_000_000.0
-    parameters = MoxonParameters(
-        frequency_hz=2_400_000_000.0,
-        width_m=25.0 * foot * scale,
-        depth_m=9.57 * foot * scale,
-        reflector_tip_m=0.0002,
-        driven_tip_m=0.0002,
-        height_m=1.0,
-        wire_radius_m=0.001,
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=0.001, radius_m=0.001),
+            YagiElement(position_m=0.05, length_m=0.001, radius_m=0.001),
+        ),
+        height_m=10.0,
     )
     use_parameters(window, parameters)
 
     assert window._optimize_action.isEnabled() is False
     tooltip = window._optimize_action.toolTip()
     assert "outside" in tooltip.lower()
-    assert "reflector_tip_m" in tooltip
+    assert "length_0" in tooltip
     window._dirty = False
 
 

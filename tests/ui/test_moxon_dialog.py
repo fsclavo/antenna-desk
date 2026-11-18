@@ -15,6 +15,22 @@ from antennadesk.ui.widgets.moxon_form import (
 )
 
 
+def test_moxon_form_warns_when_geometry_leaves_the_envelope(qtbot: QtBot) -> None:
+    dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._width.setValue(10.0)
+    form._depth.setValue(3.0)
+    form._reflector_tip.setValue(0.1)
+    form._driven_tip.setValue(0.1)
+
+    assert form._clearance_warning.isHidden() is False
+    assert "gap" in form._clearance_warning.text().lower()
+    with pytest.raises(ValueError):
+        dialog.parameters()
+
+
 def test_moxon_dialog_builds_parameters(qtbot: QtBot) -> None:
     dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

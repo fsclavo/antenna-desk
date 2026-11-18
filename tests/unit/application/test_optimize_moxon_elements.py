@@ -9,7 +9,10 @@ from antennadesk.application.use_cases.optimize_moxon_elements import (
     OptimizeMoxonElementsCommand,
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
-from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.antennas.moxon import (
+    MoxonParameters,
+    validate_moxon_geometry,
+)
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.multi_variable import BoundedStatus, BoundedVariable
 from antennadesk.domain.optimization.synthesis import SynthesisTarget
@@ -129,7 +132,20 @@ def test_optimizes_moxon_dimensions_for_impedance() -> None:
     assert result.status is BoundedStatus.CONVERGED
     assert result.best_values is not None
     assert result.best_values["width_m"] == pytest.approx(10.0, abs=0.05)
-    assert result.best_values["depth_m"] == pytest.approx(3.0, abs=0.05)
-    assert result.best_values["reflector_tip_m"] == pytest.approx(1.0, abs=0.15)
-    assert result.best_values["driven_tip_m"] == pytest.approx(1.0, abs=0.15)
+    # The analytical target has many 50-ohm solutions. The HF4 geometry
+    # envelope prunes some corners, so assert a valid Moxon and a matched
+    # impedance rather than one arbitrary tip combination.
+    rebuilt = build(result.best_values)
+    assert rebuilt.gap_m > 0.0
+    assert (
+        validate_moxon_geometry(
+            frequency_hz=rebuilt.frequency_hz,
+            width_m=rebuilt.width_m,
+            depth_m=rebuilt.depth_m,
+            reflector_tip_m=rebuilt.reflector_tip_m,
+            driven_tip_m=rebuilt.driven_tip_m,
+            wire_radius_m=rebuilt.wire_radius_m,
+        )
+        == ()
+    )
     assert result.best_score == pytest.approx(0.0, abs=0.5)

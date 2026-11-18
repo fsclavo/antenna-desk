@@ -37,6 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Moxon gap geometry contract.** The Moxon optimizer now moves the gap
+  directly and derives the driven tip instead of exposing two redundant tip
+  variables. A shared validator enforces gap/λ, gap/depth, gap/width,
+  width/depth, tip/depth, tip-sum/depth, and conductor-clearance limits anchored
+  to the Cebik 20 m reference and the 2.4 GHz high-frequency control. The editor
+  warns before the design becomes invalid, the domain constructor rejects it,
+  and the old 0.67λ gap failure is infeasible. The pre-HF6 estimator reports a
+  scaled gap that cannot clear the conductor as explicitly unsupported instead
+  of changing the wire radius.
 - **Frequency-aware optimizer bounds.** Family search ranges are now relative to
   the current design instead of using fixed 0.1/0.5/0.05 m floors. This restores
   sensible Moxon, vertical, Yagi, quad, discone, hexbeam, J-pole, Ringo, and

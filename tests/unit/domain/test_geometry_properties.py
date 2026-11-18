@@ -134,6 +134,22 @@ def test_estimated_family_geometry_satisfies_model_invariants(
     else:
         height_m = data.draw(HEIGHT_M)
 
+    # The pre-HF6 Moxon estimator scales the Cebik gap without making it
+    # radius-aware. Keep this invariant test inside the currently supported
+    # thin-wire envelope; the dedicated estimator tests cover the explicit
+    # conductor-clearance rejection.
+    if family == "moxon":
+        wire_radius_m = data.draw(
+            st.floats(
+                min_value=1e-4,
+                max_value=1e-3,
+                allow_nan=False,
+                allow_infinity=False,
+            )
+        )
+    else:
+        wire_radius_m = data.draw(RADIUS_M)
+
     intent = DesignIntent(
         frequency_hz=frequency_hz,
         antenna_type=family,
@@ -149,7 +165,7 @@ def test_estimated_family_geometry_satisfies_model_invariants(
         orientation=data.draw(st.sampled_from(list(DipoleOrientation))),
         polarization=polarization,
         azimuth_deg=data.draw(AZIMUTH_DEG),
-        wire_radius_m=data.draw(RADIUS_M),
+        wire_radius_m=wire_radius_m,
         ground=data.draw(GROUND),
         loop_shape=data.draw(st.sampled_from(list(LoopShape))),
         vertical_form=data.draw(st.sampled_from(list(VerticalForm))),

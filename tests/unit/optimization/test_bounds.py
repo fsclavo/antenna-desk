@@ -4,8 +4,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-
 import pytest
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -109,18 +107,21 @@ def test_high_frequency_designs_get_relative_bounds(parameters: object) -> None:
 
 
 def test_a_genuine_conductor_floor_still_reports_out_of_bounds() -> None:
-    parameters = replace(
-        _moxon_2_4(),
-        reflector_tip_m=0.0002,
-        driven_tip_m=0.0002,
+    parameters = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=0.001, radius_m=0.001),
+            YagiElement(position_m=0.05, length_m=0.001, radius_m=0.001),
+        ),
+        height_m=10.0,
     )
 
     availability = optimizer_availability(parameters)
 
     assert availability.available is False
     assert availability.reason_key == "optimize.unavailable.bounds.outside"
-    assert availability.reason_values["family"] == "moxon"
-    assert availability.reason_values["variable"] in {"reflector_tip_m", "driven_tip_m"}
+    assert availability.reason_values["family"] == "yagi"
+    assert availability.reason_values["variable"] in {"length_0", "length_1"}
 
 
 def test_valid_hf_moxon_remains_available() -> None:

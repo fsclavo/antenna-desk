@@ -12857,6 +12857,96 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "que {height} {unit} para que el rectángulo quede sobre el suelo."
         ),
     },
+    "moxon.constraint.positive": {
+        Language.ENGLISH: "Moxon dimensions must be positive ({actual:.4g}).",
+        Language.SPANISH: "Las dimensiones del Moxon deben ser positivas ({actual:.4g}).",
+    },
+    "moxon.constraint.gap_positive": {
+        Language.ENGLISH: ("The Moxon tip lengths must leave a positive gap ({actual:.4g} m)."),
+        Language.SPANISH: (
+            "Las longitudes de las puntas del Moxon deben dejar una separación "
+            "positiva ({actual:.4g} m)."
+        ),
+    },
+    "moxon.constraint.gap_clearance": {
+        Language.ENGLISH: (
+            "The Moxon gap ({actual:.4g} m) must exceed the conductor diameter ({minimum:.4g} m)."
+        ),
+        Language.SPANISH: (
+            "La separación del Moxon ({actual:.4g} m) debe superar el diámetro del "
+            "conductor ({minimum:.4g} m)."
+        ),
+    },
+    "moxon.constraint.gap_wavelength": {
+        Language.ENGLISH: (
+            "The Moxon gap/lambda ratio ({actual:.4g}) must be between {minimum:.4g} "
+            "and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación separación/longitud de onda del Moxon ({actual:.4g}) debe "
+            "estar entre {minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.gap_depth": {
+        Language.ENGLISH: (
+            "The Moxon gap/depth ratio ({actual:.4g}) must be between {minimum:.4g} "
+            "and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación separación/profundidad del Moxon ({actual:.4g}) debe estar "
+            "entre {minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.gap_width": {
+        Language.ENGLISH: (
+            "The Moxon gap/width ratio ({actual:.4g}) must be between {minimum:.4g} "
+            "and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación separación/ancho del Moxon ({actual:.4g}) debe estar entre "
+            "{minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.width_depth": {
+        Language.ENGLISH: (
+            "The Moxon width/depth ratio ({actual:.4g}) must be between "
+            "{minimum:.4g} and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación ancho/profundidad del Moxon ({actual:.4g}) debe estar entre "
+            "{minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.reflector_tip_depth": {
+        Language.ENGLISH: (
+            "The Moxon reflector-tip/depth ratio ({actual:.4g}) must be between "
+            "{minimum:.4g} and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación punta del reflector/profundidad del Moxon ({actual:.4g}) "
+            "debe estar entre {minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.driven_tip_depth": {
+        Language.ENGLISH: (
+            "The Moxon driven-tip/depth ratio ({actual:.4g}) must be between "
+            "{minimum:.4g} and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación punta del excitado/profundidad del Moxon ({actual:.4g}) "
+            "debe estar entre {minimum:.4g} y {maximum:.4g}."
+        ),
+    },
+    "moxon.constraint.tips_sum_depth": {
+        Language.ENGLISH: (
+            "The Moxon tip-sum/depth ratio ({actual:.4g}) must be between "
+            "{minimum:.4g} and {maximum:.4g}."
+        ),
+        Language.SPANISH: (
+            "La relación suma de puntas/profundidad del Moxon ({actual:.4g}) debe "
+            "estar entre {minimum:.4g} y {maximum:.4g}."
+        ),
+    },
     "moxon.hint": {
         Language.ENGLISH: (
             "The generator starts at 28.500 MHz with the published Cebik 20 m "
@@ -15394,6 +15484,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.moxon_gap": {
         Language.ENGLISH: "The Moxon tips must leave a gap between the elements.",
         Language.SPANISH: "Las puntas del Moxon deben dejar una brecha entre los elementos.",
+    },
+    "optimize.constraint.moxon_geometry": {
+        Language.ENGLISH: (
+            "The Moxon gap or tip proportions are outside the valid geometry envelope."
+        ),
+        Language.SPANISH: (
+            "La separación o las proporciones de las puntas del Moxon están fuera "
+            "del envolvente geométrico válido."
+        ),
     },
     "optimize.constraint.vertical_clearance": {
         Language.ENGLISH: "A vertically polarized array must clear the ground.",

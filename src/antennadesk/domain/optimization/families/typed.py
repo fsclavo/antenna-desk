@@ -33,7 +33,17 @@ from ...antennas.j_pole import JPoleParameters
 from ...antennas.loaded_dipole import LoadedDipoleParameters
 from ...antennas.loop import LoopParameters
 from ...antennas.matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
-from ...antennas.moxon import MoxonParameters
+from ...antennas.moxon import (
+    MOXON_GAP_MAX_DEPTH_RATIO,
+    MOXON_GAP_MAX_WAVELENGTH_RATIO,
+    MOXON_GAP_MAX_WIDTH_RATIO,
+    MOXON_GAP_MIN_DEPTH_RATIO,
+    MOXON_GAP_MIN_WAVELENGTH_RATIO,
+    MOXON_GAP_MIN_WIDTH_RATIO,
+    MoxonGeometryIssueKind,
+    MoxonParameters,
+    validate_moxon_geometry,
+)
 from ...antennas.ocfd import OCFDParameters
 from ...antennas.phased_vertical import PhasedVerticalParameters
 from ...antennas.quad_beam import QuadBeamParameters
@@ -43,6 +53,7 @@ from ...antennas.transmission_line_doublet import TransmissionLineDoubletParamet
 from ...antennas.trap_dipole import TrapDipoleParameters
 from ...antennas.trap_yagi import TrapYagiParameters
 from ...antennas.zepp import ZeppParameters
+from ...common import units
 from ..constraints import ConstraintViolation
 from ..descriptor import (
     AntennaOptimizerDescriptor,
@@ -72,8 +83,9 @@ def _length(
     value: float,
     fraction: float = 0.2,
     minimum: float = 1e-6,
+    maximum: float | None = None,
 ) -> OptimizationVariable:
-    low, high = around(value, fraction, minimum=minimum)
+    low, high = around(value, fraction, minimum=minimum, maximum=maximum)
     return OptimizationVariable(
         name,
         label_key,
@@ -2729,22 +2741,35 @@ def quad_beam_descriptor(parameters: QuadBeamParameters) -> AntennaOptimizerDesc
 
 
 def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
+    wavelength = units.SPEED_OF_LIGHT_M_PER_S / parameters.frequency_hz
+    gap_low = max(
+        conductor_floor_m(parameters.wire_radius_m),
+        MOXON_GAP_MIN_WAVELENGTH_RATIO * wavelength,
+        MOXON_GAP_MIN_DEPTH_RATIO * parameters.depth_m,
+        MOXON_GAP_MIN_WIDTH_RATIO * parameters.width_m,
+    )
+    gap_high = min(
+        MOXON_GAP_MAX_WAVELENGTH_RATIO * wavelength,
+        MOXON_GAP_MAX_DEPTH_RATIO * parameters.depth_m,
+        MOXON_GAP_MAX_WIDTH_RATIO * parameters.width_m,
+    )
     variables = (
         _length("width_m", "moxon.width", "optimize.group.geometry", parameters.width_m, 0.15),
         _length("depth_m", "moxon.depth", "optimize.group.geometry", parameters.depth_m, 0.25),
+        _length(
+            "gap_m",
+            "moxon.gap",
+            "optimize.group.geometry",
+            parameters.gap_m,
+            0.35,
+            gap_low,
+            gap_high,
+        ),
         _length(
             "reflector_tip_m",
             "moxon.reflector_tip",
             "optimize.group.geometry",
             parameters.reflector_tip_m,
-            0.5,
-            conductor_floor_m(parameters.wire_radius_m),
-        ),
-        _length(
-            "driven_tip_m",
-            "moxon.driven_tip",
-            "optimize.group.geometry",
-            parameters.driven_tip_m,
             0.5,
             conductor_floor_m(parameters.wire_radius_m),
         ),
@@ -2756,11 +2781,14 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
     initial = {
         "width_m": parameters.width_m,
         "depth_m": parameters.depth_m,
+        "gap_m": parameters.gap_m,
         "reflector_tip_m": parameters.reflector_tip_m,
-        "driven_tip_m": parameters.driven_tip_m,
         "height_m": parameters.height_m,
         "wire_radius_m": parameters.wire_radius_m,
     }
+
+    def driven_tip(values: Mapping[str, float]) -> float:
+        return values["depth_m"] - values["gap_m"] - values["reflector_tip_m"]
 
     def build(values: Mapping[str, float]) -> MoxonParameters:
         return replace(
@@ -2768,7 +2796,7 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
             width_m=values["width_m"],
             depth_m=values["depth_m"],
             reflector_tip_m=values["reflector_tip_m"],
-            driven_tip_m=values["driven_tip_m"],
+            driven_tip_m=driven_tip(values),
             height_m=values["height_m"],
             wire_radius_m=values["wire_radius_m"],
         )
@@ -2777,19 +2805,40 @@ def moxon_descriptor(parameters: MoxonParameters) -> AntennaOptimizerDescriptor:
         issues: list[ConstraintViolation | None] = [
             positive_violation("width_m", values["width_m"]),
             positive_violation("depth_m", values["depth_m"]),
+            positive_violation("gap_m", values["gap_m"]),
             positive_violation("reflector_tip_m", values["reflector_tip_m"]),
-            positive_violation("driven_tip_m", values["driven_tip_m"]),
             positive_violation("height_m", values["height_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
         ]
-        if values["reflector_tip_m"] + values["driven_tip_m"] >= values["depth_m"]:
+        candidate_driven_tip = driven_tip(values)
+        if candidate_driven_tip <= 0.0:
             issues.append(
                 violation(
-                    "reflector_tip_m",
-                    values["reflector_tip_m"] + values["driven_tip_m"] - values["depth_m"],
+                    "gap_m",
+                    -candidate_driven_tip,
                     "optimize.constraint.moxon_gap",
                 )
             )
+        if candidate_driven_tip > 0.0:
+            for issue in validate_moxon_geometry(
+                frequency_hz=parameters.frequency_hz,
+                width_m=values["width_m"],
+                depth_m=values["depth_m"],
+                reflector_tip_m=values["reflector_tip_m"],
+                driven_tip_m=candidate_driven_tip,
+                wire_radius_m=values["wire_radius_m"],
+            ):
+                issues.append(
+                    violation(
+                        issue.field,
+                        1.0,
+                        (
+                            "optimize.constraint.conductor_spacing"
+                            if issue.kind is MoxonGeometryIssueKind.GAP_CLEARANCE
+                            else "optimize.constraint.moxon_geometry"
+                        ),
+                    )
+                )
         return collect(*issues)
 
     return _descriptor(
