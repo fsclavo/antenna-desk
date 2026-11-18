@@ -220,3 +220,21 @@ def test_quad_beam_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> 
     assert parameters.loop_side_m == pytest.approx(5.0, rel=1e-3)
     assert parameters.reflector_spacing_m == pytest.approx(4.0, rel=1e-3)
     assert dialog._form._loop_side.suffix().strip() == "ft"
+
+
+def test_quad_beam_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.quad_beam_form import QuadBeamForm
+
+    form = QuadBeamForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(quad_beam_parameters(frequency_hz=432_000_000.0, height_m=5.3))
+
+    assert form._loop_side_field.unit == "cm"
+    assert form._reflector_spacing_field.unit == "cm"
+    assert form._height_field.unit == "m"

@@ -35,6 +35,8 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
@@ -45,7 +47,11 @@ from ..units import (
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import (
+    LengthField,
+    LengthFieldSpec,
+    apply_radius_units,
+)
 from .ground_presets import GroundPresetController
 from .starting_dimensions import StartingDimensionsState
 
@@ -59,11 +65,17 @@ class QuadBeamForm(QWidget):
         unit_system: UnitSystem,
         parameters: QuadBeamParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="quad_beam")
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
@@ -91,10 +103,35 @@ class QuadBeamForm(QWidget):
         self._director_spacing.setDecimals(3)
         self._director_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
+        self._loop_side_field = LengthField(
+            self._loop_side,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._reflector_spacing_field = LengthField(
+            self._reflector_spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._director_spacing_field = LengthField(
+            self._director_spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+
         self._height = QDoubleSpinBox(self)
         self._height.setRange(minimum_height, maximum_height)
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
 
         self._reflector_scale = QDoubleSpinBox(self)
         self._reflector_scale.setRange(1.0, 1.2)
@@ -379,24 +416,21 @@ class QuadBeamForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._loop_side,
-                self._reflector_spacing,
-                self._director_spacing,
-                self._height,
-            )
-            self._loop_side.setRange(minimum_length, maximum_length)
-            self._reflector_spacing.setRange(minimum_length, maximum_length)
-            self._director_spacing.setRange(minimum_length, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
+            for field in (
+                self._loop_side_field,
+                self._reflector_spacing_field,
+                self._director_spacing_field,
+                self._height_field,
+            ):
+                field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -409,14 +443,10 @@ class QuadBeamForm(QWidget):
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._element_count.setValue(parameters.element_count)
-            self._loop_side.setValue(length_from_m(parameters.loop_side_m, self._unit_system))
-            self._reflector_spacing.setValue(
-                length_from_m(parameters.reflector_spacing_m, self._unit_system)
-            )
-            self._director_spacing.setValue(
-                length_from_m(parameters.director_spacing_m, self._unit_system)
-            )
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._loop_side_field.configure(parameters.loop_side_m)
+            self._reflector_spacing_field.configure(parameters.reflector_spacing_m)
+            self._director_spacing_field.configure(parameters.director_spacing_m)
+            self._height_field.configure(parameters.height_m)
             self._reflector_scale.setValue(parameters.reflector_scale)
             self._director_scale.setValue(parameters.director_scale)
             self._azimuth.setValue(parameters.azimuth_deg)
@@ -465,11 +495,11 @@ class QuadBeamForm(QWidget):
     def parameters(self) -> QuadBeamParameters:
         return QuadBeamParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            loop_side_m=length_to_m(self._loop_side.value(), self._unit_system),
-            reflector_spacing_m=length_to_m(self._reflector_spacing.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            loop_side_m=self._loop_side_field.value_m(),
+            reflector_spacing_m=self._reflector_spacing_field.value_m(),
+            height_m=self._height_field.value_m(),
             element_count=self._element_count.value(),
-            director_spacing_m=length_to_m(self._director_spacing.value(), self._unit_system),
+            director_spacing_m=self._director_spacing_field.value_m(),
             reflector_scale=self._reflector_scale.value(),
             director_scale=self._director_scale.value(),
             azimuth_deg=self._azimuth.value(),

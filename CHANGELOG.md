@@ -81,6 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   tip gap, feed gap, element separation, and height now use `LengthFieldSpec`;
   automatic units show the 435 MHz details in cm while keeping the installation
   height in meters.
+- **Quad-beam form migration.** Loop side, reflector/director spacing, and
+  height now use `LengthFieldSpec`; automatic units show UHF loop dimensions in
+  cm while keeping the installation height in meters.
 
 ### Changed
 
