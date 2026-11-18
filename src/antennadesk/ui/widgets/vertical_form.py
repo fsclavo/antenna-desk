@@ -40,15 +40,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .radial_presets import RadialPresetController
 
@@ -64,11 +65,16 @@ class VerticalForm(QWidget):
         parent: QWidget | None = None,
         *,
         mobile: bool = False,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -96,6 +102,28 @@ class VerticalForm(QWidget):
         self._radial_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._radial_length.setValue(length_from_m(5.0, unit_system))
 
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._base_height_field = LengthField(
+            self._base_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._radial_length_field = LengthField(
+            self._radial_length,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._height_field.configure(10.0)
+        self._base_height_field.configure(0.25)
+        self._radial_length_field.configure(5.0)
+
         self._radial_angle = QDoubleSpinBox(self)
         self._radial_angle.setRange(0.0, 360.0)
         self._radial_angle.setDecimals(1)
@@ -110,6 +138,9 @@ class VerticalForm(QWidget):
             self._radial_length,
             translator,
             unit_system,
+            base_height_field=self._base_height_field,
+            radial_length_field=self._radial_length_field,
+            applied=self._radial_preset_applied,
         )
 
         self._radius = QDoubleSpinBox(self)
@@ -209,6 +240,21 @@ class VerticalForm(QWidget):
         self._top_hat_wire_count.setRange(1, MAX_TOP_HAT_WIRES)
         self._top_hat_wire_count.setValue(4)
 
+        self._coil_offset_field = LengthField(
+            self._coil_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._top_hat_radius_field = LengthField(
+            self._top_hat_radius,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._coil_offset_field.configure(0.0)
+        self._top_hat_radius_field.configure(0.5)
+
         top_hat_form = QFormLayout(self._top_hat_group)
         top_hat_form.addRow(self._top_hat_enabled)
         top_hat_form.addRow(
@@ -221,11 +267,11 @@ class VerticalForm(QWidget):
         )
 
         if parameters is None and mobile:
-            self._height.setValue(length_from_m(2.0, unit_system))
+            self._height_field.configure(2.0)
             self._radial_count.setValue(4)
-            self._radial_length.setValue(length_from_m(1.0, unit_system))
+            self._radial_length_field.configure(1.0)
             self._coil_enabled.setChecked(True)
-            self._coil_offset.setValue(length_from_m(1.0, unit_system))
+            self._coil_offset_field.configure(1.0)
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
@@ -293,6 +339,13 @@ class VerticalForm(QWidget):
         self._update_radial_controls()
         self._emit_changed()
 
+    def _radial_preset_applied(self) -> None:
+        if self._updating:
+            return
+        self._update_radial_controls()
+        self._update_coil_controls()
+        self._emit_changed()
+
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
         self._emit_changed()
@@ -352,7 +405,7 @@ class VerticalForm(QWidget):
 
     def _top_hat_toggled(self, checked: bool) -> None:
         if checked and self._top_hat_radius.value() <= 0.0:
-            self._top_hat_radius.setValue(length_from_m(0.5, self._unit_system))
+            self._top_hat_radius_field.configure(0.5)
         self._update_top_hat_controls()
         self._emit_changed()
 
@@ -379,7 +432,9 @@ class VerticalForm(QWidget):
         self._coil_inductance.setEnabled(enabled)
         self._coil_resistance.setEnabled(enabled)
         self._coil_q.setEnabled(enabled)
-        maximum = self._height.value()
+        maximum_m = self._height_field.value_m()
+        factor = self._coil_offset_field.display_units.meters_per_unit(self._coil_offset_field.unit)
+        maximum = maximum_m / factor
         self._coil_offset.setMaximum(maximum)
         if self._coil_offset.value() > maximum:
             self._coil_offset.setValue(maximum)
@@ -401,11 +456,11 @@ class VerticalForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(MOBILE_EXAMPLE_FREQUENCY_HZ / 1_000_000.0)
-            self._height.setValue(length_from_m(MOBILE_EXAMPLE_HEIGHT_M, self._unit_system))
-            self._base_height.setValue(0.0)
+            self._height_field.configure(MOBILE_EXAMPLE_HEIGHT_M)
+            self._base_height_field.configure(0.0)
             self._radial_count.setValue(0)
             self._coil_enabled.setChecked(True)
-            self._coil_offset.setValue(0.0)
+            self._coil_offset_field.configure(0.0)
             self._coil_inductance.setValue(MOBILE_EXAMPLE_COIL_INDUCTANCE_H * 1e6)
             self._coil_resistance.setValue(0.0)
             self._coil_q.setValue(0.0)
@@ -448,17 +503,20 @@ class VerticalForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         self._radial_presets.set_unit_system(unit_system)
         apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
-            unit_system,
-            self._height,
-            self._base_height,
-            self._radial_length,
-            self._coil_offset,
-            self._top_hat_radius,
-        )
+        for field in (
+            self._height_field,
+            self._base_height_field,
+            self._radial_length_field,
+            self._coil_offset_field,
+            self._top_hat_radius_field,
+        ):
+            field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -466,12 +524,10 @@ class VerticalForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
-            self._base_height.setValue(length_from_m(parameters.base_height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
+            self._base_height_field.configure(parameters.base_height_m)
             self._radial_count.setValue(parameters.radial_count)
-            self._radial_length.setValue(
-                length_from_m(parameters.radial_length_m, self._unit_system)
-            )
+            self._radial_length_field.configure(parameters.radial_length_m)
             self._radial_angle.setValue(parameters.radial_angle_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -485,16 +541,12 @@ class VerticalForm(QWidget):
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
             self._coil_enabled.setChecked(parameters.loading_coil_enabled)
-            self._coil_offset.setValue(
-                length_from_m(parameters.loading_coil_offset_m, self._unit_system)
-            )
+            self._coil_offset_field.configure(parameters.loading_coil_offset_m)
             self._coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
             self._coil_q.setValue(self._coil_q_from_resistance())
             self._top_hat_enabled.setChecked(parameters.top_hat_enabled)
-            self._top_hat_radius.setValue(
-                length_from_m(parameters.top_hat_radius_m, self._unit_system)
-            )
+            self._top_hat_radius_field.configure(parameters.top_hat_radius_m)
             if parameters.top_hat_wire_count > 0:
                 self._top_hat_wire_count.setValue(parameters.top_hat_wire_count)
         finally:
@@ -503,6 +555,7 @@ class VerticalForm(QWidget):
         self._update_radial_controls()
         self._update_coil_controls()
         self._update_top_hat_controls()
+        self._radial_presets.sync_selection()
         self._update_geometry()
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
@@ -544,23 +597,19 @@ class VerticalForm(QWidget):
         top_hat_enabled = self._top_hat_enabled.isChecked()
         return VerticalParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
+            base_height_m=self._base_height_field.value_m(),
             radial_count=self._radial_count.value(),
-            radial_length_m=length_to_m(self._radial_length.value(), self._unit_system),
+            radial_length_m=self._radial_length_field.value_m(),
             radial_angle_deg=self._radial_angle.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),
             loading_coil_enabled=self._coil_enabled.isChecked(),
-            loading_coil_offset_m=length_to_m(self._coil_offset.value(), self._unit_system),
+            loading_coil_offset_m=self._coil_offset_field.value_m(),
             loading_coil_inductance_h=self._coil_inductance.value() * 1e-6,
             loading_coil_resistance_ohm=self._coil_resistance.value(),
             top_hat_enabled=top_hat_enabled,
-            top_hat_radius_m=(
-                length_to_m(self._top_hat_radius.value(), self._unit_system)
-                if top_hat_enabled
-                else 0.0
-            ),
+            top_hat_radius_m=(self._top_hat_radius_field.value_m() if top_hat_enabled else 0.0),
             top_hat_wire_count=(self._top_hat_wire_count.value() if top_hat_enabled else 0),
         )

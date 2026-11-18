@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QSpinBox
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import QComboBox, QDoubleSpinBox, QSpinBox
 from ...domain.common import units
 from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_to_m
+from .form_units import LengthField
 
 CUSTOM_RADIAL_KEY = "custom"
 
@@ -89,6 +91,10 @@ class RadialPresetController:
         radial_length: QDoubleSpinBox,
         translator: Translator,
         unit_system: UnitSystem,
+        *,
+        base_height_field: LengthField | None = None,
+        radial_length_field: LengthField | None = None,
+        applied: Callable[[], None] | None = None,
     ) -> None:
         self._preset_combo = preset_combo
         self._frequency = frequency
@@ -97,6 +103,9 @@ class RadialPresetController:
         self._radial_length = radial_length
         self._translator = translator
         self._unit_system = unit_system
+        self._base_height_field = base_height_field
+        self._radial_length_field = radial_length_field
+        self._applied = applied
         self._updating = False
 
         self._populate()
@@ -136,6 +145,28 @@ class RadialPresetController:
     def _frequency_hz(self) -> float:
         return self._frequency.value() * 1_000_000.0
 
+    def _set_base_height_m(self, value_m: float) -> None:
+        if self._base_height_field is not None:
+            self._base_height_field.configure(value_m)
+            return
+        self._base_height.setValue(length_from_m(value_m, self._unit_system))
+
+    def _base_height_m(self) -> float:
+        if self._base_height_field is not None:
+            return self._base_height_field.value_m()
+        return length_to_m(self._base_height.value(), self._unit_system)
+
+    def _set_radial_length_m(self, value_m: float) -> None:
+        if self._radial_length_field is not None:
+            self._radial_length_field.configure(value_m)
+            return
+        self._radial_length.setValue(length_from_m(value_m, self._unit_system))
+
+    def _radial_length_m(self) -> float:
+        if self._radial_length_field is not None:
+            return self._radial_length_field.value_m()
+        return length_to_m(self._radial_length.value(), self._unit_system)
+
     def _apply_selected(self) -> None:
         if self._updating:
             return
@@ -145,13 +176,13 @@ class RadialPresetController:
         self._updating = True
         try:
             if preset.base_height_m is not None:
-                self._base_height.setValue(length_from_m(preset.base_height_m, self._unit_system))
+                self._set_base_height_m(preset.base_height_m)
             self._radial_count.setValue(preset.radial_count)
-            self._radial_length.setValue(
-                length_from_m(radial_length_m(preset, self._frequency_hz()), self._unit_system)
-            )
+            self._set_radial_length_m(radial_length_m(preset, self._frequency_hz()))
         finally:
             self._updating = False
+        if self._applied is not None:
+            self._applied()
 
     def _frequency_changed(self, *_args: object) -> None:
         if self._updating:
@@ -161,9 +192,7 @@ class RadialPresetController:
             return
         self._updating = True
         try:
-            self._radial_length.setValue(
-                length_from_m(radial_length_m(preset, self._frequency_hz()), self._unit_system)
-            )
+            self._set_radial_length_m(radial_length_m(preset, self._frequency_hz()))
         finally:
             self._updating = False
 
@@ -172,9 +201,9 @@ class RadialPresetController:
             return
         key = matching_radial_key(
             self._frequency_hz(),
-            length_to_m(self._base_height.value(), self._unit_system),
+            self._base_height_m(),
             self._radial_count.value(),
-            length_to_m(self._radial_length.value(), self._unit_system),
+            self._radial_length_m(),
         )
         index = self._preset_combo.findData(key)
         if index < 0 or self._preset_combo.currentIndex() == index:
@@ -187,6 +216,9 @@ class RadialPresetController:
 
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         self._unit_system = unit_system
+
+    def sync_selection(self) -> None:
+        self._sync_selection()
 
     def retranslate(self) -> None:
         self._populate()

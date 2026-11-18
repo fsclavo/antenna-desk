@@ -91,6 +91,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   height, and radial length now use `LengthFieldSpec`; automatic units choose
   the unit per field, so a 14 MHz array keeps its main dimensions in meters
   while a 0.25 m base height shows in centimeters.
+- **Discone form completion.** Base height and disc gap now use
+  `LengthFieldSpec` too, completing the per-field migration for that family.
+- **Vertical form migration.** Radiator height, base height, radial length,
+  loading-coil offset, and top-hat radius now use `LengthFieldSpec`. Radial
+  presets write canonical meters through the fields, so applying a preset with
+  automatic units keeps the correct physical geometry; a 14 MHz vertical shows
+  its radiator and radials in meters and the base/top-hat details in
+  centimeters.
 
 ### Changed
 

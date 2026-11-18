@@ -193,3 +193,44 @@ def test_vertical_dialog_restores_a_loading_coil(qtbot: QtBot) -> None:
     assert restored.loading_coil_offset_m == pytest.approx(1.0)
     assert restored.loading_coil_inductance_h == pytest.approx(15e-6)
     assert restored.loading_coil_resistance_ohm == pytest.approx(0.3)
+
+
+def test_vertical_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.vertical_form import VerticalForm
+
+    form = VerticalForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._height_field.unit == "m"
+    assert form._base_height_field.unit == "cm"
+    assert form._radial_length_field.unit == "m"
+    assert form._top_hat_radius_field.unit == "cm"
+
+
+def test_vertical_form_applies_radial_presets_with_auto_units(qtbot: QtBot) -> None:
+    from antennadesk.domain.common.units import wavelength_m
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.vertical_form import VerticalForm
+
+    form = VerticalForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    index = form._radial_preset.findData("ground")
+    assert index >= 0
+
+    form._radial_preset.setCurrentIndex(index)
+
+    parameters = form.parameters()
+    assert parameters.base_height_m == pytest.approx(0.25)
+    assert parameters.radial_length_m == pytest.approx(
+        wavelength_m(parameters.frequency_hz) * 0.25,
+        abs=1e-3,
+    )

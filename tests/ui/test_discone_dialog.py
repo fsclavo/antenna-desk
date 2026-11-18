@@ -134,4 +134,6 @@ def test_discone_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
     assert form._cone_height_field.unit == "cm"
     assert form._cone_radius_field.unit == "cm"
     assert form._disc_radius_field.unit == "cm"
+    assert form._base_height_field.unit == "cm"
+    assert form._disc_gap_field.unit == "cm"
     assert form._cone_height.suffix().strip() == "cm"

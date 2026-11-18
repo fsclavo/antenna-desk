@@ -38,7 +38,6 @@ from ..units import (
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
@@ -47,7 +46,6 @@ from .form_i18n import FormLabels, retranslate_combo
 from .form_units import (
     LengthField,
     LengthFieldSpec,
-    apply_length_suffixes,
     apply_radius_units,
 )
 from .ground_presets import GroundPresetController
@@ -122,6 +120,18 @@ class DisconeForm(QWidget):
         )
         self._disc_radius_field = LengthField(
             self._disc_radius,
+            LengthFieldSpec(minimum_m=0.0001, maximum_m=10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._base_height_field = LengthField(
+            self._base_height,
+            LengthFieldSpec(minimum_m=0.0, maximum_m=10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._disc_gap_field = LengthField(
+            self._disc_gap,
             LengthFieldSpec(minimum_m=0.0001, maximum_m=10_000.0, scale_hint="mm"),
             translator,
             self._display_units,
@@ -340,23 +350,15 @@ class DisconeForm(QWidget):
             unit_system,
             self._display_units.length_policy,
         )
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._base_height,
-                self._disc_gap,
-            )
-            self._disc_gap.setRange(minimum_length, maximum_length)
-            self._base_height.setRange(minimum_height, maximum_height)
             self._cone_height_field.set_display_units(self._display_units)
             self._cone_radius_field.set_display_units(self._display_units)
             self._disc_radius_field.set_display_units(self._display_units)
+            self._base_height_field.set_display_units(self._display_units)
+            self._disc_gap_field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -371,8 +373,8 @@ class DisconeForm(QWidget):
             self._cone_height_field.configure(parameters.cone_height_m)
             self._cone_radius_field.configure(parameters.cone_radius_m)
             self._disc_radius_field.configure(parameters.disc_radius_m)
-            self._base_height.setValue(length_from_m(parameters.base_height_m, self._unit_system))
-            self._disc_gap.setValue(length_from_m(parameters.disc_gap_m, self._unit_system))
+            self._base_height_field.configure(parameters.base_height_m)
+            self._disc_gap_field.configure(parameters.disc_gap_m)
             self._wire_count.setValue(parameters.wire_count)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
@@ -419,8 +421,8 @@ class DisconeForm(QWidget):
             cone_height_m=self._cone_height_field.value_m(),
             cone_radius_m=self._cone_radius_field.value_m(),
             disc_radius_m=self._disc_radius_field.value_m(),
-            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
-            disc_gap_m=length_to_m(self._disc_gap.value(), self._unit_system),
+            base_height_m=self._base_height_field.value_m(),
+            disc_gap_m=self._disc_gap_field.value_m(),
             wire_count=self._wire_count.value(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
