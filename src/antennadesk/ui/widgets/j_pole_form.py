@@ -24,15 +24,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -45,11 +46,17 @@ class JPoleForm(QWidget):
         unit_system: UnitSystem,
         parameters: JPoleParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -87,6 +94,49 @@ class JPoleForm(QWidget):
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._base_height.setValue(length_from_m(0.25, unit_system))
+
+        self._radiator_height_field = LengthField(
+            self._radiator_height,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._stub_length_field = LengthField(
+            self._stub_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._spacing_field = LengthField(
+            self._spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._feed_offset_field = LengthField(
+            self._feed_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._gap_field = LengthField(
+            self._gap,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._base_height_field = LengthField(
+            self._base_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._radiator_height_field.configure(1.0)
+        self._stub_length_field.configure(0.5)
+        self._spacing_field.configure(0.05)
+        self._feed_offset_field.configure(0.1)
+        self._gap_field.configure(0.01)
+        self._base_height_field.configure(0.25)
 
         self._folded = QCheckBox(translator.t("j_pole.folded"), self)
 
@@ -223,17 +273,20 @@ class JPoleForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._radiator_height,
-            self._stub_length,
-            self._spacing,
-            self._feed_offset,
-            self._gap,
-            self._base_height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        for field in (
+            self._radiator_height_field,
+            self._stub_length_field,
+            self._spacing_field,
+            self._feed_offset_field,
+            self._gap_field,
+            self._base_height_field,
+        ):
+            field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -241,14 +294,12 @@ class JPoleForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._radiator_height.setValue(
-                length_from_m(parameters.radiator_height_m, self._unit_system)
-            )
-            self._stub_length.setValue(length_from_m(parameters.stub_length_m, self._unit_system))
-            self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
-            self._feed_offset.setValue(length_from_m(parameters.feed_offset_m, self._unit_system))
-            self._gap.setValue(length_from_m(parameters.gap_m, self._unit_system))
-            self._base_height.setValue(length_from_m(parameters.base_height_m, self._unit_system))
+            self._radiator_height_field.configure(parameters.radiator_height_m)
+            self._stub_length_field.configure(parameters.stub_length_m)
+            self._spacing_field.configure(parameters.spacing_m)
+            self._feed_offset_field.configure(parameters.feed_offset_m)
+            self._gap_field.configure(parameters.gap_m)
+            self._base_height_field.configure(parameters.base_height_m)
             self._folded.setChecked(parameters.folded)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -288,12 +339,12 @@ class JPoleForm(QWidget):
     def parameters(self) -> JPoleParameters:
         return JPoleParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            radiator_height_m=length_to_m(self._radiator_height.value(), self._unit_system),
-            stub_length_m=length_to_m(self._stub_length.value(), self._unit_system),
-            spacing_m=length_to_m(self._spacing.value(), self._unit_system),
-            feed_offset_m=length_to_m(self._feed_offset.value(), self._unit_system),
-            gap_m=length_to_m(self._gap.value(), self._unit_system),
-            base_height_m=length_to_m(self._base_height.value(), self._unit_system),
+            radiator_height_m=self._radiator_height_field.value_m(),
+            stub_length_m=self._stub_length_field.value_m(),
+            spacing_m=self._spacing_field.value_m(),
+            feed_offset_m=self._feed_offset_field.value_m(),
+            gap_m=self._gap_field.value_m(),
+            base_height_m=self._base_height_field.value_m(),
             folded=self._folded.isChecked(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

@@ -27,17 +27,18 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -52,11 +53,16 @@ class TransmissionLineDoubletForm(QWidget):
         parent: QWidget | None = None,
         *,
         preset: DoubletPreset = DoubletPreset.G5RV,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._preset = DoubletPreset(preset)
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
@@ -96,6 +102,31 @@ class TransmissionLineDoubletForm(QWidget):
         self._line_length.setRange(minimum_length, maximum_length)
         self._line_length.setDecimals(3)
         self._line_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._dipole_length_field = LengthField(
+            self._dipole_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._feed_height_field = LengthField(
+            self._feed_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._line_length_field = LengthField(
+            self._line_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
 
         self._velocity = QDoubleSpinBox(self)
         self._velocity.setRange(0.01, 1.0)
@@ -235,24 +266,18 @@ class TransmissionLineDoubletForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._dipole_length,
-                self._height,
-                self._feed_height,
-                self._line_length,
-            )
-            for box in (self._dipole_length, self._line_length):
-                box.setRange(minimum_length, maximum_length)
-            for box in (self._height, self._feed_height):
-                box.setRange(minimum_height, maximum_height)
+            self._dipole_length_field.set_display_units(self._display_units)
+            self._height_field.set_display_units(self._display_units)
+            self._feed_height_field.set_display_units(self._display_units)
+            self._line_length_field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -263,14 +288,12 @@ class TransmissionLineDoubletForm(QWidget):
         try:
             self._preset = parameters.preset
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._dipole_length.setValue(
-                length_from_m(parameters.dipole_total_length_m, self._unit_system)
-            )
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
-            self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
+            self._dipole_length_field.configure(parameters.dipole_total_length_m)
+            self._height_field.configure(parameters.height_m)
+            self._feed_height_field.configure(parameters.feed_height_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._line_impedance.setValue(parameters.line_impedance_ohm)
-            self._line_length.setValue(length_from_m(parameters.line_length_m, self._unit_system))
+            self._line_length_field.configure(parameters.line_length_m)
             self._velocity.setValue(parameters.line_velocity_factor)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -312,12 +335,12 @@ class TransmissionLineDoubletForm(QWidget):
         return TransmissionLineDoubletParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             preset=self._preset,
-            dipole_total_length_m=length_to_m(self._dipole_length.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
+            dipole_total_length_m=self._dipole_length_field.value_m(),
+            height_m=self._height_field.value_m(),
+            feed_height_m=self._feed_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             line_impedance_ohm=self._line_impedance.value(),
-            line_length_m=length_to_m(self._line_length.value(), self._unit_system),
+            line_length_m=self._line_length_field.value_m(),
             line_velocity_factor=self._velocity.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

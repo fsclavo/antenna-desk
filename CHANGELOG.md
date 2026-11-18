@@ -133,6 +133,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dimensions, T2FD length/spacing/height, and Zepp radiator/matching/spacing/
   base dimensions now use `LengthFieldSpec`; automatic units keep long HF wires
   in meters while short spacing and low base heights use centimeters.
+- **J-pole and transmission-line-doublet migrations.** J-pole/Slim-Jim
+  radiator/stub/spacing/feed/gap/base dimensions and the G5RV/ZS6BKW doublet
+  dipole/height/feed/line dimensions now use `LengthFieldSpec`; a 145 MHz
+  J-pole shows its 1 m radiator in meters and its small stub/gap details in
+  centimeters.
 
 ### Changed
 
