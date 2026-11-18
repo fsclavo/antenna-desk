@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from .variables import OptimizationVariable, VariableKind
+from .variables import OptimizationVariable, VariableKind, variable_bound_issue
 
 OptimizerEvaluator = Callable[[Mapping[str, float]], "CandidateEvaluation"]
 OptimizerBatchEvaluator = Callable[
@@ -182,7 +182,28 @@ def optimize_design(
     for variable in variables:
         if variable.name not in initial_values:
             raise ValueError(f"missing initial value for {variable.name!r}")
-        variable.clamp(initial_values[variable.name])
+        issue = variable_bound_issue(variable, initial_values[variable.name])
+        if issue is not None:
+            return _result(
+                OptimizationStatus.ERROR,
+                None,
+                (),
+                seed,
+                issue.describe("optimizer"),
+            )
+    for point in start_points:
+        for variable in variables:
+            if variable.name not in point:
+                raise ValueError(f"missing start-point value for {variable.name!r}")
+            issue = variable_bound_issue(variable, point[variable.name])
+            if issue is not None:
+                return _result(
+                    OptimizationStatus.ERROR,
+                    None,
+                    (),
+                    seed,
+                    f"start point: {issue.describe('optimizer')}",
+                )
 
     rng = random.Random(seed)  # noqa: S311 — deterministic search, not cryptography
     evaluations: list[CandidateEvaluation] = []
@@ -297,6 +318,8 @@ def optimize_design(
             last_improvement = len(evaluations)
 
     def initial_vector(values: Mapping[str, float]) -> tuple[float, ...]:
+        # Values are validated above, so to_fraction preserves the exact design
+        # instead of moving it to a clamped bound.
         return tuple(
             variable.to_fraction(values.get(variable.name, initial_values[variable.name]))
             for variable in variables

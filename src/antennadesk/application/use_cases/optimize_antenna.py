@@ -214,6 +214,20 @@ class OptimizeAntenna:
         )
         if not active_variables:
             raise ValueError("at least one variable must remain unlocked")
+        bound_issue = descriptor.bound_issue({variable.name for variable in active_variables})
+        if bound_issue is not None:
+            return OptimizeAntennaResult(
+                status=OptimizationStatus.ERROR,
+                best_parameters=None,
+                best_values=None,
+                best_score=None,
+                best_metrics={},
+                evaluations=(),
+                sensitivity=(),
+                budget=command.budget,
+                seed=command.seed,
+                message=bound_issue.describe(descriptor.key),
+            )
         initial_values = {
             variable.name: descriptor.initial_values[variable.name] for variable in active_variables
         }

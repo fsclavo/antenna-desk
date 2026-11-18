@@ -15462,6 +15462,53 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "la optimización de toda la pila no está disponible."
         ),
     },
+    "optimize.unavailable.bounds.outside": {
+        Language.ENGLISH: (
+            "Cannot optimize the {family} family: {variable}={value:.6g} is outside "
+            "its search bounds [{minimum:.6g}, {maximum:.6g}]. Change the design or "
+            "the variable range; the optimizer will not start from a clamped design."
+        ),
+        Language.SPANISH: (
+            "No se puede optimizar la familia {family}: {variable}={value:.6g} está "
+            "fuera de sus límites de búsqueda [{minimum:.6g}, {maximum:.6g}]. Cambiá "
+            "el diseño o el rango de la variable; el optimizador no arrancará desde "
+            "un diseño recortado."
+        ),
+    },
+    "optimize.unavailable.bounds.non_finite": {
+        Language.ENGLISH: (
+            "Cannot optimize the {family} family: {variable} has a non-finite initial "
+            "value ({value:.6g}); bounds are [{minimum:.6g}, {maximum:.6g}]."
+        ),
+        Language.SPANISH: (
+            "No se puede optimizar la familia {family}: {variable} tiene un valor "
+            "inicial no finito ({value:.6g}); los límites son [{minimum:.6g}, "
+            "{maximum:.6g}]."
+        ),
+    },
+    "optimize.unavailable.bounds.degenerate_span": {
+        Language.ENGLISH: (
+            "Cannot optimize the {family} family: the search span for {variable} is "
+            "degenerate around {value:.6g} (bounds [{minimum:.6g}, {maximum:.6g}])."
+        ),
+        Language.SPANISH: (
+            "No se puede optimizar la familia {family}: el intervalo de búsqueda de "
+            "{variable} es degenerado alrededor de {value:.6g} (límites "
+            "[{minimum:.6g}, {maximum:.6g}])."
+        ),
+    },
+    "optimize.unavailable.bounds.unrepresentable": {
+        Language.ENGLISH: (
+            "Cannot optimize the {family} family: {variable}={value:.6g} is not a "
+            "representable value for this variable; bounds are [{minimum:.6g}, "
+            "{maximum:.6g}]."
+        ),
+        Language.SPANISH: (
+            "No se puede optimizar la familia {family}: {variable}={value:.6g} no es "
+            "un valor representable para esta variable; los límites son "
+            "[{minimum:.6g}, {maximum:.6g}]."
+        ),
+    },
     "optimize.unavailable.unsupported": {
         Language.ENGLISH: "This antenna type has no registered optimizer.",
         Language.SPANISH: "Este tipo de antena no tiene un optimizador registrado.",

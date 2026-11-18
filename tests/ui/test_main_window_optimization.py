@@ -161,6 +161,31 @@ def test_optimize_biquad_applies_to_the_biquad_form(
     window._dirty = False
 
 
+def test_optimize_tooltip_explains_an_out_of_bounds_hf_design(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+
+    foot = 0.3048
+    scale = 14_170_000.0 / 2_400_000_000.0
+    parameters = MoxonParameters(
+        frequency_hz=2_400_000_000.0,
+        width_m=25.0 * foot * scale,
+        depth_m=9.57 * foot * scale,
+        reflector_tip_m=4.85 * foot * scale,
+        driven_tip_m=4.00 * foot * scale,
+        height_m=1.0,
+        wire_radius_m=0.0005,
+    )
+    use_parameters(window, parameters)
+
+    assert window._optimize_action.isEnabled() is False
+    tooltip = window._optimize_action.toolTip()
+    assert "outside" in tooltip.lower()
+    assert "width_m" in tooltip
+    window._dirty = False
+
+
 def test_optimize_multiband_hexbeam_targets_the_active_band(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

@@ -16,6 +16,54 @@ class VariableKind(StrEnum):
     CHOICE = "choice"
 
 
+class BoundIssueKind(StrEnum):
+    """Why an initial value cannot anchor a bounded optimizer run."""
+
+    OUTSIDE = "outside"
+    NON_FINITE = "non_finite"
+    DEGENERATE_SPAN = "degenerate_span"
+    UNREPRESENTABLE = "unrepresentable"
+
+
+@dataclass(frozen=True, slots=True)
+class VariableBoundIssue:
+    """One variable whose current value violates the descriptor invariant."""
+
+    variable: str
+    value: float
+    minimum: float
+    maximum: float
+    kind: BoundIssueKind
+
+    @property
+    def reason_key(self) -> str:
+        return f"optimize.unavailable.bounds.{self.kind.value}"
+
+    def reason_values(self, family: str) -> dict[str, object]:
+        return {
+            "family": family,
+            "variable": self.variable,
+            "value": self.value,
+            "minimum": self.minimum,
+            "maximum": self.maximum,
+        }
+
+    def describe(self, family: str) -> str:
+        bounds = f"[{self.minimum:.6g}, {self.maximum:.6g}]"
+        if self.kind is BoundIssueKind.NON_FINITE:
+            return f"{family}.{self.variable} has a non-finite initial value; bounds {bounds}"
+        if self.kind is BoundIssueKind.DEGENERATE_SPAN:
+            return (
+                f"{family}.{self.variable} has a degenerate search span around "
+                f"{self.value:.6g}; bounds {bounds}"
+            )
+        if self.kind is BoundIssueKind.UNREPRESENTABLE:
+            return (
+                f"{family}.{self.variable}={self.value:.6g} is not representable; bounds {bounds}"
+            )
+        return f"{family}.{self.variable}={self.value:.6g} is outside its search bounds {bounds}"
+
+
 @dataclass(frozen=True, slots=True)
 class OptimizationVariable:
     """One bounded variable in a family design vector.
@@ -94,6 +142,68 @@ class OptimizationVariable:
                 min(max(index + (1 if direction > 0 else -1), 0), len(self.choices) - 1)
             ]
         return self.clamp(value + direction * self.step)
+
+
+def variable_bound_issue(
+    variable: OptimizationVariable,
+    value: float,
+) -> VariableBoundIssue | None:
+    """Return the invariant violation for one initial value, if any.
+
+    The span rule follows ADR-0046: a length search interval must be at least
+    1 µm or 0.1 % of the value scale, whichever is larger. Non-length units use
+    the same relative rule with a smaller numerical floor. It is a numerical
+    non-degeneracy rule, not a physical construction reference.
+    """
+
+    if not math.isfinite(value):
+        return VariableBoundIssue(
+            variable=variable.name,
+            value=value,
+            minimum=variable.minimum,
+            maximum=variable.maximum,
+            kind=BoundIssueKind.NON_FINITE,
+        )
+    if value < variable.minimum or value > variable.maximum:
+        return VariableBoundIssue(
+            variable=variable.name,
+            value=value,
+            minimum=variable.minimum,
+            maximum=variable.maximum,
+            kind=BoundIssueKind.OUTSIDE,
+        )
+    span = variable.maximum - variable.minimum
+    # ADR-0046 states the absolute floor in metres. Other units (F, H, ratios,
+    # angles, counts) use the same relative rule with a smaller numerical floor.
+    numerical_floor = 1e-6 if variable.unit in {"m", "radius"} else 1e-12
+    scale = max(abs(value), numerical_floor)
+    if span < max(numerical_floor, 0.001 * scale):
+        return VariableBoundIssue(
+            variable=variable.name,
+            value=value,
+            minimum=variable.minimum,
+            maximum=variable.maximum,
+            kind=BoundIssueKind.DEGENERATE_SPAN,
+        )
+    if variable.kind is VariableKind.INTEGER and not math.isclose(value, round(value)):
+        return VariableBoundIssue(
+            variable=variable.name,
+            value=value,
+            minimum=variable.minimum,
+            maximum=variable.maximum,
+            kind=BoundIssueKind.UNREPRESENTABLE,
+        )
+    if variable.kind is VariableKind.CHOICE and not any(
+        math.isclose(value, choice) for choice in variable.choices
+    ):
+        return VariableBoundIssue(
+            variable=variable.name,
+            value=value,
+            minimum=variable.minimum,
+            maximum=variable.maximum,
+            kind=BoundIssueKind.UNREPRESENTABLE,
+        )
+    return None
 
 
 def variables_at_bounds(

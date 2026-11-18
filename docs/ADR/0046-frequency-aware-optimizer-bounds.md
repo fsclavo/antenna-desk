@@ -214,18 +214,34 @@ the optimizer variables/validation.
 The implementation is sliced in
 [`../AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md):
 
-| Slice | Scope |
-|---|---|
-| HF1 | This ADR and the bound contract |
-| HF2 | Descriptor invariant and no silent initial clamp |
-| HF3 | Frequency-aware bounds across all families |
-| HF4 | Moxon geometry contract, gap variable, and constraints |
-| HF5 | Yagi wavelength-relative bounds and high-element-count QA |
-| HF6 | Moxon high-frequency estimator, radius, and confidence |
-| HF7 | Thin-wire model-quality gate |
-| HF8 | Diagnostics, default objective review, Apply Best, adaptive units |
-| HF9 | Regression matrix, evidence, and documentation |
-| HF10 | Design-frequency/geometry consistency |
+| Slice | Scope | Status |
+|---|---|---|
+| HF1 | This ADR and the bound contract | Implemented 2026-11-18 |
+| HF2 | Descriptor invariant and no silent initial clamp | Implemented 2026-11-18 |
+| HF3 | Frequency-aware bounds across all families | Queued |
+| HF4 | Moxon geometry contract, gap variable, and constraints | Queued |
+| HF5 | Yagi wavelength-relative bounds and high-element-count QA | Queued |
+| HF6 | Moxon high-frequency estimator, radius, and confidence | Queued |
+| HF7 | Thin-wire model-quality gate | Queued |
+| HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Queued |
+| HF9 | Regression matrix, evidence, and documentation | Queued |
+| HF10 | Design-frequency/geometry consistency | Queued |
+
+### HF2 implementation note
+
+The descriptor validates its default search scope when it is constructed:
+default-locked variables are context and keep their initial values, while every
+default-active variable must be finite, inside its bounds, and represented by a
+non-degenerate span. `OptimizerAvailability` returns a translated reason with
+the family, variable, value, and bounds instead of constructing an unusable
+descriptor. When the user unlocks an additional variable in the dialog, the
+same check runs before a solver thread starts. The engine independently rejects
+an out-of-bounds active initial value or start point with
+`OptimizationStatus.ERROR` and never evaluates a clamped design.
+
+The span floor is 1 µm for length/radius units and a smaller unit-relative floor
+for capacitance, inductance, ratios, angles, and counts; a blanket metre floor
+would falsely reject valid picofarad and nanohenry variables.
 
 ## Test contract
 

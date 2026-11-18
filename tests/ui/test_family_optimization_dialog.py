@@ -116,6 +116,70 @@ def test_family_dialog_runs_the_multiband_hexbeam_band_optimizer(qtbot: QtBot) -
     assert selected.bands[1].frequency_hz == pytest.approx(parameters.bands[1].frequency_hz)
 
 
+def test_family_dialog_blocks_an_unlocked_out_of_bounds_variable(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.optimization.descriptor import (
+        AntennaOptimizerDescriptor,
+        FamilyOptimizationObjective,
+    )
+    from antennadesk.domain.optimization.variables import OptimizationVariable
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    descriptor = AntennaOptimizerDescriptor(
+        key="test_unlocked_bounds",
+        variables=(
+            OptimizationVariable(
+                "width_m",
+                "field.length",
+                "optimize.group.geometry",
+                0.0,
+                1.0,
+            ),
+            OptimizationVariable(
+                "height_m",
+                "field.height",
+                "optimize.group.geometry",
+                0.1,
+                0.2,
+            ),
+        ),
+        initial_values={"width_m": 0.5, "height_m": 0.05},
+        build_parameters=lambda values: parameters,
+        validate=lambda values: (),
+        objectives=frozenset({FamilyOptimizationObjective.TARGET_IMPEDANCE}),
+    )
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        descriptor,
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+    )
+    qtbot.addWidget(dialog)
+    row = next(
+        index for index, variable in enumerate(dialog._variables) if variable.name == "height_m"
+    )
+    dialog._table.item(row, 2).setCheckState(Qt.CheckState.Checked)
+    messages: list[str] = []
+    monkeypatch.setattr(
+        "antennadesk.ui.dialogs.family_optimization_dialog.QMessageBox.critical",
+        lambda _parent, _title, text: messages.append(text),
+    )
+
+    dialog._start()
+
+    assert messages
+    assert "height_m" in messages[0]
+    assert "outside" in messages[0].lower()
+    assert dialog._thread is None
+
+
 def test_family_dialog_shows_the_matching_override_warning(qtbot: QtBot) -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,

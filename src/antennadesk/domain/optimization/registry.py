@@ -8,7 +8,8 @@ a descriptor or an explicit unavailable reason.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import assert_never
 
 from ..antennas.beverage import BeverageParameters
@@ -41,7 +42,7 @@ from ..antennas.trap_yagi import TrapYagiParameters
 from ..antennas.vertical import VerticalParameters
 from ..antennas.yagi import YagiParameters
 from ..antennas.zepp import ZeppParameters
-from .descriptor import AntennaOptimizerDescriptor
+from .descriptor import AntennaOptimizerDescriptor, OptimizerBoundsError
 from .families.dipole import dipole_descriptor
 from .families.scv import scv_descriptor
 from .families.typed import (
@@ -86,10 +87,14 @@ _REASON_UNSUPPORTED = "optimize.unavailable.unsupported"
 class OptimizerAvailability:
     descriptor: AntennaOptimizerDescriptor | None = None
     reason_key: str | None = None
+    reason_values: Mapping[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if (self.descriptor is None) == (self.reason_key is None):
             raise ValueError("provide exactly one of descriptor or reason_key")
+        if self.reason_values and self.reason_key is None:
+            raise ValueError("reason values require a reason key")
+        object.__setattr__(self, "reason_values", dict(self.reason_values))
 
     @property
     def available(self) -> bool:
@@ -97,6 +102,20 @@ class OptimizerAvailability:
 
 
 def optimizer_availability(
+    parameters: AntennaDesignParameters,
+    *,
+    hexbeam_band: str | None = None,
+) -> OptimizerAvailability:
+    try:
+        return _optimizer_availability(parameters, hexbeam_band=hexbeam_band)
+    except OptimizerBoundsError as exc:
+        return OptimizerAvailability(
+            reason_key=exc.reason_key,
+            reason_values=exc.reason_values,
+        )
+
+
+def _optimizer_availability(
     parameters: AntennaDesignParameters,
     *,
     hexbeam_band: str | None = None,

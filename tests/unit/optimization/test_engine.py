@@ -183,6 +183,83 @@ def test_batch_engine_reports_cancellation_before_a_batch() -> None:
     assert len(result.evaluations) == 1
 
 
+def test_engine_starts_from_the_exact_current_design() -> None:
+    variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1.0),)
+    seen: list[float] = []
+
+    def evaluate(values: dict[str, float]) -> CandidateEvaluation:
+        seen.append(values["x"])
+        return CandidateEvaluation(0, values, 0.0, True)
+
+    optimize_design(
+        variables,
+        {"x": 0.37},
+        evaluate,
+        budget=OptimizationBudget(20, 20, 5),
+        seed=1,
+    )
+
+    assert seen[0] == pytest.approx(0.37)
+
+
+def test_engine_returns_error_instead_of_clamping_an_out_of_bounds_design() -> None:
+    variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1.0),)
+
+    def evaluate(values: dict[str, float]) -> CandidateEvaluation:
+        raise AssertionError("an out-of-bounds design must not be evaluated")
+
+    result = optimize_design(
+        variables,
+        {"x": 1.5},
+        evaluate,
+        budget=OptimizationBudget(20, 20, 5),
+        seed=1,
+    )
+
+    assert result.status is OptimizationStatus.ERROR
+    assert result.evaluations == ()
+    assert result.best_values is None
+    assert "outside" in result.message
+
+
+def test_engine_rejects_an_out_of_bounds_start_point() -> None:
+    variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1.0),)
+
+    def evaluate(values: dict[str, float]) -> CandidateEvaluation:
+        raise AssertionError("an out-of-bounds start point must not be evaluated")
+
+    result = optimize_design(
+        variables,
+        {"x": 0.5},
+        evaluate,
+        budget=OptimizationBudget(20, 20, 5),
+        seed=1,
+        start_points=({"x": 1.5},),
+    )
+
+    assert result.status is OptimizationStatus.ERROR
+    assert result.evaluations == ()
+    assert "start point" in result.message
+
+
+def test_engine_rejects_a_degenerate_search_span() -> None:
+    variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1e-7),)
+
+    def evaluate(values: dict[str, float]) -> CandidateEvaluation:
+        raise AssertionError("a degenerate span must not be evaluated")
+
+    result = optimize_design(
+        variables,
+        {"x": 5e-8},
+        evaluate,
+        budget=OptimizationBudget(20, 20, 5),
+        seed=1,
+    )
+
+    assert result.status is OptimizationStatus.ERROR
+    assert "degenerate" in result.message
+
+
 def test_engine_prefers_a_feasible_candidate() -> None:
     variables = (OptimizationVariable("x", "field.length", "g", 0.0, 1.0),)
 

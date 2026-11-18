@@ -2046,7 +2046,10 @@ class MainWindow(QMainWindow):
         optimize_enabled = idle and has_project and optimize_available and self._solver is not None
         optimize_hint = self._translator.t("help.action.optimize")
         if optimizer is not None and not optimizer.available and optimizer.reason_key:
-            optimize_hint = self._translator.t(optimizer.reason_key)
+            optimize_hint = self._translator.t(
+                optimizer.reason_key,
+                **optimizer.reason_values,
+            )
         self._optimize_action.setEnabled(optimize_enabled)
         self._optimize_button.setEnabled(optimize_enabled)
         self._optimize_action.setToolTip(optimize_hint)
@@ -7578,7 +7581,10 @@ class MainWindow(QMainWindow):
         availability = optimizer_availability(design.parameters, hexbeam_band=hexbeam_band)
         if availability.descriptor is None:
             self._show_error(
-                self._translator.t(availability.reason_key or "optimize.unavailable.unsupported")
+                self._translator.t(
+                    availability.reason_key or "optimize.unavailable.unsupported",
+                    **availability.reason_values,
+                )
             )
             return
         adapter = adapter_for(design.parameters)

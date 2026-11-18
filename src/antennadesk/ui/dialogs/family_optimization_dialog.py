@@ -831,6 +831,17 @@ class FamilyOptimizationDialog(QDialog):
         locked = frozenset(
             variable.name for variable in self._variables if variable.name not in selected_names
         )
+        issue = self._descriptor.bound_issue(selected_names)
+        if issue is not None:
+            QMessageBox.critical(
+                self,
+                self.windowTitle(),
+                self._translator.t(
+                    issue.reason_key,
+                    **issue.reason_values(self._descriptor.key),
+                ),
+            )
+            return
         budget = budget_for(self._budget_profile(), len(selected))
         constraints: tuple[SoftConstraint, ...] = ()
         if self._max_swr_enabled.isChecked():
@@ -1019,6 +1030,8 @@ class FamilyOptimizationDialog(QDialog):
 
     def _summary_text(self, result: OptimizeAntennaResult) -> str:
         status = self._translator.t(f"optimize_status.{result.status.value}")
+        if result.status is OptimizationStatus.ERROR and result.message:
+            return self._translator.t("error.optimize", message=result.message)
         if result.best_score is None:
             return self._translator.t(
                 "optimize.family_summary",

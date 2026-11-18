@@ -21,11 +21,17 @@ from antennadesk.application.use_cases.optimize_antenna import (
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.optimization.constraints import OptimizationMetric, SoftConstraint
 from antennadesk.domain.optimization.descriptor import (
+    AntennaOptimizerDescriptor,
     FamilyOptimizationObjective,
     OptimizationWeights,
 )
-from antennadesk.domain.optimization.engine import BudgetProfile, budget_for
+from antennadesk.domain.optimization.engine import (
+    BudgetProfile,
+    OptimizationStatus,
+    budget_for,
+)
 from antennadesk.domain.optimization.registry import optimizer_availability
+from antennadesk.domain.optimization.variables import OptimizationVariable
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -81,6 +87,54 @@ def _command() -> OptimizeAntennaCommand:
         objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
         budget=budget_for(BudgetProfile.FAST, len(descriptor.variables)),
     )
+
+
+def test_optimize_returns_error_for_an_unlocked_out_of_bounds_variable() -> None:
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    descriptor = AntennaOptimizerDescriptor(
+        key="test_unlocked_bounds",
+        variables=(
+            OptimizationVariable(
+                "width_m",
+                "field.length",
+                "optimize.group.geometry",
+                0.0,
+                1.0,
+            ),
+            OptimizationVariable(
+                "height_m",
+                "field.height",
+                "optimize.group.geometry",
+                0.1,
+                0.2,
+            ),
+        ),
+        initial_values={"width_m": 0.5, "height_m": 0.05},
+        build_parameters=lambda values: parameters,
+        validate=lambda values: (),
+        objectives=frozenset({FamilyOptimizationObjective.TARGET_IMPEDANCE}),
+    )
+    command = OptimizeAntennaCommand(
+        descriptor=descriptor,
+        base_spec=SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            far_field=FarFieldRequest(enabled=False),
+        ),
+        objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+        budget=budget_for(BudgetProfile.FAST, 2),
+        locked_variables=frozenset(),
+    )
+
+    result = OptimizeAntenna(_NoopSolver()).execute(command)
+
+    assert result.status is OptimizationStatus.ERROR
+    assert "height_m" in result.message
+    assert result.evaluations == ()
+    assert result.best_parameters is None
 
 
 def _scoring_command(

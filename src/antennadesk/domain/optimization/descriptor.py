@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -12,7 +12,12 @@ from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters
 from ..common.units import ensure_non_negative
 from .constraints import ConstraintViolation
-from .variables import OptimizationVariable, apply_default_locks
+from .variables import (
+    OptimizationVariable,
+    VariableBoundIssue,
+    apply_default_locks,
+    variable_bound_issue,
+)
 
 
 class FamilyOptimizationObjective(StrEnum):
@@ -55,6 +60,23 @@ ParameterValidator = Callable[[Mapping[str, float]], tuple[ConstraintViolation, 
 StructuralSegmentation = Callable[[AntennaDesignParameters], tuple[tuple[str, int], ...]]
 ModelBuilder = Callable[[AntennaDesignParameters], AntennaModel]
 EvaluationFrequency = Callable[[AntennaDesignParameters], float]
+
+
+class OptimizerBoundsError(ValueError):
+    """A descriptor whose current design cannot anchor a bounded search."""
+
+    def __init__(self, family: str, issue: VariableBoundIssue) -> None:
+        self.family = family
+        self.issue = issue
+        super().__init__(issue.describe(family))
+
+    @property
+    def reason_key(self) -> str:
+        return self.issue.reason_key
+
+    @property
+    def reason_values(self) -> dict[str, object]:
+        return self.issue.reason_values(self.family)
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,3 +125,33 @@ class AntennaOptimizerDescriptor:
         for point in self.start_points:
             if set(point) != set(names):
                 raise ValueError("each start point must cover every variable")
+        issue = self.bound_issue()
+        if issue is not None:
+            raise OptimizerBoundsError(self.key, issue)
+
+    def bound_issue(
+        self,
+        active_names: Collection[str] | None = None,
+    ) -> VariableBoundIssue | None:
+        """Return the first bound-invariant violation for the active variables.
+
+        Locked variables are context and keep their initial values, so they do
+        not need a searchable span. When ``active_names`` is omitted, the
+        descriptor's default search scope is used.
+        """
+
+        names = (
+            set(active_names)
+            if active_names is not None
+            else {variable.name for variable in self.variables if not variable.locked_by_default}
+        )
+        for variable in self.variables:
+            if variable.name not in names:
+                continue
+            issue = variable_bound_issue(
+                variable,
+                self.initial_values[variable.name],
+            )
+            if issue is not None:
+                return issue
+        return None

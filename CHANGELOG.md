@@ -37,6 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **No silent optimizer clamping at VHF/UHF.** Family optimizer descriptors now
+  reject a current design whose active variables are outside their search
+  bounds, non-finite, represented by a degenerate span, or unrepresentable for
+  an integer/choice variable. **Optimize** is disabled with a message naming
+  the family, variable, value, and bounds; unlocking a bad variable in the
+  dialog is blocked before the solver starts, and the engine returns an error
+  instead of evaluating a clamped design. Locked variables remain context and
+  keep their initial values. This makes high-frequency Moxon, vertical, and
+  Yagi designs fail explicitly until HF3 supplies frequency-aware bounds.
 - **Selected-band HexBeam optimizer.** For a multi-band design, **Optimize**
   targets the **Active band**. It searches only that band's driver/reflector
   halves, tip gap, and height while the shared turning radius, conductor, and
