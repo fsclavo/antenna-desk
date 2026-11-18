@@ -3631,6 +3631,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "resultado es una referencia escalada."
         ),
     },
+    "help.hexbeam.active_band": {
+        Language.ENGLISH: (
+            "Choose which band's geometry is dimensioned and emphasized in the "
+            "scene; the other bands stay visible. This is a view setting and is "
+            "not saved with the design."
+        ),
+        Language.SPANISH: (
+            "Elegí qué banda se acota y se resalta en la escena; las demás bandas "
+            "siguen visibles. Es una preferencia de vista y no se guarda con el "
+            "diseño."
+        ),
+    },
     "help.hexbeam.bands": {
         Language.ENGLISH: (
             "Published G3TXQ bands. The largest selected band defines the shared "
@@ -10901,6 +10913,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Bands",
         Language.SPANISH: "Bandas",
     },
+    "hexbeam.active_band": {
+        Language.ENGLISH: "Active band",
+        Language.SPANISH: "Banda activa",
+    },
     "hexbeam.bands_hint": {
         Language.ENGLISH: (
             "Select two or more published bands to build a nested stack. One "
@@ -11053,12 +11069,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "hexbeam.multiband_scene_note": {
         Language.ENGLISH: (
             "Bands: {bands}. Dimensions and the feed marker refer to the "
-            "{primary} band; higher bands are nested and stacked."
+            "{active} band; the other bands remain visible."
         ),
         Language.SPANISH: (
             "Bandas: {bands}. Las cotas y el marcador de alimentación "
-            "corresponden a la banda de {primary}; las bandas superiores están "
-            "anidadas y apiladas."
+            "corresponden a la banda de {active}; las demás bandas siguen "
+            "visibles."
         ),
     },
     "hexbeam.spreader_angle_note": {

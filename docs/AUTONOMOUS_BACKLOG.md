@@ -48,7 +48,7 @@ external service and must not be invented or simulated into existence.
 | ~~C7b~~ | ~~Multi-band HexBeam preset, editor, scene, and reports~~ | L | C7a | **Done 2026-11-18:** published 20/17/15/12/10 preset and 218/412 reconciliation; band checkboxes and read-only per-band table; nested scene rendering with the primary band emphasized and a band note; per-band summary/construction rows; EN/ES help; golden scenes updated. Multi-band optimization/scaling remain explicitly unavailable. |
 | ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; real NEC2C 20/15/10 m runs completed with one driven source per analysis and finite pattern results; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
 | C7d | Selected-band HexBeam optimizer | M–L | C7c; family-optimizer ADR | Optimize one selected band's driver/reflector halves, tip gap, and height while the other bands stay fixed; enforce shared-frame fit and band-collision constraints; expose the target band in the dialog; deterministic tests and solver QA. Keep full multi-band optimization unavailable. |
-| C7e | Selectable HexBeam band dimensions and scene highlight | M | C7c | Add a transient active-band selector; dimension the selected band, emphasize it in the scene, and keep the other bands visible; update the band note, help, golden scenes, and tests. No schema change. |
+| ~~C7e~~ | ~~Selectable HexBeam band dimensions and scene highlight~~ | M | C7c | **Done 2026-11-18:** transient active-band selector in the band group. The selected band's feed, halves, tip gap, turning radius, span, summary, and inset are dimensioned; its wires are emphasized and the other bands stay visible. The form emits a view-only signal, and the geometry view/export paths carry the active band. No schema change. |
 | C7f | Editable HexBeam band table and custom band sets | M | C7c | Replace the read-only published table with validated editable rows; add/remove bands within 1–5; preserve the largest-band-first rule; custom labels/frequencies; EN/ES help; no silent value migration. |
 | ~~C7g~~ | ~~HexBeam band-aware starting set and scaling policy~~ | S–M | C7c; source policy | **Done 2026-11-18:** in multi-band mode the primary-frequency field uniformly scales the selected published stack when the target stays inside the primary band. Band frequencies, lengths, gaps, offsets, and shared radius scale together; the form preserves the scaled bands, labels are nominal, and a reference-scaled warning is shown. Out-of-band targets are rejected. This is a starting-set scaler, not a general estimator or optimizer. |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
@@ -583,8 +583,9 @@ C7 are closed; the optional C7d-C7i follow-ups are queued.
   arbitrary prefix of the published table. It exposes **Load starting
   dimensions** and a read-only per-band table. Editable per-band rows and
   arbitrary custom band sets are deferred to C7f.
-- Scene draws all bands on the shared frame with the primary band emphasized and
-  a band note; selectable-band dimensions/highlight are deferred to C7e.
+- Scene draws all bands on the shared frame. C7e adds a transient active-band
+  selector: the selected band's dimensions, feed marker, summary, and detail
+  inset are shown, its wires are emphasized, and the other bands stay visible.
   Reports and the construction sheet include per-band rows.
 - Feed model is explicit. One selected band is driven per analysis and the
   other bands are passive; the real coax harness, coupling, and balun are
@@ -625,8 +626,9 @@ unavailable.
 
 - **C7d — selected-band optimizer.** Optimize one band at a time with the other
   bands fixed; do not pretend to optimize the whole stack.
-- **C7e — active-band dimensions and scene highlight.** Add a transient band
-  selector for cotas and emphasis without changing the persisted design.
+- **C7e — active-band dimensions and scene highlight — implemented.** A
+  transient selector chooses the band whose cotas and feed marker are shown;
+  its wires are emphasized and the other bands remain visible. Not persisted.
 - **C7f — editable per-band table and custom band sets.** Replace the read-only
   published table with validated rows and add/remove support.
 - **C7g — band-aware starting set / whole-stack scaling — implemented.**
@@ -3649,10 +3651,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,563 passed, 1 skipped** on 2026-11-18 after the multi-band
-  HexBeam per-band analysis, estimator, and reference-scaled stack fixes, with
-  `NEC2C` auto-detected by the test configuration; the skip is the Windows-only
-  console-hiding test on Linux.
+- Full gate: **3,564 passed, 1 skipped** on 2026-11-18 after the HexBeam
+  active-band scene slice, with `NEC2C` auto-detected by the test configuration;
+  the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

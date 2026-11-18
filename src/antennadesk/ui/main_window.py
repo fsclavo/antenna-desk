@@ -937,6 +937,7 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         self._hexbeam_form.changed.connect(self._on_form_changed)
+        self._hexbeam_form.active_band_changed.connect(self._on_hexbeam_active_band_changed)
         self._hexbeam_scroll = QScrollArea(self)
         self._hexbeam_scroll.setWidgetResizable(True)
         self._hexbeam_scroll.setWidget(self._hexbeam_form)
@@ -2503,10 +2504,19 @@ class MainWindow(QMainWindow):
             self._custom_sweep.setChecked(True)
         self._update_custom_pattern_status()
 
+    def _on_hexbeam_active_band_changed(self, band: str) -> None:
+        if isinstance(self._geometry, GeometryView):
+            self._geometry.set_active_band(band)
+
     def _set_geometry_model(self, design: DesignVariant) -> None:
         display_name = (
             design.parameters.template_name
             if isinstance(design.parameters, JPoleParameters)
+            else None
+        )
+        active_band = (
+            self._hexbeam_form.active_band()
+            if isinstance(design.parameters, HexbeamParameters)
             else None
         )
         self._geometry.set_model(
@@ -2514,6 +2524,7 @@ class MainWindow(QMainWindow):
             antenna_type=design.antenna_type,
             display_name=display_name,
             parameters=design.parameters,
+            active_band=active_band,
         )
         self._height_combo.blockSignals(True)
         self._height_combo.setCurrentIndex(0)

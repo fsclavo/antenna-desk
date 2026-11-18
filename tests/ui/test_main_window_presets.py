@@ -963,6 +963,9 @@ def test_hexbeam_multiband_preset_uses_the_inline_editor(window: MainWindow) -> 
     assert len(window._project.designs[0].antenna.wires) == 50
     assert len(window._project.designs[0].antenna.sources) == 0
     assert window._optimize_action.isEnabled() is False
+    assert window._geometry.active_band == "20m"
+    window._hexbeam_form._active_band_combo.setCurrentIndex(2)
+    assert window._geometry.active_band == "15m"
     window._dirty = False
 
 

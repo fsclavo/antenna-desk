@@ -1035,6 +1035,38 @@ def test_hexbeam_multiband_scene_draws_all_bands_and_marks_the_primary() -> None
     assert primary.width > secondary.width
 
 
+def test_hexbeam_multiband_active_band_controls_dimensions_and_emphasis() -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    model = parameters.to_antenna()
+    scene = build_scene(
+        model,
+        antenna_type="hexbeam",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.PLAN,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+        active_band="15m",
+    )
+
+    assert "active band 15m" in scene.summary
+    span = next(dimension for dimension in scene.dimensions if dimension.text == "4.42 m")
+    assert span.start.distance_to(span.end) == pytest.approx(
+        2.0 * parameters.band_radius_m(parameters.resolved_bands[1]),
+        abs=1e-2,
+    )
+    radius = next(
+        dimension for dimension in scene.dimensions if dimension.label == "Turning radius"
+    )
+    assert radius.text == "2.21 m"
+    wires = [polyline for polyline in scene.polylines if polyline.role == "wire"]
+    assert wires[0].width == pytest.approx(1.2)
+    band3 = next(polyline for polyline in wires if polyline.width == pytest.approx(3.0))
+    assert band3 is not None
+
+
 def test_hexbeam_plan_dimensions_the_half_and_spreader_angle() -> None:
     parameters = published_hexbeam_parameters()
 

@@ -115,6 +115,7 @@ class GeometryView(QWidget):
         self._parameters: object | None = None
         self._antenna_type: str | None = None
         self._display_name: str | None = None
+        self._active_band: str | None = None
         self._mode = GeometryViewMode.CONSTRUCTION
         self._height_exaggeration = 1.0
         self._zoom = 1.0
@@ -151,6 +152,10 @@ class GeometryView(QWidget):
         return self._mode
 
     @property
+    def active_band(self) -> str | None:
+        return self._active_band
+
+    @property
     def scene(self) -> GeometryScene | None:
         return self._scene
 
@@ -171,6 +176,7 @@ class GeometryView(QWidget):
         self._parameters = None
         self._antenna_type = None
         self._display_name = None
+        self._active_band = None
         self._scene = None
         self._last_summary = None
         self._set_hidden_dimensions(())
@@ -391,6 +397,7 @@ class GeometryView(QWidget):
             translator=self._translator,
             display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.FIXED),
             height_exaggeration=self._height_exaggeration,
+            active_band=self._active_band,
         )
         write_dxf(
             scene,
@@ -405,11 +412,13 @@ class GeometryView(QWidget):
         antenna_type: str | None = None,
         display_name: str | None = None,
         parameters: object | None = None,
+        active_band: str | None = None,
     ) -> None:
         self._model = model
         self._parameters = parameters
         self._antenna_type = antenna_type if antenna_type is not None else self._infer_type(model)
         self._display_name = display_name
+        self._active_band = active_band
         self._pan = QPointF(0.0, 0.0)
         self._zoom = 1.0
         self._height_exaggeration = 1.0
@@ -478,6 +487,13 @@ class GeometryView(QWidget):
             return
         self._display_units = display_units
         self._unit_system = display_units.system
+        self._scene = None
+        self.update()
+
+    def set_active_band(self, band: str | None) -> None:
+        if band == self._active_band:
+            return
+        self._active_band = band
         self._scene = None
         self.update()
 
@@ -638,6 +654,7 @@ class GeometryView(QWidget):
             unit_system=self._unit_system,
             display_units=self._display_units,
             height_exaggeration=self._height_exaggeration,
+            active_band=self._active_band,
         )
         return self._scene
 

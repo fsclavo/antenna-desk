@@ -166,6 +166,10 @@ def test_hexbeam_form_selects_the_five_band_preset(qtbot: QtBot) -> None:
     assert not form._driver_half.isEnabled()
     assert "5 bands" in form._geometry.text().lower()
     assert "m)" in form._band_table.horizontalHeaderItem(2).text()
+    assert form._active_band_combo.count() == 5
+    assert form.active_band() == "20m"
+    form._active_band_combo.setCurrentIndex(2)
+    assert form.active_band() == "15m"
 
 
 def test_hexbeam_form_scales_the_band_stack_within_the_primary_band(qtbot: QtBot) -> None:

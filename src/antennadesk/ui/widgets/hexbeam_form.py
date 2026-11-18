@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QPushButton,
@@ -69,6 +70,7 @@ def _small_length_minimum(unit_system: UnitSystem) -> float:
 
 class HexbeamForm(QWidget):
     changed = Signal()
+    active_band_changed = Signal(str)
 
     def __init__(
         self,
@@ -237,8 +239,19 @@ class HexbeamForm(QWidget):
         self._band_table.setMinimumHeight(130)
         self._band_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self._retranslate_band_table_headers()
+        self._active_band_label = QLabel(
+            translator.t("hexbeam.active_band"),
+            self._band_group,
+        )
+        self._active_band_combo = QComboBox(self._band_group)
+        self._active_band_combo.currentIndexChanged.connect(self._active_band_selection_changed)
+        apply_help(self._active_band_combo, translator, "active_band", family="hexbeam")
+        active_row = QHBoxLayout()
+        active_row.addWidget(self._active_band_label)
+        active_row.addWidget(self._active_band_combo, 1)
         band_layout = QVBoxLayout(self._band_group)
         band_layout.addLayout(checks_layout)
+        band_layout.addLayout(active_row)
         band_layout.addWidget(self._bands_note)
         band_layout.addWidget(self._band_table)
         apply_help(self._band_group, translator, "bands", family="hexbeam")
@@ -334,10 +347,18 @@ class HexbeamForm(QWidget):
         )
         self._band_group.setTitle(self._translator.t("hexbeam.bands"))
         apply_help(self._band_group, self._translator, "bands", family="hexbeam")
+        self._active_band_label.setText(self._translator.t("hexbeam.active_band"))
+        apply_help(
+            self._active_band_combo,
+            self._translator,
+            "active_band",
+            family="hexbeam",
+        )
         for label, check in self._band_checks.items():
             check.setText(self._translator.t(f"hexbeam.band.{label}"))
             apply_help(check, self._translator, f"band_{label}", family="hexbeam")
         labels = self._selected_band_labels()
+        self._refresh_active_band_combo(labels)
         preserved_labels = tuple(band.label for band in self._preserved_bands)
         if self._preserved_bands and preserved_labels == labels:
             self._populate_band_table(self._preserved_bands)
@@ -362,6 +383,7 @@ class HexbeamForm(QWidget):
             return
         if self._selected_band_labels():
             self._set_band_checks(())
+            self._refresh_active_band_combo(())
             self._set_multiband_widgets(False)
             self._band_table.setRowCount(0)
             self._band_table.setVisible(False)
@@ -421,6 +443,42 @@ class HexbeamForm(QWidget):
 
     def _selected_band_labels(self) -> tuple[str, ...]:
         return tuple(label for label in HEXBEAM_BAND_LABELS if self._band_checks[label].isChecked())
+
+    def active_band(self) -> str | None:
+        data = self._active_band_combo.currentData()
+        if isinstance(data, str) and data:
+            return data
+        labels = self._selected_band_labels()
+        return labels[0] if labels else None
+
+    def _refresh_active_band_combo(self, labels: tuple[str, ...]) -> None:
+        current = self._active_band_combo.currentData()
+        previous = self._updating
+        self._updating = True
+        try:
+            self._active_band_combo.clear()
+            for label in labels:
+                self._active_band_combo.addItem(
+                    self._translator.t(f"hexbeam.band.{label}"),
+                    label,
+                )
+            if isinstance(current, str) and current in labels:
+                index = labels.index(current)
+            else:
+                index = 0 if labels else -1
+            self._active_band_combo.setCurrentIndex(index)
+        finally:
+            self._updating = previous
+        visible = len(labels) > 1
+        self._active_band_label.setVisible(visible)
+        self._active_band_combo.setVisible(visible)
+
+    def _active_band_selection_changed(self, _index: int) -> None:
+        if self._updating:
+            return
+        label = self.active_band()
+        if label is not None:
+            self.active_band_changed.emit(label)
 
     def _set_band_checks(self, labels: tuple[str, ...]) -> None:
         previous = self._updating
@@ -617,6 +675,7 @@ class HexbeamForm(QWidget):
             self._set_multiband_widgets(False)
             self._band_table.setRowCount(0)
             self._band_table.setVisible(False)
+            self._refresh_active_band_combo(())
             self._bands_scaled = False
             self._refresh_bands_note()
             self._starting_state.mark_non_pristine()
@@ -732,6 +791,7 @@ class HexbeamForm(QWidget):
                 self._preserved_bands = ()
                 self._bands_scaled = False
             self._set_band_checks(labels)
+            self._refresh_active_band_combo(labels)
             self._populate_band_table(parameters.bands)
             self._set_multiband_widgets(multiband)
             self._refresh_bands_note()

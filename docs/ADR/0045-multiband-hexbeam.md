@@ -83,9 +83,11 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
    nominal labels. `with_primary_dimension()` scales the whole stack for
    tuning/resize workflows but does not change band frequencies.
 
-10. **Presentation.** The scene draws every band's canonical wires. Dimensions
-    and the selected-band highlight are a follow-up UI slice; reports add a
-    per-band table. Adaptive display units apply to every per-band value.
+10. **Presentation.** The scene draws every band's canonical wires. A transient
+    active-band selector chooses which band's dimensions and feed marker are
+    shown and emphasizes that band; the other bands remain visible. The selector
+    is view-only and not persisted. Reports add a per-band table. Adaptive
+    display units apply to every per-band value.
 
 ## Consequences
 

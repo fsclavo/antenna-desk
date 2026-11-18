@@ -1488,35 +1488,43 @@ def _add_hexbeam_dimensions(
     insets: list[SceneInset],
     notes: list[str],
     translator: Translator,
+    *,
+    active_band: str | None = None,
 ) -> None:
     if parameters is None:
         return
+    bands = parameters.resolved_bands
+    band_index = _hexbeam_band_index(parameters, active_band)
+    band = bands[band_index]
+    prefix = "hexbeam-" if band_index == 0 else f"hexbeam-band{band_index + 1}-"
+    radius_m = parameters.band_radius_m(band)
+    band_height = parameters.height_m + band.vertical_offset_m
     driver_left_inner = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-driver-left-inner"),
+        (wire for wire in model.wires if wire.id == f"{prefix}driver-left-inner"),
         None,
     )
     driver_left = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-driver-left-tip"),
+        (wire for wire in model.wires if wire.id == f"{prefix}driver-left-tip"),
         None,
     )
     driver_right = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-driver-right-tip"),
+        (wire for wire in model.wires if wire.id == f"{prefix}driver-right-tip"),
         None,
     )
     reflector_left_inner = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-reflector-left-inner"),
+        (wire for wire in model.wires if wire.id == f"{prefix}reflector-left-inner"),
         None,
     )
     reflector_left = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-reflector-left-tip"),
+        (wire for wire in model.wires if wire.id == f"{prefix}reflector-left-tip"),
         None,
     )
     reflector_right = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-reflector-right-tip"),
+        (wire for wire in model.wires if wire.id == f"{prefix}reflector-right-tip"),
         None,
     )
     reflector_right_inner = next(
-        (wire for wire in model.wires if wire.id == "hexbeam-reflector-right-inner"),
+        (wire for wire in model.wires if wire.id == f"{prefix}reflector-right-inner"),
         None,
     )
     span_left = (
@@ -1534,7 +1542,7 @@ def _add_hexbeam_dimensions(
             factory.between_scene(
                 factory.project(span_left),
                 factory.project(span_right),
-                parameters.overall_span_m,
+                2.0 * radius_m,
                 side="left",
                 priority=95,
                 label=translator.t("geometry.span"),
@@ -1570,15 +1578,15 @@ def _add_hexbeam_dimensions(
         if reflector_left_inner is not None:
             azimuth = math.radians(parameters.azimuth_deg)
             lateral_vertex = Point3D(
-                -parameters.turning_radius_m * math.sin(azimuth),
-                parameters.turning_radius_m * math.cos(azimuth),
-                parameters.height_m,
+                -radius_m * math.sin(azimuth),
+                radius_m * math.cos(azimuth),
+                band_height,
             )
             dimensions.append(
                 factory.dimension(
-                    Point3D(0.0, 0.0, parameters.height_m),
+                    Point3D(0.0, 0.0, band_height),
                     lateral_vertex,
-                    parameters.turning_radius_m,
+                    radius_m,
                     side="left",
                     priority=85,
                     label=translator.t("hexbeam.turning_radius"),
@@ -1586,7 +1594,7 @@ def _add_hexbeam_dimensions(
             )
         if driver_left_inner is not None and driver_left is not None:
             feed_wire = next(
-                (wire for wire in model.wires if wire.id == "hexbeam-feed"),
+                (wire for wire in model.wires if wire.id == f"{prefix}feed"),
                 None,
             )
             if feed_wire is not None:
@@ -1665,8 +1673,8 @@ def _add_hexbeam_dimensions(
             factory.vertical_dimension(
                 factory.project(driver_left.start).x_m if driver_left else 0.0,
                 0.0,
-                parameters.height_m,
-                parameters.height_m,
+                band_height,
+                band_height,
                 side="left",
                 priority=60,
                 label=translator.t("field.height"),
@@ -1675,15 +1683,15 @@ def _add_hexbeam_dimensions(
     notes.append(
         translator.t(
             "hexbeam.geometry_note",
-            radius=_format_length(parameters.turning_radius_m, translator, factory.display_units),
+            radius=_format_length(radius_m, translator, factory.display_units),
         )
     )
     if len(parameters.bands) > 1:
         notes.append(
             translator.t(
                 "hexbeam.multiband_scene_note",
-                bands=", ".join(band.label for band in parameters.bands),
-                primary=parameters.bands[0].label,
+                bands=", ".join(item.label for item in parameters.bands),
+                active=band.label,
             )
         )
 
@@ -3133,6 +3141,7 @@ def _summary(
     display_name: str | None,
     mode: GeometryViewMode,
     notes: list[str],
+    active_band: str | None = None,
 ) -> str:
     label = type_label(translator, antenna_type, parameters, display_name)
     plan_label = f"{label} {translator.t('geometry.top_view')}"
@@ -3524,12 +3533,15 @@ def _summary(
         )
     elif isinstance(parameters, HexbeamParameters) or antenna_type == ANTENNA_TYPE_HEXBEAM:
         if isinstance(parameters, HexbeamParameters):
-            driver_half = parameters.driver_half_length_m
-            reflector_half = parameters.reflector_half_length_m
-            span = parameters.overall_span_m
-            radius = parameters.turning_radius_m
-            gap = parameters.tip_gap_m
-            height = parameters.height_m
+            bands = parameters.resolved_bands
+            band_index = _hexbeam_band_index(parameters, active_band)
+            band = bands[band_index]
+            driver_half = band.driver_half_length_m
+            reflector_half = band.reflector_half_length_m
+            radius = parameters.band_radius_m(band)
+            span = 2.0 * radius
+            gap = band.tip_gap_m
+            height = parameters.height_m + band.vertical_offset_m
         else:
             driver_half = max(wire.length_m for wire in model.wires)
             reflector_half = driver_half
@@ -3539,6 +3551,7 @@ def _summary(
             height = min_z
         if isinstance(parameters, HexbeamParameters) and len(parameters.bands) > 1:
             parts.append(f"{translator.t('hexbeam.bands').lower()} {len(parameters.bands)}")
+            parts.append(f"{translator.t('hexbeam.active_band').lower()} {band.label}")
         parts.extend(
             [
                 f"{translator.t('hexbeam.driver_half').lower()} "
@@ -4088,6 +4101,38 @@ def _plan_inset(
     )
 
 
+def _hexbeam_band_index(
+    parameters: HexbeamParameters,
+    active_band: str | None,
+) -> int:
+    labels = [band.label.casefold() for band in parameters.resolved_bands]
+    if active_band is not None and active_band.casefold() in labels:
+        return labels.index(active_band.casefold())
+    return 0
+
+
+def _hexbeam_wire_band_index(wire_id: str) -> int:
+    if wire_id.startswith("hexbeam-band"):
+        parts = wire_id.split("-")
+        if len(parts) > 1 and parts[1].startswith("band"):
+            try:
+                return int(parts[1][4:]) - 1
+            except ValueError:
+                return 0
+    return 0
+
+
+def _hexbeam_wire_width(
+    wire_id: str,
+    parameters: object | None,
+    active_band: str | None,
+) -> float:
+    if not isinstance(parameters, HexbeamParameters) or len(parameters.bands) <= 1:
+        return 2.5
+    active_index = _hexbeam_band_index(parameters, active_band)
+    return 3.0 if _hexbeam_wire_band_index(wire_id) == active_index else 1.2
+
+
 def build_scene(
     model: AntennaModel,
     *,
@@ -4099,6 +4144,7 @@ def build_scene(
     unit_system: UnitSystem | None = None,
     display_units: DisplayUnits | None = None,
     height_exaggeration: float = 1.0,
+    active_band: str | None = None,
 ) -> GeometryScene:
     """Project ``model`` and attach semantic dimensions for the selected view."""
 
@@ -4112,6 +4158,13 @@ def build_scene(
         wires=tuple(wire for wire in model.wires if not is_model_only_wire(wire.id)),
     )
     effective_type = effective_antenna_type(antenna_type, parameters)
+    if isinstance(parameters, HexbeamParameters) and active_band is not None:
+        scene_model = parameters.to_antenna(active_band=active_band)
+        model = replace(
+            model,
+            feed=scene_model.feed,
+            sources=scene_model.sources,
+        )
     if mode is GeometryViewMode.CONSTRUCTION:
         mode = construction_view(model, antenna_type=effective_type)
     points = tuple(point for wire in model.wires for point in (wire.start, wire.end))
@@ -4128,7 +4181,7 @@ def build_scene(
         ScenePolyline(
             (factory.project(wire.start), factory.project(wire.end)),
             role="wire",
-            width=1.5 if wire.id.startswith("hexbeam-band") else 2.5,
+            width=_hexbeam_wire_width(wire.id, parameters, active_band),
         )
         for wire in model.wires
     ) + _transmission_line_polylines(model, factory)
@@ -4284,6 +4337,7 @@ def build_scene(
             insets,
             notes,
             translator,
+            active_band=active_band,
         )
     elif effective_type in {ANTENNA_TYPE_YAGI, ANTENNA_TYPE_MOXON}:
         _add_array_dimensions(
@@ -4408,6 +4462,7 @@ def build_scene(
         display_name,
         mode,
         notes,
+        active_band=active_band,
     )
     if not math.isclose(factory.exaggeration, 1.0):
         summary = (

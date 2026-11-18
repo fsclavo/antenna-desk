@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   single-band starting design. The result warns that the other published bands
   must be added in the editor; no multi-band performance or feed-harness claim
   is made.
+- **Selectable active HexBeam band.** A transient **Active band** selector
+  chooses which band's feed marker, half-lengths, tip gap, turning radius, span,
+  and detail inset are shown. The selected band's wires are emphasized and the
+  other bands remain visible. The selection is view-only and not persisted.
 - **Multi-band HexBeam stack scaling.** In multi-band mode, changing the
   primary frequency uniformly scales the selected published stack while the
   target remains inside the primary band. Band frequencies, lengths, gaps,

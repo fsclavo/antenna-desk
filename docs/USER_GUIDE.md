@@ -998,7 +998,9 @@ Use the **Bands** checkboxes to build a nested 20/17/15/12/10 m stack. Two or
 more selected bands use the published G3TXQ rows, displayed read-only in the
 band table. The largest selected band defines the shared turning radius; the
 reference height is the lowest selected band, and the other bands are stacked
-by their published vertical offsets. The 20 m row used by the family is
+by their published vertical offsets. Use **Active band** to choose which band's
+dimensions and feed marker are shown and emphasized in the scene; the other
+bands stay visible and the selection is not saved with the design. The 20 m row used by the family is
 218 in driver half, 412 in reflector total, 24 in tip gap, and 130 in turning
 radius. **Analyze Bands** defaults to the bands selected in the design and
 drives one band at a time while the other bands remain passive; this avoids
