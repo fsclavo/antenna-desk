@@ -16002,6 +16002,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "unit.m": {Language.ENGLISH: "m", Language.SPANISH: "m"},
     "unit.ft": {Language.ENGLISH: "ft", Language.SPANISH: "ft"},
     "unit.mm": {Language.ENGLISH: "mm", Language.SPANISH: "mm"},
+    "unit.cm": {Language.ENGLISH: "cm", Language.SPANISH: "cm"},
     "unit.in": {Language.ENGLISH: "in", Language.SPANISH: "in"},
 }
 
