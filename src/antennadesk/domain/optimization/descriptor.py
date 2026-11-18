@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from ..antennas.antenna import AntennaModel
 from ..antennas.design import AntennaDesignParameters
 from ..common.units import ensure_non_negative
 from .constraints import ConstraintViolation
@@ -52,6 +53,8 @@ class OptimizationWeights:
 ParameterBuilder = Callable[[Mapping[str, float]], AntennaDesignParameters]
 ParameterValidator = Callable[[Mapping[str, float]], tuple[ConstraintViolation, ...]]
 StructuralSegmentation = Callable[[AntennaDesignParameters], tuple[tuple[str, int], ...]]
+ModelBuilder = Callable[[AntennaDesignParameters], AntennaModel]
+EvaluationFrequency = Callable[[AntennaDesignParameters], float]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +75,8 @@ class AntennaOptimizerDescriptor:
     context_note_key: str | None = None
     structural_segmentation: StructuralSegmentation | None = None
     recommends_bound_hits: bool = False
+    model_builder: ModelBuilder | None = None
+    evaluation_frequency_hz: EvaluationFrequency | None = None
 
     def __post_init__(self) -> None:
         if not self.key.strip():
@@ -80,6 +85,10 @@ class AntennaOptimizerDescriptor:
             raise ValueError("context note key must not be empty when provided")
         if self.structural_segmentation is not None and not callable(self.structural_segmentation):
             raise TypeError("structural_segmentation must be callable when provided")
+        if self.model_builder is not None and not callable(self.model_builder):
+            raise TypeError("model_builder must be callable when provided")
+        if self.evaluation_frequency_hz is not None and not callable(self.evaluation_frequency_hz):
+            raise TypeError("evaluation_frequency_hz must be callable when provided")
         variables = apply_default_locks(self.key, self.variables)
         object.__setattr__(self, "variables", variables)
         if not variables:

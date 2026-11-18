@@ -161,6 +161,78 @@ def test_optimize_biquad_applies_to_the_biquad_form(
     window._dirty = False
 
 
+def test_optimize_multiband_hexbeam_targets_the_active_band(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    use_parameters(window, parameters)
+    window._hexbeam_form._active_band_combo.setCurrentIndex(1)
+    optimized_band = replace(
+        parameters.bands[1],
+        driver_half_length_m=parameters.bands[1].driver_half_length_m * 1.02,
+    )
+    optimized = replace(
+        parameters,
+        bands=(parameters.bands[0], optimized_band, parameters.bands[2]),
+    )
+    captured: dict[str, object] = {}
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured["descriptor"] = args[3]
+            captured["base_spec"] = args[4]
+            captured["target_band_label"] = kwargs.get("target_band_label")
+            captured["band_edges_hz"] = kwargs.get("band_edges_hz")
+            captured["operating_frequencies_hz"] = kwargs.get("operating_frequencies_hz")
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def selected_parameters(self) -> object:
+            return optimized
+
+        def selected_result(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+    monkeypatch.setattr(window, "simulate", lambda: None)
+
+    window.optimize_current_design()
+    window._dirty = False
+
+    from antennadesk.domain.optimization.descriptor import AntennaOptimizerDescriptor
+
+    descriptor = captured["descriptor"]
+    assert isinstance(descriptor, AntennaOptimizerDescriptor)
+    assert descriptor.key == "hexbeam_band"
+    assert captured["target_band_label"] == "15 m"
+    assert captured["band_edges_hz"] == ()
+    operating = captured["operating_frequencies_hz"]
+    assert isinstance(operating, tuple)
+    assert operating == (pytest.approx(parameters.bands[1].frequency_hz),)
+    base_spec = captured["base_spec"]
+    assert isinstance(base_spec, SimulationSpec)
+    assert base_spec.frequency_plan.start_hz == pytest.approx(
+        parameters.bands[1].frequency_hz * 0.95
+    )
+    assert window._project is not None
+    applied = window._project.designs[0].parameters
+    assert applied.bands[0] == parameters.bands[0]
+    assert applied.bands[2] == parameters.bands[2]
+    assert applied.bands[1].driver_half_length_m == pytest.approx(
+        optimized_band.driver_half_length_m
+    )
+
+
 def test_optimize_current_design_persists_the_run_summary(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

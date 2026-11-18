@@ -478,6 +478,23 @@ height. A run that excludes any variable is reported as partial.
 - Acceptance requires a test for the shortened EFHW partitions and a test that
   standard end-fed and a representative non-end-fed descriptor stay `None`.
 
+## Amendment 2026-11-18 — Selected-element model and frequency hooks
+
+- Most descriptors optimize a parameter object whose canonical model has one
+  feed and one design frequency. A multi-band HexBeam instead needs to keep
+  every band's wires in the model while exciting only the band being optimized,
+  and it must score at that band's frequency rather than the primary frequency.
+- `AntennaOptimizerDescriptor.model_builder` and
+  `evaluation_frequency_hz` are optional callbacks. When present, the shared
+  engine uses them for candidate metrics, space constraints, and default
+  band-edge derivation. Both default to `None`, preserving the previous
+  `parameters.to_antenna()` and `parameters.frequency_hz` path for every
+  existing family.
+- The selected-band HexBeam descriptor uses these hooks to build the
+  all-band model with the target feed excited and to evaluate at the target
+  band's frequency. Acceptance requires a unit test that records the model feed
+  and frequency plus a real-solver smoke test; see ADR-0045.
+
 ## Follow-up
 
 - See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and

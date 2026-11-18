@@ -100,6 +100,7 @@ class FamilyOptimizationDialog(QDialog):
         parent: QWidget | None = None,
         *,
         topology_label: str | None = None,
+        target_band_label: str | None = None,
         band_edges_hz: tuple[float, ...] = (),
         operating_frequencies_hz: tuple[float, ...] = (),
         last_summary: OptimizationSummary | None = None,
@@ -123,6 +124,7 @@ class FamilyOptimizationDialog(QDialog):
         self._cancel_token: EventCancelToken | None = None
         self._result: OptimizeAntennaResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
+        self._target_band_value: QLabel | None = None
         self._variables = descriptor.variables
         self._updating = False
         self._ready = False
@@ -347,6 +349,9 @@ class FamilyOptimizationDialog(QDialog):
         form = QFormLayout()
         if topology_label:
             form.addRow(QLabel(translator.t("field.template"), self), QLabel(topology_label, self))
+        if target_band_label:
+            self._target_band_value = QLabel(target_band_label, self)
+            form.addRow(QLabel(translator.t("optimize.target_band"), self), self._target_band_value)
         form.addRow(self._objective_label, self._objective)
         form.addRow(self._mode_label, self._mode)
         form.addRow(self._band_edges_label, self._band_edges)

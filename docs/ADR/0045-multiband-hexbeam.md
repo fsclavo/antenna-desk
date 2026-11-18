@@ -69,10 +69,16 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
    list; the scalar fields mirror `bands[0]`. No old project values are
    rewritten.
 
-8. **Optimizer scope.** Multi-band optimization is explicitly unavailable in
-   this slice. The family registry returns a translated reason; the existing
-   single-band descriptor remains for one-band designs. A later slice may
-   optimize one selected band with the others fixed.
+8. **Optimizer scope.** Full multi-band optimization is unavailable and the
+   family registry returns a translated reason when no target band is given.
+   The existing single-band descriptor remains for one-band designs. A
+   multi-band design can optimize one active band: the descriptor varies that
+   band's driver/reflector halves, tip gap, and height while the shared turning
+   radius, conductor, and every other band stay fixed. Each candidate excites
+   only the selected band and is evaluated at that band's frequency. Validation
+   enforces the selected band's nested frame, conductor spacing, and a
+   conductor-diameter clearance between adjacent band radii. The dialog shows
+   the target band. This is not full-stack optimization.
 
 9. **Frequency scaling scope.** `Design → Scale Geometry to Frequency` is
    disabled for a multi-band HexBeam because it is a generic action. The
@@ -104,8 +110,9 @@ Negative:
 - The per-band radius is a derived starting rule, not a published CAD layout.
 - Multi-band gain, SWR, front-to-back ratio, and feed interaction remain
   unvalidated.
-- The UI, scene, reports, and selected-band optimizer still need their own
-  slices.
+- The selected-band optimizer cannot improve the other bands or the shared
+  frame; optimizing each band independently is not the same as optimizing the
+  complete stack.
 
 ## Execution slices
 
@@ -113,11 +120,12 @@ Negative:
 |---|---|---|
 | C7a | ADR, `HexbeamBand`, optional `bands`, one-driven-band model, schema v55, domain/persistence/registry tests | Implemented 2026-11-18 |
 | C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, nested scene rendering, per-band reports | Implemented 2026-11-18 |
-| C7c | Selected-band optimizer, feed-harness limitations, validation/evidence audit | Implemented 2026-11-18; multi-band optimizer remains explicitly unavailable |
+| C7c | Feed-harness limitations and validation/evidence audit | Implemented 2026-11-18; full multi-band optimizer remains explicitly unavailable |
+| C7d | Selected-band optimizer with the shared frame and other bands fixed | Implemented 2026-11-18; full-stack optimization remains unavailable |
 
-C7a–C7c are complete: the multi-band preset, editor, scene, reports, and
-validation are implemented; multi-band optimization and automatic frequency
-scaling remain explicit unavailable paths.
+C7a–C7d are complete: the multi-band preset, editor, scene, reports, validation,
+and selected-band optimizer are implemented; full multi-band optimization and
+automatic frequency scaling remain explicit unavailable paths.
 
 ## References
 

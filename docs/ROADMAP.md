@@ -341,18 +341,21 @@ version is implemented.
   reports include per-band rows. Each analysis excites one selected band while
   the other bands remain passive; a real NEC2C run completed for 20, 15, and
   10 m. Coax jumpers, inter-band coupling, the balun, spreader sag, and frame
-  hardware remain unmodeled. Multi-band optimization and automatic frequency
-  scaling are explicitly unavailable.
+  hardware remain unmodeled. Full multi-band optimization and automatic
+  frequency scaling are explicitly unavailable.
   6 m can be added later as an optional sixth band. The published dimensions are
   starting values (B); multi-band gain, SWR, and front-to-back ratio are not
   validated.
 
-Optional HexBeam follow-ups are queued in the execution backlog: **C7d**
-selected-band optimizer, **C7f** editable band table/custom sets, **C7h** 6 m
-band, and **C7i** feed-harness/inter-band coupling (blocked on a traceable
-model or measurement). **C7e** active-band dimensions/highlight is implemented:
-the scene dimensions and feed marker follow a transient band selector while the
-other bands remain visible.
+Optional HexBeam follow-ups are queued in the execution backlog: **C7f**
+editable band table/custom sets, **C7h** 6 m band, and **C7i**
+feed-harness/inter-band coupling (blocked on a traceable model or measurement).
+**C7d** selected-band optimization is implemented: the active band's driver and
+reflector halves, tip gap, and height are optimized while the shared frame and
+the other bands stay fixed; full-stack optimization remains unavailable.
+**C7e** active-band dimensions/highlight is implemented: the scene dimensions
+and feed marker follow a transient band selector while the other bands remain
+visible.
 **C7g** band-aware starting-set scaling is implemented: the primary-frequency
 field can uniformly scale the selected published stack within its primary band,
 with a reference-scaled warning. A general multiband frequency-first estimator

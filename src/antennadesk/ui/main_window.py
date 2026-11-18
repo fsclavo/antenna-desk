@@ -2036,7 +2036,12 @@ class MainWindow(QMainWindow):
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
-        optimizer = optimizer_availability(parameters) if parameters is not None else None
+        hexbeam_band = self._optimizer_hexbeam_band(parameters)
+        optimizer = (
+            optimizer_availability(parameters, hexbeam_band=hexbeam_band)
+            if parameters is not None
+            else None
+        )
         optimize_available = optimizer is not None and optimizer.available
         optimize_enabled = idle and has_project and optimize_available and self._solver is not None
         optimize_hint = self._translator.t("help.action.optimize")
@@ -2507,6 +2512,18 @@ class MainWindow(QMainWindow):
     def _on_hexbeam_active_band_changed(self, band: str) -> None:
         if isinstance(self._geometry, GeometryView):
             self._geometry.set_active_band(band)
+        self._update_actions()
+
+    def _optimizer_hexbeam_band(self, parameters: AntennaDesignParameters | None) -> str | None:
+        """Return the band a multi-band HexBeam optimizer should target."""
+
+        if not isinstance(parameters, HexbeamParameters) or len(parameters.bands) <= 1:
+            return None
+        active = self._hexbeam_form.active_band()
+        labels = {band.label.casefold(): band.label for band in parameters.bands}
+        if active is not None and active.casefold() in labels:
+            return labels[active.casefold()]
+        return parameters.bands[0].label
 
     def _set_geometry_model(self, design: DesignVariant) -> None:
         display_name = (
@@ -4962,9 +4979,21 @@ class MainWindow(QMainWindow):
             far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
         )
 
-    def _hexbeam_simulation_spec(self, parameters: HexbeamParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
+    def _hexbeam_simulation_spec(
+        self,
+        parameters: HexbeamParameters,
+        *,
+        active_band: str | None = None,
+    ) -> SimulationSpec:
+        band = parameters.resolved_bands[0]
+        if active_band is not None:
+            key = active_band.casefold()
+            band = next(
+                (item for item in parameters.resolved_bands if item.label.casefold() == key),
+                band,
+            )
+        model = parameters.to_antenna(active_band=active_band)
+        frequency_hz = band.frequency_hz
         return SimulationSpec(
             frequency_plan=FrequencyPlan.sweep(
                 frequency_hz * 0.95,
@@ -7545,7 +7574,8 @@ class MainWindow(QMainWindow):
         design = self._project.design_by_id(self._design_id)
         band_plan = self._current_band_plan(design)
         operating_frequencies = operating_frequencies_for(design.parameters, band_plan)
-        availability = optimizer_availability(design.parameters)
+        hexbeam_band = self._optimizer_hexbeam_band(design.parameters)
+        availability = optimizer_availability(design.parameters, hexbeam_band=hexbeam_band)
         if availability.descriptor is None:
             self._show_error(
                 self._translator.t(availability.reason_key or "optimize.unavailable.unsupported")
@@ -7555,8 +7585,31 @@ class MainWindow(QMainWindow):
         if adapter is None:
             self._show_error(self._translator.t("optimize.unavailable.unsupported"))
             return
+        target_band_label: str | None = None
+        band_edges_hz = self._optimizer_band_edges(design)
+        if isinstance(design.parameters, HexbeamParameters) and hexbeam_band is not None:
+            target = next(
+                (
+                    band
+                    for band in design.parameters.bands
+                    if band.label.casefold() == hexbeam_band.casefold()
+                ),
+                None,
+            )
+            if target is not None:
+                base_spec = self._hexbeam_simulation_spec(
+                    design.parameters,
+                    active_band=hexbeam_band,
+                )
+                operating_frequencies = (target.frequency_hz,)
+                band_edges_hz = ()
+                target_band_label = self._translator.t(f"hexbeam.band.{hexbeam_band}")
+            else:
+                base_spec = adapter.simulation_spec(self, design.parameters)
+        else:
+            base_spec = adapter.simulation_spec(self, design.parameters)
         base_spec = replace(
-            adapter.simulation_spec(self, design.parameters),
+            base_spec,
             timeout_s=float(self._solver_timeout.value()),
         )
         base_spec = self._with_project_chain(design.parameters, base_spec)
@@ -7568,7 +7621,8 @@ class MainWindow(QMainWindow):
             base_spec,
             self,
             topology_label=self._translator.t(label_key_for(design.parameters)),
-            band_edges_hz=self._optimizer_band_edges(design),
+            target_band_label=target_band_label,
+            band_edges_hz=band_edges_hz,
             operating_frequencies_hz=operating_frequencies,
             last_summary=design.optimization_summary,
         )

@@ -166,6 +166,34 @@ class _EvaluationFailure(Exception):
     """Internal control flow for an unusable solver result."""
 
 
+def _optimization_model(
+    command: OptimizeAntennaCommand,
+    parameters: AntennaDesignParameters,
+) -> AntennaModel:
+    """Build the model a family wants the optimizer to evaluate.
+
+    Most families expose one canonical model. A family with several selectable
+    elements can override the builder so the candidate excites the same element
+    the descriptor is optimizing while the remaining elements stay present.
+    """
+
+    builder = command.descriptor.model_builder
+    if builder is not None:
+        return builder(parameters)
+    return parameters.to_antenna(name="Optimization")
+
+
+def _optimization_frequency_hz(
+    command: OptimizeAntennaCommand,
+    parameters: AntennaDesignParameters,
+) -> float:
+    resolver = command.descriptor.evaluation_frequency_hz
+    frequency_hz = resolver(parameters) if resolver is not None else parameters.frequency_hz
+    if not math.isfinite(frequency_hz) or frequency_hz <= 0.0:
+        raise _EvaluationFailure("optimizer evaluation frequency must be positive and finite")
+    return frequency_hz
+
+
 @dataclass(frozen=True, slots=True)
 class _PointOutcome:
     result: SimulationResult | None = None
@@ -513,7 +541,7 @@ def _space_metrics(
     parameters: AntennaDesignParameters,
     command: OptimizeAntennaCommand,
 ) -> dict[str, float]:
-    model = parameters.to_antenna(name="Space constraint")
+    model = _optimization_model(command, parameters)
     radius = turning_radius_m(parameters, model)
     boom = boom_length_m(parameters)
     metrics = {"turning_radius_m": radius}
@@ -542,7 +570,7 @@ def _resolved_band_edges(command: OptimizeAntennaCommand) -> tuple[float, ...]:
         return tuple(sorted(set(command.band_edges_hz)))
     try:
         parameters = command.descriptor.build_parameters(command.descriptor.initial_values)
-        frequency_hz = parameters.frequency_hz
+        frequency_hz = _optimization_frequency_hz(command, parameters)
     except Exception:
         frequency_hz = (
             command.base_spec.frequency_plan.start_hz + command.base_spec.frequency_plan.stop_hz
@@ -717,8 +745,8 @@ def _single_metrics(
     needs_pattern: bool,
     needs_sweep: bool,
 ) -> dict[str, float]:
-    model = parameters.to_antenna(name="Optimization")
-    frequency_hz = parameters.frequency_hz
+    model = _optimization_model(command, parameters)
+    frequency_hz = _optimization_frequency_hz(command, parameters)
     outcome = _run_point(
         command,
         solver,
@@ -782,7 +810,7 @@ def _multi_metrics(
             scenario_parameters = descriptor.build_parameters(
                 _perturbed_values(full_values, active_variables, factor)
             )
-        model = scenario_parameters.to_antenna(name="Optimization")
+        model = _optimization_model(command, scenario_parameters)
         points: list[tuple[float, dict[str, float]]] = []
         for frequency_hz in scoring_frequencies:
             outcome = _run_point(
@@ -817,7 +845,7 @@ def _multi_metrics(
             )
         aggregated = _aggregate_metrics(
             points,
-            parameters.frequency_hz,
+            _optimization_frequency_hz(command, parameters),
             rms_swr=command.objective is FamilyOptimizationObjective.MIN_SWR_OPERATING,
         )
         all_points.extend(points)

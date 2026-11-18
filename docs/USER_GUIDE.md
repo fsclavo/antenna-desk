@@ -1009,11 +1009,17 @@ creates a single-band reference-scaled start and warns that the remaining
 bands must be added in the editor. In multi-band mode, changing the primary
 frequency uniformly scales the selected published stack only while the target
 stays inside the primary band; the result is marked reference-scaled, labels
-are nominal, and out-of-band targets are rejected. Multi-band optimization is
-not available yet; the real coax harness, inter-band coupling, and balun are
-not modeled. **Optimize...** searches the driver and reflector halves, turning
+are nominal, and out-of-band targets are rejected. Full multi-band optimization
+is not available; the real coax harness, inter-band coupling, and balun are not
+modeled. **Optimize...** searches the driver and reflector halves, turning
 radius, tip gap, height, and conductor radius jointly for a single-band design.
-Gain, front-to-back ratio, and impedance are not independently validated.
+For a multi-band design it targets the **Active band**: it searches only that
+band's driver and reflector halves, tip gap, and height, while the shared
+turning radius, conductor, and the other bands stay fixed. The dialog shows the
+target band, and each candidate excites only that band. The shared frame fit,
+conductor spacing, and adjacent-band clearance are validated. Optimizing each
+band independently is not the same as optimizing the complete stack. Gain,
+front-to-back ratio, and impedance are not independently validated.
 
 ## Create a trapped Yagi
 

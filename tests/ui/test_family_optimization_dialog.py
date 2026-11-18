@@ -55,6 +55,67 @@ def test_family_dialog_lists_the_family_variables(qtbot: QtBot) -> None:
     assert dialog._budget.count() == 3
 
 
+def test_family_dialog_shows_the_multiband_hexbeam_target_band(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+    assert availability.descriptor is not None
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        availability.descriptor,
+        SimulationSpec(frequency_plan=FrequencyPlan.single(parameters.bands[1].frequency_hz)),
+        target_band_label="15 m",
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._target_band_value is not None
+    assert dialog._target_band_value.text() == "15 m"
+    assert dialog._table.rowCount() == 4
+    assert "selected band" in dialog._context_note.text().lower()
+
+
+def test_family_dialog_runs_the_multiband_hexbeam_band_optimizer(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.hexbeam import (
+        HexbeamParameters,
+        published_hexbeam_multiband_parameters,
+    )
+    from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
+
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.bands[1].frequency_hz),
+        far_field=far_field_request(5.0, parameters.ground),
+    )
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        availability.descriptor,
+        spec,
+        target_band_label="15 m",
+    )
+    qtbot.addWidget(dialog)
+    dialog._budget.setCurrentIndex(dialog._budget.findData(BudgetProfile.FAST.value))
+    dialog._objective.setCurrentIndex(
+        dialog._objective.findData(FamilyOptimizationObjective.TARGET_IMPEDANCE.value)
+    )
+
+    dialog._start()
+    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+
+    assert dialog.selected_result() is not None
+    selected = dialog.selected_parameters()
+    assert isinstance(selected, HexbeamParameters)
+    assert selected.bands[0] == parameters.bands[0]
+    assert selected.bands[2] == parameters.bands[2]
+    assert selected.bands[1].frequency_hz == pytest.approx(parameters.bands[1].frequency_hz)
+
+
 def test_family_dialog_shows_the_matching_override_warning(qtbot: QtBot) -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,

@@ -8,6 +8,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import replace
 
+from ...antennas.antenna import AntennaModel
 from ...antennas.beverage import BeverageParameters
 from ...antennas.biquad import BiquadParameters
 from ...antennas.design import AntennaDesignParameters
@@ -21,6 +22,7 @@ from ...antennas.endfed import (
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
 from ...antennas.hexbeam import (
+    HexbeamBand,
     HexbeamGeometryError,
     HexbeamParameters,
     hexbeam_frame_geometry,
@@ -2163,6 +2165,189 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
         build,
         validate,
         default_objective=FamilyOptimizationObjective.MAX_GAIN,
+    )
+
+
+def _hexbeam_band_for_label(
+    parameters: HexbeamParameters,
+    band_label: str,
+) -> HexbeamBand:
+    key = band_label.casefold()
+    for band in parameters.resolved_bands:
+        if band.label.casefold() == key:
+            return band
+    raise ValueError(f"unknown hexbeam band label: {band_label}")
+
+
+def _hexbeam_band_collision_violation(
+    parameters: HexbeamParameters,
+    band: HexbeamBand,
+) -> ConstraintViolation | None:
+    """Reject a band set whose nested paths would touch in plan view.
+
+    Every band keeps its reflector vertices on its own nested hexagon, so the
+    band radius is the maximum plan extent. Adjacent bands must be separated by
+    at least one conductor diameter; otherwise the optimized band could share a
+    spreader point with another band.
+    """
+
+    radius = parameters.band_radius_m(band)
+    clearance = 2.0 * parameters.wire_radius_m
+    for other in parameters.resolved_bands:
+        if other.label.casefold() == band.label.casefold():
+            continue
+        other_radius = parameters.band_radius_m(other)
+        if other.frequency_hz < band.frequency_hz:
+            overlap = radius + clearance - other_radius
+            if overlap > 0.0:
+                return violation("band_radius", overlap, "hexbeam.constraint.band_collision")
+        else:
+            overlap = other_radius + clearance - radius
+            if overlap > 0.0:
+                return violation("band_radius", overlap, "hexbeam.constraint.band_collision")
+    return None
+
+
+def hexbeam_band_descriptor(
+    parameters: HexbeamParameters,
+    band: HexbeamBand,
+    band_index: int,
+) -> AntennaOptimizerDescriptor:
+    """Optimize one band of a multi-band HexBeam and leave the stack fixed."""
+
+    bands = parameters.resolved_bands
+    if not 0 <= band_index < len(bands):
+        raise ValueError("hexbeam band index is out of range")
+    band_radius_m = parameters.band_radius_m(band)
+    variables: list[OptimizationVariable] = [
+        _length(
+            "driver_half_length_m",
+            "hexbeam.driver_half",
+            "optimize.group.geometry",
+            band.driver_half_length_m,
+            0.12,
+            0.05,
+        ),
+        _length(
+            "reflector_half_length_m",
+            "hexbeam.reflector_half",
+            "optimize.group.geometry",
+            band.reflector_half_length_m,
+            0.12,
+            0.05,
+        ),
+        _length(
+            "tip_gap_m",
+            "hexbeam.tip_gap",
+            "optimize.group.geometry",
+            band.tip_gap_m,
+            0.3,
+            0.01,
+        ),
+        _length(
+            "height_m",
+            "field.height",
+            "optimize.group.geometry",
+            parameters.height_m,
+            0.5,
+            0.0,
+        ),
+    ]
+    initial = {
+        "driver_half_length_m": band.driver_half_length_m,
+        "reflector_half_length_m": band.reflector_half_length_m,
+        "tip_gap_m": band.tip_gap_m,
+        "height_m": parameters.height_m,
+    }
+
+    def build(values: Mapping[str, float]) -> HexbeamParameters:
+        candidate_band = replace(
+            band,
+            driver_half_length_m=values["driver_half_length_m"],
+            reflector_half_length_m=values["reflector_half_length_m"],
+            tip_gap_m=values["tip_gap_m"],
+        )
+        candidate_bands = (
+            *bands[:band_index],
+            candidate_band,
+            *bands[band_index + 1 :],
+        )
+        if band_index == 0:
+            return replace(
+                parameters,
+                bands=candidate_bands,
+                height_m=values["height_m"],
+                frequency_hz=candidate_band.frequency_hz,
+                driver_half_length_m=candidate_band.driver_half_length_m,
+                reflector_half_length_m=candidate_band.reflector_half_length_m,
+                tip_gap_m=candidate_band.tip_gap_m,
+                feed_gap_m=candidate_band.feed_gap_m,
+            )
+        return replace(
+            parameters,
+            bands=candidate_bands,
+            height_m=values["height_m"],
+        )
+
+    def build_model(candidate: AntennaDesignParameters) -> AntennaModel:
+        if not isinstance(candidate, HexbeamParameters):
+            raise TypeError("hexbeam band optimizer requires hexbeam parameters")
+        return candidate.to_antenna(name="Optimization", active_band=band.label)
+
+    def evaluation_frequency(candidate: AntennaDesignParameters) -> float:
+        if not isinstance(candidate, HexbeamParameters):
+            raise TypeError("hexbeam band optimizer requires hexbeam parameters")
+        return _hexbeam_band_for_label(candidate, band.label).frequency_hz
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        issues: list[ConstraintViolation | None] = [
+            positive_violation("driver_half_length_m", values["driver_half_length_m"]),
+            positive_violation("reflector_half_length_m", values["reflector_half_length_m"]),
+            positive_violation("tip_gap_m", values["tip_gap_m"]),
+            non_negative_violation("height_m", values["height_m"]),
+            _hexbeam_band_collision_violation(parameters, band),
+        ]
+        try:
+            hexbeam_frame_geometry(
+                turning_radius_m=band_radius_m,
+                driver_half_length_m=values["driver_half_length_m"],
+                reflector_half_length_m=values["reflector_half_length_m"],
+                tip_gap_m=values["tip_gap_m"],
+            )
+        except HexbeamGeometryError as exc:
+            message_keys = {
+                "driver_half_length_m": "hexbeam.constraint.driver_length",
+                "reflector_half_length_m": "hexbeam.constraint.reflector_length",
+                "tip_gap_m": "hexbeam.constraint.tip_gap",
+            }
+            issues.append(
+                violation(
+                    exc.field,
+                    1.0,
+                    message_keys.get(exc.field, "hexbeam.constraint.driver_length"),
+                )
+            )
+        if values["tip_gap_m"] <= 2.0 * parameters.wire_radius_m:
+            issues.append(
+                violation(
+                    "tip_gap_m",
+                    2.0 * parameters.wire_radius_m - values["tip_gap_m"],
+                    "optimize.constraint.conductor_spacing",
+                )
+            )
+        return collect(*issues)
+
+    return AntennaOptimizerDescriptor(
+        key="hexbeam_band",
+        variables=tuple(variables),
+        initial_values=initial,
+        build_parameters=build,
+        validate=validate,
+        objectives=COMMON_OBJECTIVES,
+        default_objective=FamilyOptimizationObjective.MAX_GAIN,
+        context_note_key="optimize.context.hexbeam_band",
+        model_builder=build_model,
+        evaluation_frequency_hz=evaluation_frequency,
     )
 
 

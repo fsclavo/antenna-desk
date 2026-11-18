@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from antennadesk.application.ports.antenna_solver import ProgressCallback
 from antennadesk.application.ports.cancellation import CancelToken
 from antennadesk.application.use_cases.optimize_antenna import (
@@ -15,6 +17,7 @@ from antennadesk.application.use_cases.optimize_antenna import (
     _spec_for_point,
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
+from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
@@ -58,6 +61,8 @@ class RecordingSolver:
         self.heights: list[float] = []
         self.lengths: list[float] = []
         self.transformer_ratios: list[float] = []
+        self.feed_wire_ids: list[str] = []
+        self.wire_ids: list[set[str]] = []
 
     def capabilities(self) -> SolverCapabilities:
         return SolverCapabilities(
@@ -91,6 +96,8 @@ class RecordingSolver:
         self.heights.append(model.wires[0].start.z_m)
         self.lengths.append(model.wires[0].length_m)
         self.transformer_ratios.append(spec.feed_transformer_ratio)
+        self.feed_wire_ids.append(model.feed.wire_id)
+        self.wire_ids.append({wire.id for wire in model.wires})
         frequency_hz = spec.frequency_plan.start_hz
         return SimulationResult(
             status=SimulationStatus.COMPLETED,
@@ -168,6 +175,33 @@ def test_single_metrics_applies_the_candidate_transformer_ratio() -> None:
 
     assert solver.transformer_ratios == [6.0]
     assert metrics["target_error_ohm"] == 0.0
+
+
+def test_single_metrics_uses_the_hexbeam_selected_band_model_and_frequency() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    band = parameters.bands[1]
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+    assert availability.descriptor is not None
+    solver = RecordingSolver()
+    command = OptimizeAntennaCommand(
+        descriptor=availability.descriptor,
+        base_spec=SimulationSpec(frequency_plan=FrequencyPlan.single(band.frequency_hz)),
+        objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+        budget=OptimizationBudget(4, 4, 2),
+    )
+
+    _single_metrics(
+        command,
+        solver,
+        parameters,
+        needs_pattern=False,
+        needs_sweep=False,
+    )
+
+    assert solver.frequencies == [pytest.approx(band.frequency_hz)]
+    assert solver.feed_wire_ids == ["hexbeam-band2-feed"]
+    assert "hexbeam-feed" in solver.wire_ids[0]
+    assert "hexbeam-band3-feed" in solver.wire_ids[0]
 
 
 def test_operating_objective_scores_only_operating_frequencies() -> None:

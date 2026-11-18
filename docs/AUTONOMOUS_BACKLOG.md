@@ -43,11 +43,11 @@ external service and must not be invented or simulated into existence.
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~C6~~ | ~~HexBeam geometry correctness~~ | M | published G3TXQ/K4KIO drawing | **Done 2026-11-18:** the single-band model now routes the M driver and rear U reflector on the six-spreader frame. Ten canonical wires, 6.604 m span, 0.6096 m tip gap, all wire points at or inside the 3.302 m turning radius, reflector midpoint at the rear, and a zero published fore-aft trim. Domain and optimizer share one frame helper; scene dimensions, golden scenes, reports, help, and docs are updated. Tests: 3,533 passed, 1 skipped; ruff/format/mypy pass; no schema or solver change. See `docs/spikes/c6-hexbeam-geometry.md`. |
-| ~~C7~~ | ~~Multi-band HexBeam (1-5 bands)~~ | L | C6; feed-model decision; published 5-band table | **Done 2026-11-18 via C7a–C7c:** selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, one driven band at a time, band editor/table, nested scene, per-band reports, and real NEC2C runs for 20/15/10 m. 6 m remains optional; multi-band performance is not validated. |
+| ~~C7~~ | ~~Multi-band HexBeam (1-5 bands)~~ | L | C6; feed-model decision; published 5-band table | **Done 2026-11-18 via C7a–C7c, with C7d–C7g follow-ups:** selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, one driven band at a time, band editor/table, nested scene, per-band reports, selected-band optimization, and real NEC2C runs for 20/15/10 m. 6 m remains optional; multi-band performance is not validated. |
 | ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, one driven band at a time, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped at C7a; no solver change. |
 | ~~C7b~~ | ~~Multi-band HexBeam preset, editor, scene, and reports~~ | L | C7a | **Done 2026-11-18:** published 20/17/15/12/10 preset and 218/412 reconciliation; band checkboxes and read-only per-band table; nested scene rendering with the primary band emphasized and a band note; per-band summary/construction rows; EN/ES help; golden scenes updated. Multi-band optimization/scaling remain explicitly unavailable. |
 | ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; real NEC2C 20/15/10 m runs completed with one driven source per analysis and finite pattern results; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
-| C7d | Selected-band HexBeam optimizer | M–L | C7c; family-optimizer ADR | Optimize one selected band's driver/reflector halves, tip gap, and height while the other bands stay fixed; enforce shared-frame fit and band-collision constraints; expose the target band in the dialog; deterministic tests and solver QA. Keep full multi-band optimization unavailable. |
+| ~~C7d~~ | ~~Selected-band HexBeam optimizer~~ | M–L | C7c; family-optimizer ADR | **Done 2026-11-18:** the family optimizer targets the active band from the editor. Its descriptor varies only that band's driver/reflector halves, tip gap, and height; the shared turning radius, conductor, and every other band stay fixed. Validation enforces the band's nested frame, conductor spacing, and a conductor-diameter clearance between adjacent band radii. The descriptor builds the model with the selected band excited and evaluates it at that band's frequency, and the dialog shows the target band. Full multi-band optimization remains explicitly unavailable. Covered by registry, use-case, UI-flow, and real NEC2C tests. |
 | ~~C7e~~ | ~~Selectable HexBeam band dimensions and scene highlight~~ | M | C7c | **Done 2026-11-18:** transient active-band selector in the band group. The selected band's feed, halves, tip gap, turning radius, span, summary, and inset are dimensioned; its wires are emphasized and the other bands stay visible. The form emits a view-only signal, and the geometry view/export paths carry the active band. No schema change. |
 | C7f | Editable HexBeam band table and custom band sets | M | C7c | Replace the read-only published table with validated editable rows; add/remove bands within 1–5; preserve the largest-band-first rule; custom labels/frequencies; EN/ES help; no silent value migration. |
 | ~~C7g~~ | ~~HexBeam band-aware starting set and scaling policy~~ | S–M | C7c; source policy | **Done 2026-11-18:** in multi-band mode the primary-frequency field uniformly scales the selected published stack when the target stays inside the primary band. Band frequencies, lengths, gaps, offsets, and shared radius scale together; the form preserves the scaled bands, labels are nominal, and a reference-scaled warning is shown. Out-of-band targets are rejected. This is a starting-set scaler, not a general estimator or optimizer. |
@@ -567,7 +567,8 @@ and every wire point inside the 3.302 m turning radius. C7 adds the published
 
 The detailed reconstruction, source reconciliation, and file-level test matrix
 are in [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md). C6 and
-C7 are closed; the optional C7d-C7i follow-ups are queued.
+C7 are closed; the optional C7d-C7i follow-ups are tracked there, with C7d,
+C7e, and C7g implemented.
 
 ### C7 acceptance (implemented 2026-11-18)
 
@@ -590,9 +591,9 @@ C7 are closed; the optional C7d-C7i follow-ups are queued.
 - Feed model is explicit. One selected band is driven per analysis and the
   other bands are passive; the real coax harness, coupling, and balun are
   limitations.
-- NEC2C integration covers one driven band at a time. Multi-band optimization
-  remains unavailable with a reason; a selected-band optimizer is deferred to
-  C7d.
+- NEC2C integration covers one driven band at a time. Full multi-band
+  optimization remains unavailable with a reason; C7d adds a selected-band
+  optimizer that leaves the shared frame and the other bands fixed.
 - Evidence stays B for published starting dimensions; performance is not
   claimed. Update `VALIDATION_PLAN.md`, `EVIDENCE_AUDIT.md`, user guide, and
   `CHANGELOG.md`.
@@ -619,13 +620,21 @@ Post-C7 fix on 2026-11-18: **Analyze Bands** now defaults to the bands selected
 in the design and passes a band-specific one-source model per analysis; this
 removes the negative input resistance and "Simulation failed" results at 15
 and 10 m. **Estimate Dimensions...** is enabled with a single-band
-reference-scaled starting design. Multi-band optimization remains explicitly
-unavailable.
+reference-scaled starting design.
+
+C7d is implemented on 2026-11-18: **Optimize** targets the active band of a
+multi-band HexBeam. The descriptor varies only that band's driver/reflector
+halves, tip gap, and height; the shared turning radius, conductor, and the
+other bands stay fixed. Validation checks the band's nested frame, conductor
+spacing, and adjacent-radius clearance. Each candidate excites the selected
+band and is evaluated at its frequency, and the dialog shows the target band.
+Full multi-band optimization remains explicitly unavailable.
 
 ### Optional HexBeam follow-ups (queued 2026-11-18)
 
-- **C7d — selected-band optimizer.** Optimize one band at a time with the other
-  bands fixed; do not pretend to optimize the whole stack.
+- **C7d — selected-band optimizer — implemented.** Optimize one band at a time
+  with the shared frame and the other bands fixed; full-stack optimization is
+  not exposed.
 - **C7e — active-band dimensions and scene highlight — implemented.** A
   transient selector chooses the band whose cotas and feed marker are shown;
   its wires are emphasized and the other bands remain visible. Not persisted.
@@ -3651,9 +3660,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,564 passed, 1 skipped** on 2026-11-18 after the HexBeam
-  active-band scene slice, with `NEC2C` auto-detected by the test configuration;
-  the skip is the Windows-only console-hiding test on Linux.
+- Full gate: **3,574 passed, 1 skipped** on 2026-11-18 after the selected-band
+  HexBeam optimizer, with `NEC2C` auto-detected by the test configuration; the
+  skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

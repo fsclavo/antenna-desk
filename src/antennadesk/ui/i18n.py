@@ -3646,14 +3646,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.hexbeam.bands": {
         Language.ENGLISH: (
             "Published G3TXQ bands. The largest selected band defines the shared "
-            "turning radius; the higher bands are nested inboard and stacked by "
-            "their vertical offsets. Multi-band optimization is not available yet."
+            "turning radius; higher bands are nested inboard and stacked by their "
+            "vertical offsets. Optimize targets the Active band and leaves the "
+            "others fixed."
         ),
         Language.SPANISH: (
-            "Bandas publicadas G3TXQ. La banda seleccionada más grande define el "
-            "radio de giro compartido; las bandas superiores se anidan hacia "
-            "adentro y se apilan con sus desplazamientos verticales. La "
-            "optimización multibanda aún no está disponible."
+            "Bandas publicadas G3TXQ. La banda más grande fija el radio compartido; "
+            "las superiores se anidan y apilan con sus desplazamientos verticales. "
+            "Optimizar usa la banda activa y deja fijas las demás."
         ),
     },
     "help.hexbeam.band_20m": {
@@ -11055,6 +11055,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "La separación de puntas coloca la punta del excitado más allá del separador delantero."
         ),
     },
+    "hexbeam.constraint.band_collision": {
+        Language.ENGLISH: (
+            "This band would touch another band's nested path on the shared frame. "
+            "Keep at least one conductor diameter between adjacent band radii."
+        ),
+        Language.SPANISH: (
+            "Esta banda tocaría la trayectoria anidada de otra banda en el marco "
+            "compartido. Dejá al menos un diámetro de conductor entre los radios de "
+            "bandas adyacentes."
+        ),
+    },
     "hexbeam.geometry_note": {
         Language.ENGLISH: (
             "M driver and rear U reflector on a six-spreader frame; turning radius "
@@ -14967,6 +14978,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Family Optimizer",
         Language.SPANISH: "Optimizador de familia",
     },
+    "optimize.target_band": {
+        Language.ENGLISH: "Target band",
+        Language.SPANISH: "Banda objetivo",
+    },
+    "optimize.context.hexbeam_band": {
+        Language.ENGLISH: (
+            "Only the selected band's driver and reflector halves, tip gap, and "
+            "height are optimized. The shared turning radius, conductor, and every "
+            "other band stay fixed; the selected band is excited alone in each "
+            "simulation."
+        ),
+        Language.SPANISH: (
+            "Solo se optimizan las semilongitudes del excitado y del reflector, la "
+            "separación de puntas y la altura de la banda elegida. El radio de giro "
+            "compartido, el conductor y las demás bandas quedan fijos; cada "
+            "simulación excita únicamente la banda elegida."
+        ),
+    },
     "optimize.variables": {
         Language.ENGLISH: "Design variables",
         Language.SPANISH: "Variables de diseño",
@@ -15342,12 +15371,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "optimize.unavailable.hexbeam_multiband": {
         Language.ENGLISH: (
-            "Multi-band HexBeam optimization is not available yet; optimize a "
-            "single-band design or run a solver sweep."
+            "Select a band in the multi-band HexBeam editor to optimize that band; "
+            "full-stack optimization is not available."
         ),
         Language.SPANISH: (
-            "La optimización del HexBeam multibanda aún no está disponible; "
-            "optimizá un diseño de una sola banda o usá un barrido del solver."
+            "Elegí una banda en el editor del HexBeam multibanda para optimizarla; "
+            "la optimización de toda la pila no está disponible."
         ),
     },
     "optimize.unavailable.unsupported": {

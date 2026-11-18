@@ -28,6 +28,7 @@ from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.hexbeam import (
     HexbeamBand,
+    published_hexbeam_multiband_parameters,
     published_hexbeam_parameters,
 )
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
@@ -635,6 +636,134 @@ def test_multiband_hexbeam_optimizer_is_explicitly_unavailable() -> None:
     )
 
     availability = optimizer_availability(parameters)
+
+    assert availability.available is False
+    assert availability.reason_key == "optimize.unavailable.hexbeam_multiband"
+
+
+def test_multiband_hexbeam_band_optimizer_targets_one_band() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    band = parameters.bands[1]
+
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    assert {variable.name for variable in descriptor.variables} == {
+        "driver_half_length_m",
+        "reflector_half_length_m",
+        "tip_gap_m",
+        "height_m",
+    }
+    assert descriptor.initial_values["driver_half_length_m"] == pytest.approx(
+        band.driver_half_length_m
+    )
+    assert descriptor.initial_values["reflector_half_length_m"] == pytest.approx(
+        band.reflector_half_length_m
+    )
+    assert descriptor.initial_values["tip_gap_m"] == pytest.approx(band.tip_gap_m)
+    assert descriptor.validate(descriptor.initial_values) == ()
+
+    values = dict(descriptor.initial_values)
+    values["driver_half_length_m"] += 0.05
+    rebuilt = descriptor.build_parameters(values)
+
+    assert rebuilt.bands[0] == parameters.bands[0]
+    assert rebuilt.bands[2] == parameters.bands[2]
+    assert rebuilt.bands[1].driver_half_length_m == pytest.approx(band.driver_half_length_m + 0.05)
+    assert rebuilt.driver_half_length_m == pytest.approx(parameters.driver_half_length_m)
+    assert rebuilt.turning_radius_m == pytest.approx(parameters.turning_radius_m)
+
+    assert descriptor.model_builder is not None
+    model = descriptor.model_builder(parameters)
+    assert model.feed.wire_id == "hexbeam-band2-feed"
+    assert descriptor.evaluation_frequency_hz is not None
+    assert descriptor.evaluation_frequency_hz(parameters) == pytest.approx(band.frequency_hz)
+
+
+def test_multiband_hexbeam_band_optimizer_updates_the_primary_scalars() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    availability = optimizer_availability(parameters, hexbeam_band="20m")
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    values = dict(descriptor.initial_values)
+    values["reflector_half_length_m"] += 0.04
+    rebuilt = descriptor.build_parameters(values)
+
+    assert rebuilt.driver_half_length_m == pytest.approx(parameters.driver_half_length_m)
+    assert rebuilt.reflector_half_length_m == pytest.approx(
+        parameters.reflector_half_length_m + 0.04
+    )
+    assert rebuilt.bands[0].reflector_half_length_m == pytest.approx(
+        parameters.bands[0].reflector_half_length_m + 0.04
+    )
+    assert rebuilt.bands[1] == parameters.bands[1]
+
+
+def test_multiband_hexbeam_band_optimizer_rejects_shared_frame_overruns() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    too_short_reflector = dict(descriptor.initial_values)
+    too_short_reflector["reflector_half_length_m"] = 1.0
+    assert any(
+        item.name == "reflector_half_length_m"
+        and item.message_key == "hexbeam.constraint.reflector_length"
+        for item in descriptor.validate(too_short_reflector)
+    )
+
+    tip_past_spreader = dict(descriptor.initial_values)
+    tip_past_spreader["tip_gap_m"] = 5.0
+    assert any(
+        item.name == "tip_gap_m" and item.message_key == "hexbeam.constraint.tip_gap"
+        for item in descriptor.validate(tip_past_spreader)
+    )
+
+    too_long_driver = dict(descriptor.initial_values)
+    too_long_driver["driver_half_length_m"] = 0.5
+    assert any(
+        item.name == "driver_half_length_m"
+        and item.message_key == "hexbeam.constraint.driver_length"
+        for item in descriptor.validate(too_long_driver)
+    )
+
+    conductor_overlap = dict(descriptor.initial_values)
+    conductor_overlap["tip_gap_m"] = 2.0 * parameters.wire_radius_m
+    assert any(
+        item.name == "tip_gap_m" and item.message_key == "optimize.constraint.conductor_spacing"
+        for item in descriptor.validate(conductor_overlap)
+    )
+
+
+def test_multiband_hexbeam_band_optimizer_rejects_overlapping_bands() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    close_20m = replace(
+        parameters.bands[0],
+        label="20m-close",
+        frequency_hz=parameters.bands[0].frequency_hz + 1_000.0,
+    )
+    overlapping = replace(
+        parameters,
+        bands=(parameters.bands[0], close_20m, parameters.bands[1]),
+    )
+    availability = optimizer_availability(overlapping, hexbeam_band="20m-close")
+    assert availability.descriptor is not None
+
+    violations = availability.descriptor.validate(availability.descriptor.initial_values)
+
+    assert any(
+        item.name == "band_radius" and item.message_key == "hexbeam.constraint.band_collision"
+        for item in violations
+    )
+
+
+def test_multiband_hexbeam_unknown_band_stays_unavailable() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+
+    availability = optimizer_availability(parameters, hexbeam_band="6m")
 
     assert availability.available is False
     assert availability.reason_key == "optimize.unavailable.hexbeam_multiband"

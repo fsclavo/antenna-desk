@@ -19,7 +19,11 @@ from antennadesk.domain.antennas.biquad import BiquadKind, biquad_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
-from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+from antennadesk.domain.antennas.hexbeam import (
+    HexbeamParameters,
+    published_hexbeam_multiband_parameters,
+    published_hexbeam_parameters,
+)
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -179,3 +183,41 @@ def test_family_optimizer_runs_against_nec2c(
     assert result.best_score is not None
     assert math.isfinite(result.best_score)
     assert result.evaluations
+
+
+def test_multiband_hexbeam_selected_band_optimizer_runs_against_nec2c(
+    solver: Nec2cSolver,
+) -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    target = parameters.bands[1]
+    availability = optimizer_availability(parameters, hexbeam_band="15m")
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(target.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = OptimizeAntenna(solver).execute(
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=spec,
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=OptimizationBudget(4, 4, 2),
+            seed=9,
+        )
+    )
+
+    assert result.best_parameters is not None
+    assert result.best_score is not None
+    assert math.isfinite(result.best_score)
+    best = result.best_parameters
+    assert isinstance(best, HexbeamParameters)
+    assert len(best.bands) == 3
+    assert best.bands[0] == parameters.bands[0]
+    assert best.bands[2] == parameters.bands[2]
+    assert best.bands[1].frequency_hz == pytest.approx(target.frequency_hz)
+    assert best.turning_radius_m == pytest.approx(parameters.turning_radius_m)
+    model = best.to_antenna(active_band="15m")
+    assert model.feed.wire_id == "hexbeam-band2-feed"

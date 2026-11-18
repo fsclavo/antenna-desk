@@ -51,6 +51,7 @@ from .families.typed import (
     endfed_descriptor,
     fan_dipole_descriptor,
     folded_dipole_descriptor,
+    hexbeam_band_descriptor,
     hexbeam_descriptor,
     inverted_l_descriptor,
     inverted_v_descriptor,
@@ -97,6 +98,8 @@ class OptimizerAvailability:
 
 def optimizer_availability(
     parameters: AntennaDesignParameters,
+    *,
+    hexbeam_band: str | None = None,
 ) -> OptimizerAvailability:
     if isinstance(parameters, DipoleParameters):
         return OptimizerAvailability(descriptor=dipole_descriptor(parameters))
@@ -144,6 +147,13 @@ def optimizer_availability(
         return OptimizerAvailability(descriptor=trap_yagi_descriptor(parameters))
     if isinstance(parameters, HexbeamParameters):
         if parameters.bands:
+            if hexbeam_band is not None:
+                key = hexbeam_band.casefold()
+                for index, band in enumerate(parameters.bands):
+                    if band.label.casefold() == key:
+                        return OptimizerAvailability(
+                            descriptor=hexbeam_band_descriptor(parameters, band, index)
+                        )
             return OptimizerAvailability(reason_key=_REASON_HEXBEAM_MULTIBAND)
         return OptimizerAvailability(descriptor=hexbeam_descriptor(parameters))
     if isinstance(parameters, T2FDParameters):

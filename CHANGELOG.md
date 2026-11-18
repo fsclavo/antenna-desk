@@ -17,9 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   simulation excites one selected band while the other bands remain passive.
   Schema 55 adds the optional band list without rewriting existing single-band
   values. The published five-band preset, editor, nested scene, and per-band
-  reports were added in C7b; multi-band optimizer and frequency scaling are
-  explicitly unavailable. The real coax harness, coupling, and balun are not
-  modeled.
+  reports were added in C7b; full multi-band optimization and frequency scaling
+  are explicitly unavailable, and the selected-band optimizer is described
+  below. The real coax harness, coupling, and balun are not modeled.
 - **HexBeam frequency-first estimate.** **Estimate Dimensions...** now scales
   the published G3TXQ 20 m row linearly to the requested frequency and creates a
   single-band starting design. The result warns that the other published bands
@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   chooses which band's feed marker, half-lengths, tip gap, turning radius, span,
   and detail inset are shown. The selected band's wires are emphasized and the
   other bands remain visible. The selection is view-only and not persisted.
+- **Selected-band HexBeam optimizer.** For a multi-band design, **Optimize**
+  targets the **Active band**. It searches only that band's driver/reflector
+  halves, tip gap, and height while the shared turning radius, conductor, and
+  every other band stay fixed. Validation enforces the band's nested frame,
+  conductor spacing, and a conductor-diameter clearance between adjacent band
+  radii. Each candidate excites only the target band and is evaluated at its
+  frequency, and the dialog shows the target band. Full multi-band optimization
+  remains unavailable.
 - **Multi-band HexBeam stack scaling.** In multi-band mode, changing the
   primary frequency uniformly scales the selected published stack while the
   target remains inside the primary band. Band frequencies, lengths, gaps,
@@ -43,9 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the reference height. The single-band 20 m reference was reconciled from
   219/207 to 218/412 in driver/reflector dimensions. Reports include per-band
   rows. Each analysis excites one selected band while the other bands remain
-  passive; real NEC2C runs complete for 20, 15, and 10 m. Multi-band
-  optimization and automatic frequency scaling remain unavailable;
-  the coax harness, inter-band coupling, and balun are not modeled.
+  passive; real NEC2C runs complete for 20, 15, and 10 m. Full multi-band
+  optimization and automatic frequency scaling remain unavailable; the
+  selected-band optimizer is described above, and the coax harness, inter-band
+  coupling, and balun are not modeled.
 - **Biquad and double-biquad feed transformer.** New designs start with an
   ideal 4:1 feed transformer, editable in the design panel and persisted in
   schema 53. The ratio is applied to the reported SWR and to the feed-connection
