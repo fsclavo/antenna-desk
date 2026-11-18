@@ -587,8 +587,8 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         level=EvidenceLevel.PUBLISHED,
         source=(
             "Steve Hunt, G3TXQ, 'A Broadband Hexbeam', antenneX no. 128, "
-            "December 2007: 20 m reference at 14.184 MHz with a 219 in driver "
-            "half, 207 in reflector half, 24 in tip gap, and 130 in turning radius"
+            "December 2007: 20 m reference at 14.184 MHz with a 218 in driver "
+            "half, 412 in reflector total, 24 in tip gap, and 130 in turning radius"
         ),
         tolerance=(
             "1% on the published driver/reflector half-lengths, tip gap, and turning radius"
@@ -597,9 +597,9 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "The model reconstructs the M-shaped driver and rear U-shaped reflector "
             "on the six-spreader frame; every wire point stays inside the turning "
             "radius, and the tip spacer matches the published gap. It does not "
-            "reproduce the exact commercial frame, spreader sag, feed balun, or "
-            "multi-band nesting. Gain, front-to-back ratio, and impedance are not "
-            "independently validated."
+            "reproduce the exact commercial frame, spreader sag, feed harness, "
+            "balun, or inter-band coupling. Gain, front-to-back ratio, and "
+            "impedance are not independently validated."
         ),
     ),
     "doublet": EvidenceEntry(

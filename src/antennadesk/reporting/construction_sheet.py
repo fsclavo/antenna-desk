@@ -818,6 +818,16 @@ def render_construction_sheet(
             coil_note=coil_note,
         )
     elif isinstance(parameters, HexbeamParameters):
+        band_rows = ""
+        if len(parameters.bands) > 1:
+            band_rows = f"<tr><th>Bands</th><td>{len(parameters.bands)}</td></tr>" + "".join(
+                f"<tr><th>Band</th><td>{band.label}: "
+                f"driver {_length(band.driver_half_length_m, display_units)}"
+                f" · reflector {_length(band.reflector_half_length_m, display_units)}"
+                f" · tip gap {_length(band.tip_gap_m, display_units)}"
+                f" · offset {_length(band.vertical_offset_m, display_units)}</td></tr>"
+                for band in parameters.bands
+            )
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>
 <tr><th>Driver half-length</th><td>{_length(parameters.driver_half_length_m, display_units)}</td></tr>
@@ -825,6 +835,7 @@ def render_construction_sheet(
 <tr><th>Turning radius</th><td>{_length(parameters.turning_radius_m, display_units)}</td></tr>
 <tr><th>Tip gap</th><td>{_length(parameters.tip_gap_m, display_units)}</td></tr>
 <tr><th>Overall span</th><td>{_length(parameters.overall_span_m, display_units)}</td></tr>
+{band_rows}
 <tr><th>Feed height above ground</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 """
         construction_note = _note(

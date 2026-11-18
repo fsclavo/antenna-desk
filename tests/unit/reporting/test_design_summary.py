@@ -33,11 +33,26 @@ def test_hexbeam_summary_reports_the_bent_elements() -> None:
     rows = dict(design_summary_rows(parameters))
 
     assert rows["Type"] == "Hexbeam"
-    assert rows["Driver half-length"] == "5.5626 m"
-    assert rows["Reflector half-length"] == "5.2578 m"
+    assert rows["Driver half-length"] == "5.5372 m"
+    assert rows["Reflector half-length"] == "5.2324 m"
     assert rows["Turning radius"] == "3.3020 m"
     assert rows["Tip gap"] == "0.6096 m"
     assert rows["Feed"] == "center of the M driver"
+
+
+def test_hexbeam_multiband_summary_lists_each_band() -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters()
+    rows = design_summary_rows(parameters)
+    values = dict(rows)
+
+    assert values["Bands"] == "5"
+    band_rows = [value for label, value in rows if label == "Band"]
+    assert len(band_rows) == 5
+    assert band_rows[0].startswith("20m:")
+    assert "offset" in band_rows[0]
+    assert values["Overall span"] == "6.6040 m"
 
 
 def test_trap_yagi_summary_reports_the_traps() -> None:

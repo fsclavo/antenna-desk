@@ -983,8 +983,8 @@ six-spreader frame. The editor sets the frequency, driver and reflector
 half-lengths, turning radius, tip gap, height, center feed gap, reflector
 fore-aft trim, azimuth, conductor radius, material, and ground.
 
-The defaults are the published G3TXQ 20 m reference at 14.184 MHz: 219 in
-driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius.
+The defaults are the published G3TXQ 20 m reference at 14.184 MHz: 218 in
+driver half, 412 in reflector total, 24 in tip gap, and 130 in turning radius.
 The generator scales that reference to the requested frequency; **Load starting
 dimensions** reapplies the scaling after a frequency edit and keeps the
 installation height, conductor, ground, and azimuth.
@@ -992,11 +992,19 @@ installation height, conductor, ground, and azimuth.
 The driver knees lie on the 30° front spreaders, the reflector wraps the rear
 three sides, and 24 in tip spacers connect the driver tips to the reflector
 ends. The modeled span is the frame diameter, about 6.60 m at 20 m, and every
-wire point stays inside the turning radius. **Optimize...** searches the driver
-and reflector halves, turning radius, tip gap, height, and conductor radius
-jointly. The frame, spreader sag, feed balun, and multi-band nesting are not
-modeled. Gain, front-to-back ratio, and impedance are not independently
-validated.
+wire point stays inside the turning radius.
+
+Use the **Bands** checkboxes to build a nested 20/17/15/12/10 m stack. Two or
+more selected bands use the published G3TXQ rows, displayed read-only in the
+band table. The largest selected band defines the shared turning radius; the
+reference height is the lowest selected band, and the other bands are stacked
+by their published vertical offsets. The 20 m row used by the family is
+218 in driver half, 412 in reflector total, 24 in tip gap, and 130 in turning
+radius. Multi-band optimization and automatic frequency scaling are not
+available yet; the real coax harness, inter-band coupling, and balun are not
+modeled. **Optimize...** searches the driver and reflector halves, turning
+radius, tip gap, height, and conductor radius jointly for a single-band design.
+Gain, front-to-back ratio, and impedance are not independently validated.
 
 ## Create a trapped Yagi
 

@@ -38,7 +38,9 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
    half, reflector half, tip gap, feed gap, and vertical offset above the
    reference plane. The first band is the lowest-frequency/largest element and
    must match the scalar fields. Labels and frequencies must be unique. The
-   current limit is five bands.
+   current limit is five bands. The preset frequencies are common band centers
+   (14.184, 18.118, 21.2, 24.94, and 28.5 MHz); the published table supplies the
+   lengths and spacing, not a unique design frequency for each row.
 
 4. **Height and vertical offsets.** `height_m` is the reference plane of the
    lowest band in the stack (10 m for the standard five-band set). Each band
@@ -55,11 +57,10 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
 6. **Published rows.** The multi-band preset uses the G3TXQ five-band table:
    20 m 218 in driver half / 412 in reflector total / 24 in end spacing,
    17 m 169.5/321/18.5, 15 m 144.5/274.4/16, 12 m 121.7/232/13.5, and
-   10 m 106.8/204.4/12, with a 130 in turning radius. The current single-band
-   reference still carries 219/207/24/130; the reconciliation to 218/412 is a
-   required follow-up in the multi-band implementation slice and must update
-   the reference library, evidence text, tests, and docs together. Do not mix
-   the two rows inside one preset.
+   10 m 106.8/204.4/12, with a 130 in turning radius. C7b reconciled the
+   single-band reference from 219/207 to 218/412 and updated the reference
+   library, evidence text, tests, and docs together. Do not mix the two rows
+   inside one preset.
 
 7. **Schema version 55.** Add an optional `bands` list to the hexbeam payload.
    Existing single-band payloads migrate with an empty list and keep using the
@@ -104,7 +105,7 @@ Negative:
 | Slice | Scope | Status |
 |---|---|---|
 | C7a | ADR, `HexbeamBand`, optional `bands`, sources, schema v55, domain/persistence/registry tests | Implemented 2026-11-18 |
-| C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, scene highlight, per-band reports | Queued |
+| C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, nested scene rendering, per-band reports | Implemented 2026-11-18 |
 | C7c | Selected-band optimizer, feed-harness limitations, validation/evidence audit | Queued |
 
 ## References

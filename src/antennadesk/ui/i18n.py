@@ -1306,13 +1306,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "catalog.hexbeam.description": {
         Language.ENGLISH: (
-            "Single-band broadband beam with an M-shaped driven element and a "
-            "U-shaped reflector around the rear of a six-spreader frame."
+            "Broadband beam with an M-shaped driven element and a U-shaped "
+            "reflector around the rear of a six-spreader frame; one to five "
+            "nested bands."
         ),
         Language.SPANISH: (
-            "Beam de banda ancha y una sola banda con elemento excitado en forma "
-            "de M y reflector en forma de U alrededor de la parte trasera de un "
-            "marco de seis separadores."
+            "Beam de banda ancha con elemento excitado en forma de M y reflector "
+            "en forma de U alrededor de la parte trasera de un marco de seis "
+            "separadores; de una a cinco bandas anidadas."
         ),
     },
     "catalog.family.wire": {
@@ -1778,11 +1779,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "reference.g3txq_hexbeam_20m.published": {
         Language.ENGLISH: (
-            "14.184 MHz: 219 in driver half, 207 in reflector half, 24 in tip gap, "
+            "14.184 MHz: 218 in driver half, 412 in reflector total, 24 in tip gap, "
             "and 130 in turning radius."
         ),
         Language.SPANISH: (
-            "14.184 MHz: media del excitador de 219 in, media del reflector de 207 in, "
+            "14.184 MHz: media del excitador de 218 in, total del reflector de 412 in, "
             "separación de puntas de 24 in y radio de giro de 130 in."
         ),
     },
@@ -3602,6 +3603,39 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Separador aislante entre la punta del excitado y el extremo del "
             "reflector en cada lado; no es una brecha en el hilo del reflector."
         ),
+    },
+    "help.hexbeam.bands": {
+        Language.ENGLISH: (
+            "Published G3TXQ bands. The largest selected band defines the shared "
+            "turning radius; the higher bands are nested inboard and stacked by "
+            "their vertical offsets. Multi-band optimization is not available yet."
+        ),
+        Language.SPANISH: (
+            "Bandas publicadas G3TXQ. La banda seleccionada más grande define el "
+            "radio de giro compartido; las bandas superiores se anidan hacia "
+            "adentro y se apilan con sus desplazamientos verticales. La "
+            "optimización multibanda aún no está disponible."
+        ),
+    },
+    "help.hexbeam.band_20m": {
+        Language.ENGLISH: "Published 20 m row: 218 in driver half, 412 in reflector total, 24 in tip gap.",
+        Language.SPANISH: "Fila publicada de 20 m: 218 in de semilongitud del excitado, 412 in de total del reflector, 24 in de separación de puntas.",
+    },
+    "help.hexbeam.band_17m": {
+        Language.ENGLISH: "Published 17 m row: 169.5 in driver half, 321 in reflector total, 18.5 in tip gap.",
+        Language.SPANISH: "Fila publicada de 17 m: 169,5 in de semilongitud del excitado, 321 in de total del reflector, 18,5 in de separación de puntas.",
+    },
+    "help.hexbeam.band_15m": {
+        Language.ENGLISH: "Published 15 m row: 144.5 in driver half, 274.4 in reflector total, 16 in tip gap.",
+        Language.SPANISH: "Fila publicada de 15 m: 144,5 in de semilongitud del excitado, 274,4 in de total del reflector, 16 in de separación de puntas.",
+    },
+    "help.hexbeam.band_12m": {
+        Language.ENGLISH: "Published 12 m row: 121.7 in driver half, 232 in reflector total, 13.5 in tip gap.",
+        Language.SPANISH: "Fila publicada de 12 m: 121,7 in de semilongitud del excitado, 232 in de total del reflector, 13,5 in de separación de puntas.",
+    },
+    "help.hexbeam.band_10m": {
+        Language.ENGLISH: "Published 10 m row: 106.8 in driver half, 204.4 in reflector total, 12 in tip gap.",
+        Language.SPANISH: "Fila publicada de 10 m: 106,8 in de semilongitud del excitado, 204,4 in de total del reflector, 12 in de separación de puntas.",
     },
     "help.hexbeam.element_separation": {
         Language.ENGLISH: (
@@ -10834,6 +10868,57 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reflector fore-aft trim",
         Language.SPANISH: "Ajuste longitudinal del reflector",
     },
+    "hexbeam.bands": {
+        Language.ENGLISH: "Bands",
+        Language.SPANISH: "Bandas",
+    },
+    "hexbeam.bands_hint": {
+        Language.ENGLISH: (
+            "Select two or more published bands to build a nested stack. One "
+            "selected band loads its published row; no selection edits a custom "
+            "single band. The largest band defines the shared frame."
+        ),
+        Language.SPANISH: (
+            "Seleccioná dos o más bandas publicadas para construir una pila "
+            "anidada. Una banda seleccionada carga su fila publicada; sin selección "
+            "se edita una banda única personalizada. La banda más grande define el "
+            "marco compartido."
+        ),
+    },
+    "hexbeam.band.20m": {
+        Language.ENGLISH: "20 m",
+        Language.SPANISH: "20 m",
+    },
+    "hexbeam.band.17m": {
+        Language.ENGLISH: "17 m",
+        Language.SPANISH: "17 m",
+    },
+    "hexbeam.band.15m": {
+        Language.ENGLISH: "15 m",
+        Language.SPANISH: "15 m",
+    },
+    "hexbeam.band.12m": {
+        Language.ENGLISH: "12 m",
+        Language.SPANISH: "12 m",
+    },
+    "hexbeam.band.10m": {
+        Language.ENGLISH: "10 m",
+        Language.SPANISH: "10 m",
+    },
+    "hexbeam.vertical_offset": {
+        Language.ENGLISH: "Vertical offset",
+        Language.SPANISH: "Desplazamiento vertical",
+    },
+    "hexbeam.multiband_geometry": {
+        Language.ENGLISH: (
+            "{bands} bands · span {span} {unit} · turning radius {radius} {unit} · "
+            "reference height {height} {unit}"
+        ),
+        Language.SPANISH: (
+            "{bands} bandas · envergadura {span} {unit} · radio de giro {radius} "
+            "{unit} · altura de referencia {height} {unit}"
+        ),
+    },
     "hexbeam.geometry": {
         Language.ENGLISH: (
             "driver {driver} {unit} half · reflector {reflector} {unit} half · "
@@ -10863,21 +10948,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "hexbeam.evidence": {
         Language.ENGLISH: (
-            "Published starting dimensions from G3TXQ (219 in driver half, 207 in "
-            "reflector half, 24 in tip gap, 130 in turning radius at 14.184 MHz), "
+            "Published starting dimensions from G3TXQ (218 in driver half, 412 in "
+            "reflector total, 24 in tip gap, 130 in turning radius at 14.184 MHz), "
             "reconstructed as an M-shaped driver and a rear U-shaped reflector on "
-            "the six-spreader frame. The frame, spreader sag, feed balun, and "
-            "multi-band nesting are not modeled; gain, front-to-back ratio, and "
-            "impedance are not independently validated."
+            "the six-spreader frame. The frame, spreader sag, feed harness, balun, "
+            "and inter-band coupling are not modeled; gain, front-to-back ratio, "
+            "and impedance are not independently validated."
         ),
         Language.SPANISH: (
-            "Dimensiones iniciales publicadas por G3TXQ (219 in de semilongitud del "
-            "excitado, 207 in del reflector, 24 in de separación de puntas y 130 in "
+            "Dimensiones iniciales publicadas por G3TXQ (218 in de semilongitud del "
+            "excitado, 412 in de total del reflector, 24 in de separación de puntas y 130 in "
             "de radio de giro a 14,184 MHz), reconstruidas como excitado en M y "
             "reflector en U trasero sobre el marco de seis separadores. No se "
-            "modelan el marco, la flecha de los separadores, el balun ni el anidado "
-            "multibanda; la ganancia, la relación delante/atrás y la impedancia no "
-            "están validadas independientemente."
+            "modelan el marco, la flecha de los separadores, el arnés de "
+            "alimentación, el balun ni el acoplamiento entre bandas; la ganancia, "
+            "la relación delante/atrás y la impedancia no están validadas "
+            "independientemente."
         ),
     },
     "hexbeam.constraint.driver_length": {
@@ -10909,6 +10995,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Excitado en M y reflector en U trasero sobre un marco de seis "
             "separadores; radio de giro {radius}. No se modelan el marco, la flecha "
             "de los separadores ni el balun."
+        ),
+    },
+    "hexbeam.multiband_scene_note": {
+        Language.ENGLISH: (
+            "Bands: {bands}. Dimensions and the feed marker refer to the "
+            "{primary} band; higher bands are nested and stacked."
+        ),
+        Language.SPANISH: (
+            "Bandas: {bands}. Las cotas y el marcador de alimentación "
+            "corresponden a la banda de {primary}; las bandas superiores están "
+            "anidadas y apiladas."
         ),
     },
     "hexbeam.spreader_angle_note": {

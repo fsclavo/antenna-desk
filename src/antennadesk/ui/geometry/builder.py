@@ -1678,6 +1678,14 @@ def _add_hexbeam_dimensions(
             radius=_format_length(parameters.turning_radius_m, translator, factory.display_units),
         )
     )
+    if len(parameters.bands) > 1:
+        notes.append(
+            translator.t(
+                "hexbeam.multiband_scene_note",
+                bands=", ".join(band.label for band in parameters.bands),
+                primary=parameters.bands[0].label,
+            )
+        )
 
 
 def _add_trap_yagi_dimensions(
@@ -3529,6 +3537,8 @@ def _summary(
             radius = 0.0
             gap = 0.0
             height = min_z
+        if isinstance(parameters, HexbeamParameters) and len(parameters.bands) > 1:
+            parts.append(f"{translator.t('hexbeam.bands').lower()} {len(parameters.bands)}")
         parts.extend(
             [
                 f"{translator.t('hexbeam.driver_half').lower()} "
@@ -4118,7 +4128,7 @@ def build_scene(
         ScenePolyline(
             (factory.project(wire.start), factory.project(wire.end)),
             role="wire",
-            width=2.5,
+            width=1.5 if wire.id.startswith("hexbeam-band") else 2.5,
         )
         for wire in model.wires
     ) + _transmission_line_polylines(model, factory)

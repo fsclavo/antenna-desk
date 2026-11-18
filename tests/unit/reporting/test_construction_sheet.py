@@ -586,6 +586,22 @@ def test_hexbeam_construction_sheet_lists_the_bent_elements(
     assert "frame" in sheet
 
 
+def test_hexbeam_multiband_construction_sheet_lists_the_bands(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    design = sample_project.designs[0]
+    hexbeam = design.with_parameters(published_hexbeam_multiband_parameters())
+    sheet = render_construction_sheet(sample_project, hexbeam, None)
+
+    assert "Bands" in sheet
+    assert "Band" in sheet
+    assert "20m:" in sheet
+    assert "10m:" in sheet
+    assert sheet.count("Band</th>") >= 5
+
+
 def test_trap_yagi_construction_sheet_lists_the_traps(
     sample_project: Project,
 ) -> None:

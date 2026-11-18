@@ -512,7 +512,7 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
         "source": (
             "Steve Hunt, G3TXQ, «A Broadband Hexbeam», antenneX n.º 128, "
             "diciembre de 2007: referencia de 20 m a 14,184 MHz con semilongitud "
-            "del excitador de 219 in, semilongitud del reflector de 207 in, "
+            "del excitador de 218 in, total del reflector de 412 in, "
             "separación de puntas de 24 in y radio de giro de 130 in"
         ),
         "tolerance": (
@@ -523,9 +523,9 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
             "El modelo reconstruye el excitado en M y el reflector en U trasero "
             "como un camino de hilo doblado sobre el marco de seis separadores; no "
             "reproduce el marco comercial exacto, la flecha de los separadores, el "
-            "balun de alimentación ni el anidamiento multibanda. La ganancia, la "
-            "relación frente/espalda y la impedancia no están validadas "
-            "independientemente."
+            "arnés de alimentación, el balun ni el acoplamiento entre bandas. La "
+            "ganancia, la relación frente/espalda y la impedancia no están "
+            "validadas independientemente."
         ),
     },
     "doublet": {

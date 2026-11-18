@@ -23,17 +23,17 @@ HEXBEAM_DRIVER_ID_PREFIX = "hexbeam-driver-"
 HEXBEAM_REFLECTOR_ID_PREFIX = "hexbeam-reflector-"
 HEXBEAM_REFLECTOR_REAR_ID = "hexbeam-reflector-rear"
 
-# Steve Hunt, G3TXQ, "A Broadband Hexbeam", antenneX no. 128, December 2007,
-# as restated by the CyberDev broadband-hexbeam calculator: 20 m reference at
-# 14.184 MHz with a 219 in driver half, 207 in reflector half, 24 in tip gap,
-# and a 130 in spreader (turning radius).
+# Steve Hunt, G3TXQ, "A Broadband Hexbeam", antenneX no. 128, December 2007:
+# 20 m reference at 14.184 MHz with a 218 in driver half, 412 in reflector
+# total, 24 in end spacing, and a 130 in spreader (turning radius).
 PUBLISHED_HEXBEAM_FREQUENCY_HZ = 14_184_000.0
-PUBLISHED_DRIVER_HALF_M = 219.0 * 0.0254
-PUBLISHED_REFLECTOR_HALF_M = 207.0 * 0.0254
+PUBLISHED_DRIVER_HALF_M = 218.0 * 0.0254
+PUBLISHED_REFLECTOR_HALF_M = 206.0 * 0.0254
 PUBLISHED_TIP_GAP_M = 24.0 * 0.0254
 PUBLISHED_TURNING_RADIUS_M = 130.0 * 0.0254
 DEFAULT_FEED_GAP_M = 1.25 * 0.0254
 DEFAULT_ELEMENT_SEPARATION_M = 0.0
+HEXBEAM_BAND_LABELS = ("20m", "17m", "15m", "12m", "10m")
 
 _FRONT_HALF_ANGLE_RAD = math.radians(30.0)
 _FRONT_COS = math.cos(_FRONT_HALF_ANGLE_RAD)
@@ -179,6 +179,27 @@ class HexbeamBand:
         ensure_non_negative(self.vertical_offset_m, name="vertical_offset_m")
 
 
+@dataclass(frozen=True, slots=True)
+class HexbeamBandPreset:
+    """A published G3TXQ band row for the standard five-band stack."""
+
+    label: str
+    frequency_hz: float
+    driver_half_in: float
+    reflector_total_in: float
+    tip_gap_in: float
+    vertical_offset_in: float
+
+
+HEXBEAM_BAND_PRESETS: tuple[HexbeamBandPreset, ...] = (
+    HexbeamBandPreset("20m", 14_184_000.0, 218.0, 412.0, 24.0, 38.0),
+    HexbeamBandPreset("17m", 18_118_000.0, 169.5, 321.0, 18.5, 15.0),
+    HexbeamBandPreset("15m", 21_200_000.0, 144.5, 274.4, 16.0, 9.0),
+    HexbeamBandPreset("12m", 24_940_000.0, 121.7, 232.0, 13.5, 5.0),
+    HexbeamBandPreset("10m", 28_500_000.0, 106.8, 204.4, 12.0, 0.0),
+)
+
+
 def published_hexbeam_parameters(
     *,
     frequency_hz: float = PUBLISHED_HEXBEAM_FREQUENCY_HZ,
@@ -204,6 +225,64 @@ def published_hexbeam_parameters(
         wire_radius_m=wire_radius_m,
         material=material,
         ground=ground,
+    )
+
+
+def published_hexbeam_multiband_parameters(
+    *,
+    labels: tuple[str, ...] = HEXBEAM_BAND_LABELS,
+    height_m: float = 10.0,
+    azimuth_deg: float = 0.0,
+    wire_radius_m: float = 0.001,
+    material: ConductorMaterial = COPPER,
+    ground: GroundModel = FREE_SPACE,
+) -> HexbeamParameters:
+    """Return the published G3TXQ band rows selected by ``labels``.
+
+    The largest selected band defines the outer turning radius. Vertical
+    offsets are normalized so the lowest selected band sits on ``height_m``.
+    """
+
+    requested = {label.casefold() for label in labels}
+    known = {preset.label.casefold() for preset in HEXBEAM_BAND_PRESETS}
+    unknown = requested - known
+    if unknown:
+        raise ValueError(f"unknown hexbeam band labels: {sorted(unknown)}")
+    selected = tuple(
+        preset for preset in HEXBEAM_BAND_PRESETS if preset.label.casefold() in requested
+    )
+    if not selected:
+        raise ValueError("at least one hexbeam band is required")
+    primary = selected[0]
+    radius = PUBLISHED_TURNING_RADIUS_M * PUBLISHED_HEXBEAM_FREQUENCY_HZ / primary.frequency_hz
+    minimum_offset_in = min(preset.vertical_offset_in for preset in selected)
+    bands = tuple(
+        HexbeamBand(
+            label=preset.label,
+            frequency_hz=preset.frequency_hz,
+            driver_half_length_m=preset.driver_half_in * 0.0254,
+            reflector_half_length_m=preset.reflector_total_in * 0.5 * 0.0254,
+            tip_gap_m=preset.tip_gap_in * 0.0254,
+            feed_gap_m=(DEFAULT_FEED_GAP_M * PUBLISHED_HEXBEAM_FREQUENCY_HZ / preset.frequency_hz),
+            vertical_offset_m=(preset.vertical_offset_in - minimum_offset_in) * 0.0254,
+        )
+        for preset in selected
+    )
+    first = bands[0]
+    return HexbeamParameters(
+        frequency_hz=first.frequency_hz,
+        driver_half_length_m=first.driver_half_length_m,
+        reflector_half_length_m=first.reflector_half_length_m,
+        turning_radius_m=radius,
+        tip_gap_m=first.tip_gap_m,
+        height_m=height_m,
+        feed_gap_m=first.feed_gap_m,
+        element_separation_m=DEFAULT_ELEMENT_SEPARATION_M,
+        azimuth_deg=azimuth_deg,
+        wire_radius_m=wire_radius_m,
+        material=material,
+        ground=ground,
+        bands=bands,
     )
 
 

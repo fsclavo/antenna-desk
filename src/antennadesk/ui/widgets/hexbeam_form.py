@@ -1,22 +1,33 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Inline editor for single-band hexbeams."""
+"""Inline editor for single- and multi-band hexbeams."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from dataclasses import replace
+
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
+    QHeaderView,
     QLabel,
     QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from ...domain.antennas.hexbeam import (
+    HEXBEAM_BAND_LABELS,
+    HexbeamBand,
     HexbeamParameters,
+    published_hexbeam_multiband_parameters,
     published_hexbeam_parameters,
 )
 from ...domain.antennas.material_defaults import default_material_for_template
@@ -75,6 +86,7 @@ class HexbeamForm(QWidget):
             LengthPolicy.FIXED,
         )
         self._updating = False
+        self._preserved_bands: tuple[HexbeamBand, ...] = ()
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
 
@@ -202,6 +214,32 @@ class HexbeamForm(QWidget):
             translator,
         )
 
+        self._band_group = QGroupBox(translator.t("hexbeam.bands"), self)
+        self._band_checks: dict[str, QCheckBox] = {}
+        checks_layout = QVBoxLayout()
+        for label in HEXBEAM_BAND_LABELS:
+            check = QCheckBox(translator.t(f"hexbeam.band.{label}"), self._band_group)
+            check.setObjectName(f"band_{label}")
+            check.toggled.connect(self._band_toggled)
+            apply_help(check, translator, f"band_{label}", family="hexbeam")
+            self._band_checks[label] = check
+            checks_layout.addWidget(check)
+        self._bands_note = QLabel(translator.t("hexbeam.bands_hint"), self._band_group)
+        self._bands_note.setWordWrap(True)
+        self._band_table = QTableWidget(0, 6, self._band_group)
+        self._band_table.verticalHeader().setVisible(False)
+        self._band_table.setAlternatingRowColors(True)
+        self._band_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self._band_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self._band_table.setMinimumHeight(130)
+        self._band_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._retranslate_band_table_headers()
+        band_layout = QVBoxLayout(self._band_group)
+        band_layout.addLayout(checks_layout)
+        band_layout.addWidget(self._bands_note)
+        band_layout.addWidget(self._band_table)
+        apply_help(self._band_group, translator, "bands", family="hexbeam")
+
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
             self,
@@ -242,6 +280,7 @@ class HexbeamForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self._labels.bind_form(form)
         layout.addLayout(form)
+        layout.addWidget(self._band_group)
         layout.addWidget(self._geometry)
         layout.addWidget(self._starting_note)
 
@@ -252,9 +291,9 @@ class HexbeamForm(QWidget):
             self._turning_radius,
             self._tip_gap,
             self._feed_gap,
-            self._element_separation,
         ):
-            widget.valueChanged.connect(self._managed_field_changed)
+            widget.valueChanged.connect(self._band_dimension_changed)
+        self._element_separation.valueChanged.connect(self._managed_field_changed)
         for widget in (
             self._height,
             self._azimuth,
@@ -290,6 +329,20 @@ class HexbeamForm(QWidget):
             self._translator,
             ("ground.free_space", "ground.perfect", "ground.finite"),
         )
+        self._band_group.setTitle(self._translator.t("hexbeam.bands"))
+        self._bands_note.setText(self._translator.t("hexbeam.bands_hint"))
+        apply_help(self._band_group, self._translator, "bands", family="hexbeam")
+        for label, check in self._band_checks.items():
+            check.setText(self._translator.t(f"hexbeam.band.{label}"))
+            apply_help(check, self._translator, f"band_{label}", family="hexbeam")
+        labels = self._selected_band_labels()
+        if len(labels) > 1:
+            self._populate_band_table(self._multiband_parameters_for(labels).bands)
+        elif self._preserved_bands:
+            self._populate_band_table(self._preserved_bands)
+        else:
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
         self._update_geometry()
 
     def _emit_changed(self, *_args: object) -> None:
@@ -300,6 +353,11 @@ class HexbeamForm(QWidget):
     def _frequency_changed(self, _value: float) -> None:
         if self._updating:
             return
+        if self._selected_band_labels():
+            self._set_band_checks(())
+            self._set_multiband_widgets(False)
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
         if self._starting_state.pristine:
             try:
                 self.load_starting_dimensions()
@@ -309,6 +367,15 @@ class HexbeamForm(QWidget):
             return
         self._starting_state.show_stale(self._frequency.value())
         self._emit_changed()
+
+    def _band_dimension_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        if self._selected_band_labels():
+            self._set_band_checks(())
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
+        self._managed_field_changed()
 
     def _managed_field_changed(self, *_args: object) -> None:
         if self._updating:
@@ -345,7 +412,141 @@ class HexbeamForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
+    def _selected_band_labels(self) -> tuple[str, ...]:
+        return tuple(label for label in HEXBEAM_BAND_LABELS if self._band_checks[label].isChecked())
+
+    def _set_band_checks(self, labels: tuple[str, ...]) -> None:
+        previous = self._updating
+        self._updating = True
+        try:
+            selected = set(labels)
+            for label, check in self._band_checks.items():
+                check.setChecked(label in selected)
+        finally:
+            self._updating = previous
+
+    def _retranslate_band_table_headers(self, unit: str | None = None) -> None:
+        suffix = f" ({unit})" if unit else ""
+        self._band_table.setHorizontalHeaderLabels(
+            (
+                self._translator.t("band.table.band"),
+                f"{self._translator.t('field.frequency')} (MHz)",
+                f"{self._translator.t('hexbeam.driver_half')}{suffix}",
+                f"{self._translator.t('hexbeam.reflector_half')}{suffix}",
+                f"{self._translator.t('hexbeam.tip_gap')}{suffix}",
+                f"{self._translator.t('hexbeam.vertical_offset')}{suffix}",
+            )
+        )
+
+    def _populate_band_table(self, bands: tuple[HexbeamBand, ...]) -> None:
+        if len(bands) < 2:
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
+            return
+        values = [
+            value
+            for band in bands
+            for value in (
+                band.driver_half_length_m,
+                band.reflector_half_length_m,
+                band.tip_gap_m,
+                band.vertical_offset_m,
+            )
+        ]
+        unit = self._display_units.table_unit(values)
+        self._retranslate_band_table_headers(str(unit))
+        self._band_table.setRowCount(len(bands))
+        for row, band in enumerate(bands):
+            items = (
+                self._translator.t(f"hexbeam.band.{band.label}"),
+                f"{band.frequency_hz / 1_000_000.0:.3f}",
+                self._display_units.format_number(
+                    band.driver_half_length_m,
+                    unit=unit,
+                    trim=False,
+                ),
+                self._display_units.format_number(
+                    band.reflector_half_length_m,
+                    unit=unit,
+                    trim=False,
+                ),
+                self._display_units.format_number(band.tip_gap_m, unit=unit, trim=False),
+                self._display_units.format_number(
+                    band.vertical_offset_m,
+                    unit=unit,
+                    trim=False,
+                ),
+            )
+            for column, text in enumerate(items):
+                item = QTableWidgetItem(text)
+                if column > 0:
+                    item.setTextAlignment(
+                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                    )
+                self._band_table.setItem(row, column, item)
+        self._band_table.setVisible(True)
+
+    def _set_multiband_widgets(self, multiband: bool) -> None:
+        for widget in (
+            self._frequency,
+            self._driver_half,
+            self._reflector_half,
+            self._turning_radius,
+            self._tip_gap,
+            self._feed_gap,
+        ):
+            widget.setEnabled(not multiband)
+
+    def _multiband_parameters_for(self, labels: tuple[str, ...]) -> HexbeamParameters:
+        base = published_hexbeam_multiband_parameters(
+            labels=labels,
+            height_m=self._height_field.value_m(),
+            azimuth_deg=self._azimuth.value(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+        return replace(
+            base,
+            element_separation_m=self._element_separation_field.value_m(),
+        )
+
+    def _single_band_preset_parameters(self, label: str) -> HexbeamParameters:
+        return replace(self._multiband_parameters_for((label,)), bands=())
+
+    def _band_toggled(self, _checked: bool) -> None:
+        if self._updating:
+            return
+        self._preserved_bands = ()
+        labels = self._selected_band_labels()
+        if len(labels) > 1:
+            self.set_parameters(self._multiband_parameters_for(labels))
+            self._starting_state.mark_pristine()
+        elif len(labels) == 1:
+            self.set_parameters(self._single_band_preset_parameters(labels[0]))
+            self._set_band_checks(labels)
+            self._starting_state.mark_pristine()
+        else:
+            self._set_multiband_widgets(False)
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
+            self._starting_state.mark_non_pristine()
+            self._emit_changed()
+
     def load_starting_dimensions(self) -> None:
+        labels = self._selected_band_labels()
+        if labels:
+            parameters = (
+                self._multiband_parameters_for(labels)
+                if len(labels) > 1
+                else self._single_band_preset_parameters(labels[0])
+            )
+            self.set_parameters(parameters)
+            if len(labels) == 1:
+                self._set_band_checks(labels)
+            self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())
+            self.changed.emit()
+            return
         try:
             current = self.parameters()
         except (ValueError, TypeError):
@@ -432,6 +633,16 @@ class HexbeamForm(QWidget):
                 self._permittivity.setValue(parameters.ground.relative_permittivity)
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
+            labels = tuple(band.label for band in parameters.bands)
+            known_labels = set(HEXBEAM_BAND_LABELS)
+            self._preserved_bands = (
+                parameters.bands
+                if any(band.label not in known_labels for band in parameters.bands)
+                else ()
+            )
+            self._set_band_checks(labels)
+            self._populate_band_table(parameters.bands)
+            self._set_multiband_widgets(len(parameters.bands) > 1)
         finally:
             self._updating = False
         self._starting_state.mark_non_pristine()
@@ -448,6 +659,18 @@ class HexbeamForm(QWidget):
             self._geometry.setText("")
             return
         unit = self._translator.t(length_unit_key(self._unit_system))
+        if len(parameters.bands) > 1:
+            self._geometry.setText(
+                self._translator.t(
+                    "hexbeam.multiband_geometry",
+                    bands=len(parameters.bands),
+                    span=f"{length_from_m(parameters.overall_span_m, self._unit_system):.3f}",
+                    radius=f"{length_from_m(parameters.turning_radius_m, self._unit_system):.3f}",
+                    height=f"{length_from_m(parameters.height_m, self._unit_system):.3f}",
+                    unit=unit,
+                )
+            )
+            return
         driver = length_from_m(parameters.driver_half_length_m, self._unit_system)
         reflector = length_from_m(parameters.reflector_half_length_m, self._unit_system)
         span = length_from_m(parameters.overall_span_m, self._unit_system)
@@ -464,7 +687,10 @@ class HexbeamForm(QWidget):
         )
 
     def parameters(self) -> HexbeamParameters:
-        return HexbeamParameters(
+        labels = self._selected_band_labels()
+        if len(labels) > 1:
+            return self._multiband_parameters_for(labels)
+        parameters = HexbeamParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             driver_half_length_m=self._driver_half_field.value_m(),
             reflector_half_length_m=self._reflector_half_field.value_m(),
@@ -478,3 +704,6 @@ class HexbeamForm(QWidget):
             material=self._selected_material(),
             ground=self._ground_model(),
         )
+        if self._preserved_bands:
+            return replace(parameters, bands=self._preserved_bands)
+        return parameters

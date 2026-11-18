@@ -80,7 +80,7 @@ def test_hexbeam_435_scene_uses_cm_and_keeps_the_small_gap_visible() -> None:
         "hexbeam",
     )
 
-    assert "driver half-length 18.14 cm" in scene.summary
+    assert "driver half-length 18.06 cm" in scene.summary
     assert "tip gap 1.99 cm" in scene.summary
     assert "1.99 cm" in {dimension.text for dimension in scene.dimensions}
 

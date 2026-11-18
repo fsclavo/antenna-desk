@@ -48,10 +48,11 @@ The correct topology is documented by G3TXQ and the K4KIO single-band top view:
   ends, on the hexagon sides;
 - everything stays at or inside the 130 in turning radius.
 
-The repository currently declares 219 in driver half, 207 in reflector half,
+At C6 time the repository declared 219 in driver half, 207 in reflector half,
 24 in tip gap, and 130 in turning radius. The G3TXQ broadband five-band table
 uses 218 in driver half, 412 in reflector total, 24 in end spacing, and 130 in
 turning radius. The difference is below 1 %, but the two rows must not be mixed.
+C7b later reconciled the canonical row to 218/412.
 
 **C6 decision:** keep the current single-band constants for the topology fix so
 the change does not also become a data-source migration. Make the geometry
@@ -111,9 +112,11 @@ coordinates.
 
 ## Result (2026-11-18)
 
-The implemented single-band model uses the current 219/207/24/130 row and ten
-canonical wires: feed, four driver segments, and five reflector segments. The
-20 m reference now has:
+The implemented single-band model used the then-current 219/207/24/130 row and
+ten canonical wires: feed, four driver segments, and five reflector segments.
+The later C7b multiband preset reconciled the canonical 20 m row to G3TXQ
+218/412/24/130; the C6 values below are the historical C6 result. The 20 m
+reference had:
 
 - 6.604 m overall span;
 - 3.302 m maximum wire radius, with every endpoint at or inside it;

@@ -513,8 +513,8 @@ full τ/σ optimizer; the registry returns an explicit unavailable reason.
 `HexbeamParameters` stores the design frequency, driver and reflector
 half-lengths, turning radius, tip gap, height, center feed gap, reflector
 fore-aft trim, azimuth, radius, material, and ground. The default values are
-the published G3TXQ 20 m reference scaled linearly with frequency: 219 in
-driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius at
+the published G3TXQ 20 m reference scaled linearly with frequency: 218 in
+driver half, 412 in reflector total, 24 in tip gap, and 130 in turning radius at
 14.184 MHz. The driver half is measured from the feed center to the tip; the
 reflector half is measured from the middle of the rear side to the reflector
 end. `to_antenna()` builds an M-shaped driver split around a small center feed

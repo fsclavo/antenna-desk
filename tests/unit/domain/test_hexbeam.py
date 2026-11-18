@@ -23,10 +23,10 @@ from antennadesk.domain.antennas.hexbeam import (
     PUBLISHED_REFLECTOR_HALF_M,
     PUBLISHED_TIP_GAP_M,
     PUBLISHED_TURNING_RADIUS_M,
-    HexbeamBand,
     HexbeamGeometryError,
     HexbeamParameters,
     hexbeam_frame_geometry,
+    published_hexbeam_multiband_parameters,
     published_hexbeam_parameters,
 )
 
@@ -36,29 +36,7 @@ def _wire(model, wire_id: str):  # type: ignore[no-untyped-def]
 
 
 def _published_multiband():  # type: ignore[no-untyped-def]
-    primary = published_hexbeam_parameters()
-    table = (
-        ("20m", 14_184_000.0, 0.9652),
-        ("17m", 18_118_000.0, 0.3810),
-        ("15m", 21_200_000.0, 0.2286),
-        ("12m", 24_940_000.0, 0.1270),
-        ("10m", 28_500_000.0, 0.0),
-    )
-    bands = []
-    for label, frequency_hz, vertical_offset_m in table:
-        band = published_hexbeam_parameters(frequency_hz=frequency_hz)
-        bands.append(
-            HexbeamBand(
-                label=label,
-                frequency_hz=band.frequency_hz,
-                driver_half_length_m=band.driver_half_length_m,
-                reflector_half_length_m=band.reflector_half_length_m,
-                tip_gap_m=band.tip_gap_m,
-                feed_gap_m=band.feed_gap_m,
-                vertical_offset_m=vertical_offset_m,
-            )
-        )
-    return replace(primary, bands=tuple(bands))
+    return published_hexbeam_multiband_parameters()
 
 
 def test_published_hexbeam_reference_dimensions() -> None:
@@ -246,7 +224,7 @@ def test_hexbeam_rejects_paths_that_do_not_fit_the_frame() -> None:
     with pytest.raises(HexbeamGeometryError, match="reflector_half_length_m is too short"):
         HexbeamParameters(
             frequency_hz=14_184_000.0,
-            driver_half_length_m=5.5626,
+            driver_half_length_m=5.5372,
             reflector_half_length_m=4.0,
             turning_radius_m=3.302,
             tip_gap_m=0.6096,
@@ -254,7 +232,7 @@ def test_hexbeam_rejects_paths_that_do_not_fit_the_frame() -> None:
     with pytest.raises(HexbeamGeometryError, match="places the driver tip past"):
         HexbeamParameters(
             frequency_hz=14_184_000.0,
-            driver_half_length_m=5.5626,
+            driver_half_length_m=5.5372,
             reflector_half_length_m=8.25,
             turning_radius_m=3.302,
             tip_gap_m=0.6096,
@@ -263,15 +241,15 @@ def test_hexbeam_rejects_paths_that_do_not_fit_the_frame() -> None:
         HexbeamParameters(
             frequency_hz=14_184_000.0,
             driver_half_length_m=1.0,
-            reflector_half_length_m=5.2578,
+            reflector_half_length_m=5.2324,
             turning_radius_m=3.302,
             tip_gap_m=0.6096,
         )
     with pytest.raises(ValueError, match="tip_gap_m"):
         HexbeamParameters(
             frequency_hz=14_184_000.0,
-            driver_half_length_m=5.5626,
-            reflector_half_length_m=5.2578,
+            driver_half_length_m=5.5372,
+            reflector_half_length_m=5.2324,
             turning_radius_m=3.302,
             tip_gap_m=0.001,
             wire_radius_m=0.001,
@@ -306,6 +284,50 @@ def test_hexbeam_both_published_20m_rows_fit(driver_in: float, reflector_in: flo
         for point in (wire.start, wire.end)
     )
     assert parameters.overall_span_m == pytest.approx(2.0 * radius)
+
+
+def test_published_multiband_uses_the_five_band_table() -> None:
+    parameters = published_hexbeam_multiband_parameters()
+
+    assert tuple(band.label for band in parameters.bands) == (
+        "20m",
+        "17m",
+        "15m",
+        "12m",
+        "10m",
+    )
+    assert parameters.turning_radius_m == pytest.approx(130.0 * 0.0254)
+    assert parameters.driver_half_length_m == pytest.approx(218.0 * 0.0254)
+    assert parameters.reflector_half_length_m == pytest.approx(206.0 * 0.0254)
+    assert parameters.tip_gap_m == pytest.approx(24.0 * 0.0254)
+    assert tuple(round(band.vertical_offset_m / 0.0254, 1) for band in parameters.bands) == (
+        38.0,
+        15.0,
+        9.0,
+        5.0,
+        0.0,
+    )
+    assert tuple(
+        round(parameters.band_radius_m(band) / 0.0254, 1) for band in parameters.bands
+    ) == pytest.approx((130.0, 101.8, 87.0, 73.9, 64.7), abs=0.1)
+
+
+def test_published_multiband_subset_normalizes_the_reference_height() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "17m", "15m"))
+
+    assert tuple(band.label for band in parameters.bands) == ("20m", "17m", "15m")
+    assert parameters.turning_radius_m == pytest.approx(130.0 * 0.0254)
+    assert tuple(round(band.vertical_offset_m / 0.0254, 1) for band in parameters.bands) == (
+        29.0,
+        6.0,
+        0.0,
+    )
+    assert parameters.bands[0].vertical_offset_m > parameters.bands[-1].vertical_offset_m
+
+
+def test_published_multiband_rejects_unknown_labels() -> None:
+    with pytest.raises(ValueError, match="unknown hexbeam band labels"):
+        published_hexbeam_multiband_parameters(labels=("30m",))
 
 
 def test_hexbeam_multiband_builds_nested_bands_and_sources() -> None:

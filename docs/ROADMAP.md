@@ -333,20 +333,20 @@ version remains queued.
   report, and persistence tests cover the corrected path. No schema or solver
   change. See [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) and
   [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md).
-- **Multi-band HexBeam, 1-5 bands (L).** C7a domain/schema is implemented
-  (2026-11-18, [ADR-0045](ADR/0045-multiband-hexbeam.md)); C7b editor/scene/
-  reports and C7c validation remain. Add a selectable band set and count with
-  one shared six-spreader frame and nested driver/reflector pairs at the
-  published G3TXQ 20/17/15/12/10 m dimensions and vertical offsets. Per-band
-  geometry, feed gap, tip gap, vertical offset, and derived attachment radius;
-  band table in the editor, scene highlighting, and reports; schema migration
-  from the single-band payload. Model every driven element with ideal equal-phase
-  sources, or document a feed-harness approximation; coax jumpers, coupling,
-  the balun, spreader sag, and frame hardware remain unmodeled. Optimize one
-  selected band with the others fixed; full multi-band optimization stays out
-  of scope until a trustworthy model exists. 6 m can be added later as an
-  optional sixth band. The published dimensions are starting values (B);
-  multi-band gain, SWR, and front-to-back ratio are not validated.
+- **Multi-band HexBeam, 1-5 bands (L) — C7a/C7b implemented 2026-11-18.**
+  One shared six-spreader frame carries nested driver/reflector pairs from the
+  published G3TXQ 20/17/15/12/10 m table, with the 20 m row reconciled to
+  218/412. The editor selects the band set and shows a read-only per-band
+  table; the scene draws every band with the primary band emphasized, and
+  reports include per-band rows. Every driven element is excited by an ideal
+  unit-amplitude, zero-phase source in the model. Coax jumpers, inter-band
+  coupling, the balun, spreader sag, and frame hardware remain unmodeled.
+  Multi-band optimization and automatic frequency scaling are explicitly
+  unavailable. C7c remains: selected-band optimizer or a final unavailable
+  decision, feed-harness limitations, and the validation/evidence audit. 6 m
+  can be added later as an optional sixth band. The published dimensions are
+  starting values (B); multi-band gain, SWR, and front-to-back ratio are not
+  validated.
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
 medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are

@@ -934,10 +934,35 @@ def test_hexbeam_preset_uses_the_inline_editor(window: MainWindow) -> None:
     assert window._project.designs[0].antenna_type == "hexbeam"
     assert window._design_stack.currentWidget() is window._hexbeam_scroll
     restored = window._hexbeam_form.parameters()
-    assert restored.driver_half_length_m == pytest.approx(5.5626, abs=1e-3)
+    assert restored.driver_half_length_m == pytest.approx(5.5372, abs=1e-3)
     assert restored.turning_radius_m == pytest.approx(3.302, abs=1e-3)
     assert len(window._project.designs[0].antenna.wires) == 10
     assert window._optimize_action.isEnabled() is True
+    window._dirty = False
+
+
+def test_hexbeam_multiband_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters(height_m=12.0)
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "hexbeam"
+    assert window._design_stack.currentWidget() is window._hexbeam_scroll
+    restored = window._hexbeam_form.parameters()
+    assert tuple(band.label for band in restored.bands) == (
+        "20m",
+        "17m",
+        "15m",
+        "12m",
+        "10m",
+    )
+    assert restored.height_m == pytest.approx(12.0)
+    assert len(window._project.designs[0].antenna.wires) == 50
+    assert len(window._project.designs[0].antenna.sources) == 4
+    assert window._optimize_action.isEnabled() is False
     window._dirty = False
 
 

@@ -21,12 +21,12 @@ def test_hexbeam_dialog_builds_the_published_reference(qtbot: QtBot) -> None:
     parameters = dialog.parameters()
 
     assert dialog.windowTitle() == "Hexbeam Generator"
-    assert parameters.driver_half_length_m == pytest.approx(5.5626, abs=1e-3)
-    assert parameters.reflector_half_length_m == pytest.approx(5.2578, abs=1e-3)
+    assert parameters.driver_half_length_m == pytest.approx(5.5372, abs=1e-3)
+    assert parameters.reflector_half_length_m == pytest.approx(5.2324, abs=1e-3)
     assert parameters.turning_radius_m == pytest.approx(3.302, abs=1e-3)
     assert parameters.tip_gap_m == pytest.approx(0.6096, abs=1e-3)
     assert len(parameters.to_antenna().wires) == 10
-    assert "driver 5.563 m half" in dialog._form._geometry.text()
+    assert "driver 5.537 m half" in dialog._form._geometry.text()
 
 
 def test_hexbeam_dialog_updates_the_wire_path(qtbot: QtBot) -> None:
@@ -58,8 +58,8 @@ def test_hexbeam_dialog_seeds_the_reference_at_the_requested_frequency(
 
     parameters = dialog.parameters()
     assert parameters.frequency_hz == pytest.approx(21_200_000.0)
-    assert parameters.driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
-    assert parameters.reflector_half_length_m == pytest.approx(3.5178, abs=1e-3)
+    assert parameters.driver_half_length_m == pytest.approx(3.7047, abs=1e-3)
+    assert parameters.reflector_half_length_m == pytest.approx(3.5008, abs=1e-3)
 
 
 def test_hexbeam_form_load_starting_preserves_installation_fields(
@@ -76,7 +76,7 @@ def test_hexbeam_form_load_starting_preserves_installation_fields(
     form._starting.click()
 
     parameters = form.parameters()
-    assert parameters.driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
+    assert parameters.driver_half_length_m == pytest.approx(3.7047, abs=1e-3)
     assert parameters.height_m == pytest.approx(12.0)
     assert parameters.azimuth_deg == pytest.approx(30.0)
 
@@ -88,7 +88,7 @@ def test_hexbeam_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
 
     form._frequency.setValue(21.2)
 
-    assert form.parameters().driver_half_length_m == pytest.approx(3.7217, abs=1e-3)
+    assert form.parameters().driver_half_length_m == pytest.approx(3.7047, abs=1e-3)
 
     form._height.setValue(12.0)
     form._frequency.setValue(28.4)
@@ -138,6 +138,76 @@ def test_hexbeam_form_represents_uhf_tip_and_feed_gaps(qtbot: QtBot) -> None:
     )
     assert dialog._form._tip_gap.value() > 0.0
     assert dialog._form._feed_gap.value() > 0.0
+
+
+def test_hexbeam_form_selects_the_five_band_preset(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for check in form._band_checks.values():
+        check.setChecked(True)
+
+    parameters = dialog.parameters()
+
+    assert tuple(band.label for band in parameters.bands) == (
+        "20m",
+        "17m",
+        "15m",
+        "12m",
+        "10m",
+    )
+    assert len(parameters.to_antenna().wires) == 50
+    assert len(parameters.to_antenna().sources) == 4
+    assert form._band_table.rowCount() == 5
+    assert not form._band_table.isHidden()
+    assert not form._frequency.isEnabled()
+    assert not form._driver_half.isEnabled()
+    assert "5 bands" in form._geometry.text().lower()
+    assert "m)" in form._band_table.horizontalHeaderItem(2).text()
+
+
+def test_hexbeam_form_single_preset_and_custom_single_band(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._band_checks["15m"].setChecked(True)
+    parameters = dialog.parameters()
+
+    assert parameters.bands == ()
+    assert parameters.driver_half_length_m == pytest.approx(144.5 * 0.0254, abs=1e-3)
+    assert form._frequency.isEnabled()
+    assert form._driver_half.isEnabled()
+    assert form._band_table.isHidden()
+
+    form._driver_half.setValue(form._driver_half.value() + 0.01)
+    assert not any(check.isChecked() for check in form._band_checks.values())
+
+
+def test_hexbeam_form_clearing_bands_returns_to_custom_single_band(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for check in form._band_checks.values():
+        check.setChecked(True)
+    form._band_checks["10m"].setChecked(False)
+
+    parameters = dialog.parameters()
+
+    assert tuple(band.label for band in parameters.bands) == ("20m", "17m", "15m", "12m")
+    assert len(parameters.to_antenna().wires) == 40
+    assert form._band_table.rowCount() == 4
+
+    for check in form._band_checks.values():
+        check.setChecked(False)
+
+    custom = dialog.parameters()
+    assert custom.bands == ()
+    assert form._frequency.isEnabled()
+    assert form._driver_half.isEnabled()
+    assert form._band_table.isHidden()
 
 
 def test_hexbeam_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:

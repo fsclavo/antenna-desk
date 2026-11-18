@@ -1018,6 +1018,23 @@ def test_moxon_plan_has_a_tip_detail_inset() -> None:
     assert ("gap", "1.00 m") in dimensions
 
 
+def test_hexbeam_multiband_scene_draws_all_bands_and_marks_the_primary() -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters()
+    scene = _scene(parameters, "hexbeam", GeometryViewMode.PLAN)
+
+    wires = [polyline for polyline in scene.polylines if polyline.role == "wire"]
+    assert len(wires) == 50
+    assert "bands 5" in scene.summary
+    assert any("Bands: 20m, 17m, 15m, 12m, 10m" in note for note in scene.notes)
+    assert any("refer to the 20m band" in note for note in scene.notes)
+
+    primary = next(polyline for polyline in wires if len(polyline.points) == 2)
+    secondary = wires[-1]
+    assert primary.width > secondary.width
+
+
 def test_hexbeam_plan_dimensions_the_half_and_spreader_angle() -> None:
     parameters = published_hexbeam_parameters()
 

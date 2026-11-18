@@ -797,6 +797,18 @@ def design_summary_rows(
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
+        if len(parameters.bands) > 1:
+            rows.append(("Bands", str(len(parameters.bands))))
+            for band in parameters.bands:
+                rows.append(
+                    (
+                        "Band",
+                        f"{band.label}: driver {_length(band.driver_half_length_m, display_units)}"
+                        f" · reflector {_length(band.reflector_half_length_m, display_units)}"
+                        f" · tip gap {_length(band.tip_gap_m, display_units)}"
+                        f" · offset {_length(band.vertical_offset_m, display_units)}",
+                    )
+                )
         return tuple(rows)
     if isinstance(parameters, TrapYagiParameters):
         rows.extend(

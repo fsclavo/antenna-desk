@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   remain queued for C7b; multi-band optimizer and frequency scaling are
   explicitly unavailable. The real coax harness, coupling, and balun are not
   modeled.
+- **Multi-band HexBeam preset and editor.** The HexBeam editor now offers
+  checkboxes for the published 20/17/15/12/10 m set, a read-only per-band table,
+  and nested scene rendering. Two or more selected bands use the G3TXQ table;
+  the largest band defines the shared turning radius and the lowest band sets
+  the reference height. The single-band 20 m reference was reconciled from
+  219/207 to 218/412 in driver/reflector dimensions. Reports include per-band
+  rows. Multi-band optimization and automatic frequency scaling remain
+  unavailable; the coax harness, inter-band coupling, and balun are not
+  modeled.
 - **Biquad and double-biquad feed transformer.** New designs start with an
   ideal 4:1 feed transformer, editable in the design panel and persisted in
   schema 53. The ratio is applied to the reported SWR and to the feed-connection
