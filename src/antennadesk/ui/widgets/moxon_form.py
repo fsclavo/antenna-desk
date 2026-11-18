@@ -30,7 +30,6 @@ from ..units import (
     UnitSystem,
     height_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
@@ -300,8 +299,8 @@ class MoxonForm(QWidget):
 
     def _update_clearance_warning(self) -> None:
         vertical = self._selected_polarization() is Polarization.VERTICAL
-        required = length_to_m(self._width.value(), self._unit_system) / 2.0
-        current = length_to_m(self._height.value(), self._unit_system)
+        required = self._width_field.value_m() / 2.0
+        current = self._height_field.value_m()
         invalid = vertical and required > 0.0 and current <= required
         self._clearance_warning.setText(
             self._translator.t(
@@ -377,7 +376,7 @@ class MoxonForm(QWidget):
         try:
             parameters = moxon_20m_wire(
                 frequency_hz=self._frequency.value() * 1_000_000.0,
-                height_m=length_to_m(self._height.value(), self._unit_system),
+                height_m=self._height_field.value_m(),
                 azimuth_deg=self._azimuth.value(),
                 polarization=self._selected_polarization(),
                 wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),

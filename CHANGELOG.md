@@ -121,6 +121,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and loaded-dipole total length/height/link offset now use `LengthFieldSpec`;
   automatic units show UHF dipole sections in centimeters while the 10 m
   installation height stays in meters.
+- **Main dipole/folded-dipole/loop migration.** The shared design form now uses
+  `LengthFieldSpec` for length, folded-element spacing, height, and sag. This
+  covers the wire dipole, folded dipole, and loop templates and preserves the
+  canonical geometry through unit changes.
+- **Moxon and quad-beam follow-up.** Clearance warnings, reference presets, and
+  starting-dimension reloads now read the `LengthField` values instead of
+  converting the spin-box text with the old fixed unit, so automatic units
+  cannot corrupt the generated geometry.
 
 ### Changed
 

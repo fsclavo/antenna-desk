@@ -41,7 +41,6 @@ from ..units import (
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
@@ -376,7 +375,7 @@ class QuadBeamForm(QWidget):
             current = quad_beam_parameters(
                 frequency_hz=self._frequency.value() * 1_000_000.0,
                 element_count=self._element_count.value(),
-                height_m=length_to_m(self._height.value(), self._unit_system),
+                height_m=self._height_field.value_m(),
                 reflector_scale=self._reflector_scale.value(),
                 director_scale=self._director_scale.value(),
                 azimuth_deg=self._azimuth.value(),

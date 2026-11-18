@@ -57,3 +57,26 @@ def test_dipole_form_disables_sag_for_vertical_orientation(qtbot: QtBot) -> None
     )
 
     assert form._sag.isEnabled() is False
+
+
+def test_dipole_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    form = DipoleForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        DipoleParameters(
+            frequency_hz=435_000_000.0,
+            total_length_m=0.33,
+            height_m=8.0,
+            sag_m=0.1,
+        )
+    )
+
+    assert form._length_field.unit == "cm"
+    assert form._height_field.unit == "m"
+    assert form._sag_field.unit == "cm"
