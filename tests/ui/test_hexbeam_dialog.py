@@ -25,25 +25,25 @@ def test_hexbeam_dialog_builds_the_published_reference(qtbot: QtBot) -> None:
     assert parameters.reflector_half_length_m == pytest.approx(5.2578, abs=1e-3)
     assert parameters.turning_radius_m == pytest.approx(3.302, abs=1e-3)
     assert parameters.tip_gap_m == pytest.approx(0.6096, abs=1e-3)
-    assert len(parameters.to_antenna().wires) == 9
+    assert len(parameters.to_antenna().wires) == 10
     assert "driver 5.563 m half" in dialog._form._geometry.text()
 
 
 def test_hexbeam_dialog_updates_the_wire_path(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)
-    dialog._form._driver_half.setValue(5.8)
-    dialog._form._reflector_half.setValue(5.4)
-    dialog._form._turning_radius.setValue(3.4)
-    dialog._form._tip_gap.setValue(0.7)
+    dialog._form._driver_half.setValue(5.84)
+    dialog._form._reflector_half.setValue(5.52)
+    dialog._form._turning_radius.setValue(3.47)
+    dialog._form._tip_gap.setValue(0.64)
 
     parameters = dialog.parameters()
 
-    assert parameters.driver_half_length_m == pytest.approx(5.8, abs=1e-3)
-    assert parameters.reflector_half_length_m == pytest.approx(5.4, abs=1e-3)
-    assert parameters.turning_radius_m == pytest.approx(3.4, abs=1e-3)
-    assert parameters.tip_gap_m == pytest.approx(0.7, abs=1e-3)
-    assert len(parameters.to_antenna().wires) == 9
+    assert parameters.driver_half_length_m == pytest.approx(5.84, abs=1e-3)
+    assert parameters.reflector_half_length_m == pytest.approx(5.52, abs=1e-3)
+    assert parameters.turning_radius_m == pytest.approx(3.47, abs=1e-3)
+    assert parameters.tip_gap_m == pytest.approx(0.64, abs=1e-3)
+    assert len(parameters.to_antenna().wires) == 10
 
 
 def test_hexbeam_dialog_seeds_the_reference_at_the_requested_frequency(
@@ -96,10 +96,10 @@ def test_hexbeam_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
     assert form.parameters().height_m == pytest.approx(12.0)
     assert form.parameters().driver_half_length_m < 3.0
 
-    form._driver_half.setValue(4.0)
+    form._driver_half.setValue(2.82)
     form._frequency.setValue(30.0)
 
-    assert form.parameters().driver_half_length_m == pytest.approx(4.0)
+    assert form.parameters().driver_half_length_m == pytest.approx(2.82)
     assert "not resized" in form._starting_note.text().lower()
 
 

@@ -346,15 +346,30 @@ class HexbeamForm(QWidget):
         return value if isinstance(value, ConductorMaterial) else COPPER
 
     def load_starting_dimensions(self) -> None:
-        current = self.parameters()
+        try:
+            current = self.parameters()
+        except (ValueError, TypeError):
+            frequency_hz = self._frequency.value() * 1_000_000.0
+            height_m = self._height_field.value_m()
+            azimuth_deg = self._azimuth.value()
+            wire_radius_m = radius_to_m(self._radius.value(), self._unit_system)
+            material = self._selected_material()
+            ground = self._ground_model()
+        else:
+            frequency_hz = current.frequency_hz
+            height_m = current.height_m
+            azimuth_deg = current.azimuth_deg
+            wire_radius_m = current.wire_radius_m
+            material = current.material
+            ground = current.ground
         self.set_parameters(
             published_hexbeam_parameters(
-                frequency_hz=current.frequency_hz,
-                height_m=current.height_m,
-                azimuth_deg=current.azimuth_deg,
-                wire_radius_m=current.wire_radius_m,
-                material=current.material,
-                ground=current.ground,
+                frequency_hz=frequency_hz,
+                height_m=height_m,
+                azimuth_deg=azimuth_deg,
+                wire_radius_m=wire_radius_m,
+                material=material,
+                ground=ground,
             )
         )
         self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())

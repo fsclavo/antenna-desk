@@ -37,7 +37,7 @@ def test_hexbeam_summary_reports_the_bent_elements() -> None:
     assert rows["Reflector half-length"] == "5.2578 m"
     assert rows["Turning radius"] == "3.3020 m"
     assert rows["Tip gap"] == "0.6096 m"
-    assert rows["Feed"] == "center of the W driver"
+    assert rows["Feed"] == "center of the M driver"
 
 
 def test_trap_yagi_summary_reports_the_traps() -> None:

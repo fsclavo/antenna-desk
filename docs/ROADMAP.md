@@ -316,21 +316,23 @@ point; `C` is structural/experimental only.
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | **Implemented on 2026-11-08:** two-band Yagi with one ideal parallel LC trap pair per element, schema 28, inline editor, scene contract, reports, construction notes, and family optimizer. Trap loss, boom mounting, feed line, and matching remain unvalidated. |
 | 20 | Shortened loaded EFHW | EndFed variant | M | Medium | B/C | **Implemented on 2026-11-09, matching model extended 2026-11-10, inverted-L option 2026-11-11:** 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) presets with a 49:1 transformer, editable series coil, schema 33 for the matching values, schema 34 for the project design target, and schema 35 for the optional inverted-L bend, catalog entries, band plans, reports, construction notes, and optimizer variables. The optional primary 100 pF shunt and 0.198 µH leakage estimate are modeled; an optional measured 49:1 loss table from Squash Practice/AF7NX is available, and the bend uses a sharp 90° corner with an 8 m vertical starting section and no independent validation. An optional feedpoint common-mode choke accepts measured series R/X on the coax shield (ADR-0037), and an optional design-specific L-network can replace the fixed internal match (ADR-0038); shack-end choke placement, shield transfer impedance, ground, capacitor ESR, and winding capacitance are not modeled. Edited or scaled geometry is experimental. |
 
-### HexBeam follow-ups (queued 2026-11-17)
+### HexBeam follow-ups (C6 implemented 2026-11-18; C7 queued)
 
 These extend an existing family; they are not new antenna families. The
-single-band HexBeam in item 16 needs a geometry correction before the
-multi-band version is credible.
+single-band HexBeam in item 16 was corrected on 2026-11-18; the multi-band
+version remains queued.
 
-- **HexBeam geometry correctness (M).** Rebuild the single-band G3TXQ
-  broadband wire path on the six-spreader frame: M-shaped driver across the
-  front, U-shaped reflector around the rear three sides, and 24 in tip spacers
-  near the lateral vertices, on the hexagon sides. Keep every wire point at or
-  inside the 130 in turning radius and derive the overall span from the frame
-  (~6.60 m), not from the published wire lengths. Replace the current 9.03 m
-  span and 0.67 m drawn gap with dimensions that match the published reference.
-  Add semantic geometry tests and update the scene, reports, evidence, and
-  docs. Prerequisite for the multi-band item.
+- **HexBeam geometry correctness (M) — implemented 2026-11-18.** The
+  single-band G3TXQ broadband wire path now follows the six-spreader frame:
+  M-shaped driver across the front, U-shaped reflector around the rear three
+  sides, and 24 in tip spacers near the lateral vertices, on the hexagon sides.
+  Every wire point stays at or inside the 130 in turning radius; the overall
+  span is the 6.60 m frame diameter, not a tip-derived 9.03 m. The drawn tip gap
+  is the published 0.61 m, the reflector midpoint is at the rear, and the model
+  has ten canonical wires. Semantic geometry, scene, adaptive-unit, optimizer,
+  report, and persistence tests cover the corrected path. No schema or solver
+  change. See [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) and
+  [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md).
 - **Multi-band HexBeam, 1-5 bands (L).** Add a selectable band set and count
   with one shared six-spreader frame and nested driver/reflector pairs at the
   published G3TXQ 20/17/15/12/10 m dimensions and vertical offsets. Per-band

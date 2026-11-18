@@ -520,11 +520,12 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
             "separación de puntas y el radio de giro"
         ),
         "limitation": (
-            "El modelo reconstruye el camino de hilo doblado en W/U a partir de "
-            "las longitudes publicadas; no reproduce el marco comercial exacto, "
-            "la flecha de los separadores, el balun de alimentación ni el "
-            "anidamiento multibanda. La ganancia, la relación frente/espalda y "
-            "la impedancia no están validadas independientemente."
+            "El modelo reconstruye el excitado en M y el reflector en U trasero "
+            "como un camino de hilo doblado sobre el marco de seis separadores; no "
+            "reproduce el marco comercial exacto, la flecha de los separadores, el "
+            "balun de alimentación ni el anidamiento multibanda. La ganancia, la "
+            "relación frente/espalda y la impedancia no están validadas "
+            "independientemente."
         ),
     },
     "doublet": {

@@ -511,15 +511,21 @@ full τ/σ optimizer; the registry returns an explicit unavailable reason.
 ### HexbeamParameters
 
 `HexbeamParameters` stores the design frequency, driver and reflector
-half-lengths, turning radius, tip gap, height, center feed gap, driver/
-reflector center offset, azimuth, radius, material, and ground. The default
-values are the published G3TXQ 20 m reference scaled linearly with frequency:
-219 in driver half, 207 in reflector half, 24 in tip gap, and 130 in turning
-radius at 14.184 MHz. `to_antenna()` builds a W-shaped driver split around a
-small center feed and a U-shaped reflector just behind it; the apex of each
-half lies on the 60° spreader ray. The frame, spreader sag, feed balun, and
-multi-band nesting are not modeled. Gain, front-to-back ratio, and impedance
-are not independently validated.
+half-lengths, turning radius, tip gap, height, center feed gap, reflector
+fore-aft trim, azimuth, radius, material, and ground. The default values are
+the published G3TXQ 20 m reference scaled linearly with frequency: 219 in
+driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius at
+14.184 MHz. The driver half is measured from the feed center to the tip; the
+reflector half is measured from the middle of the rear side to the reflector
+end. `to_antenna()` builds an M-shaped driver split around a small center feed
+and a U-shaped reflector around the rear three sides of the six-spreader
+frame. The driver knees lie on the ±30° front spreaders, the reflector midpoint
+is the middle of the rear side, and the tip spacers connect the driver tips to
+the reflector ends. Every wire point stays at or inside the turning radius, so
+the overall span is the frame diameter (`2 × turning_radius_m`). Ten canonical
+wires represent the feed, four driver segments, and five reflector segments.
+The frame, spreader sag, feed balun, and multi-band nesting are not modeled.
+Gain, front-to-back ratio, and impedance are not independently validated.
 
 ### TrapYagiParameters
 

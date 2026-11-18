@@ -20,7 +20,11 @@ from ...antennas.endfed import (
 )
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
 from ...antennas.folded_dipole import FoldedDipoleParameters
-from ...antennas.hexbeam import HexbeamParameters
+from ...antennas.hexbeam import (
+    HexbeamGeometryError,
+    HexbeamParameters,
+    hexbeam_frame_geometry,
+)
 from ...antennas.inverted_l import InvertedLParameters
 from ...antennas.inverted_v import InvertedVParameters
 from ...antennas.j_pole import JPoleParameters
@@ -2122,23 +2126,24 @@ def hexbeam_descriptor(parameters: HexbeamParameters) -> AntennaOptimizerDescrip
             non_negative_violation("height_m", values["height_m"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
         ]
-        if values["driver_half_length_m"] <= 1.5 * values["turning_radius_m"]:
-            issues.append(
-                violation(
-                    "driver_half_length_m",
-                    1.5 * values["turning_radius_m"] - values["driver_half_length_m"],
-                    "hexbeam.constraint.driver_length",
-                )
+        try:
+            hexbeam_frame_geometry(
+                turning_radius_m=values["turning_radius_m"],
+                driver_half_length_m=values["driver_half_length_m"],
+                reflector_half_length_m=values["reflector_half_length_m"],
+                tip_gap_m=values["tip_gap_m"],
             )
-        minimum_reflector = values["turning_radius_m"] + abs(
-            values["turning_radius_m"] / 2.0 - values["tip_gap_m"]
-        )
-        if values["reflector_half_length_m"] <= minimum_reflector:
+        except HexbeamGeometryError as exc:
+            message_keys = {
+                "driver_half_length_m": "hexbeam.constraint.driver_length",
+                "reflector_half_length_m": "hexbeam.constraint.reflector_length",
+                "tip_gap_m": "hexbeam.constraint.tip_gap",
+            }
             issues.append(
                 violation(
-                    "reflector_half_length_m",
-                    minimum_reflector - values["reflector_half_length_m"],
-                    "hexbeam.constraint.reflector_length",
+                    exc.field,
+                    1.0,
+                    message_keys.get(exc.field, "hexbeam.constraint.driver_length"),
                 )
             )
         if values["tip_gap_m"] <= 2.0 * values["wire_radius_m"]:

@@ -1515,20 +1515,25 @@ def _add_hexbeam_dimensions(
         (wire for wire in model.wires if wire.id == "hexbeam-reflector-right-tip"),
         None,
     )
-    span_left = driver_left
-    span_right = driver_right
-    if (
-        reflector_left is not None
-        and reflector_right is not None
-        and parameters.reflector_tip_half_span_m > parameters.driver_tip_half_span_m
-    ):
-        span_left = reflector_left
-        span_right = reflector_right
+    reflector_right_inner = next(
+        (wire for wire in model.wires if wire.id == "hexbeam-reflector-right-inner"),
+        None,
+    )
+    span_left = (
+        reflector_left_inner.start
+        if reflector_left_inner is not None
+        else (driver_left.end if driver_left is not None else None)
+    )
+    span_right = (
+        reflector_right_inner.start
+        if reflector_right_inner is not None
+        else (driver_right.end if driver_right is not None else None)
+    )
     if span_left is not None and span_right is not None:
         dimensions.append(
             factory.between_scene(
-                factory.project(span_left.end),
-                factory.project(span_right.end),
+                factory.project(span_left),
+                factory.project(span_right),
                 parameters.overall_span_m,
                 side="left",
                 priority=95,
@@ -1536,15 +1541,15 @@ def _add_hexbeam_dimensions(
             )
         )
     if driver_left is not None and reflector_left is not None and not factory.projection.vertical:
-        clear_gap = driver_left.end.distance_to(reflector_left.end)
+        clear_gap = driver_left.end.distance_to(reflector_left.start)
         gap_start = driver_left.end
-        gap_end = reflector_left.end
+        gap_end = reflector_left.start
         if driver_right is not None and reflector_right is not None:
-            right_gap = driver_right.end.distance_to(reflector_right.end)
+            right_gap = driver_right.end.distance_to(reflector_right.start)
             if right_gap < clear_gap:
                 clear_gap = right_gap
                 gap_start = driver_right.end
-                gap_end = reflector_right.end
+                gap_end = reflector_right.start
         dimensions.append(
             factory.between_scene(
                 factory.project(gap_start),
@@ -1558,22 +1563,22 @@ def _add_hexbeam_dimensions(
         notes.append(
             translator.t(
                 "hexbeam.tip_gap_note",
-                published=_format_length(
-                    parameters.tip_gap_m,
-                    translator,
-                    factory.display_units,
-                ),
-                clear=_format_length(clear_gap, translator, factory.display_units),
+                gap=_format_length(clear_gap, translator, factory.display_units),
             )
         )
     if not factory.projection.vertical:
         if reflector_left_inner is not None:
-            radius_m = reflector_left_inner.start.distance_to(reflector_left_inner.end)
+            azimuth = math.radians(parameters.azimuth_deg)
+            lateral_vertex = Point3D(
+                -parameters.turning_radius_m * math.sin(azimuth),
+                parameters.turning_radius_m * math.cos(azimuth),
+                parameters.height_m,
+            )
             dimensions.append(
                 factory.dimension(
-                    reflector_left_inner.start,
-                    reflector_left_inner.end,
-                    radius_m,
+                    Point3D(0.0, 0.0, parameters.height_m),
+                    lateral_vertex,
+                    parameters.turning_radius_m,
                     side="left",
                     priority=85,
                     label=translator.t("hexbeam.turning_radius"),
@@ -1630,11 +1635,11 @@ def _add_hexbeam_dimensions(
                     )
                 )
             if driver_left is not None and reflector_left is not None:
-                inset_gap = driver_left.end.distance_to(reflector_left.end)
+                inset_gap = driver_left.end.distance_to(reflector_left.start)
                 half_dimensions.append(
                     factory.between_scene(
                         factory.project(driver_left.end),
-                        factory.project(reflector_left.end),
+                        factory.project(reflector_left.start),
                         inset_gap,
                         side="above",
                         priority=100,

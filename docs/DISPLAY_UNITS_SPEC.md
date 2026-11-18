@@ -269,7 +269,7 @@ not need a schema or solver change.
 | Moxon 28.5 MHz gap | `10.91 cm` | `4.30 in` |
 | 20 m dipole length | `20 m` | `65.617 ft` |
 | 10 m dipole height | `10 m` | `32.808 ft` |
-| Hexbeam 435 MHz tip gap | `19.9 mm` | `0.78 in` |
+| Hexbeam 435 MHz tip gap | `1.99 cm` | `0.78 in` |
 
 With the current Cebik-scaled reference, the Moxon drive tip at 435 MHz is
 `3.97 cm`; the value read as "4 cm" is that tip, not the gap. The real gap is

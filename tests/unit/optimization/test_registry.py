@@ -576,6 +576,31 @@ def test_hexbeam_optimizes_the_bent_wire_path() -> None:
         "height_m",
         "wire_radius_m",
     }
+    descriptor = availability.descriptor
+    assert descriptor.validate(descriptor.initial_values) == ()
+
+    too_short_reflector = dict(descriptor.initial_values)
+    too_short_reflector["reflector_half_length_m"] = 4.0
+    assert any(
+        violation.name == "reflector_half_length_m"
+        and violation.message_key == "hexbeam.constraint.reflector_length"
+        for violation in descriptor.validate(too_short_reflector)
+    )
+
+    too_long_driver = dict(descriptor.initial_values)
+    too_long_driver["driver_half_length_m"] = 1.0
+    assert any(
+        violation.name == "driver_half_length_m"
+        and violation.message_key == "hexbeam.constraint.driver_length"
+        for violation in descriptor.validate(too_long_driver)
+    )
+
+    tip_past_spreader = dict(descriptor.initial_values)
+    tip_past_spreader["reflector_half_length_m"] = 8.25
+    assert any(
+        violation.name == "tip_gap_m" and violation.message_key == "hexbeam.constraint.tip_gap"
+        for violation in descriptor.validate(tip_past_spreader)
+    )
 
 
 def test_trap_yagi_optimizes_the_trap_positions() -> None:

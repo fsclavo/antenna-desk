@@ -40,6 +40,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **HexBeam geometry.** The single-band model now routes the M-shaped driver
+  and rear U-shaped reflector on the six-spreader frame instead of solving the
+  wire tips outside the turning radius. At 20 m the span is the 6.60 m frame
+  diameter, the drawn tip gap is the 24 in spacer, every wire point stays inside
+  the 130 in radius, and the reflector midpoint sits at the rear side. The model
+  now has ten canonical wires (feed, four driver segments, and five reflector
+  segments); the former 9.03 m span and 0.67 m drawn gap are gone. The
+  reflector fore-aft trim replaces the former center-offset meaning, and the
+  total conductor reports the sum of the modeled wires. Existing projects keep
+  their stored parameters; their derived geometry changes when reopened. No
+  schema or solver change.
 - **Quad beam frequency-first starting dimensions.** A new or changed-template
   quad beam now seeds its loop side and reflector/director spacing from the
   requested design frequency instead of the 14.1 MHz default. At 144 MHz the

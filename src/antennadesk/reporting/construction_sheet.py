@@ -829,10 +829,10 @@ def render_construction_sheet(
 """
         construction_note = _note(
             tr,
-            "Build a W-shaped driver with {driver} m half-lengths and a U-shaped "
+            "Build an M-shaped driver with {driver} m half-lengths and a U-shaped "
             "reflector with {reflector} m half-lengths on a six-spreader frame "
             "with a {turning} m turning radius. Set the tip gap to {tip_gap} m and "
-            "feed the center of the W. The model reconstructs the bent wire path; "
+            "feed the center of the M. The reflector wraps the rear three sides; "
             "the frame, spreader sag, feed balun, and multi-band nesting are not "
             "modeled.",
             driver=f"{parameters.driver_half_length_m:.4f}",

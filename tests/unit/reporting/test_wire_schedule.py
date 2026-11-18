@@ -39,7 +39,7 @@ def test_wire_schedule_covers_a_bent_multi_wire_family() -> None:
     rows = wire_schedule_rows(model)
     feed = feed_schedule_row(model)
 
-    assert len(rows) == 9
+    assert len(rows) == 10
     assert {row.wire_id for row in rows} == {wire.id for wire in model.wires}
     assert feed.wire_id == "hexbeam-feed"
     assert feed.height_m == 10.0
@@ -112,7 +112,7 @@ def test_conductor_bom_covers_a_multi_wire_family() -> None:
     rows = conductor_bom_rows(model)
 
     assert len(rows) == 1
-    assert rows[0].wire_count == 9
+    assert rows[0].wire_count == 10
     assert rows[0].total_length_m == pytest.approx(sum(wire.length_m for wire in model.wires))
 
 

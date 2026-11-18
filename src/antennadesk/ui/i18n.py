@@ -1306,12 +1306,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "catalog.hexbeam.description": {
         Language.ENGLISH: (
-            "Single-band broadband beam with a W-shaped driven element and a "
-            "U-shaped reflector on a six-spreader frame."
+            "Single-band broadband beam with an M-shaped driven element and a "
+            "U-shaped reflector around the rear of a six-spreader frame."
         ),
         Language.SPANISH: (
             "Beam de banda ancha y una sola banda con elemento excitado en forma "
-            "de W y reflector en forma de U sobre un marco de seis separadores."
+            "de M y reflector en forma de U alrededor de la parte trasera de un "
+            "marco de seis separadores."
         ),
     },
     "catalog.family.wire": {
@@ -1787,10 +1788,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "reference.g3txq_hexbeam_20m.modeled": {
         Language.ENGLISH: (
-            "Bent W/U wire approximation; no spreaders, frame, balun, or multiband nesting."
+            "Bent M/U wire approximation on a six-spreader frame; no spreaders, "
+            "frame, balun, or multiband nesting."
         ),
         Language.SPANISH: (
-            "Aproximación de hilos en W/U; sin largueros, marco, balun ni anidado multibanda."
+            "Aproximación de hilos en M/U sobre un marco de seis separadores; sin "
+            "largueros, marco, balun ni anidado multibanda."
         ),
     },
     "reference.g5rv.title": {
@@ -3591,16 +3594,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "help.hexbeam.tip_gap": {
-        Language.ENGLISH: "Gap between adjacent spreader tips at the element ends.",
-        Language.SPANISH: "Separación entre puntas de separadores adyacentes en los extremos.",
+        Language.ENGLISH: (
+            "Insulating spacer between the driver tip and reflector end on each "
+            "side; it is not a gap in the reflector wire."
+        ),
+        Language.SPANISH: (
+            "Separador aislante entre la punta del excitado y el extremo del "
+            "reflector en cada lado; no es una brecha en el hilo del reflector."
+        ),
     },
     "help.hexbeam.element_separation": {
-        Language.ENGLISH: "Boom-axis spacing between the driven element and reflector.",
-        Language.SPANISH: "Separación sobre el boom entre el elemento alimentado y el reflector.",
+        Language.ENGLISH: (
+            "Small rearward fore-aft trim of the reflector U; it is not a "
+            "center-to-center element spacing."
+        ),
+        Language.SPANISH: (
+            "Pequeño ajuste longitudinal del reflector en U hacia atrás; no es una "
+            "separación entre centros de elementos."
+        ),
     },
     "help.hexbeam.turning_radius": {
-        Language.ENGLISH: "Tip-to-boom turning radius used by the space constraint.",
-        Language.SPANISH: "Radio de giro desde la punta al boom usado por la restricción de espacio.",
+        Language.ENGLISH: "Spreader tip radius from the center post.",
+        Language.SPANISH: "Radio de la punta de los separadores desde el poste central.",
     },
     "help.inverted_l.vertical_height": {
         Language.ENGLISH: (
@@ -10816,8 +10831,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Brecha de alimentación central",
     },
     "hexbeam.element_separation": {
-        Language.ENGLISH: "Driver/reflector center offset",
-        Language.SPANISH: "Desplazamiento entre centros",
+        Language.ENGLISH: "Reflector fore-aft trim",
+        Language.SPANISH: "Ajuste longitudinal del reflector",
     },
     "hexbeam.geometry": {
         Language.ENGLISH: (
@@ -10831,70 +10846,87 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "hexbeam.hint": {
         Language.ENGLISH: (
-            "The driver is a W-shaped wire with a small center feed gap; the "
-            "reflector is a U-shaped wire just behind it. The apexes lie on the "
-            "60° spreader rays at the turning radius. The published 20 m reference "
-            "is scaled linearly with frequency."
+            "The driver is an M-shaped wire with a small center feed gap; the "
+            "reflector is one U-shaped wire around the rear three sides. The "
+            "driver knees lie on the 30° front spreaders, and the tip spacers "
+            "connect the driver tips to the reflector ends. The published 20 m "
+            "reference is scaled linearly with frequency."
         ),
         Language.SPANISH: (
-            "El excitado es un hilo en forma de W con una pequeña brecha central de "
-            "alimentación; el reflector es un hilo en forma de U justo detrás. Los "
-            "vértices se apoyan en los rayos de 60° a la distancia del radio de giro. "
-            "La referencia publicada de 20 m se escala linealmente con la frecuencia."
+            "El excitado es un hilo en forma de M con una pequeña brecha central de "
+            "alimentación; el reflector es un solo hilo en forma de U alrededor de "
+            "los tres lados traseros. Las rodillas del excitado se apoyan en los "
+            "separadores delanteros a 30°, y los separadores de punta unen las "
+            "puntas del excitado con los extremos del reflector. La referencia "
+            "publicada de 20 m se escala linealmente con la frecuencia."
         ),
     },
     "hexbeam.evidence": {
         Language.ENGLISH: (
             "Published starting dimensions from G3TXQ (219 in driver half, 207 in "
             "reflector half, 24 in tip gap, 130 in turning radius at 14.184 MHz), "
-            "reconstructed as a bent wire. The frame, spreader sag, feed balun, "
-            "and multi-band nesting are not modeled; gain, front-to-back ratio, "
-            "and impedance are not independently validated."
+            "reconstructed as an M-shaped driver and a rear U-shaped reflector on "
+            "the six-spreader frame. The frame, spreader sag, feed balun, and "
+            "multi-band nesting are not modeled; gain, front-to-back ratio, and "
+            "impedance are not independently validated."
         ),
         Language.SPANISH: (
             "Dimensiones iniciales publicadas por G3TXQ (219 in de semilongitud del "
             "excitado, 207 in del reflector, 24 in de separación de puntas y 130 in "
-            "de radio de giro a 14,184 MHz), reconstruidas como hilo doblado. No se "
+            "de radio de giro a 14,184 MHz), reconstruidas como excitado en M y "
+            "reflector en U trasero sobre el marco de seis separadores. No se "
             "modelan el marco, la flecha de los separadores, el balun ni el anidado "
             "multibanda; la ganancia, la relación delante/atrás y la impedancia no "
             "están validadas independientemente."
         ),
     },
     "hexbeam.constraint.driver_length": {
-        Language.ENGLISH: "The driver half must exceed 1.5 times the turning radius.",
-        Language.SPANISH: "La semilongitud del excitado debe superar 1,5 veces el radio de giro.",
+        Language.ENGLISH: (
+            "The driver half-length cannot be fitted inside the turning radius on "
+            "the front spreader."
+        ),
+        Language.SPANISH: (
+            "La semilongitud del excitado no se puede ajustar dentro del radio de "
+            "giro sobre el separador delantero."
+        ),
     },
     "hexbeam.constraint.reflector_length": {
-        Language.ENGLISH: "The reflector half is too short for the turning radius and tip gap.",
-        Language.SPANISH: "La semilongitud del reflector es demasiado corta para el radio de giro y la separación de puntas.",
+        Language.ENGLISH: "The reflector half-length is too short for the turning radius.",
+        Language.SPANISH: "La semilongitud del reflector es demasiado corta para el radio de giro.",
+    },
+    "hexbeam.constraint.tip_gap": {
+        Language.ENGLISH: ("The tip gap places the driver tip beyond the front spreader."),
+        Language.SPANISH: (
+            "La separación de puntas coloca la punta del excitado más allá del separador delantero."
+        ),
     },
     "hexbeam.geometry_note": {
         Language.ENGLISH: (
-            "W driver and U reflector on a six-spreader frame; turning radius "
+            "M driver and rear U reflector on a six-spreader frame; turning radius "
             "{radius}. Frame, spreader sag, and balun are not modeled."
         ),
         Language.SPANISH: (
-            "Excitado en W y reflector en U sobre un marco de seis separadores; "
-            "radio de giro {radius}. No se modelan el marco, la flecha de los "
-            "separadores ni el balun."
+            "Excitado en M y reflector en U trasero sobre un marco de seis "
+            "separadores; radio de giro {radius}. No se modelan el marco, la flecha "
+            "de los separadores ni el balun."
         ),
     },
     "hexbeam.spreader_angle_note": {
         Language.ENGLISH: (
-            "spreader angle {spreader}° from the boom axis; wire bend at the apex {bend}°"
+            "front spreader angle {spreader}° from the boom axis; adjacent "
+            "spreaders are 60° apart; wire bend at the knee {bend}°"
         ),
         Language.SPANISH: (
-            "ángulo del separador {spreader}° desde el eje del boom; quiebre del "
-            "hilo en el vértice {bend}°"
+            "ángulo del separador delantero {spreader}° desde el eje del boom; los "
+            "separadores adyacentes están a 60°; quiebre del hilo en la rodilla "
+            "{bend}°"
         ),
     },
     "hexbeam.tip_gap_note": {
-        Language.ENGLISH: (
-            "published tip-gap parameter {published}; drawn clear tip-to-tip gap {clear}"
-        ),
+        Language.ENGLISH: ("tip gap {gap} between the driver tip and reflector end on each side"),
         Language.SPANISH: (
-            "parámetro publicado de separación de puntas {published}; separación "
-            "libre dibujada entre puntas {clear}"
+            "separación de puntas {gap} entre la punta del excitado y el extremo "
+            "del reflector en cada lado"
         ),
     },
     "trap_yagi.title": {

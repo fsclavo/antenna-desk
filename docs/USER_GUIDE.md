@@ -978,20 +978,24 @@ solver or a measurement.
 ## Create a hexbeam
 
 Choose **File → New Antenna... → Hexbeam** for a single-band broadband beam
-with a W-shaped driven element and a U-shaped reflector on a six-spreader
-frame. The editor sets the frequency, driver and reflector half-lengths,
-turning radius, tip gap, height, center feed gap, driver/reflector center
-offset, azimuth, conductor radius, material, and ground.
+with an M-shaped driven element and a U-shaped reflector around the rear of a
+six-spreader frame. The editor sets the frequency, driver and reflector
+half-lengths, turning radius, tip gap, height, center feed gap, reflector
+fore-aft trim, azimuth, conductor radius, material, and ground.
 
 The defaults are the published G3TXQ 20 m reference at 14.184 MHz: 219 in
 driver half, 207 in reflector half, 24 in tip gap, and 130 in turning radius.
 The generator scales that reference to the requested frequency; **Load starting
 dimensions** reapplies the scaling after a frequency edit and keeps the
 installation height, conductor, ground, and azimuth.
-**Optimize...** searches the driver and reflector halves, turning radius, tip
-gap, height, and conductor radius jointly. The element model reconstructs the
-bent wire path; the frame, spreader sag, feed balun, and multi-band nesting are
-not modeled. Gain, front-to-back ratio, and impedance are not independently
+
+The driver knees lie on the 30° front spreaders, the reflector wraps the rear
+three sides, and 24 in tip spacers connect the driver tips to the reflector
+ends. The modeled span is the frame diameter, about 6.60 m at 20 m, and every
+wire point stays inside the turning radius. **Optimize...** searches the driver
+and reflector halves, turning radius, tip gap, height, and conductor radius
+jointly. The frame, spreader sag, feed balun, and multi-band nesting are not
+modeled. Gain, front-to-back ratio, and impedance are not independently
 validated.
 
 ## Create a trapped Yagi

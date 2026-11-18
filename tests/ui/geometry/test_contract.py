@@ -527,7 +527,7 @@ def _cases() -> tuple[FamilyCase, ...]:
             "hexbeam",
             published_hexbeam_parameters(),
             "hexbeam",
-            9,
+            10,
             GeometryViewMode.PLAN,
             (
                 "Hexbeam",

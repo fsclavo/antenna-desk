@@ -791,7 +791,7 @@ def design_summary_rows(
                 ("Tip gap", _length(parameters.tip_gap_m, display_units)),
                 ("Overall span", _length(parameters.overall_span_m, display_units)),
                 ("Height", _length(parameters.height_m, display_units)),
-                ("Feed", "center of the W driver"),
+                ("Feed", "center of the M driver"),
                 ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),

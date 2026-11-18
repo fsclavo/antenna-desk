@@ -594,10 +594,12 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "1% on the published driver/reflector half-lengths, tip gap, and turning radius"
         ),
         limitation=(
-            "The model reconstructs the bent W/U wire path from the published "
-            "lengths; it does not reproduce the exact commercial frame, spreader "
-            "sag, feed balun, or multi-band nesting. Gain, front-to-back ratio, "
-            "and impedance are not independently validated."
+            "The model reconstructs the M-shaped driver and rear U-shaped reflector "
+            "on the six-spreader frame; every wire point stays inside the turning "
+            "radius, and the tip spacer matches the published gap. It does not "
+            "reproduce the exact commercial frame, spreader sag, feed balun, or "
+            "multi-band nesting. Gain, front-to-back ratio, and impedance are not "
+            "independently validated."
         ),
     ),
     "doublet": EvidenceEntry(

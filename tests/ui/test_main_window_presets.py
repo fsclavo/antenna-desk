@@ -936,7 +936,7 @@ def test_hexbeam_preset_uses_the_inline_editor(window: MainWindow) -> None:
     restored = window._hexbeam_form.parameters()
     assert restored.driver_half_length_m == pytest.approx(5.5626, abs=1e-3)
     assert restored.turning_radius_m == pytest.approx(3.302, abs=1e-3)
-    assert len(window._project.designs[0].antenna.wires) == 9
+    assert len(window._project.designs[0].antenna.wires) == 10
     assert window._optimize_action.isEnabled() is True
     window._dirty = False
 

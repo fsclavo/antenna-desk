@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-17
+**Date:** 2026-11-18
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -42,7 +42,7 @@ external service and must not be invented or simulated into existence.
 | ~~C3~~ | ~~**Log-periodic**~~ | L | transposed feed-line model | **Done 2026-11-16:** added a straight-element log-periodic dipole array as a normal family over `AntennaModel`, `Wire`, `FeedPoint`, and `TransmissionLine`. The only cross-cutting change is a generic `phase_reversal` flag on `TransmissionLine`, emitted as a negative NEC TL characteristic impedance. The Cebik 10 m 1.0 in, 75 Ω reference reproduces the published NEC-4 gain (7.37 vs 7.36 dBi), front-to-back ratio (22.01 dB), element-center phases (within 1.6°), and segmentation stability. Evidence is **B**: a published-model comparison, not a measurement. The ARRL/Cebik 7 MHz wire design is a swept-element V array and is not reproduced by this straight-element family; it remains a future variant. See `docs/ADR/0041-log-periodic-transposed-feed.md` and `docs/spikes/c3-log-periodic-spike.md`. |
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
-| C6 | HexBeam geometry correctness | M | published G3TXQ/K4KIO drawing | Rebuild the single-band driver/reflector on the six-spreader frame: M driver at the front, U reflector around the rear three sides, 24 in tip spacers, every wire point at or inside the turning radius, and overall span ~2R. Replace the 9.03 m span and 0.67 m drawn tip gap; add semantic geometry/scene tests and update docs/evidence. Supersedes the geometry portion of C2; prerequisite for C7. |
+| ~~C6~~ | ~~HexBeam geometry correctness~~ | M | published G3TXQ/K4KIO drawing | **Done 2026-11-18:** the single-band model now routes the M driver and rear U reflector on the six-spreader frame. Ten canonical wires, 6.604 m span, 0.6096 m tip gap, all wire points at or inside the 3.302 m turning radius, reflector midpoint at the rear, and a zero published fore-aft trim. Domain and optimizer share one frame helper; scene dimensions, golden scenes, reports, help, and docs are updated. Tests: 3,533 passed, 1 skipped; ruff/format/mypy pass; no schema or solver change. See `docs/spikes/c6-hexbeam-geometry.md`. |
 | C7 | Multi-band HexBeam (1-5 bands) | L | C6; feed-model decision; published 5-band table | Selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources or a documented harness approximation, schema migration, per-band editor/scene/reports, semantic and NEC2C tests, and single-band optimizer scope. 6 m optional later; multi-band performance remains unvalidated. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
@@ -133,6 +133,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX36~~ | ~~Quad beam frequency-first estimator~~ | M | UX32 | **Done 2026-11-17:** `quad_beam` is registered in the estimator registry; `DesignIntent` carries 2–3 elements; **Estimate Dimensions...** is enabled, preloads the current element count and height, and returns the documented quarter-wave-side/fifth-wave-spacing heuristic with confidence, source, assumptions, warnings, tolerance, and 144 MHz reference tests. Apply uses the dialog element count and height and preserves reflector/director scales, transformer, radius, material, ground, and azimuth. NEC smoke and UI/domain/registry tests pass; no schema change. |
 | ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
+| UX39 | Raise generated single-design impedance/SWR sweeps to at least 100 computed points | S–M | none | Generated templates default to 100 points (including the two-band shared plan); every computed point remains in the chart, table, and exports; marker density is bounded without dropping data; tests and docs updated; no schema or solver change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
 | ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
@@ -151,32 +152,409 @@ external service and must not be invented or simulated into existence.
 | ~~EF8a~~ | ~~User-selectable end-fed return path~~ | M | EF3 | **Done 2026-11-13:** added `EndFedReturnPath` (`auto`, `installation_proxy`, `counterpoise`, `coax_shield`) and persisted it in schema 47. `auto` preserves the legacy counterpoise-or-proxy behavior; counterpoise and coax shield use the existing return length/height/azimuth fields, with the shield as a model-only straight-wire approximation. The optimizer searches the return length for counterpoise/coax and keeps the height variable only for a physical counterpoise. The editor, reports, construction sheet, scene note, and EN/ES help state that the shield is a wire approximation. EF8 later added an optional feedpoint choke; shack-end placement and shield transfer impedance remain unmodeled. No solver change for other families at EF8a. |
 | ~~EF8~~ | ~~Common-mode return / coax-shield model for end-fed antennas~~ | L | measurement or validated common-mode model | **Done 2026-11-13 with explicit limits:** EF8a added the selectable return path and the coax-shield wire approximation. EF8 adds an optional **feedpoint** common-mode choke as a measured series R/X load on the shield, with a required source, a 49:1-compatible coax-shield return, a frequency-mismatch warning, and a predominantly-reactive warning. Positive X becomes a series L and negative X a series C; R is held constant. ADR-0037 records the model. Shack-end choke placement, frequency-interpolated `Zcm(f)`, shield transfer impedance, the real cable route, and absolute common-mode-current prediction remain unmodeled; no universal choke preset was invented. Do not optimize the installation proxy as a physical radial. |
 | EF9 | Design-specific matching-network optimization | L | EF7b, EF8, ADR | **Done 2026-11-14; automatic Pi/T added 2026-11-16.** ADR-0038 implements an optional design-specific L/Pi/T network owned by `EndFedParameters`, with precedence **project network > design-specific network > internal fixed unit**, schema 50, bounded optimizer variables, UI, reports, and regression coverage. The project matching dialog and the design-specific end-fed action now synthesize L, Pi, or T from the current primary-side feed impedance, fill the editor, and wait for explicit user review. Pi/T use a visible total design Q (0 = auto above the minimum); a Q below the minimum returns no solution. The synthesis is lossless; component Q remains a separate loss model. Do not add loose C/L variables to the fixed input-shunt network. |
+| HF1 | Frequency-aware optimizer-bound contract and ADR | S | none | **Queued 2026-11-18:** write ADR-0045 defining the separation between physical construction floors and per-run search bounds, λ/current-relative normalization, the initial-in-bounds and non-degenerate-span invariants, fail-fast versus explicit-unavailable behavior, Moxon gap parameterization, high-frequency validity, and the no-invented-reference rule. No behavior change. |
+| HF2 | Enforce descriptor bounds and remove silent initial clamping | M | HF1 | **Queued 2026-11-18:** descriptors reject or report unavailable when an initial value is outside its bounds or a span is degenerate; the optimizer never starts from a silently clamped design; a typed error/reason and UI message identify the family, variable, value, and bounds; tests cover Moxon 2.4 GHz, vertical 2.4 GHz, Yagi 5.8 GHz, and valid HF designs. |
+| HF3 | Replace absolute length floors with frequency-aware bounds | L | HF1, HF2 | **Queued 2026-11-18:** migrate every `_length`/`around` minimum and explicit 0.1/0.5/0.05 m floor to a shared frequency-aware helper; keep a separate documented construction floor; return an explicit optimizer-unavailable reason when the family is outside its supported envelope; cover every registry family and the 1.8–5800 MHz matrix; keep the biquad small-feature minima as the reference pattern. |
+| HF4 | Moxon geometry contract, gap variable, and constraints | M–L | HF1–HF3 | **Queued 2026-11-18:** expose or derive the gap explicitly; constrain gap/λ, gap/radius, and gap/depth/width; keep the Cebik 14.17 MHz dimensions exact; reject 0.67λ gaps; test 14.17/28.5/144/435/1500/2400 MHz; no schema change unless justified. |
+| HF5 | Yagi wavelength-relative bounds and high-element-count QA | M | HF1–HF3 | **Queued 2026-11-18:** remove the absolute 0.05 m element floor; normalize lengths, gaps, height, and steps by λ; keep the DL6WU taper constraints; verify 5/10/15/20/32 elements at 1.5/2.4/5.8 GHz start inside bounds; add NEC2C smoke coverage; no performance claims. |
+| HF6 | Moxon high-frequency estimator, radius, and confidence policy | M | HF1, HF4 | **Queued 2026-11-18:** document the valid linear-scaling envelope; make the starting gap radius-aware; downgrade confidence and tolerance outside the envelope; add a strong warning and EN/ES help; keep 14.17 MHz exact; do not invent a high-frequency reference. |
+| HF7 | Thin-wire model-quality gate for high-frequency optimization | M–L | HF1, HF2 | **Queued 2026-11-18:** define segment/radius and Moxon-gap resolution policy; expose or select the extended thin-wire kernel; block candidates with errors or unacceptable warnings; test 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi with and without the extended kernel; document the chosen default. |
+| HF8 | High-frequency optimizer diagnostics, defaults, and Apply Best guard | M | HF4–HF6 | **Queued 2026-11-18:** enable bound-hit diagnostics for all families; show initial versus clamped values, gap/λ, and gap/radius; review the Moxon default objective; block or confirm **Apply Best** on implausible geometry; use adaptive units in the optimizer table; EN/ES help and tests. |
+| HF9 | High-frequency regression matrix, evidence, and documentation | M | HF2–HF8 | **Queued 2026-11-18:** add the frequency/family matrix, an old-behavior regression for the 2.4 GHz Moxon gap, invariant and solver-completion assertions, and a no-silent-clamp check; update the ADR, estimator guide, user guide, and `CHANGELOG.md`; make no accuracy claim without a traceable source. |
+| HF10 | Design-frequency/geometry consistency for Moxon and Yagi | S–M | HF1, HF2; UX34/ADR-0043 | **Queued 2026-11-18:** reconcile the Moxon manual preset and the Yagi auto-scale exception with the pristine-geometry policy; warn or block optimization when geometry is grossly inconsistent with λ; test frequency changes, preset loads, and optimizer availability. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | ~~D4~~ | ~~Segmented frequency plan in one NEC deck~~ | M | solver benchmark | **Closed 2026-11-16 by ADR-0042:** the solver-only single deck saves about 0.95 s on 808 frequencies, while the four-worker per-band path is faster than a sequential single deck and preserves the existing result, pattern, project-size, and cancellation contracts. Keep per-band batching; revisit only under the ADR triggers. |
 
-## HexBeam follow-ups (queued 2026-11-17)
+## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-C6 is the prerequisite. The current single-band model derives each tip from
-the published wire half-length and places it outside the 130 in frame; the
-result is a 9.03 m span on a 3.30 m turning radius and a 0.67 m drawn tip gap
-against the published 0.61 m. C6 corrects the topology before C7 nests bands.
+**Status:** queued. HF1 is a design gate; HF2–HF10 must not start implementation
+until HF1 records the bound contract. HF2–HF5 are the P0 correctness slice;
+HF6–HF8 are the high-frequency fidelity slice; HF9 closes the track.
 
-### C6 acceptance
+**Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
+[ADR-0043](ADR/0043-design-versus-analysis-frequency.md),
+[ADR-0044](ADR/0044-adaptive-length-display-units.md), and
+[`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md).
+
+**Trigger:** a user-visible inconsistency in the family optimizers at VHF/UHF.
+The first confirmed case is a 2.4 GHz Moxon whose optimized tip gap is tens of
+millimetres, far outside a plausible Moxon rectangle. The same bound pattern
+exists in other families.
+
+**Evidence:** reproduced with the real NEC2C adapter and the domain/application
+optimizer. At 2.4 GHz the reference-scaled Moxon starts at width 44.99 mm,
+depth 17.22 mm, tip gap 1.296 mm, but the optimizer bounds are
+`width=[100, 101] mm` and `depth=[100, 101] mm`. The resulting gap is
+76.1–93.0 mm (0.61–0.74 λ) for every feasible candidate. A production
+`MULTI_OBJECTIVE` run returned gap 86.96 mm, SWR 15.50, 4.19 dBi, and 2.11 dB
+front-to-back. An in-memory control that changed only the bounds to relative
+values returned gap 4.86 mm, SWR 1.05, 6.06 dBi, and 25.06 dB front-to-back.
+The control is exploratory and is **not** a numerical reference. The 1.5 GHz
+case is the same: 2.07 mm reference gap versus a 61.8–88.3 mm optimizer range.
+
+The root cause is the absolute length policy in the descriptors:
+
+- `_length()` defaults to `minimum=0.1` m and `_length`/`around` treats that
+  floor as the lower search bound, not as a physical constraint.
+- When `value * (1 + fraction) <= minimum`, `around()` returns a degenerate
+  interval above the current design (`high = low + 1 mm`).
+- `OptimizationVariable.to_fraction()` silently clamps the current value into
+  that interval; the engine evaluates the clamped design, not the editor
+  design.
+- The Moxon validator only checks `reflector_tip + driven_tip < depth`; a
+  0.67 λ gap is feasible.
+- Yagi element lengths have an absolute 0.05 m floor, which starts clamping
+  15+ element arrays at 2.4 GHz and every element at 5.8 GHz.
+- Many other families have absolute 0.1 m or 0.5 m floors and show the same
+  behavior at 1.5/2.4 GHz.
+
+### HF1 — Bound contract (required decision)
+
+Write `docs/ADR/0045-frequency-aware-optimizer-bounds.md` before changing
+behavior. The ADR must define:
+
+- the difference between a **physical/construction floor** (a real minimum for
+  a buildable design) and a **search bound** (the interval the optimizer may
+  explore around the current design);
+- how search bounds are derived from the current value and/or
+  `wavelength_m(parameters.frequency_hz)`, including a minimum non-degenerate
+  span;
+- the invariant `variable.minimum <= initial_value <= variable.maximum` and a
+  second invariant that rejects a degenerate span;
+- whether an out-of-bounds or unsupported design produces a typed
+  `OptimizerUnavailable` reason or a hard error, and the user-facing message;
+- why the current design must never be silently clamped;
+- the Moxon gap contract (direct `gap_m` variable versus derived gap, the
+  allowed gap/λ, gap/radius, and gap/depth/width ranges, and how the Cebik
+  14.17 MHz reference remains exact);
+- the high-frequency validity policy for the Moxon linear scaling and the
+  Yagi reference, including confidence and tolerance downgrades;
+- the thin-wire kernel/segmentation policy and which warnings are hard;
+- the no-invented-reference rule: high-frequency checks use invariants,
+  published references, or measurements; they do not turn an exploratory
+  control into a golden value.
+
+The ADR must explicitly reject a blanket `minimum=0` change. Removing every
+construction floor would restore the search interval but could produce
+unbuildable HF designs; the two concepts must stay separate.
+
+### HF2 — Descriptor invariant and no silent clamp
+
+Implementation requirements:
+
+- Add a shared descriptor validation helper or constructor check that rejects
+  an initial value outside its variable bounds, a non-finite value, or a
+  degenerate span.
+- Surface the failure through the existing optimizer availability/error path
+  with the family, variable, current value, and bounds. The UI must show it
+  before starting a solver run.
+- Change `optimize_design()` so the first candidate is the actual current
+  design. If an active variable is outside bounds, do not clamp it; fail the
+  run with a clear status/message.
+- Preserve the existing behavior for intentionally locked variables: locked
+  variables are context and must remain at their initial values.
+- Add tests that would fail on the old code for Moxon 2.4 GHz, vertical
+  2.4 GHz, and Yagi 5.8 GHz, plus a valid HF case that still converges.
+- No solver or schema change.
+
+### HF3 — Frequency-aware bounds across families
+
+Replace the absolute length-floor pattern in every descriptor, not only
+Moxon/Yagi. At minimum:
+
+- `_length()` and `around()` gain an explicit, tested policy for a physical
+  floor versus a search interval.
+- Every `OptimizationVariable` length uses relative bounds or a λ-scaled
+  floor; steps are also normalized where they are exposed in the UI.
+- Families with a published normalized design (Yagi, Moxon, quad, hexbeam,
+  discone, vertical, J-pole, Ringo) derive their search ranges from the
+  design's normalized dimensions and the current frequency.
+- Families that are not meaningful at a frequency return an explicit
+  unavailable reason rather than a clamped search range. The decision is
+  recorded in HF1; do not invent frequency envelopes without evidence.
+- The biquad remains the reference for small-feature minima; do not regress
+  its 0.01 m/0.001 m behavior.
+- Cover all registry families in the matrix; a family is not exempt because
+  it is usually HF-only. If it remains available at 2.4 GHz, it must either
+  produce a sane bound set or explicitly say it is unsupported.
+- No schema change.
+
+### HF4 — Moxon geometry and optimizer contract
+
+Requirements:
+
+- Make the gap a first-class part of the Moxon optimizer contract. Either
+  expose `gap_m` directly and derive the tips, or keep the current fields but
+  enforce a documented relationship so the optimizer cannot independently
+  move two redundant tip lengths into an implausible geometry.
+- Add a shared Moxon geometry validator used by the domain, descriptor, and
+  UI. It must check:
+  - `gap_m > 0` (existing);
+  - a documented minimum clearance relative to `wire_radius_m`;
+  - a documented gap/λ range;
+  - documented width/depth and tip/depth proportions;
+  - the published 14.17 MHz reference dimensions still pass exactly.
+- Do not hard-code the exploratory 4.86 mm or 7.27 mm values. The limits must
+  be justified by the reference geometry, the thin-wire model, or a traceable
+  source, and the ADR must state the evidence level.
+- Ensure a 0.67 λ gap is rejected or reported as an invalid Moxon, not
+  silently optimized.
+- Add tests at 14.17 MHz (exact reference), 28.5 MHz, 144 MHz, 435 MHz,
+  1.5 GHz, and 2.4 GHz. The high-frequency tests assert invariants and
+  completion, not an invented performance target.
+- No schema migration unless a new persisted field is unavoidable; prefer
+  keeping the current `MoxonParameters` fields and changing only the
+  optimizer variables/validation.
+
+### HF5 — Yagi wavelength-relative bounds
+
+Requirements:
+
+- Remove the absolute 0.05 m element-length floor and the 0.01 m search
+  steps from the Yagi descriptor; derive element/gap/height bounds from the
+  current normalized design and λ.
+- Keep the existing director length/gap taper constraints and the minimum
+  conductor spacing; make the minimum spacing relative to the actual radius.
+- Verify the DL6WU starting design for 5, 10, 15, 20, and 32 elements at
+  1.5, 2.4, and 5.8 GHz: every initial value is inside its bounds, the taper
+  constraints still pass, and the initial design rebuilds exactly.
+- Add real NEC2C smoke coverage for 2.4 GHz 15/32 elements and 5.8 GHz 5/15
+  elements. The test asserts completion, finite R/X, and no error; it does
+  not claim a published gain.
+- Check folded and beta/hairpin variables at high frequency; their minima
+  remain tied to the conductor radius.
+- No solver or schema change.
+
+### HF6 — Moxon high-frequency estimator
+
+Requirements:
+
+- State the validated range of the Cebik 20 m linear scaling in
+  `ANTENNA_DESIGN_ESTIMATORS.md` and the ADR. If no independent source exists
+  for 1.5/2.4 GHz, the result is a heuristic, not a reference-scaled design.
+- Make the starting geometry radius-aware. At minimum, detect when the scaled
+  gap is smaller than a documented multiple of the wire diameter and either
+  raise `UnsupportedEstimateError` or return a clearly labelled experimental
+  estimate with a starting gap adjustment derived from a documented rule.
+- Do not leave `REFERENCE_SCALED` confidence and a tolerance smaller than the
+  gap for an extrapolation that is not validated. Downgrade confidence and
+  make the tolerance meaningful.
+- Add a strong EN/ES warning that the wire radius is not scaled and that the
+  high-frequency Moxon needs independent verification; explain the
+  construction implication when the gap is comparable to the conductor
+  diameter.
+- Keep 14.17 MHz exact and keep the 28.5 MHz editor default a documented
+  heuristic.
+- Do not invent a 2.4 GHz published reference. If a traceable source or
+  measurement is added later, record it separately.
+
+### HF7 — Thin-wire model-quality gate
+
+Requirements:
+
+- Define a shared quality policy for segment length versus wire radius,
+  Moxon tip/gap resolution, and the extended thin-wire kernel.
+- Expose the extended kernel in the simulation UI or select it
+  automatically for families/frequencies where the default thin-wire kernel
+  is outside its stated range. Record the chosen behavior and its effect.
+- Make the optimizer treat model-quality failures as infeasible or as a
+  blocking warning; do not silently optimize a model with
+  `segmentation.radius_ratio_low` or `segment_too_short` when that invalidates
+  the objective.
+- Refine the Moxon tip/gap region or document why the current segmentation is
+  sufficient. The 2.4 GHz Moxon tip segments are currently shorter than the
+  gap and have a segment/radius ratio below 8.
+- Test 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi with and without the extended
+  kernel; assert deterministic completion and record the impedance change.
+- No universal numerical accuracy claim; use convergence and invariant checks.
+
+### HF8 — Diagnostics, defaults, and Apply Best
+
+Requirements:
+
+- Set `recommends_bound_hits=True` for Moxon, Yagi, and the other families
+  where a bound hit is actionable, or make the recommendation universal.
+  The current Moxon result sits at the width/depth bounds without a warning.
+- Show the initial value, the optimizer value, and the bounds for every
+  active variable; show the Moxon gap and gap/λ/gap-radius in the results and
+  the optimizer table.
+- Review the Moxon default objective. `MAX_GAIN` can select a poor match/F/B
+  design even after the bounds are fixed. Record the decision; a
+  multi-objective default or an F/B target with an SWR constraint are the
+  candidate options. Do not change the Yagi default without the same review.
+- Block or require confirmation for **Apply Best** when the selected design
+  violates the Moxon geometry contract or has a critical model-quality
+  warning.
+- Do not present `converged` as a physical-validity claim. Pair the status
+  with the geometry contract, bound-hit diagnostics, model-quality result, and
+  high-SWR recommendation; a converged search can still be an unusable
+  antenna.
+- Use `DisplayUnits(AUTO)` in the family optimization dialog and pass it from
+  `MainWindow`; the table must not hide sub-centimetre values in fixed meters.
+- Add EN/ES help for every new warning/field and update the help coverage
+  manifest.
+- UI tests cover the warning, the bound table, the apply guard, and the
+  adaptive units.
+
+### HF9 — Regression matrix, evidence, and documentation
+
+Required matrix:
+
+- Frequencies: 1.8, 3.5, 7, 14, 28, 50, 144, 435, 1296, 2400, and 5800 MHz.
+- Families: every optimizer registry type, with priority on Moxon, Yagi,
+  vertical, dipole, folded dipole, inverted V, J-pole, Ringo, quad beam,
+  discone, hexbeam, and biquad.
+- Assertions:
+  - every initial value is within its variable bounds;
+  - no variable span is degenerate;
+  - `build_parameters(initial_values)` reproduces the current parameters;
+  - `validate(initial_values)` is empty for valid designs;
+  - the optimizer does not silently change the initial design;
+  - a real NEC2C run completes for the high-frequency priority cases;
+  - Moxon gap/λ and gap/radius are inside the documented contract;
+  - Yagi lengths/λ and gaps/radius are inside the documented contract.
+
+Add an old-behavior regression that fails on the current code: at 2.4 GHz,
+the Moxon initial width/depth must be inside their bounds and the optimizer
+must not return a gap of 0.67 λ. The test must not depend on an invented
+performance reference; it asserts the bound and geometry invariants.
+
+Documentation:
+
+- ADR-0045 and the estimator guide record the bound contract, the Moxon
+  high-frequency validity, the thin-wire policy, and the confidence downgrade.
+- The user guide explains why a high-frequency Moxon/Yagi may be marked
+  experimental or unsupported, and how to rebuild a valid starting design.
+- `CHANGELOG.md` records the behavior change when the implementation lands.
+- Do not promote evidence levels or claim measured accuracy without a
+  traceable source.
+
+### HF10 — Design-frequency/geometry consistency
+
+- Reconcile the Moxon manual **Load 20 m reference scaled to current
+  frequency** action and the Yagi auto-scale exception with ADR-0043.
+- If a design is grossly inconsistent with its design frequency (for example,
+  a 20 m Moxon optimized at 2.4 GHz), show a warning and offer the explicit
+  starting-dimension action; do not silently rescale tuned geometry.
+- Consider an optimizer preflight check that compares the primary dimensions
+  with λ and reports a clear “geometry and design frequency disagree”
+  message.
+- Test frequency changes, preset loads, pristine/edited states, and optimizer
+  availability.
+
+### File plan
+
+- `src/antennadesk/domain/optimization/families/common.py`
+- `src/antennadesk/domain/optimization/families/typed.py`
+- `src/antennadesk/domain/optimization/families/yagi.py`
+- `src/antennadesk/domain/optimization/families/dipole.py`
+- `src/antennadesk/domain/optimization/families/vertical.py`
+- `src/antennadesk/domain/optimization/families/scv.py`
+- `src/antennadesk/domain/optimization/descriptor.py`
+- `src/antennadesk/domain/optimization/registry.py`
+- `src/antennadesk/domain/optimization/engine.py`
+- `src/antennadesk/application/use_cases/optimize_antenna.py`
+- `src/antennadesk/domain/antennas/moxon.py`
+- `src/antennadesk/domain/design/estimators.py`
+- `src/antennadesk/domain/simulation/segmentation.py`
+- `src/antennadesk/simulation/discretization.py`
+- `src/antennadesk/domain/simulation/spec.py`
+- `src/antennadesk/ui/dialogs/family_optimization_dialog.py`
+- `src/antennadesk/ui/main_window.py`
+- `src/antennadesk/ui/i18n.py`
+- `tests/unit/optimization/`, `tests/integration/simulation/`, `tests/ui/`
+- `docs/ADR/0045-frequency-aware-optimizer-bounds.md`
+- `docs/ANTENNA_DESIGN_ESTIMATORS.md`, `docs/USER_GUIDE.md`,
+  `docs/VALIDATION_PLAN.md` (only if evidence changes), `CHANGELOG.md`
+
+### Acceptance for the track
+
+- HF1’s ADR is accepted and linked from the queue.
+- Every descriptor passes the initial-in-bounds and non-degenerate-span
+  invariants across the frequency matrix; no silent clamp remains.
+- A 2.4 GHz Moxon no longer produces a 0.67 λ gap; its gap is inside the
+  documented contract and the optimizer can explore a physically plausible
+  design.
+- Yagi 15/32 elements at 2.4 GHz and 5/32 elements at 5.8 GHz start inside
+  bounds and complete a real NEC2C run.
+- Other families either have sane bounds at 2.4 GHz or an explicit
+  unsupported reason; no family silently evaluates a clamped design.
+- Model-quality warnings are either resolved or block the optimizer.
+- The optimizer UI shows bounds, gap ratios, and bound-hit diagnostics; Apply
+  Best cannot silently accept a geometrically invalid design.
+- The full gate passes: `ruff check`, `ruff format --check`, both `mypy`
+  passes, and `NEC2C=... pytest`.
+
+### Out of scope
+
+- New antenna families or new solver engines.
+- A universal frequency envelope without evidence.
+- Inventing high-frequency Moxon/Yagi reference values.
+- Automatic scaling of tuned geometry; ADR-0043 remains the policy.
+- Multi-band Moxon/Yagi optimization.
+- Matching-network optimization.
+- Claiming measurement-grade accuracy for 1.5/2.4/5.8 GHz results.
+
+### Risks and mitigations
+
+- **Removing construction floors makes HF designs unbuildable.** Keep a
+  separate physical floor and test HF construction values; do not equate
+  “search bound” with “buildable minimum”.
+- **Changing Moxon parameterization could break persistence.** Prefer the
+  existing fields and change only optimizer variables/validation; if a new
+  field is unavoidable, add schema migration and round-trip tests.
+- **The extended kernel changes results.** Treat it as a modeling decision
+  with regression and convergence evidence; do not enable it silently without
+  documenting the effect.
+- **Many families are affected.** Migrate incrementally, but do not close the
+  track until every registry family passes the matrix or has an explicit
+  unsupported reason.
+- **The exploratory control is not a reference.** Do not turn 4.86 mm,
+  7.27 mm, or 25 dB into golden values without a traceable source.
+
+## HexBeam follow-ups (C6 complete 2026-11-18; C7 queued)
+
+C6 is complete. The former single-band model derived each tip from the
+published wire half-length and placed it outside the 130 in frame, producing a
+9.03 m span on a 3.30 m turning radius and a 0.67 m drawn tip gap against the
+published 0.61 m. The corrected model has a 6.604 m span, a 0.6096 m tip gap,
+and every wire point inside the 3.302 m turning radius. C7 can now start.
+
+### C6 acceptance (implemented 2026-11-18)
 
 - Driver: two halves from the center feed to the front-side spreaders, then
   along the hexagon sides to the lateral tips; M shape.
-- Reflector: one wire around the rear three sides, with its midpoint at the
-  rear; U shape.
+- Reflector: one continuous wire around the rear three sides, with its
+  midpoint at the rear; U shape.
+- Ten canonical wires: feed, four driver segments, and five reflector segments
+  (left/right tip, left/right inner, and the full rear side).
 - Tip spacer: 24 in between the driver tip and reflector end, on the side.
-- Every wire point is inside the turning radius; overall span is 2R (~6.60 m).
+- Every wire point is at or inside the turning radius; overall span is 2R
+  (~6.60 m).
+- `total_conductor_length_m` stays `2·(Ld + Lr) + feed_gap` and matches the sum
+  of the canonical wire lengths within 1 mm; the invariant is tested.
+- The published `element_separation_m` defaults to zero and is applied only as a
+  reflector fore-aft trim; it is not a center-to-center spacing.
+- Domain and optimizer feasibility checks share one frame helper; the old
+  `driver_half > 1.5R` and reflector lower-bound rules are removed.
+- Adaptive-unit tests cover both the legacy fixed-metric scene and
+  `DisplayUnits` automatic; the 435 MHz drawn gap changes from 2.18 cm to
+  1.99 cm.
+- C6 keeps the current 219/207/24/130 constants; a parameterized test covers
+  both that row and the G3TXQ 218/412/24/130 row. C7 reconciles the five-band
+  20 m row.
 - Plan dimensions, notes, construction sheet, design summary, and evidence
   agree with the geometry; no "published vs drawn gap" mismatch.
 - Tests assert the frame-fit invariant, reflector rear midpoint, exact tip gap,
   and span; the golden scene is updated deliberately.
 - Docs/help that describe the W/U or 60-degree ray are corrected. The C2
   family/editor/report scaffolding remains valid.
+
+The detailed reconstruction, source reconciliation, and file-level test matrix
+are in [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md). C6 is
+closed; C7 remains queued.
 
 ### C7 acceptance
 
@@ -330,7 +708,8 @@ was completed the same day. UX31 was queued on 2026-11-17 from feed-schematic
 feedback and was completed the same day.
 UX32–UX37 were queued on 2026-11-17 from frequency-first starting-dimension
 feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
-new-antenna tab feedback and is also complete.
+new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
+from impedance/SWR point-density feedback; it is the only open UX item.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -2388,6 +2767,162 @@ semantics.
 - Update `docs/USER_GUIDE.md` and `CHANGELOG.md`.
 - Run the full gate; no new translation or help keys are required.
 
+## UX39 — At least 100 computed points in generated single-design impedance/SWR charts (queue note, 2026-11-18)
+
+**Status:** queued. The feasibility analysis is recorded here; no code or
+schema change has been made.
+
+### Problem
+
+Generated single-design templates default to 31 points
+(`DEFAULT_GENERATED_SWEEP_POINTS` in
+`src/antennadesk/ui/main_window.py`); most use a ±5% span, while some use wider
+spans. The shared two-band plan defaults to 61
+(`DEFAULT_TWO_BAND_SWEEP_POINTS`). The reported case was a ~145 MHz design with
+31 points across ~15 MHz, about a 0.48 MHz step. Basic/custom sweep controls
+already default to 100 when a sweep is enabled, the magnetic loop uses 101, and
+band analysis exposes 3–201 points per band (default 15).
+
+The impedance and SWR charts plot one point per solver frequency. They do not
+interpolate, smooth, or synthesize intermediate values: the line between
+points is only a visual join. Requiring 100 chart points therefore means 100
+NEC solves at 100 frequencies. That is a frequency-sampling increase, not a
+claim of higher electromagnetic accuracy; the accuracy at each point is still
+set by segmentation, ground, conductor losses, and the thin-wire model.
+
+### Decision
+
+- Raise the generated single-design default to **100 points**. Keep the span
+  unchanged; only the count changes. `100` means 99 intervals; use `101` if a
+  future product decision requires 100 intervals.
+- Raise the two-band shared default from 61 to 100.
+- Preserve explicit plans that already have at least 100 points (for example
+  the magnetic loop's 101) and every user override.
+- Do not interpolate, smooth, average, or fabricate intermediate points.
+- Do not silently cap below 100 or reduce the sweep to fit the pattern budget.
+  If a model is too slow, the user can lower **Points** or raise the timeout.
+- Keep the current 180 s default timeout, cancellation, and indeterminate
+  progress. True per-frequency progress remains P7/D4 and is out of scope.
+- Keep ADR-0019's pattern-snapshot policy: the impedance sweep keeps all
+  points, while far-field patterns remain limited to snapshots and the storage
+  budget.
+- Band analysis keeps its per-band 3–201 control and its current default. A
+  global band-analysis default of 100 is a separate product decision; the
+  existing control already supports it.
+- In the impedance and SWR charts, keep every computed point in the line and
+  in the table. Apply a density-aware marker policy so 100 points do not
+  become an unreadable band of 5 px symbols: symbols may be shrunk, decimated,
+  or suppressed above a threshold, but the line data, cursor series, table,
+  CSV, and reports retain every point. Prefer a testable pure helper over
+  layout-dependent guessing.
+
+### Feasibility evidence (2026-11-18)
+
+Local check with one nec2c process, one deck containing `FR 0 N`, and patterns
+disabled. Timings are a feasibility check, not a target-hardware guarantee.
+
+| Model | Segments | 31 points | 100 points |
+|---|---:|---:|---:|
+| 40 m dipole | 21 | 0.013 s | 0.030 s |
+| G5RV | 66 | 0.08 s | 0.24 s |
+| 7 MHz vertical, 32 radials, 3.5–30 MHz | 725 | 12.6 s | 41.3 s |
+
+The cost is approximately linear in the frequency count and is about 3× from
+31 to 100. The 725-segment 100-point case fits the 180 s default. At 890
+segments the backlog's 31-point runtime note is 25.3 s including five pattern
+snapshots; a 100-point run is expected to remain within the default on the same
+class of machine, but it must be re-measured. The existing timeout and cancel
+path remain the guard for larger models or slower hardware.
+
+Storage is not a blocker: `estimate_project_bytes` gives about 26 MB of JSON
+(≈4.4 MB compressed) for 100 points at 725 segments and about 32 MB (≈5.3 MB
+compressed) at 890 segments. Both are below the 32 MB warning and the 64 MB
+hard limit. The 24 MB pattern budget is compressed and only stressed by much
+larger models; the pattern step may still be coarsened, and that reduction is
+already reported. ADR-0042 already benchmarked 101 points per band across
+eight bands: 1.18 s with four workers and 7.05 MB compressed for the G5RV
+case.
+
+### Implementation contract
+
+- `src/antennadesk/ui/main_window.py`: set `DEFAULT_GENERATED_SWEEP_POINTS` to
+  100 and `DEFAULT_TWO_BAND_SWEEP_POINTS` to 100; the custom sweep spin box
+  inherits the first constant. Audit every `FrequencyPlan.sweep(...)` call in
+  the generated spec builders and replace only the 31/61 defaults. Keep
+  explicit counts at or above 100.
+- `src/antennadesk/ui/widgets/dipole_form.py`: verify the basic form remains
+  at 100; no change is expected.
+- `src/antennadesk/ui/widgets/results_view.py`: add the marker-density policy
+  to the impedance and SWR plots only. Keep the full `x`/`y` arrays in the
+  line, the table rows, the cursor series, and exports. Do not apply the policy
+  to the pattern, current, or measurement charts in this item.
+- Do not touch `FrequencyPlan`, `SimulationSpec`, the NEC input writer, the
+  parser, normalization, or the project schema.
+- Do not change band-analysis defaults, the comparison dialog's point count,
+  or optimizer/synthesis target plans.
+- No new ADR is required for a constant/default change. If the implementation
+  adds an adaptive points-by-model-size policy or a user-facing resolution
+  control, record the policy in an ADR first.
+
+### Tests and acceptance
+
+- [ ] A table-driven UI test over the generated templates asserts
+      `frequency_plan.count >= 100` for every enabled sweep. Cover at least the
+      T2FD, vertical, Yagi, end-fed, beverage, loaded-dipole, and two-band
+      builders; exclude single-frequency custom mode by design.
+- [ ] The Auto (template) view and the Points spin box show 100 for generated
+      templates; **Custom** still overrides, and a single-frequency custom plan
+      remains count 1.
+- [ ] Impedance and SWR charts contain one plotted point per computed
+      frequency, the table has one row per frequency, and no interpolation is
+      introduced.
+- [ ] At 100 points the chart line uses all points; the marker layer is
+      bounded and the plot is legible at the minimum supported window width.
+      The cursor still snaps to each computed point.
+- [ ] A 100-point NEC2C smoke run of a representative generated design
+      completes within the 180 s default and returns 100 results; record the
+      wall time and keep the test solver-marked.
+- [ ] Project save/load round-trips a 100-point result; record the estimated
+      compressed size and confirm it stays below the warning threshold for the
+      tested models.
+- [ ] Update the tests that currently assert 31:
+      `tests/ui/test_main_window_presets.py` (T2FD) and
+      `tests/ui/test_main_window_simulation.py` (vertical and generated-spec
+      fixtures). Rename the "performance-safe defaults" test if the wording no
+      longer describes the policy.
+- [ ] Update `docs/USER_GUIDE.md`, `docs/VALIDATION_PLAN.md`,
+      `docs/MULTIBAND_ANALYSIS_PLAN.md`, and `CHANGELOG.md`. Add a new
+      changelog entry; do not rewrite historical release entries.
+- [ ] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
+      passes, and `NEC2C=... uv run pytest`.
+
+### Out of scope
+
+- Interpolated or synthetic points, smoothing, or curve fitting.
+- Changing segmentation, ground, conductor, or solver accuracy claims.
+- Changing band-analysis defaults or its 3–201 range.
+- Reopening P7/D4 per-frequency progress or the single-deck multi-band plan.
+- Changing optimizer, synthesis, robustness, tuning, or comparison plans.
+- Schema migration or project-format changes.
+- Rewriting historical ADR-0019 or old changelog entries.
+
+Follow-up not included here: if band analysis should also default to 100 points
+per band, raise its 15-point default in a separate item. ADR-0042 already
+benchmarks 101 points per band, but runtime and storage multiply by the number
+of selected bands.
+
+### Risks
+
+- Large radial models at 100 points are about 3× slower. On a slower target
+  machine or a much larger model, the 180 s default may be exceeded; the user
+  must lower Points or raise the timeout. Do not add silent capping.
+- Dense markers can obscure the curve. The marker policy must be independent
+  of the data series so the user never loses computed points.
+- Tests and docs that repeat "31-point sweep" are spread across the UI tests,
+  user guide, validation plan, and multiband plan; update them together.
+- The pattern budget may coarsen the pattern at high point counts. Keep the
+  existing diagnostic visible; do not trade away the impedance sweep.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -2824,7 +3359,7 @@ model and solver contract must land first.
     `_create_project_from_parameters()` selects the Design tab. It covers
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
-    unchanged. No new translation or help keys. The UX queue is now closed.
+    unchanged. No new translation or help keys. UX39 is the only open UX item.
 19. **U1–U5 are complete; U6 documentation is done.** The shared
     `DisplayUnits` formatter, Units preference, adaptive geometry scenes,
     unit-aware scale bar, all family editors and editable tables, the
@@ -2832,6 +3367,10 @@ model and solver contract must land first.
     are migrated. `QA_PASS_2026-11-18.md` records the automated gate; only the
     manual desktop light/dark and font-scaling checklist remains before the
     release decision.
+20. **UX39 is queued after U6.** Raise generated single-design sweeps to 100
+    computed points, keep every point in the chart/table/exports, and bound
+    marker density. It does not change band-analysis defaults, the solver, or
+    the schema; see the UX39 note above.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2862,10 +3401,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,524 passed, 1 skipped** on 2026-11-18 after the canonical-input
-  regression tests, with `NEC2C` and the optional `cross-engine` group; the skip
-  is the Windows-only console-hiding test on Linux. Rerun without PyNEC if the
-  environment lacks it.
+- Full gate: **3,533 passed, 1 skipped** on 2026-11-18 after the HexBeam
+  geometry correction, with `NEC2C` auto-detected by the test configuration; the
+  skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

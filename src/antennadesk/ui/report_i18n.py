@@ -721,12 +721,12 @@ REPORT_SPANISH: dict[str, str] = {
         "Construí un rectángulo Moxon con elementos de {width} m, una separación "
         "de {depth} m y puntas dobladas que dejan una separación de {gap} m."
     ),
-    "Build a W-shaped driver with {driver} m half-lengths and a U-shaped reflector with {reflector} m half-lengths on a six-spreader frame with a {turning} m turning radius. Set the tip gap to {tip_gap} m and feed the center of the W. The model reconstructs the bent wire path; the frame, spreader sag, feed balun, and multi-band nesting are not modeled.": (  # noqa: E501
-        "Construí un excitador en forma de W con semilongitudes de {driver} m y "
+    "Build an M-shaped driver with {driver} m half-lengths and a U-shaped reflector with {reflector} m half-lengths on a six-spreader frame with a {turning} m turning radius. Set the tip gap to {tip_gap} m and feed the center of the M. The reflector wraps the rear three sides; the frame, spreader sag, feed balun, and multi-band nesting are not modeled.": (  # noqa: E501
+        "Construí un excitador en forma de M con semilongitudes de {driver} m y "
         "un reflector en forma de U con semilongitudes de {reflector} m sobre un "
         "marco de seis separadores con un radio de giro de {turning} m. Ajustá la "
-        "separación de puntas a {tip_gap} m y alimentá el centro de la W. El "
-        "modelo reconstruye el camino de hilo doblado; el marco, la flecha de los "
+        "separación de puntas a {tip_gap} m y alimentá el centro de la M. El "
+        "reflector rodea los tres lados traseros; el marco, la flecha de los "
         "separadores, el balun de alimentación y el anidamiento multibanda no "
         "están modelados."
     ),
@@ -982,7 +982,7 @@ REPORT_SPANISH: dict[str, str] = {
     ),
     "beta / hairpin": "beta / hairpin",
     "center of driven element": "centro del elemento alimentado",
-    "center of the W driver": "centro del excitador en W",
+    "center of the M driver": "centro del excitador en M",
     "across the apex gap": "a través de la separación del vértice",
     "driven element center": "centro del elemento alimentado",
     "driven loop side midpoint": "punto medio del lado del lazo alimentado",

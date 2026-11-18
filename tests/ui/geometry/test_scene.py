@@ -941,9 +941,12 @@ def test_hexbeam_dimensions_anchor_to_the_named_geometry() -> None:
     parameters = published_hexbeam_parameters()
     scene = _scene(parameters, "hexbeam", GeometryViewMode.PLAN)
 
-    span = next(dimension for dimension in scene.dimensions if dimension.text == "9.03 m")
-    assert span.start.distance_to(span.end) == pytest.approx(9.03, abs=1e-2)
-    assert any("published tip-gap parameter" in note for note in scene.notes)
+    span = next(dimension for dimension in scene.dimensions if dimension.text == "6.60 m")
+    assert span.start.distance_to(span.end) == pytest.approx(6.604, abs=1e-2)
+    gap = next(dimension for dimension in scene.dimensions if dimension.text == "0.61 m")
+    assert gap.start.distance_to(gap.end) == pytest.approx(0.6096, abs=1e-2)
+    assert any("tip gap 0.61 m" in note for note in scene.notes)
+    assert not any("published tip-gap parameter" in note for note in scene.notes)
 
 
 def test_magnetic_loop_does_not_label_a_chord_as_the_diameter() -> None:
@@ -1020,11 +1023,12 @@ def test_hexbeam_plan_dimensions_the_half_and_spreader_angle() -> None:
 
     scene = _scene(parameters, "hexbeam", GeometryViewMode.PLAN)
 
-    assert any(angle.text == "60.0°" for angle in scene.angular_dimensions)
+    assert any(angle.text == "30.0°" for angle in scene.angular_dimensions)
     assert any(
         dimension.label == "Turning radius" and dimension.text == "3.30 m"
         for dimension in scene.dimensions
     )
+    assert any("adjacent spreaders are 60° apart" in note for note in scene.notes)
     inset = next(inset for inset in scene.insets if inset.label.startswith("left half"))
     labels = {dimension.label for dimension in inset.dimensions}
     assert {"Di", "Do", "Ri", "Ro"} <= labels
