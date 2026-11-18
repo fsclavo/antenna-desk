@@ -23,15 +23,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -44,11 +45,17 @@ class InvertedVForm(QWidget):
         unit_system: UnitSystem,
         parameters: InvertedVParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -66,6 +73,21 @@ class InvertedVForm(QWidget):
         self._leg_length.setDecimals(3)
         self._leg_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._leg_length.setValue(length_from_m(10.6, unit_system))
+
+        self._apex_height_field = LengthField(
+            self._apex_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._leg_length_field = LengthField(
+            self._leg_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._apex_height_field.configure(12.0)
+        self._leg_length_field.configure(10.6)
 
         self._included_angle = QDoubleSpinBox(self)
         self._included_angle.setRange(1.0, 179.0)
@@ -204,13 +226,13 @@ class InvertedVForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._apex_height,
-            self._leg_length,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._apex_height_field.set_display_units(self._display_units)
+        self._leg_length_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -218,8 +240,8 @@ class InvertedVForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._apex_height.setValue(length_from_m(parameters.apex_height_m, self._unit_system))
-            self._leg_length.setValue(length_from_m(parameters.leg_length_m, self._unit_system))
+            self._apex_height_field.configure(parameters.apex_height_m)
+            self._leg_length_field.configure(parameters.leg_length_m)
             self._included_angle.setValue(parameters.included_angle_deg)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
@@ -259,8 +281,8 @@ class InvertedVForm(QWidget):
     def parameters(self) -> InvertedVParameters:
         return InvertedVParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            leg_length_m=length_to_m(self._leg_length.value(), self._unit_system),
-            apex_height_m=length_to_m(self._apex_height.value(), self._unit_system),
+            leg_length_m=self._leg_length_field.value_m(),
+            apex_height_m=self._apex_height_field.value_m(),
             included_angle_deg=self._included_angle.value(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),

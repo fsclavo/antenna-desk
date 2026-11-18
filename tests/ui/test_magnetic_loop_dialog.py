@@ -44,3 +44,19 @@ def test_magnetic_loop_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     assert dialog.parameters() == original
     assert dialog._sides.value() == 24
     assert dialog._capacitance.value() == 180.0
+
+
+def test_magnetic_loop_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.magnetic_loop_form import MagneticLoopForm
+
+    form = MagneticLoopForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._diameter_field.unit == "m"
+    assert form._height_field.unit == "m"
+    assert form._gap_field.unit == "cm"

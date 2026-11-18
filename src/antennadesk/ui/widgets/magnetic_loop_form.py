@@ -28,15 +28,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -49,11 +50,17 @@ class MagneticLoopForm(QWidget):
         unit_system: UnitSystem,
         parameters: MagneticLoopParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._frequency = QDoubleSpinBox(self)
@@ -81,6 +88,28 @@ class MagneticLoopForm(QWidget):
         self._gap.setDecimals(3)
         self._gap.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._gap.setValue(length_from_m(0.05, unit_system))
+
+        self._diameter_field = LengthField(
+            self._diameter,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._gap_field = LengthField(
+            self._gap,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._diameter_field.configure(1.0)
+        self._height_field.configure(1.0)
+        self._gap_field.configure(0.05)
 
         self._capacitance = QDoubleSpinBox(self)
         self._capacitance.setRange(0.001, 1_000_000.0)
@@ -235,14 +264,13 @@ class MagneticLoopForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._diameter,
-            self._height,
-            self._gap,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        for field in (self._diameter_field, self._height_field, self._gap_field):
+            field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -250,10 +278,10 @@ class MagneticLoopForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._diameter.setValue(length_from_m(parameters.diameter_m, self._unit_system))
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._diameter_field.configure(parameters.diameter_m)
+            self._height_field.configure(parameters.height_m)
             self._sides.setValue(parameters.sides)
-            self._gap.setValue(length_from_m(parameters.gap_length_m, self._unit_system))
+            self._gap_field.configure(parameters.gap_length_m)
             self._capacitance.setValue(parameters.tuning_capacitance_f * 1e12)
             self._esr.setValue(parameters.capacitor_esr_ohm)
             self._azimuth.setValue(parameters.azimuth_deg)
@@ -298,11 +326,11 @@ class MagneticLoopForm(QWidget):
     def parameters(self) -> MagneticLoopParameters:
         return MagneticLoopParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            diameter_m=length_to_m(self._diameter.value(), self._unit_system),
+            diameter_m=self._diameter_field.value_m(),
             tuning_capacitance_f=self._capacitance.value() * 1e-12,
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
             sides=self._sides.value(),
-            gap_length_m=length_to_m(self._gap.value(), self._unit_system),
+            gap_length_m=self._gap_field.value_m(),
             capacitor_esr_ohm=self._esr.value(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),

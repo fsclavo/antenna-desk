@@ -106,6 +106,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   element table now chooses one length unit per table and shows it in the
   header. A 435 MHz fan shows short elements in centimeters while the 12 m
   apex stays in meters.
+- **Inverted-L and inverted-V migrations.** Inverted-L vertical/horizontal/base
+  dimensions and inverted-V apex/leg lengths now use `LengthFieldSpec`;
+  automatic units show a 0.25 m base or apex detail in centimeters while the
+  main HF wires stay in meters.
+- **Magnetic-loop migration.** Loop diameter, height, and gap now use
+  `LengthFieldSpec`; automatic units keep the 1 m loop in meters and show the
+  5 cm gap in centimeters.
 
 ### Changed
 

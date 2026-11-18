@@ -38,3 +38,27 @@ def test_inverted_l_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
 
     assert dialog.parameters() == original
     assert "30.000" in dialog._geometry.text()
+
+
+def test_inverted_l_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
+
+    form = InvertedLForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        InvertedLParameters(
+            frequency_hz=7_100_000.0,
+            vertical_height_m=10.0,
+            horizontal_length_m=20.0,
+            base_height_m=0.25,
+        )
+    )
+
+    assert form._vertical_height_field.unit == "m"
+    assert form._horizontal_length_field.unit == "m"
+    assert form._base_height_field.unit == "cm"

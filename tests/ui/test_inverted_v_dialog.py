@@ -57,3 +57,26 @@ def test_inverted_v_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
     assert restored.included_angle_deg == pytest.approx(110.0)
     assert restored.azimuth_deg == pytest.approx(25.0)
     assert restored.leg_length_m == pytest.approx(10.6)
+
+
+def test_inverted_v_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
+
+    form = InvertedVForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        InvertedVParameters(
+            frequency_hz=7_100_000.0,
+            leg_length_m=10.6,
+            apex_height_m=12.0,
+        )
+    )
+
+    assert form._leg_length_field.unit == "m"
+    assert form._apex_height_field.unit == "m"
