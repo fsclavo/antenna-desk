@@ -108,3 +108,19 @@ def test_t2fd_dialog_uses_the_previous_design_frequency(qtbot: QtBot) -> None:
     assert parameters.frequency_hz == pytest.approx(7_100_000.0)
     assert parameters.highest_frequency_hz == pytest.approx(30_000_000.0)
     assert parameters.length_m == pytest.approx(span_m, abs=0.001)
+
+
+def test_t2fd_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.t2fd_form import T2FDForm
+
+    form = T2FDForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._length_field.unit == "m"
+    assert form._spacing_field.unit == "cm"
+    assert form._height_field.unit == "m"

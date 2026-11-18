@@ -129,6 +129,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   starting-dimension reloads now read the `LengthField` values instead of
   converting the spin-box text with the old fixed unit, so automatic units
   cannot corrupt the generated geometry.
+- **SCV, T2FD, and Zepp migrations.** SCV horizontal/vertical/base/feed-offset
+  dimensions, T2FD length/spacing/height, and Zepp radiator/matching/spacing/
+  base dimensions now use `LengthFieldSpec`; automatic units keep long HF wires
+  in meters while short spacing and low base heights use centimeters.
 
 ### Changed
 

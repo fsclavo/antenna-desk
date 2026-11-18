@@ -124,3 +124,32 @@ def test_scv_dialog_restores_existing_geometry(qtbot: QtBot) -> None:
 
     assert dialog.parameters() == original
     assert "38.000" in dialog._form._geometry.text()
+
+
+def test_scv_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.scv import (
+        SCV_REFERENCE_FREQUENCY_HZ,
+        ScvKind,
+        scv_parameters,
+    )
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.scv_form import ScvForm
+
+    form = ScvForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        replace(
+            scv_parameters(ScvKind.HALF_SQUARE, SCV_REFERENCE_FREQUENCY_HZ),
+            base_height_m=0.25,
+        )
+    )
+
+    assert form._horizontal_length_field.unit == "m"
+    assert form._vertical_height_field.unit == "m"
+    assert form._base_height_field.unit == "cm"

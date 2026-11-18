@@ -31,15 +31,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 DEFAULT_LOWEST_FREQUENCY_HZ = 3_500_000.0
@@ -55,11 +56,17 @@ class T2FDForm(QWidget):
         unit_system: UnitSystem,
         parameters: T2FDParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
 
         self._lowest_frequency = QDoubleSpinBox(self)
@@ -101,6 +108,26 @@ class T2FDForm(QWidget):
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._height.setValue(length_from_m(DEFAULT_T2FD_HEIGHT_M, unit_system))
         self._height_label = QLabel(translator.t("field.height"), self)
+
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._spacing_field = LengthField(
+            self._spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._height_field.configure(DEFAULT_T2FD_HEIGHT_M)
 
         self._orientation = QComboBox(self)
         self._orientation.addItem(
@@ -265,8 +292,8 @@ class T2FDForm(QWidget):
     def _set_starting_dimensions(self) -> None:
         lowest_hz = self._lowest_frequency.value() * 1_000_000.0
         span_m, spacing_m = t2fd_starting_dimensions(lowest_hz)
-        self._length.setValue(length_from_m(span_m, self._unit_system))
-        self._spacing.setValue(length_from_m(spacing_m, self._unit_system))
+        self._length_field.configure(span_m)
+        self._spacing_field.configure(spacing_m)
 
     def _apply_starting_dimensions(self) -> None:
         self._set_starting_dimensions()
@@ -304,14 +331,14 @@ class T2FDForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._length,
-            self._spacing,
-            self._height,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        self._length_field.set_display_units(self._display_units)
+        self._spacing_field.set_display_units(self._display_units)
+        self._height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -320,11 +347,11 @@ class T2FDForm(QWidget):
         try:
             self._lowest_frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._highest_frequency.setValue(parameters.highest_frequency_hz / 1_000_000.0)
-            self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
-            self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
+            self._length_field.configure(parameters.length_m)
+            self._spacing_field.configure(parameters.spacing_m)
             self._termination.setValue(parameters.termination_resistance_ohm)
             self._transformer.setValue(parameters.transformer_ratio)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
             orientation_index = self._orientation.findData(parameters.orientation.value)
             if orientation_index >= 0:
                 self._orientation.setCurrentIndex(orientation_index)
@@ -377,9 +404,9 @@ class T2FDForm(QWidget):
         return T2FDParameters(
             frequency_hz=self._lowest_frequency.value() * 1_000_000.0,
             highest_frequency_hz=self._highest_frequency.value() * 1_000_000.0,
-            length_m=length_to_m(self._length.value(), self._unit_system),
-            spacing_m=length_to_m(self._spacing.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            length_m=self._length_field.value_m(),
+            spacing_m=self._spacing_field.value_m(),
+            height_m=self._height_field.value_m(),
             orientation=self._selected_orientation(),
             termination_resistance_ohm=self._termination.value(),
             transformer_ratio=self._transformer.value(),

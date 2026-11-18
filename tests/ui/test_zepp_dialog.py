@@ -64,3 +64,20 @@ def test_zepp_dialog_reports_the_second_conductor_and_choke(qtbot: QtBot) -> Non
 
     assert any("dos conductores reales" in text for text in texts)
     assert any("choque de modo común 1:1" in text for text in texts)
+
+
+def test_zepp_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.zepp_form import ZeppForm
+
+    form = ZeppForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._radiator_length_field.unit == "m"
+    assert form._matching_length_field.unit == "m"
+    assert form._spacing_field.unit == "cm"
+    assert form._base_height_field.unit == "m"
