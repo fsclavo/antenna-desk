@@ -177,9 +177,11 @@ def radius_unit_key(system: UnitSystem) -> str:
 
 
 def length_bounds(system: UnitSystem) -> tuple[float, float]:
+    # UHF construction details can be below the old 0.1 m / 0.3 ft floor.
+    # Per-field LengthFieldSpec values tighten this further where needed.
     if system is UnitSystem.METRIC:
-        return 0.1, 10_000.0
-    return 0.3, 32_808.0
+        return 0.001, 10_000.0
+    return 0.003, 32_808.0
 
 
 def height_bounds(system: UnitSystem) -> tuple[float, float]:

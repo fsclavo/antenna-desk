@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mm/in. The table unit re-evaluates on frequency, preset, and model loads.
 - **Adaptive log-periodic table.** The read-only element table follows the same
   per-table unit policy and shows the selected unit in its headers.
+- **Small UHF feature floor.** The shared length bounds now allow 1 mm in metric
+  and 0.003 ft in imperial instead of the old 0.1 m / 0.3 ft floor, so UHF gaps
+  and small construction features are no longer clamped by the generic range.
 
 ### Changed
 

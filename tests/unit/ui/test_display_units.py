@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.ui.units import DisplayUnits, LengthPolicy, UnitSystem
+from antennadesk.ui.units import DisplayUnits, LengthPolicy, UnitSystem, length_bounds
 
 
 def test_metric_auto_selects_by_magnitude() -> None:
@@ -91,3 +91,11 @@ def test_meters_per_unit_matches_the_canonical_conversions() -> None:
     assert DisplayUnits.meters_per_unit("m") == pytest.approx(1.0)
     assert DisplayUnits.meters_per_unit("in") == pytest.approx(0.0254)
     assert DisplayUnits.meters_per_unit("ft") == pytest.approx(0.3048)
+
+
+def test_length_bounds_allow_small_uhf_features() -> None:
+    metric_minimum, _ = length_bounds(UnitSystem.METRIC)
+    imperial_minimum, _ = length_bounds(UnitSystem.IMPERIAL)
+
+    assert metric_minimum <= 0.001
+    assert imperial_minimum <= 0.003
