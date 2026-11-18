@@ -48,8 +48,6 @@ from ..units import (
     DisplayUnits,
     LengthPolicy,
     UnitSystem,
-    length_bounds,
-    length_unit_key,
 )
 from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
@@ -96,7 +94,6 @@ class SynthesisDialog(QDialog):
         self.setWindowTitle(translator.t("synthesis.title"))
         self.resize(*scaled_dialog_size(1_000, 760))
 
-        length_min, length_max = length_bounds(unit_system)
         scale = 1.0
 
         self._frequency = QDoubleSpinBox(self)
@@ -117,10 +114,10 @@ class SynthesisDialog(QDialog):
         self._target_x.setValue(0.0)
         self._target_x.setSuffix(" Ω")
 
-        self._min_a = self._length_spin(length_min, length_max)
-        self._max_a = self._length_spin(length_min, length_max)
-        self._min_b = self._length_spin(length_min, length_max)
-        self._max_b = self._length_spin(length_min, length_max)
+        self._min_a = self._length_spin()
+        self._max_a = self._length_spin()
+        self._min_b = self._length_spin()
+        self._max_b = self._length_spin()
 
         self._min_a_field = LengthField(
             self._min_a,
@@ -307,12 +304,8 @@ class SynthesisDialog(QDialog):
         )
         self._transformer_note.setVisible(True)
 
-    def _length_spin(self, minimum: float, maximum: float) -> QDoubleSpinBox:
-        spin = QDoubleSpinBox(self)
-        spin.setRange(minimum, maximum)
-        spin.setDecimals(4)
-        spin.setSuffix(f" {self._translator.t(length_unit_key(self._unit_system))}")
-        return spin
+    def _length_spin(self) -> QDoubleSpinBox:
+        return QDoubleSpinBox(self)
 
     def _set_length_pair(
         self,

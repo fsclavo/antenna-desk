@@ -160,6 +160,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   heights, synthesis bounds, and design-from-frequency height/base/end fields
   use `LengthFieldSpec` and accept `DisplayUnits`. Result strings choose their
   unit from each value, and fixed-unit callers keep the previous presentation.
+- **U4 auxiliary dialogs.** Comparison reference height, transmission-line
+  offsets/lengths, custom-wire coordinate tables, radial length, and feed offset
+  use the same policy. The custom table shows one coordinate unit in its
+  headers while radius stays mm/in; robustness result rows format each length
+  with `DisplayUnits`.
 
 ### Changed
 

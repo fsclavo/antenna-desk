@@ -65,7 +65,6 @@ from ..units import (
     DisplayUnits,
     LengthPolicy,
     UnitSystem,
-    length_bounds,
     length_from_m,
     length_unit_key,
 )
@@ -217,25 +216,9 @@ class DesignFromFrequencyDialog(QDialog):
         self._highest_frequency.setSuffix(" MHz")
         self._highest_frequency.setValue(highest_frequency_hz / 1_000_000.0)
 
-        length_min, length_max = length_bounds(unit_system)
-        unit = translator.t(length_unit_key(unit_system))
         self._height = QDoubleSpinBox(self)
-        self._height.setRange(length_min, length_max)
-        self._height.setDecimals(3)
-        self._height.setSuffix(f" {unit}")
-        self._height.setValue(length_from_m(height_m, unit_system))
-
         self._base_height = QDoubleSpinBox(self)
-        self._base_height.setRange(0.0, length_max)
-        self._base_height.setDecimals(3)
-        self._base_height.setSuffix(f" {unit}")
-        self._base_height.setValue(length_from_m(base_height_m, unit_system))
-
         self._end_height = QDoubleSpinBox(self)
-        self._end_height.setRange(0.0, length_max)
-        self._end_height.setDecimals(3)
-        self._end_height.setSuffix(f" {unit}")
-        self._end_height.setValue(length_from_m(end_height_m, unit_system))
 
         self._height_field = LengthField(
             self._height,

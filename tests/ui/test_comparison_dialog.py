@@ -214,3 +214,22 @@ def test_comparison_dialog_shows_height_mapping_warnings(
 
     assert dialog._note.isVisible() is True
     assert "Native height used" in dialog._note.text()
+
+
+def test_comparison_dialog_uses_per_field_units_when_auto(
+    qtbot: QtBot,
+    sample_project: Project,
+) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy, UnitSystem
+
+    results = {design.id: make_completed_result() for design in sample_project.designs}
+    dialog = ComparisonDialog(
+        Translator(Language.ENGLISH),
+        sample_project,
+        results,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+    dialog._reference_height_field.configure(0.25)
+
+    assert dialog._reference_height_field.unit == "cm"

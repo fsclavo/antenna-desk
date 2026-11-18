@@ -39,14 +39,16 @@ from ..material_combo import (
     populate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    LengthUnit,
     UnitSystem,
-    length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
     radius_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.ground_presets import GroundPresetController
 
 
@@ -59,10 +61,16 @@ class CustomAntennaDialog(QDialog):
         parent: QWidget | None = None,
         *,
         frequency_hz: float | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
+        self._table_unit: LengthUnit = self._display_units.table_unit(())
         self._loads: tuple[LumpedLoad, ...] = parameters.loads if parameters else ()
         self._generator_id = parameters.generator_id if parameters else None
         self._generator_name = parameters.generator_name if parameters else None
@@ -113,21 +121,7 @@ class CustomAntennaDialog(QDialog):
         )
 
         self._table = QTableWidget(0, 8, self)
-        self._table.setHorizontalHeaderLabels(
-            [
-                translator.t("custom.id"),
-                translator.t("custom.start_x"),
-                translator.t("custom.start_y"),
-                translator.t("custom.start_z"),
-                translator.t("custom.end_x"),
-                translator.t("custom.end_y"),
-                translator.t("custom.end_z"),
-                translator.t(
-                    "custom.radius",
-                    unit=translator.t(radius_unit_key(unit_system)),
-                ),
-            ]
-        )
+        self._retranslate_table_headers()
         self._table.verticalHeader().setVisible(False)
         self._table.setAlternatingRowColors(True)
         self._table.itemChanged.connect(self._refresh_feed_values)
@@ -143,7 +137,6 @@ class CustomAntennaDialog(QDialog):
         self._radial_length = QDoubleSpinBox(self)
         self._radial_length.setRange(0.1, 1_000.0)
         self._radial_length.setDecimals(3)
-        self._radial_length.setValue(length_from_m(5.0, unit_system))
         self._radial_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._radial_angle = QDoubleSpinBox(self)
         self._radial_angle.setRange(0.0, 360.0)
@@ -158,6 +151,21 @@ class CustomAntennaDialog(QDialog):
         self._feed_offset.setDecimals(3)
         self._feed_offset.setRange(0.0, 1.0)
         self._feed_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._radial_length_field = LengthField(
+            self._radial_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._feed_offset_field = LengthField(
+            self._feed_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._radial_length_field.configure(5.0)
+        self._feed_offset_field.configure(0.0)
 
         form = QFormLayout()
         form.addRow(translator.t("field.frequency"), self._frequency)
@@ -225,6 +233,7 @@ class CustomAntennaDialog(QDialog):
                 )
             )
         else:
+            self._set_table_unit_from_wires(parameters.wires)
             for wire in parameters.wires:
                 self._append_wire(wire)
             self._set_ground(parameters.ground)
@@ -232,28 +241,67 @@ class CustomAntennaDialog(QDialog):
         self._update_ground_controls()
         self._refresh_feed_values()
         if parameters is None:
-            self._feed_offset.setValue(length_from_m(5.0, self._unit_system))
+            self._feed_offset_field.configure(5.0)
+
+    def _retranslate_table_headers(self) -> None:
+        t = self._translator.t
+        coordinate_keys = (
+            "custom.start_x",
+            "custom.start_y",
+            "custom.start_z",
+            "custom.end_x",
+            "custom.end_y",
+            "custom.end_z",
+        )
+        self._table.setHorizontalHeaderLabels(
+            [
+                t("custom.id"),
+                *(f"{t(key)} ({self._table_unit})" for key in coordinate_keys),
+                t(
+                    "custom.radius",
+                    unit=t(radius_unit_key(self._unit_system)),
+                ),
+            ]
+        )
+
+    def _table_value(self, value_m: float) -> str:
+        value = value_m / self._display_units.meters_per_unit(self._table_unit)
+        return f"{value:.{self._display_units.decimals_for(self._table_unit)}f}"
+
+    def _table_value_m(self, text: str) -> float:
+        return float(text) * self._display_units.meters_per_unit(self._table_unit)
+
+    def _set_table_unit_from_wires(self, wires: tuple[Wire, ...]) -> None:
+        values = [
+            coordinate
+            for wire in wires
+            for coordinate in (
+                wire.start.x_m,
+                wire.start.y_m,
+                wire.start.z_m,
+                wire.end.x_m,
+                wire.end.y_m,
+                wire.end.z_m,
+            )
+        ]
+        self._table_unit = self._display_units.table_unit(values)
+        self._retranslate_table_headers()
 
     def _append_wire(self, wire: Wire) -> None:
         row = self._table.rowCount()
         self._table.insertRow(row)
         values = [
             wire.id,
-            length_from_m(wire.start.x_m, self._unit_system),
-            length_from_m(wire.start.y_m, self._unit_system),
-            length_from_m(wire.start.z_m, self._unit_system),
-            length_from_m(wire.end.x_m, self._unit_system),
-            length_from_m(wire.end.y_m, self._unit_system),
-            length_from_m(wire.end.z_m, self._unit_system),
-            radius_from_m(wire.radius_m, self._unit_system),
+            self._table_value(wire.start.x_m),
+            self._table_value(wire.start.y_m),
+            self._table_value(wire.start.z_m),
+            self._table_value(wire.end.x_m),
+            self._table_value(wire.end.y_m),
+            self._table_value(wire.end.z_m),
+            f"{radius_from_m(wire.radius_m, self._unit_system):.4f}",
         ]
         for column, value in enumerate(values):
-            if isinstance(value, float):
-                decimals = 4 if column == 7 else 3
-                text = f"{value:.{decimals}f}"
-            else:
-                text = str(value)
-            self._table.setItem(row, column, QTableWidgetItem(text))
+            self._table.setItem(row, column, QTableWidgetItem(value))
 
     def _add_wire(self) -> None:
         index = self._table.rowCount() + 1
@@ -270,7 +318,7 @@ class CustomAntennaDialog(QDialog):
 
     def _add_radial_wires(self) -> None:
         count = self._radial_count.value()
-        length_m = length_to_m(self._radial_length.value(), self._unit_system)
+        length_m = self._radial_length_field.value_m()
         step = 360.0 / count
         material = self._selected_material()
         start = self._table.rowCount() + 1
@@ -324,7 +372,7 @@ class CustomAntennaDialog(QDialog):
             return cell.text().strip() if cell is not None else ""
 
         def coordinate(column: int) -> float:
-            return length_to_m(float(item(column)), self._unit_system)
+            return self._table_value_m(item(column))
 
         return Wire(
             id=item(0),
@@ -362,7 +410,7 @@ class CustomAntennaDialog(QDialog):
             return
         if wire is None:
             return
-        self._feed_offset.setRange(0.0, length_from_m(wire.length_m, self._unit_system))
+        self._feed_offset_field.set_range_m(0.0, wire.length_m)
 
     def _update_ground_controls(self) -> None:
         finite = self._ground.currentData() == GroundKind.FINITE.value
@@ -406,7 +454,7 @@ class CustomAntennaDialog(QDialog):
         return CustomAntennaParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             wires=wires,
-            feed=FeedPoint(feed_wire, length_to_m(self._feed_offset.value(), self._unit_system)),
+            feed=FeedPoint(feed_wire, self._feed_offset_field.value_m()),
             ground=self._ground_model(),
             loads=self._loads,
             generator_id=self._generator_id,

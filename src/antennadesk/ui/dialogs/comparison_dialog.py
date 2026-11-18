@@ -53,6 +53,8 @@ from ..i18n import Translator
 from ..template_identity import catalog_key_for
 from ..theme import theme_colors
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     diameter_from_m,
     diameter_unit_key,
@@ -60,6 +62,7 @@ from ..units import (
     length_to_m,
     length_unit_key,
 )
+from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.ground_presets import SOIL_PRESETS
 
 MAX_COMPARISON_DESIGNS = 4
@@ -83,6 +86,7 @@ class ComparisonDialog(QDialog):
         initial_basis: ComparisonBasis | None = None,
         initial_design_ids: Sequence[UUID] | None = None,
         height_mapping: Mapping[UUID, tuple[bool, tuple[str, ...]]] | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -90,6 +94,10 @@ class ComparisonDialog(QDialog):
         self._results = dict(results)
         self._band_analyses = dict(band_analyses or {})
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._height_mapping = dict(height_mapping or {})
         self._basis = initial_basis or self._default_basis(project)
         self._recomputing = False
@@ -144,6 +152,13 @@ class ComparisonDialog(QDialog):
         self._reference_height.setDecimals(2)
         self._reference_height.setSpecialValueText(t("compare.height_native"))
         self._reference_height.setSuffix(f" {t(length_unit_key(self._unit_system))}")
+        self._reference_height_field = LengthField(
+            self._reference_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            self._translator,
+            self._display_units,
+        )
+        self._reference_height_field.configure(0.0)
         self._reference_frequency = QDoubleSpinBox(self._basis_group)
         self._reference_frequency.setRange(0.1, 100_000.0)
         self._reference_frequency.setDecimals(6)
@@ -294,10 +309,8 @@ class ComparisonDialog(QDialog):
         self._points.setValue(basis.frequency_plan.count)
         index = self._ground_index(basis.ground)
         self._ground.setCurrentIndex(index if index >= 0 else 0)
-        self._reference_height.setValue(
-            length_from_m(basis.reference_height_m, self._unit_system)
-            if basis.reference_height_m is not None
-            else 0.0
+        self._reference_height_field.configure(
+            basis.reference_height_m if basis.reference_height_m is not None else 0.0
         )
         self._reference_frequency.setValue(basis.reference_frequency_hz / 1_000_000.0)
         self._basis_label.setText(self._basis_text(basis))
@@ -308,7 +321,7 @@ class ComparisonDialog(QDialog):
         stop = self._stop.value() * 1_000_000.0
         if stop <= start:
             raise ValueError(self._translator.t("compare.invalid_range"))
-        height = self._reference_height.value()
+        height = self._reference_height_field.value_m()
         return ComparisonBasis(
             frequency_plan=FrequencyPlan.sweep(start, stop, self._points.value()),
             ground=self._ground.currentData(),

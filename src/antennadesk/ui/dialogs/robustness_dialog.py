@@ -47,6 +47,8 @@ from ..help import apply_help
 from ..i18n import Translator
 from ..theme import theme_colors
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
     length_unit_key,
@@ -69,10 +71,16 @@ class RobustnessDialog(QDialog):
         design: DesignVariant,
         base_spec: SimulationSpec,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._solver = solver
         self._descriptor = descriptor
         self._design = design
@@ -533,11 +541,14 @@ class RobustnessDialog(QDialog):
             variable = by_name.get(name)
             if variable is None:
                 continue
-            unit = self._unit_text(variable.unit)
-            display = self._to_display(variable.unit, value)
-            text = f"{display:.4f}"
-            if unit:
-                text += f" {unit}"
+            if variable.unit == "m":
+                text = self._display_units.format_length(value, trim=False)
+            else:
+                unit = self._unit_text(variable.unit)
+                display = self._to_display(variable.unit, value)
+                text = f"{display:.4f}"
+                if unit:
+                    text += f" {unit}"
             parts.append(f"{self._translator.t(variable.label_key)}={text}")
         return " · ".join(parts)
 

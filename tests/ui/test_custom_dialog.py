@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.dialogs.custom_antenna_dialog import CustomAntennaDialog
@@ -86,3 +87,37 @@ def test_custom_dialog_preserves_generator_metadata(qtbot: QtBot) -> None:
 
     assert dialog.parameters().generator_id == "yagi"
     assert dialog.parameters().generator_name == "Yagi"
+
+
+def test_custom_dialog_uses_per_table_and_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.custom import CustomAntennaParameters
+    from antennadesk.domain.antennas.feed import FeedPoint
+    from antennadesk.domain.antennas.geometry import Point3D
+    from antennadesk.domain.antennas.materials import COPPER
+    from antennadesk.domain.antennas.wire import Wire
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    parameters = CustomAntennaParameters(
+        frequency_hz=435_000_000.0,
+        wires=(
+            Wire(
+                id="wire-1",
+                start=Point3D(-0.08, 0.0, 0.1),
+                end=Point3D(0.08, 0.0, 0.1),
+                radius_m=0.001,
+                material=COPPER,
+            ),
+        ),
+        feed=FeedPoint("wire-1", 0.08),
+    )
+    dialog = CustomAntennaDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._table_unit == "cm"
+    assert "(cm)" in dialog._table.horizontalHeaderItem(1).text()
+    assert dialog.parameters().wires[0].start.x_m == pytest.approx(-0.08)

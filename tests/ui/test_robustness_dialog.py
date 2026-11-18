@@ -86,6 +86,7 @@ def _dialog(
     qtbot: QtBot,
     *,
     language: Language = Language.ENGLISH,
+    display_units: object | None = None,
 ) -> RobustnessDialog:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,
@@ -108,6 +109,7 @@ def _dialog(
         availability.descriptor,
         design,
         SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        display_units=display_units,  # type: ignore[arg-type]
     )
     qtbot.addWidget(dialog)
     return dialog
@@ -179,3 +181,18 @@ def test_dialog_requires_at_least_one_dimension(qtbot: QtBot) -> None:
 
     assert dialog._run.isEnabled() is False
     assert dialog._validation.isHidden() is False
+
+
+def test_robustness_dialog_formats_lengths_with_auto_units(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = _dialog(
+        qtbot,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    name = dialog._variables[0].name
+
+    text = dialog._format_values(((name, 0.25),))
+
+    assert "cm" in text
+    assert "25.00" in text

@@ -103,3 +103,21 @@ def test_transmission_lines_dialog_restores_existing_lines(qtbot: QtBot) -> None
 
     assert dialog.transmission_lines() == (line,)
     assert dialog._table.rowCount() == 1
+
+
+def test_transmission_lines_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    dialog = TransmissionLinesDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        _wires(),
+        (),
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+    dialog._start_offset_field.configure(0.25)
+    dialog._length_field.configure(0.25)
+
+    assert dialog._start_offset_field.unit == "cm"
+    assert dialog._length_field.unit == "cm"

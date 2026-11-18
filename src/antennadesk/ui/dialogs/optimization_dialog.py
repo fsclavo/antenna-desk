@@ -51,9 +51,6 @@ from ..units import (
     DisplayUnits,
     LengthPolicy,
     UnitSystem,
-    length_bounds,
-    length_from_m,
-    length_unit_key,
 )
 from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
@@ -102,8 +99,6 @@ class OptimizationDialog(QDialog):
         self.setWindowTitle(translator.t("optimize.title"))
         self.resize(*scaled_dialog_size(960, 820))
 
-        unit = translator.t(length_unit_key(unit_system))
-        length_min, length_max = length_bounds(unit_system)
         base_dimension_m = primary_dimension_m(base_parameters)
         default_min = max(base_dimension_m * 0.9, 0.5)
         default_max = max(base_dimension_m * 1.1, default_min + 0.5)
@@ -119,16 +114,7 @@ class OptimizationDialog(QDialog):
         self._objective.currentIndexChanged.connect(self._objective_changed)
 
         self._min_length = QDoubleSpinBox(self)
-        self._min_length.setRange(length_min, length_max)
-        self._min_length.setDecimals(3)
-        self._min_length.setSuffix(f" {unit}")
-        self._min_length.setValue(length_from_m(default_min, unit_system))
-
         self._max_length = QDoubleSpinBox(self)
-        self._max_length.setRange(length_min, length_max)
-        self._max_length.setDecimals(3)
-        self._max_length.setSuffix(f" {unit}")
-        self._max_length.setValue(length_from_m(default_max, unit_system))
 
         self._min_length_field = LengthField(
             self._min_length,

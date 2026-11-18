@@ -27,7 +27,14 @@ from ...domain.antennas.wire import Wire
 from ..fonts import scaled_dialog_size
 from ..help import apply_row_help
 from ..i18n import Translator
-from ..units import UnitSystem, length_from_m, length_to_m, length_unit_key
+from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    UnitSystem,
+    length_from_m,
+    length_unit_key,
+)
+from ..widgets.form_units import LengthField, LengthFieldSpec
 
 
 class TransmissionLinesDialog(QDialog):
@@ -38,10 +45,16 @@ class TransmissionLinesDialog(QDialog):
         wires: Mapping[str, Wire],
         transmission_lines: tuple[TransmissionLine, ...],
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._wires = dict(wires)
         self._transmission_lines = list(transmission_lines)
         self.setWindowTitle(translator.t("transmission_lines.title"))
@@ -76,6 +89,28 @@ class TransmissionLinesDialog(QDialog):
         self._length.setDecimals(3)
         self._length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._length.setValue(1.0)
+
+        self._start_offset_field = LengthField(
+            self._start_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._end_offset_field = LengthField(
+            self._end_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.001, 100_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._start_offset_field.configure(0.0)
+        self._end_offset_field.configure(0.0)
+        self._length_field.configure(1.0)
 
         self._velocity = QDoubleSpinBox(self)
         self._velocity.setRange(0.01, 1.0)
@@ -161,29 +196,22 @@ class TransmissionLinesDialog(QDialog):
         return self._wires.get(wire_id)
 
     def _update_offset_ranges(self) -> None:
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        for combo, spin in (
-            (self._start_wire, self._start_offset),
-            (self._end_wire, self._end_offset),
+        for combo, field in (
+            (self._start_wire, self._start_offset_field),
+            (self._end_wire, self._end_offset_field),
         ):
             wire = self._selected_wire(combo)
-            maximum = length_from_m(wire.length_m, self._unit_system) if wire else 0.0
-            spin.setRange(0.0, maximum)
-            spin.setSuffix(f" {unit}")
+            field.set_range_m(0.0, wire.length_m if wire else 0.0)
 
     def _set_straight_line_distance(self) -> None:
         start_wire = self._selected_wire(self._start_wire)
         end_wire = self._selected_wire(self._end_wire)
         if start_wire is None or end_wire is None:
             return
-        start = start_wire.point_at(
-            min(length_to_m(self._start_offset.value(), self._unit_system), start_wire.length_m)
-        )
-        end = end_wire.point_at(
-            min(length_to_m(self._end_offset.value(), self._unit_system), end_wire.length_m)
-        )
+        start = start_wire.point_at(min(self._start_offset_field.value_m(), start_wire.length_m))
+        end = end_wire.point_at(min(self._end_offset_field.value_m(), end_wire.length_m))
         distance = max(start.distance_to(end), 0.001)
-        self._length.setValue(length_from_m(distance, self._unit_system))
+        self._length_field.configure(distance)
 
     def _refresh(self) -> None:
         unit = self._translator.t(length_unit_key(self._unit_system))
@@ -214,14 +242,8 @@ class TransmissionLinesDialog(QDialog):
         end_wire = self._selected_wire(self._end_wire)
         if start_wire is None or end_wire is None:
             return
-        start_offset = min(
-            length_to_m(self._start_offset.value(), self._unit_system),
-            start_wire.length_m,
-        )
-        end_offset = min(
-            length_to_m(self._end_offset.value(), self._unit_system),
-            end_wire.length_m,
-        )
+        start_offset = min(self._start_offset_field.value_m(), start_wire.length_m)
+        end_offset = min(self._end_offset_field.value_m(), end_wire.length_m)
         try:
             line = TransmissionLine(
                 id=self._next_id(),
@@ -230,7 +252,7 @@ class TransmissionLinesDialog(QDialog):
                 end_wire_id=end_wire.id,
                 end_offset_m=end_offset,
                 characteristic_impedance_ohm=self._z0.value(),
-                length_m=length_to_m(self._length.value(), self._unit_system),
+                length_m=self._length_field.value_m(),
                 velocity_factor=self._velocity.value(),
             )
         except ValueError as exc:

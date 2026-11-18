@@ -65,7 +65,6 @@ from ..units import (
     DisplayUnits,
     LengthPolicy,
     UnitSystem,
-    length_bounds,
     length_from_m,
     length_unit_key,
     radius_from_m,
@@ -205,16 +204,9 @@ class FamilyOptimizationDialog(QDialog):
         self._workers.setValue(default_parallel_workers())
         self._workers.setToolTip(translator.t("optimize.workers_hint"))
 
-        _minimum_length, maximum_length = length_bounds(unit_system)
         self._max_boom = QDoubleSpinBox(self)
-        self._max_boom.setRange(0.0, maximum_length)
-        self._max_boom.setDecimals(3)
-        self._max_boom.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._max_boom.setSpecialValueText(translator.t("optimize.no_limit"))
         self._max_turning = QDoubleSpinBox(self)
-        self._max_turning.setRange(0.0, maximum_length)
-        self._max_turning.setDecimals(3)
-        self._max_turning.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._max_turning.setSpecialValueText(translator.t("optimize.no_limit"))
         self._max_boom.setVisible(descriptor.supports_boom_constraint)
 
