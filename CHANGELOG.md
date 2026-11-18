@@ -37,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **High-frequency Yagi bounds and QA.** The Yagi optimizer no longer uses the
+  absolute 0.05 m element floor or 0.01 m steps. Element, gap, height, folded,
+  and beta-hairpin bounds are relative to the current frequency-scaled design,
+  with conductor spacing based on the element radius. A 5/10/15/20/32-element
+  matrix at 1.5/2.4/5.8 GHz verifies initial bounds, DL6WU taper constraints,
+  span-normalized steps, and exact rebuild. Real NEC2C smoke runs complete for
+  2.4 GHz 15/32 elements and 5.8 GHz 5/15 elements; no gain claim is made.
 - **Moxon gap geometry contract.** The Moxon optimizer now moves the gap
   directly and derives the driven tip instead of exposing two redundant tip
   variables. A shared validator enforces gap/λ, gap/depth, gap/width,

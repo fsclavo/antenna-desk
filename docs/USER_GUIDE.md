@@ -530,7 +530,10 @@ published 50.1 MHz design. Changing the frequency in the form rescales
 the current element positions and lengths by the wavelength ratio. If the
 element dimensions do not look consistent with the current frequency, the form
 shows a warning; use **Design → Estimate Dimensions...** to rebuild a
-2–32 element DL6WU starting design.
+2–32 element DL6WU starting design. **Optimize...** derives element, gap, and
+height ranges from the current normalized geometry and the actual element
+radius; there is no fixed 0.05 m element floor, and the step scales with the
+search span. The DL6WU length and gap taper are preserved during the search.
 
 Set **Tapered tip length** and **Tapered tip radius** to add a smaller-radius
 tip section to both ends of every element. A zero tip length keeps straight

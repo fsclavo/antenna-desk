@@ -220,7 +220,7 @@ The implementation is sliced in
 | HF2 | Descriptor invariant and no silent initial clamp | Implemented 2026-11-18 |
 | HF3 | Frequency-aware bounds across all families | Implemented 2026-11-18 |
 | HF4 | Moxon geometry contract, gap variable, and constraints | Implemented 2026-11-18 |
-| HF5 | Yagi wavelength-relative bounds and high-element-count QA | Queued |
+| HF5 | Yagi wavelength-relative bounds and high-element-count QA | Implemented 2026-11-18 |
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Queued |
 | HF7 | Thin-wire model-quality gate | Queued |
 | HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Queued |
@@ -281,6 +281,20 @@ the exact Cebik dimensions, 28.5/144/435/1500/2400 MHz scaled references, the
 warning. Until HF6, the estimator scales the Cebik gap directly; if the scaled
 gap cannot clear the conductor, it reports an explicit unsupported estimate
 instead of silently changing the wire radius.
+
+### HF5 implementation note
+
+The Yagi descriptor has no absolute element-length or step floors. All element,
+gap, height, folded-spacing, and beta-hairpin bounds are relative to the current
+frequency-scaled design; conductor-spacing minima use the actual element radius,
+and every step is span-normalized. The DL6WU taper constraints remain.
+
+The QA matrix covers 5/10/15/20/32 elements at 1.5/2.4/5.8 GHz with a
+source-scaled 4 mm-at-432-MHz element radius. It asserts initial-in-bounds,
+empty taper violations, span-normalized steps, and exact rebuild. Real NEC2C
+smoke runs cover 2.4 GHz 15/32 elements and 5.8 GHz 5/15 elements and assert
+completion, finite R/X, and no solver error; they make no gain or pattern
+claim.
 
 ## Test contract
 

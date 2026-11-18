@@ -39,9 +39,11 @@ from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+from antennadesk.domain.common.units import wavelength_m
+from antennadesk.domain.design.yagi_reference import dl6wu_elements
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
-from antennadesk.domain.optimization.engine import OptimizationBudget
+from antennadesk.domain.optimization.engine import OptimizationBudget, OptimizationStatus
 from antennadesk.domain.optimization.registry import optimizer_availability
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -58,6 +60,24 @@ pytestmark = [
         reason="NEC2C must point to a nec2c executable",
     ),
 ]
+
+
+def _dl6wu_yagi(frequency_hz: float, element_count: int) -> YagiParameters:
+    wavelength = wavelength_m(frequency_hz)
+    radius_m = max(0.0002, 0.002 * 432_000_000.0 / frequency_hz)
+    return YagiParameters(
+        frequency_hz=frequency_hz,
+        elements=tuple(
+            YagiElement(
+                position_m=spacing * wavelength,
+                length_m=length * wavelength,
+                radius_m=radius_m,
+            )
+            for length, spacing in dl6wu_elements(element_count)
+        ),
+        height_m=1.0,
+        driven_index=1,
+    )
 
 
 def _samples() -> list[object]:
@@ -182,6 +202,52 @@ def test_family_optimizer_runs_against_nec2c(
     assert result.best_parameters is not None
     assert result.best_score is not None
     assert math.isfinite(result.best_score)
+    assert result.evaluations
+
+
+@pytest.mark.parametrize(
+    ("frequency_hz", "element_count"),
+    [
+        (2_400_000_000.0, 15),
+        (2_400_000_000.0, 32),
+        (5_800_000_000.0, 5),
+        (5_800_000_000.0, 15),
+    ],
+    ids=["2.4GHz-15el", "2.4GHz-32el", "5.8GHz-5el", "5.8GHz-15el"],
+)
+def test_high_frequency_yagi_optimizer_runs_against_nec2c(
+    solver: Nec2cSolver,
+    frequency_hz: float,
+    element_count: int,
+) -> None:
+    parameters = _dl6wu_yagi(frequency_hz, element_count)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = OptimizeAntenna(solver).execute(
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=spec,
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=OptimizationBudget(4, 4, 2),
+            seed=9,
+        )
+    )
+
+    assert result.status is not OptimizationStatus.ERROR
+    assert result.best_parameters is not None
+    assert isinstance(result.best_parameters, YagiParameters)
+    assert len(result.best_parameters.elements) == element_count
+    assert result.best_score is not None
+    assert math.isfinite(result.best_score)
+    assert math.isfinite(result.best_metrics["resistance_ohm"])
+    assert math.isfinite(result.best_metrics["reactance_ohm"])
     assert result.evaluations
 
 
