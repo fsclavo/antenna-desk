@@ -66,3 +66,23 @@ def test_length_field_respects_fixed_units(qtbot: QtBot) -> None:
 
     assert field.unit == "m"
     assert field.value_m() == pytest.approx(0.0199, abs=5e-4)
+
+
+def test_length_field_can_apply_a_dynamic_physical_range(qtbot: QtBot) -> None:
+    spin = QDoubleSpinBox()
+    qtbot.addWidget(spin)
+    field = LengthField(
+        spin,
+        LengthFieldSpec(minimum_m=0.0, maximum_m=10.0),
+        Translator(Language.ENGLISH),
+        DisplayUnits(UnitSystem.METRIC, LengthPolicy.FIXED),
+    )
+    field.configure(0.5)
+
+    field.set_range_m(0.1, 0.2)
+    field.set_value_m(0.15)
+
+    assert spin.minimum() == pytest.approx(0.1)
+    assert spin.maximum() == pytest.approx(0.2)
+    assert field.unit == "m"
+    assert field.value_m() == pytest.approx(0.15)

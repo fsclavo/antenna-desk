@@ -660,3 +660,21 @@ def test_sloper_preset_tracks_the_selected_frequency(qtbot: QtBot) -> None:
     assert parameters.frequency_hz == pytest.approx(28_500_000.0)
     assert parameters.length_m == pytest.approx(half_wave_length_m(28_500_000.0), abs=0.001)
     assert parameters.end_height_m < parameters.feed_height_m
+
+
+def test_endfed_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.endfed_form import EndFedForm
+
+    form = EndFedForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+
+    assert form._length_field.unit == "m"
+    assert form._feed_section_field.unit == "cm"
+    assert form._feed_height_field.unit == "m"
+    assert form._counterpoise_height_field.unit == "cm"
+    assert form._installation_return_field.unit == "cm"

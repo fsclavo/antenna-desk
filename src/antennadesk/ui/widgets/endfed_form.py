@@ -56,15 +56,16 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
 
@@ -83,11 +84,16 @@ class EndFedForm(QWidget):
         *,
         preset: EndFedPreset = EndFedPreset.STANDARD,
         show_override_actions: bool = True,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         self._preset = EndFedPreset(preset)
         self._project_matching_network: MatchingNetwork | None = None
@@ -442,6 +448,70 @@ class EndFedForm(QWidget):
             length_from_m(DEFAULT_INSTALLATION_RETURN_LENGTH_M, unit_system)
         )
         self._installation_return.setToolTip(translator.t("endfed.installation_return_hint"))
+
+        self._length_field = LengthField(
+            self._length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._feed_section_field = LengthField(
+            self._feed_section,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._feed_height_field = LengthField(
+            self._feed_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._end_height_field = LengthField(
+            self._end_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._bend_vertical_field = LengthField(
+            self._bend_vertical,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._loading_coil_offset_field = LengthField(
+            self._loading_coil_offset,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._counterpoise_length_field = LengthField(
+            self._counterpoise_length,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._counterpoise_height_field = LengthField(
+            self._counterpoise_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._installation_return_field = LengthField(
+            self._installation_return,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._length_field.configure(20.0)
+        self._feed_section_field.configure(DEFAULT_FEED_SECTION_LENGTH_M)
+        self._feed_height_field.configure(10.0)
+        self._end_height_field.configure(10.0)
+        self._bend_vertical_field.configure(DEFAULT_BEND_VERTICAL_LENGTH_M)
+        self._loading_coil_offset_field.configure(0.0)
+        self._counterpoise_length_field.configure(0.0)
+        self._counterpoise_height_field.configure(0.1)
+        self._installation_return_field.configure(DEFAULT_INSTALLATION_RETURN_LENGTH_M)
 
         self._return_path = QComboBox(self)
         for path in EndFedReturnPath:
@@ -838,11 +908,11 @@ class EndFedForm(QWidget):
             feed_height_m = 10.0
             end_height_m = 10.0
             self._transformer.setValue(9.0)
-        self._length.setValue(length_from_m(length_m, self._unit_system))
-        self._feed_height.setValue(length_from_m(feed_height_m, self._unit_system))
-        self._end_height.setValue(length_from_m(end_height_m, self._unit_system))
+        self._length_field.configure(length_m)
+        self._feed_height_field.configure(feed_height_m)
+        self._end_height_field.configure(end_height_m)
         self._counterpoise_enabled.setChecked(True)
-        self._counterpoise_length.setValue(length_from_m(0.05 * wavelength_m, self._unit_system))
+        self._counterpoise_length_field.configure(0.05 * wavelength_m)
         self._update_preset_label()
 
     def _shortened_parameters(
@@ -863,14 +933,8 @@ class EndFedForm(QWidget):
         if preserve_installation:
             try:
                 parameters = builder(
-                    feed_height_m=length_to_m(
-                        self._feed_height.value(),
-                        self._unit_system,
-                    ),
-                    end_height_m=length_to_m(
-                        self._end_height.value(),
-                        self._unit_system,
-                    ),
+                    feed_height_m=self._feed_height_field.value_m(),
+                    end_height_m=self._end_height_field.value_m(),
                     azimuth_deg=azimuth_deg,
                     wire_radius_m=wire_radius_m,
                     material=material,
@@ -882,10 +946,7 @@ class EndFedForm(QWidget):
                     matching_capacitance_f=self._matching_capacitance.value() * 1e-12,
                     transformer_leakage_inductance_h=(self._transformer_leakage.value() * 1e-6),
                     bend_enabled=self._bend_enabled.isChecked(),
-                    bend_vertical_length_m=length_to_m(
-                        self._bend_vertical.value(),
-                        self._unit_system,
-                    ),
+                    bend_vertical_length_m=self._bend_vertical_field.value_m(),
                 )
             except ValueError:
                 pass
@@ -919,8 +980,8 @@ class EndFedForm(QWidget):
             return
         parameters = efhw_parameters(
             band_id,
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
-            end_height_m=length_to_m(self._end_height.value(), self._unit_system),
+            feed_height_m=self._feed_height_field.value_m(),
+            end_height_m=self._end_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
@@ -929,18 +990,12 @@ class EndFedForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
-            self._feed_section.setValue(
-                length_from_m(parameters.feed_section_length_m, self._unit_system)
-            )
-            self._installation_return.setValue(
-                length_from_m(parameters.installation_return_length_m, self._unit_system)
-            )
+            self._length_field.configure(parameters.length_m)
+            self._feed_section_field.configure(parameters.feed_section_length_m)
+            self._installation_return_field.configure(parameters.installation_return_length_m)
             self._transformer.setValue(parameters.transformer_ratio)
             self._counterpoise_enabled.setChecked(True)
-            self._counterpoise_length.setValue(
-                length_from_m(parameters.counterpoise_length_m, self._unit_system)
-            )
+            self._counterpoise_length_field.configure(parameters.counterpoise_length_m)
         finally:
             self._updating = False
         self._update_counterpoise_controls()
@@ -960,9 +1015,9 @@ class EndFedForm(QWidget):
         self._update_counterpoise_controls()
 
     def _counterpoise_toggled(self, checked: bool) -> None:
-        if checked and self._counterpoise_length.value() <= 0.0:
+        if checked and self._counterpoise_length_field.value_m() <= 0.0:
             wavelength = 299.792458 / self._frequency.value()
-            self._counterpoise_length.setValue(length_from_m(0.05 * wavelength, self._unit_system))
+            self._counterpoise_length_field.configure(0.05 * wavelength)
         self._update_counterpoise_controls()
         if not self._updating:
             self._update_geometry()
@@ -1023,17 +1078,13 @@ class EndFedForm(QWidget):
 
     def _bend_toggled(self, checked: bool) -> None:
         if checked:
-            length_display = self._length.value()
-            max_display = max(length_display - 0.001, 0.001)
-            min_display = min(max(self._feed_section.value() + 0.001, 0.001), max_display)
-            self._bend_vertical.setMaximum(max_display)
-            self._bend_vertical.setMinimum(min_display)
-            if self._bend_vertical.value() <= min_display:
-                default_display = min(
-                    length_from_m(DEFAULT_BEND_VERTICAL_LENGTH_M, self._unit_system),
-                    max_display,
-                )
-                self._bend_vertical.setValue(max(default_display, min_display))
+            length_m = self._length_field.value_m()
+            max_m = max(length_m - 0.001, 0.001)
+            min_m = min(max(self._feed_section_field.value_m() + 0.001, 0.001), max_m)
+            self._bend_vertical_field.set_range_m(min_m, max_m)
+            if self._bend_vertical_field.value_m() <= min_m:
+                default_m = min(DEFAULT_BEND_VERTICAL_LENGTH_M, max_m)
+                self._bend_vertical_field.set_value_m(max(default_m, min_m))
         self._update_bend_controls()
         if not self._updating:
             self._update_geometry()
@@ -1041,22 +1092,20 @@ class EndFedForm(QWidget):
 
     def _update_bend_controls(self) -> None:
         enabled = self._bend_enabled.isChecked()
-        length_display = self._length.value()
-        max_display = max(length_display - 0.001, 0.001)
-        min_display = (
-            min(max(self._feed_section.value() + 0.001, 0.001), max_display) if enabled else 0.0
+        length_m = self._length_field.value_m()
+        max_m = max(length_m - 0.001, 0.001)
+        min_m = (
+            min(max(self._feed_section_field.value_m() + 0.001, 0.001), max_m) if enabled else 0.0
         )
-        self._bend_vertical.setMaximum(max_display)
-        self._bend_vertical.setMinimum(min_display)
+        self._bend_vertical_field.set_range_m(min_m, max_m)
         self._bend_vertical.setEnabled(enabled)
         self._end_height.setEnabled(not enabled)
         if not enabled:
             self._bend_horizontal.setText(self._translator.t("endfed.bend_horizontal_none"))
             return
-        length_m = length_to_m(length_display, self._unit_system)
-        vertical_m = length_to_m(self._bend_vertical.value(), self._unit_system)
+        vertical_m = self._bend_vertical_field.value_m()
         horizontal_m = max(length_m - vertical_m, 0.0)
-        top_height_m = length_to_m(self._feed_height.value(), self._unit_system) + vertical_m
+        top_height_m = self._feed_height_field.value_m() + vertical_m
         unit = self._translator.t(length_unit_key(self._unit_system))
         self._bend_horizontal.setText(
             self._translator.t(
@@ -1134,19 +1183,23 @@ class EndFedForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        apply_radius_units(self._translator, unit_system, self._radius)
-        apply_length_suffixes(
-            self._translator,
+        self._display_units = DisplayUnits(
             unit_system,
-            self._length,
-            self._feed_section,
-            self._feed_height,
-            self._end_height,
-            self._counterpoise_length,
-            self._counterpoise_height,
-            self._installation_return,
-            self._loading_coil_offset,
+            self._display_units.length_policy,
         )
+        apply_radius_units(self._translator, unit_system, self._radius)
+        for field in (
+            self._length_field,
+            self._feed_section_field,
+            self._feed_height_field,
+            self._end_height_field,
+            self._bend_vertical_field,
+            self._loading_coil_offset_field,
+            self._counterpoise_length_field,
+            self._counterpoise_height_field,
+            self._installation_return_field,
+        ):
+            field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -1155,13 +1208,9 @@ class EndFedForm(QWidget):
         try:
             self._preset = parameters.preset
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._length.setValue(length_from_m(parameters.length_m, self._unit_system))
-            self._feed_section.setValue(
-                length_from_m(parameters.feed_section_length_m, self._unit_system)
-            )
-            self._installation_return.setValue(
-                length_from_m(parameters.installation_return_length_m, self._unit_system)
-            )
+            self._length_field.configure(parameters.length_m)
+            self._feed_section_field.configure(parameters.feed_section_length_m)
+            self._installation_return_field.configure(parameters.installation_return_length_m)
             return_index = self._return_path.findData(parameters.return_path.value)
             if return_index >= 0:
                 self._return_path.setCurrentIndex(return_index)
@@ -1173,11 +1222,9 @@ class EndFedForm(QWidget):
                 self._choke_frequency.setValue(choke.measurement_frequency_hz / 1_000_000.0)
                 self._choke_source.setText(choke.source)
             self._bend_enabled.setChecked(parameters.bend_enabled)
-            self._bend_vertical.setValue(
-                length_from_m(parameters.bend_vertical_length_m, self._unit_system)
-            )
-            self._feed_height.setValue(length_from_m(parameters.feed_height_m, self._unit_system))
-            self._end_height.setValue(length_from_m(parameters.end_height_m, self._unit_system))
+            self._bend_vertical_field.configure(parameters.bend_vertical_length_m)
+            self._feed_height_field.configure(parameters.feed_height_m)
+            self._end_height_field.configure(parameters.end_height_m)
             self._transformer.setValue(parameters.transformer_ratio)
             model_index = self._transformer_model.findData(parameters.transformer_model.value)
             if model_index >= 0:
@@ -1194,18 +1241,12 @@ class EndFedForm(QWidget):
             self._matching_capacitance.setValue(parameters.matching_capacitance_f * 1e12)
             self._transformer_leakage.setValue(parameters.transformer_leakage_inductance_h * 1e6)
             self._loading_coil_group.setChecked(parameters.loading_coil_enabled)
-            self._loading_coil_offset.setValue(
-                length_from_m(parameters.loading_coil_offset_m, self._unit_system)
-            )
+            self._loading_coil_offset_field.configure(parameters.loading_coil_offset_m)
             self._loading_coil_inductance.setValue(parameters.loading_coil_inductance_h * 1e6)
             self._loading_coil_resistance.setValue(parameters.loading_coil_resistance_ohm)
             self._counterpoise_enabled.setChecked(parameters.counterpoise_active)
-            self._counterpoise_length.setValue(
-                length_from_m(parameters.counterpoise_length_m, self._unit_system)
-            )
-            self._counterpoise_height.setValue(
-                length_from_m(parameters.counterpoise_height_m, self._unit_system)
-            )
+            self._counterpoise_length_field.configure(parameters.counterpoise_length_m)
+            self._counterpoise_height_field.configure(parameters.counterpoise_height_m)
             counterpoise_azimuth = parameters.counterpoise_azimuth_deg
             if counterpoise_azimuth is None:
                 counterpoise_azimuth = parameters.effective_counterpoise_azimuth_deg
@@ -1515,12 +1556,10 @@ class EndFedForm(QWidget):
         path = self._selected_return_path()
         if (
             path in {EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD}
-            and self._counterpoise_length.value() <= 0.0
+            and self._counterpoise_length_field.value_m() <= 0.0
         ):
             wavelength_m = units.wavelength_m(self._frequency.value() * 1_000_000.0)
-            self._counterpoise_length.setValue(
-                length_from_m(0.05 * wavelength_m, self._unit_system)
-            )
+            self._counterpoise_length_field.configure(0.05 * wavelength_m)
         self._update_counterpoise_controls()
         self._emit_changed()
 
@@ -1558,19 +1597,13 @@ class EndFedForm(QWidget):
     def parameters(self) -> EndFedParameters:
         return EndFedParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            length_m=length_to_m(self._length.value(), self._unit_system),
-            feed_section_length_m=length_to_m(self._feed_section.value(), self._unit_system),
-            installation_return_length_m=length_to_m(
-                self._installation_return.value(),
-                self._unit_system,
-            ),
+            length_m=self._length_field.value_m(),
+            feed_section_length_m=self._feed_section_field.value_m(),
+            installation_return_length_m=self._installation_return_field.value_m(),
             bend_enabled=self._bend_enabled.isChecked(),
-            bend_vertical_length_m=length_to_m(
-                self._bend_vertical.value(),
-                self._unit_system,
-            ),
-            feed_height_m=length_to_m(self._feed_height.value(), self._unit_system),
-            end_height_m=length_to_m(self._end_height.value(), self._unit_system),
+            bend_vertical_length_m=self._bend_vertical_field.value_m(),
+            feed_height_m=self._feed_height_field.value_m(),
+            end_height_m=self._end_height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
@@ -1584,7 +1617,7 @@ class EndFedForm(QWidget):
             return_path=self._selected_return_path(),
             common_mode_choke=self._selected_common_mode_choke(),
             counterpoise_length_m=(
-                length_to_m(self._counterpoise_length.value(), self._unit_system)
+                self._counterpoise_length_field.value_m()
                 if (
                     self._selected_return_path()
                     in {EndFedReturnPath.COUNTERPOISE, EndFedReturnPath.COAX_SHIELD}
@@ -1595,14 +1628,11 @@ class EndFedForm(QWidget):
                 )
                 else 0.0
             ),
-            counterpoise_height_m=length_to_m(
-                self._counterpoise_height.value(),
-                self._unit_system,
-            ),
+            counterpoise_height_m=self._counterpoise_height_field.value_m(),
             counterpoise_azimuth_deg=self._counterpoise_azimuth.value(),
             loading_coil_enabled=self._loading_coil_group.isChecked(),
             loading_coil_offset_m=(
-                length_to_m(self._loading_coil_offset.value(), self._unit_system)
+                self._loading_coil_offset_field.value_m()
                 if self._loading_coil_group.isChecked()
                 else 0.0
             ),

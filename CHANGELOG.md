@@ -144,6 +144,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   longest-element and height fields use the same wrapper; its existing
   frequency scaling now works in canonical meters, so the table and field units
   stay consistent.
+- **End-fed form migration.** End-fed length, feed section, feed/end heights,
+  bend height, loading-coil offset, counterpoise length/height, and installation
+  return now use `LengthFieldSpec`. The bend range is enforced in canonical
+  meters, so mixed auto units cannot clamp or reinterpret the bend geometry.
+  The shared `LengthField` now exposes a dynamic physical range and a value
+  setter that keeps the chosen display unit.
 
 ### Changed
 

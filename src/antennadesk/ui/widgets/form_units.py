@@ -89,7 +89,20 @@ class LengthField:
         return self._spin_box.value() * self._display_units.meters_per_unit(self._unit)
 
     def set_value_m(self, value_m: float) -> None:
-        self.configure(value_m, unit=self._unit)
+        factor = self._display_units.meters_per_unit(self._unit)
+        blocker = QSignalBlocker(self._spin_box)
+        try:
+            self._spin_box.setValue(value_m / factor)
+        finally:
+            del blocker
+
+    def set_range_m(self, minimum_m: float, maximum_m: float) -> None:
+        factor = self._display_units.meters_per_unit(self._unit)
+        blocker = QSignalBlocker(self._spin_box)
+        try:
+            self._spin_box.setRange(minimum_m / factor, maximum_m / factor)
+        finally:
+            del blocker
 
     def set_display_units(self, display_units: DisplayUnits) -> None:
         value_m = self.value_m()
