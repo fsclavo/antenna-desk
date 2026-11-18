@@ -3618,6 +3618,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "reflector en cada lado; no es una brecha en el hilo del reflector."
         ),
     },
+    "help.hexbeam.field.frequency": {
+        Language.ENGLISH: (
+            "For a multi-band stack this is the primary/largest-band frequency. "
+            "Changing it uniformly scales the selected published set only while "
+            "the target stays inside that band; the result is reference-scaled."
+        ),
+        Language.SPANISH: (
+            "Para una pila multibanda esta es la frecuencia de la banda "
+            "primaria/más grande. Cambiarla escala uniformemente el set publicado "
+            "solo mientras el objetivo permanezca dentro de esa banda; el "
+            "resultado es una referencia escalada."
+        ),
+    },
     "help.hexbeam.bands": {
         Language.ENGLISH: (
             "Published G3TXQ bands. The largest selected band defines the shared "
@@ -10901,6 +10914,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "se edita una banda única personalizada. La banda más grande define el "
             "marco compartido. No se modelan el arnés de coaxil real, el "
             "acoplamiento entre bandas ni el balun."
+        ),
+    },
+    "hexbeam.scaled_bands_hint": {
+        Language.ENGLISH: (
+            "Reference-scaled band stack at {primary} MHz. All published rows "
+            "were scaled uniformly; labels are nominal and the geometry is not "
+            "an independently validated multiband design."
+        ),
+        Language.SPANISH: (
+            "Pila de bandas escalada desde la referencia a {primary} MHz. Todas "
+            "las filas publicadas se escalaron uniformemente; las etiquetas son "
+            "nominales y la geometría no es un diseño multibanda validado "
+            "independientemente."
+        ),
+    },
+    "hexbeam.scaled_bands_out_of_band": {
+        Language.ENGLISH: (
+            "The requested frequency is outside the primary band; the band stack was not changed."
+        ),
+        Language.SPANISH: (
+            "La frecuencia pedida está fuera de la banda primaria; la pila de "
+            "bandas no se modificó."
         ),
     },
     "hexbeam.band.20m": {

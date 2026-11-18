@@ -75,9 +75,13 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
    optimize one selected band with the others fixed.
 
 9. **Frequency scaling scope.** `Design → Scale Geometry to Frequency` is
-   disabled for a multi-band HexBeam until a band-aware rule exists.
-   `with_primary_dimension()` still scales the whole stack for tuning/resize
-   workflows, but it does not change the band frequencies.
+   disabled for a multi-band HexBeam because it is a generic action. The
+   HexBeam editor's primary-frequency field can uniformly scale the selected
+   published stack only while the target stays inside the primary band; it
+   updates band frequencies, lengths, gaps, offsets, and the shared radius
+   together and marks the result as a reference-scaled starting stack with
+   nominal labels. `with_primary_dimension()` scales the whole stack for
+   tuning/resize workflows but does not change band frequencies.
 
 10. **Presentation.** The scene draws every band's canonical wires. Dimensions
     and the selected-band highlight are a follow-up UI slice; reports add a

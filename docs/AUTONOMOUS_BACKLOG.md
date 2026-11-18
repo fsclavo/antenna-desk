@@ -50,7 +50,7 @@ external service and must not be invented or simulated into existence.
 | C7d | Selected-band HexBeam optimizer | M–L | C7c; family-optimizer ADR | Optimize one selected band's driver/reflector halves, tip gap, and height while the other bands stay fixed; enforce shared-frame fit and band-collision constraints; expose the target band in the dialog; deterministic tests and solver QA. Keep full multi-band optimization unavailable. |
 | C7e | Selectable HexBeam band dimensions and scene highlight | M | C7c | Add a transient active-band selector; dimension the selected band, emphasize it in the scene, and keep the other bands visible; update the band note, help, golden scenes, and tests. No schema change. |
 | C7f | Editable HexBeam band table and custom band sets | M | C7c | Replace the read-only published table with validated editable rows; add/remove bands within 1–5; preserve the largest-band-first rule; custom labels/frequencies; EN/ES help; no silent value migration. |
-| C7g | HexBeam band-aware starting set and scaling policy | S–M | C7c; source policy | Offer the published band set at a requested primary frequency with uniform whole-stack scaling only when the source row remains valid; label it reference-scaled, show tolerance/warnings, and do not present it as a general multiband estimator or optimizer. |
+| ~~C7g~~ | ~~HexBeam band-aware starting set and scaling policy~~ | S–M | C7c; source policy | **Done 2026-11-18:** in multi-band mode the primary-frequency field uniformly scales the selected published stack when the target stays inside the primary band. Band frequencies, lengths, gaps, offsets, and shared radius scale together; the form preserves the scaled bands, labels are nominal, and a reference-scaled warning is shown. Out-of-band targets are rejected. This is a starting-set scaler, not a general estimator or optimizer. |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
@@ -629,15 +629,12 @@ unavailable.
   selector for cotas and emphasis without changing the persisted design.
 - **C7f — editable per-band table and custom band sets.** Replace the read-only
   published table with validated rows and add/remove support.
-- **C7g — band-aware starting set / whole-stack scaling.** A frequency-first
-  multiband start is possible only as a *scaled reference stack*, not as a new
-  optimized design. The published G3TXQ rows are band-specific; a single
-  frequency-first input does not define which bands to use or how to
-  re-optimize each row. Recommendation: keep **Estimate Dimensions** as a
-  single-band starting helper and use the band-set editor for the standard
-  stack. If a custom primary frequency is needed, scale the whole stack
-  uniformly, label it reference-scaled, show tolerance/warnings, and never
-  claim validated multiband gain/SWR/front-to-back.
+- **C7g — band-aware starting set / whole-stack scaling — implemented.**
+  A frequency-first multiband start is possible only as a *scaled reference
+  stack*, not as a new optimized design. The editor's primary-frequency field
+  now scales the selected published set uniformly within the primary band and
+  shows a reference-scaled warning. **Estimate Dimensions** remains a
+  single-band helper; no general multiband estimator is provided.
 - **C7h — optional 6 m band.** Add the published 6 m row when a source-backed
   row is carried through the same frame-fit tests.
 - **C7i — feed harness and inter-band coupling.** Blocked until a traceable
@@ -3652,10 +3649,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,561 passed, 1 skipped** on 2026-11-18 after the multi-band
-  HexBeam per-band analysis and estimator fix, with `NEC2C` auto-detected by
-  the test configuration; the skip is the Windows-only console-hiding test on
-  Linux.
+- Full gate: **3,563 passed, 1 skipped** on 2026-11-18 after the multi-band
+  HexBeam per-band analysis, estimator, and reference-scaled stack fixes, with
+  `NEC2C` auto-detected by the test configuration; the skip is the Windows-only
+  console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   single-band starting design. The result warns that the other published bands
   must be added in the editor; no multi-band performance or feed-harness claim
   is made.
+- **Multi-band HexBeam stack scaling.** In multi-band mode, changing the
+  primary frequency uniformly scales the selected published stack while the
+  target remains inside the primary band. Band frequencies, lengths, gaps,
+  offsets, and the shared radius scale together; the editor preserves the
+  scaled rows, marks them reference-scaled with nominal labels, and rejects
+  out-of-band targets. This is a starting-set scaler, not a general multiband
+  estimator or optimizer.
 - **Multi-band HexBeam preset and editor.** The HexBeam editor now offers
   checkboxes for the published 20/17/15/12/10 m set, a read-only per-band table,
   and nested scene rendering. Two or more selected bands use the G3TXQ table;

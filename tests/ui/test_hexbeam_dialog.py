@@ -162,10 +162,38 @@ def test_hexbeam_form_selects_the_five_band_preset(qtbot: QtBot) -> None:
     assert parameters.to_antenna(active_band="15m").feed.wire_id == "hexbeam-band3-feed"
     assert form._band_table.rowCount() == 5
     assert not form._band_table.isHidden()
-    assert not form._frequency.isEnabled()
+    assert form._frequency.isEnabled()
     assert not form._driver_half.isEnabled()
     assert "5 bands" in form._geometry.text().lower()
     assert "m)" in form._band_table.horizontalHeaderItem(2).text()
+
+
+def test_hexbeam_form_scales_the_band_stack_within_the_primary_band(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for check in form._band_checks.values():
+        check.setChecked(True)
+
+    form._frequency.setValue(14.1)
+    parameters = dialog.parameters()
+
+    assert len(parameters.bands) == 5
+    assert parameters.frequency_hz == pytest.approx(14_100_000.0)
+    assert parameters.bands[0].frequency_hz == pytest.approx(14_100_000.0)
+    assert parameters.bands[1].frequency_hz == pytest.approx(18_010_702.0, abs=2.0)
+    assert "reference-scaled" in form._bands_note.text().lower()
+    assert form._band_table.rowCount() == 5
+
+    form._height.setValue(12.0)
+    preserved = dialog.parameters()
+    assert preserved.height_m == pytest.approx(12.0)
+    assert preserved.bands[0].frequency_hz == pytest.approx(14_100_000.0)
+
+    form._frequency.setValue(10.0)
+    assert form._frequency.value() == pytest.approx(14.1)
+    assert "outside the primary band" in form._bands_note.text().lower()
 
 
 def test_hexbeam_form_single_preset_and_custom_single_band(qtbot: QtBot) -> None:

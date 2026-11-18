@@ -177,10 +177,10 @@ front-to-back ratio, impedance, feed harness, or coupling between bands.
 A general multi-band estimator is not provided. The G3TXQ rows are
 band-specific and a single frequency-first input does not define which bands
 are wanted or how each row should be re-optimized. The honest path is the
-band-set preset; a future optional step may load the selected published rows at
-a requested primary frequency as a uniformly scaled reference stack (C7g), with
-reference-scaled confidence, tolerance, and explicit warnings. That is a
-starting-set scaler, not a new optimized design.
+band-set preset. C7g adds a starting-set scaler in the editor: changing the
+primary frequency uniformly scales the selected published rows only while the
+target remains inside the primary band, with a reference-scaled warning and
+nominal labels. That is not a new optimized design.
 
 ### J Pole and Slim Jim starting point
 

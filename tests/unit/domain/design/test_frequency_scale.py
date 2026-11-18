@@ -15,6 +15,7 @@ from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.hexbeam import (
     HexbeamBand,
     HexbeamParameters,
+    published_hexbeam_multiband_parameters,
     published_hexbeam_parameters,
 )
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -26,9 +27,38 @@ from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.yagi import nbs_five_element
 from antennadesk.domain.design.frequency_scale import (
     UnsupportedFrequencyScaleError,
+    scale_hexbeam_band_set,
     scaled_to_frequency,
     supports_frequency_scaling,
 )
+
+
+def test_hexbeam_band_set_scales_uniformly_within_the_primary_band() -> None:
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m"))
+    target_hz = 14_100_000.0
+    length_ratio = parameters.bands[0].frequency_hz / target_hz
+    frequency_ratio = target_hz / parameters.bands[0].frequency_hz
+
+    scaled = scale_hexbeam_band_set(parameters, target_hz)
+
+    assert scaled.frequency_hz == pytest.approx(target_hz)
+    assert scaled.turning_radius_m == pytest.approx(parameters.turning_radius_m * length_ratio)
+    for original, changed in zip(parameters.bands, scaled.bands, strict=True):
+        assert changed.label == original.label
+        assert changed.frequency_hz == pytest.approx(original.frequency_hz * frequency_ratio)
+        assert changed.driver_half_length_m == pytest.approx(
+            original.driver_half_length_m * length_ratio
+        )
+        assert changed.reflector_half_length_m == pytest.approx(
+            original.reflector_half_length_m * length_ratio
+        )
+        assert changed.tip_gap_m == pytest.approx(original.tip_gap_m * length_ratio)
+        assert changed.vertical_offset_m == pytest.approx(original.vertical_offset_m * length_ratio)
+
+    with pytest.raises(UnsupportedFrequencyScaleError):
+        scale_hexbeam_band_set(parameters, 10_000_000.0)
+    with pytest.raises(UnsupportedFrequencyScaleError):
+        scale_hexbeam_band_set(published_hexbeam_parameters(), 14_100_000.0)
 
 
 def test_dipole_scales_length_and_preserves_installation() -> None:

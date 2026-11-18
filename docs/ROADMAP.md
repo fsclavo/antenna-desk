@@ -349,12 +349,12 @@ version is implemented.
 
 Optional HexBeam follow-ups are queued in the execution backlog: **C7d**
 selected-band optimizer, **C7e** active-band dimensions/highlight, **C7f**
-editable band table/custom sets, **C7g** band-aware starting set and
-whole-stack scaling, **C7h** 6 m band, and **C7i** feed-harness/inter-band
-coupling (blocked on a traceable model or measurement). A general multiband
-frequency-first estimator is not recommended; the published rows are
-band-specific, so the honest path is a band-set preset and, at most, a
-uniformly scaled reference stack with visible warnings.
+editable band table/custom sets, **C7h** 6 m band, and **C7i**
+feed-harness/inter-band coupling (blocked on a traceable model or measurement).
+**C7g** band-aware starting-set scaling is implemented: the primary-frequency
+field can uniformly scale the selected published stack within its primary band,
+with a reference-scaled warning. A general multiband frequency-first estimator
+is not recommended; the published rows are band-specific.
 
 Items 1–7 were the immediate recommended sequence; items 8–14 are the next
 medium-sized candidates, with 8–13 done and 14 partially done. Items 15–19 are
