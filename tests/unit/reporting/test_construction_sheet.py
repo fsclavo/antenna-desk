@@ -1334,3 +1334,29 @@ def test_construction_sheet_omits_preflight_when_not_provided(
     sheet = render_construction_sheet(sample_project, sample_project.designs[0], None)
 
     assert "Construction pre-flight" not in sheet
+
+
+def test_construction_sheet_uses_automatic_units(sample_project: Project) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy, UnitSystem
+
+    parameters = DipoleParameters(
+        frequency_hz=435_000_000.0,
+        total_length_m=0.33,
+        height_m=0.5,
+    )
+    design = replace(
+        sample_project.designs[0],
+        parameters=parameters,
+        antenna=parameters.to_antenna(name="UHF dipole"),
+    )
+    sheet = render_construction_sheet(
+        sample_project,
+        design,
+        None,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+
+    assert "Metric auto (mm/cm/m, MHz, Ω)" in sheet
+    assert "33.00 cm" in sheet
+    assert "Length (cm)" in sheet

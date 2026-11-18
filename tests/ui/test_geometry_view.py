@@ -560,6 +560,7 @@ def test_geometry_view_exports_vector_svg_pdf_and_dxf(
     assert "LWPOLYLINE" in entity_types
     assert "DIMENSION" in entity_types
     assert "ANTENNA_WIRES" in document.layers
+    assert document.header["$INSUNITS"] == 6
 
 
 def test_geometry_view_without_a_model_is_safe(qtbot: QtBot) -> None:

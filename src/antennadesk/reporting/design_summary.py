@@ -53,7 +53,19 @@ from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.environment.ground import GroundModel
 from ..domain.projects.installation import InstallationProfile
 from ..domain.projects.project import DesignVariant
+from ..presentation.units import DisplayUnits
 from .localization import Labeler, identity_labeler
+
+
+def _length(
+    value_m: float,
+    display_units: DisplayUnits | None,
+    *,
+    decimals: int = 4,
+) -> str:
+    if display_units is None:
+        return f"{value_m:.{decimals}f} m"
+    return display_units.format_length(value_m, trim=False)
 
 
 def ground_text(ground: GroundModel, labeler: Labeler | None = None) -> str:
@@ -78,14 +90,17 @@ def material_text(material: ConductorMaterial, labeler: Labeler | None = None) -
     )
 
 
-def design_provenance_rows(design: DesignVariant) -> tuple[tuple[str, str], ...]:
+def design_provenance_rows(
+    design: DesignVariant,
+    display_units: DisplayUnits | None = None,
+) -> tuple[tuple[str, str], ...]:
     provenance = design.provenance
     if provenance is None:
         return ()
     return (
         ("Dimension source", provenance.method_id),
         ("Estimate confidence", provenance.confidence),
-        ("Estimate tolerance", f"{provenance.tolerance_m:.4f} m"),
+        ("Estimate tolerance", _length(provenance.tolerance_m, display_units)),
         ("Reference sources", ", ".join(provenance.source_ids) or "—"),
     )
 
@@ -324,6 +339,8 @@ def matching_network_description(
 def installation_profile_rows(
     profile: InstallationProfile | None,
     labeler: Labeler | None = None,
+    *,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[tuple[str, str], ...]:
     """Return the active installation profile as report rows."""
 
@@ -331,9 +348,15 @@ def installation_profile_rows(
         return ()
     tr = labeler or identity_labeler
     height = (
-        f"{profile.available_height_m:.3f} m" if profile.available_height_m is not None else "—"
+        _length(profile.available_height_m, display_units, decimals=3)
+        if profile.available_height_m is not None
+        else "—"
     )
-    width = f"{profile.available_width_m:.3f} m" if profile.available_width_m is not None else "—"
+    width = (
+        _length(profile.available_width_m, display_units, decimals=3)
+        if profile.available_width_m is not None
+        else "—"
+    )
     rows: list[tuple[str, str]] = [
         ("Installation profile", profile.name),
         ("Available height", height),
@@ -355,6 +378,7 @@ def feed_matching_rows(
     position: MatchingNetworkPosition = MatchingNetworkPosition.FEEDPOINT,
     *,
     current_balun: bool = False,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[tuple[str, str], ...]:
     """Return project-level feed and matching rows for a report."""
 
@@ -381,9 +405,9 @@ def feed_matching_rows(
             (
                 "Feed line",
                 tr(
-                    "{impedance:g} Ω, {length:.4f} m, velocity factor {velocity:g}",
+                    "{impedance:g} Ω, {length}, velocity factor {velocity:g}",
                     impedance=feed_line.characteristic_impedance_ohm,
-                    length=feed_line.length_m,
+                    length=_length(feed_line.length_m, display_units),
                     velocity=feed_line.velocity_factor,
                 ),
             )
@@ -415,6 +439,7 @@ def design_summary_rows(
     labeler: Labeler | None = None,
     *,
     project_network: MatchingNetwork | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[tuple[str, str], ...]:
     tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = [
@@ -428,9 +453,12 @@ def design_summary_rows(
                 ("Type", "custom wires"),
                 ("Generator", parameters.generator_name or "custom"),
                 ("Wires", str(len(parameters.wires))),
-                ("Total conductor", f"{sum(wire.length_m for wire in parameters.wires):.4f} m"),
-                ("Min height", f"{min(heights):.4f} m"),
-                ("Max height", f"{max(heights):.4f} m"),
+                (
+                    "Total conductor",
+                    _length(sum(wire.length_m for wire in parameters.wires), display_units),
+                ),
+                ("Min height", _length(min(heights), display_units)),
+                ("Max height", _length(max(heights), display_units)),
                 ("Materials", materials),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -444,8 +472,8 @@ def design_summary_rows(
             [
                 ("Type", "wire dipole"),
                 ("Orientation", parameters.orientation.value),
-                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
-                (height_label, f"{parameters.height_m:.4f} m"),
+                ("Total wire length", _length(parameters.total_length_m, display_units)),
+                (height_label, _length(parameters.height_m, display_units)),
                 (
                     "Azimuth",
                     f"{parameters.azimuth_deg:.1f}°"
@@ -457,10 +485,10 @@ def design_summary_rows(
         if parameters.sag_m > 0.0:
             rows.extend(
                 [
-                    ("Sag", f"{parameters.sag_m:.4f} m"),
+                    ("Sag", _length(parameters.sag_m, display_units)),
                     (
                         "Conductor length",
-                        f"{parameters.conductor_length_m:.4f} m",
+                        _length(parameters.conductor_length_m, display_units),
                     ),
                 ]
             )
@@ -475,8 +503,8 @@ def design_summary_rows(
                 ("Orientation", parameters.orientation.value),
                 ("Low band", f"{parameters.frequency_hz / 1e6:.6f} MHz"),
                 ("High band", f"{parameters.high_band_frequency_hz / 1e6:.6f} MHz"),
-                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
-                ("Center section", f"{parameters.inner_length_m:.4f} m"),
+                ("Total wire length", _length(parameters.total_length_m, display_units)),
+                ("Center section", _length(parameters.inner_length_m, display_units)),
                 ("Outer section", tr("{length:.4f} m each", length=parameters.outer_length_m)),
                 (
                     "Trap positions",
@@ -492,7 +520,7 @@ def design_summary_rows(
                     "Trap capacitance",
                     f"{parameters.trap_capacitance_f * 1e12:.4f} pF",
                 ),
-                (height_label, f"{parameters.height_m:.4f} m"),
+                (height_label, _length(parameters.height_m, display_units)),
                 (
                     "Azimuth",
                     f"{parameters.azimuth_deg:.1f}°"
@@ -514,18 +542,18 @@ def design_summary_rows(
                     f"{parameters.frequency_hz / 1e6:.6f} MHz to "
                     f"{parameters.highest_frequency_hz / 1e6:.6f} MHz",
                 ),
-                ("Element length", f"{parameters.length_m:.4f} m"),
-                ("Conductor spacing", f"{parameters.spacing_m:.4f} m"),
+                ("Element length", _length(parameters.length_m, display_units)),
+                ("Conductor spacing", _length(parameters.spacing_m, display_units)),
                 (
                     "Total conductor length",
-                    f"{parameters.total_conductor_length_m:.4f} m",
+                    _length(parameters.total_conductor_length_m, display_units),
                 ),
                 (
                     "Termination resistor",
                     f"{parameters.termination_resistance_ohm:g} Ω non-inductive",
                 ),
                 ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
-                (height_label, f"{parameters.height_m:.4f} m"),
+                (height_label, _length(parameters.height_m, display_units)),
                 (
                     "Azimuth",
                     f"{parameters.azimuth_deg:.1f}°"
@@ -538,11 +566,14 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "folded dipole"),
-                ("Element length", f"{parameters.total_length_m:.4f} m"),
-                ("Spacing", f"{parameters.spacing_m:.4f} m"),
-                ("Total conductor length", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Element length", _length(parameters.total_length_m, display_units)),
+                ("Spacing", _length(parameters.spacing_m, display_units)),
+                (
+                    "Total conductor length",
+                    _length(parameters.total_conductor_length_m, display_units),
+                ),
                 ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
@@ -553,11 +584,11 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", type_name),
-                ("Radiator length", f"{parameters.height_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Radiator length", _length(parameters.height_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
                 ("Radials", str(parameters.radial_count)),
-                ("Radial length", f"{parameters.radial_length_m:.4f} m"),
+                ("Radial length", _length(parameters.radial_length_m, display_units)),
             ]
         )
         if parameters.loading_coil_enabled:
@@ -573,18 +604,18 @@ def design_summary_rows(
             rows.extend(
                 [
                     ("Top hat wires", str(parameters.top_hat_wire_count)),
-                    ("Top hat radius", f"{parameters.top_hat_radius_m:.4f} m"),
+                    ("Top hat radius", _length(parameters.top_hat_radius_m, display_units)),
                 ]
             )
     elif isinstance(parameters, InvertedLParameters):
         rows.extend(
             [
                 ("Type", "inverted L"),
-                ("Vertical length", f"{parameters.vertical_height_m:.4f} m"),
-                ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
-                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Vertical length", _length(parameters.vertical_height_m, display_units)),
+                ("Horizontal length", _length(parameters.horizontal_length_m, display_units)),
+                ("Total wire length", _length(parameters.total_length_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
@@ -592,9 +623,9 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "inverted-V"),
-                ("Leg length", f"{parameters.leg_length_m:.4f} m"),
-                ("Apex height", f"{parameters.apex_height_m:.4f} m"),
-                ("End height", f"{parameters.end_height_m:.4f} m"),
+                ("Leg length", _length(parameters.leg_length_m, display_units)),
+                ("Apex height", _length(parameters.apex_height_m, display_units)),
+                ("End height", _length(parameters.end_height_m, display_units)),
                 ("Included angle", f"{parameters.included_angle_deg:.1f}°"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
@@ -603,12 +634,12 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "off-center-fed dipole"),
-                ("Total wire length", f"{parameters.total_length_m:.4f} m"),
+                ("Total wire length", _length(parameters.total_length_m, display_units)),
                 (
                     "Feed offset",
                     f"{parameters.feed_offset_m:.4f} m ({parameters.feed_ratio * 100:.1f}%)",
                 ),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
             ]
         )
@@ -616,13 +647,13 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "magnetic loop"),
-                ("Diameter", f"{parameters.diameter_m:.4f} m"),
-                ("Circumference", f"{parameters.circumference_m:.4f} m"),
-                ("Loop conductor", f"{parameters.loop_conductor_length_m:.4f} m"),
+                ("Diameter", _length(parameters.diameter_m, display_units)),
+                ("Circumference", _length(parameters.circumference_m, display_units)),
+                ("Loop conductor", _length(parameters.loop_conductor_length_m, display_units)),
                 ("Sides", str(parameters.sides)),
-                ("Bottom height", f"{parameters.height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
-                ("Tuning gap", f"{parameters.gap_length_m:.4f} m"),
+                ("Bottom height", _length(parameters.height_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
+                ("Tuning gap", _length(parameters.gap_length_m, display_units)),
                 ("Tuning capacitance", f"{parameters.tuning_capacitance_f * 1e12:.3f} pF"),
                 ("Capacitor ESR", f"{parameters.capacitor_esr_ohm:.3f} Ω"),
                 ("Capacitor reactance", f"{parameters.capacitor_reactance_ohm:.2f} Ω"),
@@ -634,19 +665,19 @@ def design_summary_rows(
             [
                 ("Type", "loop"),
                 ("Orientation", parameters.orientation.value),
-                ("Circumference", f"{parameters.circumference_m:.4f} m"),
+                ("Circumference", _length(parameters.circumference_m, display_units)),
                 ("Sides", str(parameters.sides)),
-                ("Equivalent diameter", f"{parameters.diameter_m:.4f} m"),
+                ("Equivalent diameter", _length(parameters.diameter_m, display_units)),
                 ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
             ]
         )
         if parameters.orientation is LoopOrientation.HORIZONTAL:
-            rows.append(("Height", f"{parameters.height_m:.4f} m"))
+            rows.append(("Height", _length(parameters.height_m, display_units)))
         else:
             rows.extend(
                 [
-                    ("Bottom height", f"{parameters.height_m:.4f} m"),
-                    ("Top height", f"{parameters.top_height_m:.4f} m"),
+                    ("Bottom height", _length(parameters.height_m, display_units)),
+                    ("Top height", _length(parameters.top_height_m, display_units)),
                 ]
             )
         rows.append(("Azimuth", f"{parameters.azimuth_deg:.1f}°"))
@@ -654,9 +685,9 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name),
-                ("Dipole length", f"{parameters.dipole_total_length_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
-                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                ("Dipole length", _length(parameters.dipole_total_length_m, display_units)),
+                ("Height", _length(parameters.height_m, display_units)),
+                ("Feed height", _length(parameters.feed_height_m, display_units)),
                 (
                     "Matching line",
                     f"{parameters.line_impedance_ohm:g} Ω, "
@@ -676,13 +707,16 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "Zepp"),
-                ("Radiator length", f"{parameters.radiator_length_m:.4f} m"),
-                ("Matching section", f"{parameters.matching_section_length_m:.4f} m"),
-                ("Spacing", f"{parameters.spacing_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Radiator length", _length(parameters.radiator_length_m, display_units)),
+                ("Matching section", _length(parameters.matching_section_length_m, display_units)),
+                ("Spacing", _length(parameters.spacing_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
                 (
                     "Radiator height",
-                    f"{parameters.base_height_m + parameters.matching_section_length_m:.4f} m",
+                    _length(
+                        parameters.base_height_m + parameters.matching_section_length_m,
+                        display_units,
+                    ),
                 ),
                 ("Estimated stub impedance", f"{impedance:.1f} Ω"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
@@ -694,8 +728,8 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name.lower()),
-                ("Horizontal length", f"{parameters.horizontal_length_m:.4f} m"),
-                ("Vertical length", f"{parameters.vertical_height_m:.4f} m"),
+                ("Horizontal length", _length(parameters.horizontal_length_m, display_units)),
+                ("Vertical length", _length(parameters.vertical_height_m, display_units)),
                 ("Vertical elements", str(parameters.vertical_count)),
                 (
                     "Horizontal segment",
@@ -704,13 +738,13 @@ def design_summary_rows(
                         length=parameters.horizontal_segment_m,
                     ),
                 ),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
                 (
                     "Feed offset below top",
-                    f"{parameters.feed_offset_m:.4f} m",
+                    _length(parameters.feed_offset_m, display_units),
                 ),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -720,9 +754,9 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name),
-                ("Active length", f"{parameters.active_length_m:.4f} m"),
-                ("Full length", f"{parameters.total_length_m:.4f} m"),
-                ("Link offset", f"{parameters.link_offset_m:.4f} m"),
+                ("Active length", _length(parameters.active_length_m, display_units)),
+                ("Full length", _length(parameters.total_length_m, display_units)),
+                ("Link offset", _length(parameters.link_offset_m, display_units)),
                 (
                     "State",
                     "links open"
@@ -737,7 +771,7 @@ def design_summary_rows(
                     "Coil Q",
                     "—" if parameters.coil_q is None else f"{parameters.coil_q:.1f}",
                 ),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Orientation", parameters.orientation.value),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
@@ -748,14 +782,17 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name),
-                ("Driver half-length", f"{parameters.driver_half_length_m:.4f} m"),
-                ("Reflector half-length", f"{parameters.reflector_half_length_m:.4f} m"),
-                ("Turning radius", f"{parameters.turning_radius_m:.4f} m"),
-                ("Tip gap", f"{parameters.tip_gap_m:.4f} m"),
-                ("Overall span", f"{parameters.overall_span_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Driver half-length", _length(parameters.driver_half_length_m, display_units)),
+                (
+                    "Reflector half-length",
+                    _length(parameters.reflector_half_length_m, display_units),
+                ),
+                ("Turning radius", _length(parameters.turning_radius_m, display_units)),
+                ("Tip gap", _length(parameters.tip_gap_m, display_units)),
+                ("Overall span", _length(parameters.overall_span_m, display_units)),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Feed", "center of the W driver"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -766,38 +803,42 @@ def design_summary_rows(
             [
                 ("Type", parameters.template_name),
                 ("Elements", str(parameters.element_count)),
-                ("Driven element", f"{parameters.driven_length_m:.4f} m"),
-                ("Reflector element", f"{parameters.reflector_length_m:.4f} m"),
-                ("Reflector spacing", f"{parameters.reflector_spacing_m:.4f} m"),
-                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
-                ("Trap inset", f"{parameters.trap_inset_m:.4f} m"),
+                ("Driven element", _length(parameters.driven_length_m, display_units)),
+                ("Reflector element", _length(parameters.reflector_length_m, display_units)),
+                ("Reflector spacing", _length(parameters.reflector_spacing_m, display_units)),
+                ("Boom length", _length(parameters.boom_length_m, display_units)),
+                ("Trap inset", _length(parameters.trap_inset_m, display_units)),
                 ("Trap frequency", f"{parameters.trap_frequency_hz / 1e6:.3f} MHz"),
                 (
                     "Trap inductance",
                     f"{parameters.trap_inductance_h * 1e6:.3f} µH",
                 ),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Feed", "driven element center"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )
         if parameters.element_count == 3:
-            rows.insert(4, ("Director element", f"{parameters.director_length_m:.4f} m"))
-            rows.insert(6, ("Director spacing", f"{parameters.director_spacing_m:.4f} m"))
+            rows.insert(
+                4, ("Director element", _length(parameters.director_length_m, display_units))
+            )
+            rows.insert(
+                6, ("Director spacing", _length(parameters.director_spacing_m, display_units))
+            )
         return tuple(rows)
     if isinstance(parameters, DisconeParameters):
         rows.extend(
             [
                 ("Type", parameters.template_name),
                 ("Radial wires", str(parameters.wire_count)),
-                ("Cone height", f"{parameters.cone_height_m:.4f} m"),
-                ("Cone base radius", f"{parameters.cone_radius_m:.4f} m"),
-                ("Disc radius", f"{parameters.disc_radius_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
-                ("Feed gap", f"{parameters.disc_gap_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
+                ("Cone height", _length(parameters.cone_height_m, display_units)),
+                ("Cone base radius", _length(parameters.cone_radius_m, display_units)),
+                ("Disc radius", _length(parameters.disc_radius_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Feed gap", _length(parameters.disc_gap_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
                 ("Feed", "across the apex gap"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -813,20 +854,20 @@ def design_summary_rows(
                     f"{parameters.frequency_low_hz / 1e6:.3f}-"
                     f"{parameters.frequency_high_hz / 1e6:.3f} MHz",
                 ),
-                ("Longest element", f"{parameters.longest_element_length_m:.4f} m"),
-                ("Shortest element", f"{parameters.shortest_element_length_m:.4f} m"),
+                ("Longest element", _length(parameters.longest_element_length_m, display_units)),
+                ("Shortest element", _length(parameters.shortest_element_length_m, display_units)),
                 ("Tau", f"{parameters.tau:.4f}"),
                 ("Sigma", f"{parameters.sigma:.4f}"),
-                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
+                ("Boom length", _length(parameters.boom_length_m, display_units)),
                 ("Phase line Z0", f"{parameters.phase_line_impedance_ohm:.1f} Ω"),
                 (
                     "Phase line velocity factor",
                     f"{parameters.phase_line_velocity_factor:.3f}",
                 ),
                 ("Feed transformer", f"{parameters.feed_transformer_ratio:.1f}:1"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Feed", "front element center"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -837,14 +878,14 @@ def design_summary_rows(
             [
                 ("Type", parameters.template_name),
                 ("Loops", str(parameters.element_count)),
-                ("Driven loop side", f"{parameters.loop_side_m:.4f} m"),
-                ("Reflector side", f"{parameters.reflector_side_m:.4f} m"),
-                ("Reflector spacing", f"{parameters.reflector_spacing_m:.4f} m"),
-                ("Boom length", f"{parameters.boom_length_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Driven loop side", _length(parameters.loop_side_m, display_units)),
+                ("Reflector side", _length(parameters.reflector_side_m, display_units)),
+                ("Reflector spacing", _length(parameters.reflector_spacing_m, display_units)),
+                ("Boom length", _length(parameters.boom_length_m, display_units)),
+                ("Height", _length(parameters.height_m, display_units)),
                 ("Feed", "driven loop side midpoint"),
                 ("Polarization", "horizontal"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
@@ -853,11 +894,11 @@ def design_summary_rows(
         if parameters.element_count == 3:
             rows.insert(
                 4,
-                ("Director side", f"{parameters.director_side_m:.4f} m"),
+                ("Director side", _length(parameters.director_side_m, display_units)),
             )
             rows.insert(
                 5,
-                ("Director spacing", f"{parameters.director_spacing_m:.4f} m"),
+                ("Director spacing", _length(parameters.director_spacing_m, display_units)),
             )
         return tuple(rows)
     if isinstance(parameters, PhasedVerticalParameters):
@@ -865,14 +906,14 @@ def design_summary_rows(
             [
                 ("Type", parameters.template_name),
                 ("Verticals", str(parameters.element_count)),
-                ("Element spacing", f"{parameters.spacing_m:.4f} m"),
-                ("Vertical element length", f"{parameters.height_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Element spacing", _length(parameters.spacing_m, display_units)),
+                ("Vertical element length", _length(parameters.height_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
                 ("Phase step", f"{parameters.phase_step_deg:.1f}°"),
                 ("Amplitude taper", f"{parameters.amplitude_taper * 100.0:.0f}%"),
                 ("Radials per element", str(parameters.radial_count)),
-                ("Radial length", f"{parameters.radial_length_m:.4f} m"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Radial length", _length(parameters.radial_length_m, display_units)),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Feed", "first vertical (primary)"),
                 ("Ground", ground_text(parameters.ground, labeler)),
@@ -883,8 +924,8 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "Beverage"),
-                ("Length", f"{parameters.length_m:.4f} m"),
-                ("Height", f"{parameters.height_m:.4f} m"),
+                ("Length", _length(parameters.length_m, display_units)),
+                ("Height", _length(parameters.height_m, display_units)),
                 (
                     "Termination",
                     (
@@ -897,7 +938,7 @@ def design_summary_rows(
                     ),
                 ),
                 ("Feed", "near end"),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -908,11 +949,11 @@ def design_summary_rows(
             [
                 ("Type", parameters.template_name),
                 ("Loops", str(parameters.loop_count)),
-                ("Loop side", f"{parameters.loop_side_m:.4f} m"),
-                ("Stack height", f"{parameters.total_height_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
-                ("Top height", f"{parameters.top_height_m:.4f} m"),
-                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                ("Loop side", _length(parameters.loop_side_m, display_units)),
+                ("Stack height", _length(parameters.total_height_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Top height", _length(parameters.top_height_m, display_units)),
+                ("Feed height", _length(parameters.feed_height_m, display_units)),
                 (
                     "Reflector",
                     (
@@ -924,7 +965,7 @@ def design_summary_rows(
                         else "disabled"
                     ),
                 ),
-                ("Total conductor", f"{parameters.total_conductor_length_m:.4f} m"),
+                ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
@@ -935,9 +976,9 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "Ringo"),
-                ("Radiator length", f"{parameters.radiator_height_m:.4f} m"),
-                ("Ring diameter", f"{parameters.ring_diameter_m:.4f} m"),
-                ("Ring height", f"{parameters.ring_height_m:.4f} m"),
+                ("Radiator length", _length(parameters.radiator_height_m, display_units)),
+                ("Ring diameter", _length(parameters.ring_diameter_m, display_units)),
+                ("Ring height", _length(parameters.ring_height_m, display_units)),
                 ("Ring sides", str(parameters.ring_sides)),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -947,11 +988,11 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", parameters.template_name),
-                ("Radiator length", f"{parameters.radiator_height_m:.4f} m"),
-                ("Stub length", f"{parameters.stub_length_m:.4f} m"),
-                ("Stub spacing", f"{parameters.spacing_m:.4f} m"),
-                ("Feed offset", f"{parameters.feed_offset_m:.4f} m"),
-                ("Base height", f"{parameters.base_height_m:.4f} m"),
+                ("Radiator length", _length(parameters.radiator_height_m, display_units)),
+                ("Stub length", _length(parameters.stub_length_m, display_units)),
+                ("Stub spacing", _length(parameters.spacing_m, display_units)),
+                ("Feed offset", _length(parameters.feed_offset_m, display_units)),
+                ("Base height", _length(parameters.base_height_m, display_units)),
                 ("Folded", "yes" if parameters.folded else "no"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -959,7 +1000,7 @@ def design_summary_rows(
         return tuple(rows)
     if isinstance(parameters, EndFedParameters):
         counterpoise = (
-            f"{parameters.counterpoise_length_m:.4f} m"
+            _length(parameters.counterpoise_length_m, display_units)
             if parameters.counterpoise_active
             else "none"
         )
@@ -991,22 +1032,28 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", type_label),
-                ("Length", f"{parameters.length_m:.4f} m"),
-                ("Feed section", f"{parameters.feed_section_length_m:.4f} m"),
-                ("Feed height", f"{parameters.feed_height_m:.4f} m"),
+                ("Length", _length(parameters.length_m, display_units)),
+                ("Feed section", _length(parameters.feed_section_length_m, display_units)),
+                ("Feed height", _length(parameters.feed_height_m, display_units)),
                 *(
                     [
-                        ("Vertical section", f"{parameters.bend_vertical_length_m:.4f} m"),
-                        ("Horizontal run", f"{parameters.bend_horizontal_length_m:.4f} m"),
-                        ("Top height", f"{parameters.bend_top_height_m:.4f} m"),
+                        (
+                            "Vertical section",
+                            _length(parameters.bend_vertical_length_m, display_units),
+                        ),
+                        (
+                            "Horizontal run",
+                            _length(parameters.bend_horizontal_length_m, display_units),
+                        ),
+                        ("Top height", _length(parameters.bend_top_height_m, display_units)),
                     ]
                     if parameters.bend_active
-                    else [("End height", f"{parameters.end_height_m:.4f} m")]
+                    else [("End height", _length(parameters.end_height_m, display_units))]
                 ),
                 ("Transformer", f"{parameters.transformer_ratio:g}:1"),
                 ("Transformer loss", transformer_loss_label),
                 ("Return path", return_path_label),
-                ("Return length", f"{parameters.effective_return_length_m:.4f} m"),
+                ("Return length", _length(parameters.effective_return_length_m, display_units)),
                 ("Common-mode choke", choke),
                 ("Counterpoise", counterpoise),
                 (
@@ -1019,7 +1066,7 @@ def design_summary_rows(
                 ),
                 (
                     "Counterpoise height",
-                    f"{parameters.effective_return_height_m:.4f} m",
+                    _length(parameters.effective_return_height_m, display_units),
                 ),
                 (
                     "Counterpoise azimuth",
@@ -1101,7 +1148,7 @@ def design_summary_rows(
                     ),
                     (
                         "Top section",
-                        f"{parameters.loading_coil_top_length_m:.4f} m",
+                        _length(parameters.loading_coil_top_length_m, display_units),
                     ),
                 ]
             )
@@ -1115,7 +1162,9 @@ def design_summary_rows(
                 ("Pairs", str(len(parameters.elements))),
                 (
                     "Element lengths",
-                    ", ".join(f"{element.length_m:.4f} m" for element in parameters.elements),
+                    ", ".join(
+                        _length(element.length_m, display_units) for element in parameters.elements
+                    ),
                 ),
                 (
                     "Included angles",
@@ -1126,11 +1175,11 @@ def design_summary_rows(
                 (
                     "End heights",
                     ", ".join(
-                        f"{parameters.element_end_height_m(element):.4f} m"
+                        _length(parameters.element_end_height_m(element), display_units)
                         for element in parameters.elements
                     ),
                 ),
-                ("Apex height", f"{parameters.apex_height_m:.4f} m"),
+                ("Apex height", _length(parameters.apex_height_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
@@ -1140,17 +1189,17 @@ def design_summary_rows(
         rows.extend(
             [
                 ("Type", "Moxon rectangle"),
-                ("Element width", f"{parameters.width_m:.4f} m"),
-                ("Element spacing", f"{parameters.depth_m:.4f} m"),
-                ("Reflector tip", f"{parameters.reflector_tip_m:.4f} m"),
-                ("Driven tip", f"{parameters.driven_tip_m:.4f} m"),
-                ("Tip gap", f"{parameters.gap_m:.4f} m"),
+                ("Element width", _length(parameters.width_m, display_units)),
+                ("Element spacing", _length(parameters.depth_m, display_units)),
+                ("Reflector tip", _length(parameters.reflector_tip_m, display_units)),
+                ("Driven tip", _length(parameters.driven_tip_m, display_units)),
+                ("Tip gap", _length(parameters.gap_m, display_units)),
                 ("Polarization", parameters.polarization.value),
-                ("Boom height", f"{parameters.height_m:.4f} m"),
+                ("Boom height", _length(parameters.height_m, display_units)),
             ]
         )
         if parameters.polarization is Polarization.VERTICAL:
-            rows.append(("Lowest edge", f"{parameters.lowest_edge_m:.4f} m"))
+            rows.append(("Lowest edge", _length(parameters.lowest_edge_m, display_units)))
         rows.extend(
             [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
@@ -1164,13 +1213,13 @@ def design_summary_rows(
             [
                 ("Type", "Yagi"),
                 ("Elements", str(len(parameters.elements))),
-                ("Boom length", f"{max(positions) - min(positions):.4f} m"),
+                ("Boom length", _length(max(positions) - min(positions), display_units)),
                 ("Polarization", parameters.polarization.value),
-                ("Boom height", f"{parameters.height_m:.4f} m"),
+                ("Boom height", _length(parameters.height_m, display_units)),
             ]
         )
         if parameters.polarization is Polarization.VERTICAL:
-            rows.append(("Lowest tip", f"{parameters.lowest_tip_m:.4f} m"))
+            rows.append(("Lowest tip", _length(parameters.lowest_tip_m, display_units)))
         if parameters.is_tapered:
             rows.append(
                 (
@@ -1186,7 +1235,7 @@ def design_summary_rows(
                 ("Folded driven", "yes" if parameters.driven_folded else "no"),
                 *(
                     [
-                        ("Fold spacing", f"{parameters.driven_fold_spacing_m:.4f} m"),
+                        ("Fold spacing", _length(parameters.driven_fold_spacing_m, display_units)),
                         ("Feed transformer", f"{parameters.transformer_ratio:g}:1"),
                     ]
                     if parameters.driven_folded
@@ -1195,8 +1244,8 @@ def design_summary_rows(
                 ("Feed match", parameters.match_type.value),
                 *(
                     [
-                        ("Hairpin length", f"{parameters.match_length_m:.4f} m"),
-                        ("Hairpin spacing", f"{parameters.match_spacing_m:.4f} m"),
+                        ("Hairpin length", _length(parameters.match_length_m, display_units)),
+                        ("Hairpin spacing", _length(parameters.match_spacing_m, display_units)),
                     ]
                     if parameters.match_type.value == "beta_hairpin"
                     else []
@@ -1225,6 +1274,8 @@ def design_summary_rows(
 def load_summary_rows(
     loads: tuple[LumpedLoad, ...],
     labeler: Labeler | None = None,
+    *,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[tuple[str, str], ...]:
     tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = []
@@ -1234,7 +1285,7 @@ def load_summary_rows(
             (
                 tr("Load {index} ({kind})", index=index, kind=kind),
                 (
-                    f"{load.wire_id} @ {load.offset_m:.3f} m · "
+                    f"{load.wire_id} @ {_length(load.offset_m, display_units, decimals=3)} · "
                     f"R={load.resistance_ohm:g} Ω · "
                     f"L={load.inductance_h * 1e6:g} µH · "
                     f"C={load.capacitance_f * 1e12:g} pF"
@@ -1247,6 +1298,8 @@ def load_summary_rows(
 def transmission_line_summary_rows(
     lines: tuple[TransmissionLine, ...],
     labeler: Labeler | None = None,
+    *,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[tuple[str, str], ...]:
     tr = labeler or identity_labeler
     rows: list[tuple[str, str]] = []
@@ -1255,10 +1308,13 @@ def transmission_line_summary_rows(
             (
                 tr("Transmission line {index}", index=index),
                 (
-                    f"{line.start_wire_id} @ {line.start_offset_m:.3f} m → "
-                    f"{line.end_wire_id} @ {line.end_offset_m:.3f} m · "
+                    f"{line.start_wire_id} @ "
+                    f"{_length(line.start_offset_m, display_units, decimals=3)} → "
+                    f"{line.end_wire_id} @ "
+                    f"{_length(line.end_offset_m, display_units, decimals=3)} · "
                     f"{line.characteristic_impedance_ohm:g} Ω · "
-                    f"{line.length_m:.3f} m · VF {line.velocity_factor:g}"
+                    f"{_length(line.length_m, display_units, decimals=3)} · "
+                    f"VF {line.velocity_factor:g}"
                 ),
             )
         )

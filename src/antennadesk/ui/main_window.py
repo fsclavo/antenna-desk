@@ -8607,6 +8607,7 @@ class MainWindow(QMainWindow):
             isometric_svg=isometric_svg,
             auxiliary_kind=auxiliary_kind,
             preflight=self._preflight_report_for_current_design(),
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
         )
         dialog.exec()
         self._workflow_construction_viewed.add(self._design_id)
@@ -9235,6 +9236,7 @@ class MainWindow(QMainWindow):
                 labeler=self._translator.report,
                 language=self._translator.language.value,
                 geometry_svg=self._report_geometry_svg(design),
+                display_units=DisplayUnits(self._unit_system, self._length_policy),
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))

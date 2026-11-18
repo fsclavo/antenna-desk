@@ -16,6 +16,7 @@ from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import SimulationResult
+from ..presentation.units import DisplayUnits
 from ..reporting.bom_costs import (
     bom_cost_entries,
     bom_cost_total,
@@ -36,6 +37,7 @@ from ..reporting.design_summary import (
     installation_profile_rows,
     load_summary_rows,
     optimization_summary_rows,
+    transmission_line_summary_rows,
 )
 from ..reporting.feed_schematic import feed_schematic_svg
 from ..reporting.localization import (
@@ -110,6 +112,7 @@ def write_construction_pdf(
     isometric_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
     preflight: PreflightReport | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -183,7 +186,17 @@ def write_construction_pdf(
         translator.t("construction.frequency"),
         f"{design.parameters.frequency_hz / 1e6:.6f} MHz",
     )
-    row(translator.t("construction.units"), "SI (m, MHz, Ω)")
+    units_text = (
+        "SI (m, MHz, Ω)"
+        if display_units is None
+        else (
+            f"{display_units.system.value.title()} "
+            f"{display_units.length_policy.value} "
+            f"({'mm/cm/m' if display_units.system.value == 'metric' else 'in/ft'}, "
+            "MHz, Ω)"
+        )
+    )
+    row(translator.t("construction.units"), units_text)
     row(translator.t("construction.updated"), project.updated_at.strftime("%Y-%m-%d"))
     y += 8.0
 
@@ -313,10 +326,12 @@ def write_construction_pdf(
                 design.parameters,
                 labeler=translator.report,
                 project_network=project.matching_network,
+                display_units=display_units,
             ),
             *installation_profile_rows(
                 project.active_installation_profile,
                 labeler=translator.report,
+                display_units=display_units,
             ),
             *feed_matching_rows(
                 project.matching_network,
@@ -325,10 +340,20 @@ def write_construction_pdf(
                 labeler=translator.report,
                 position=project.matching_network_position,
                 current_balun=project.current_balun,
+                display_units=display_units,
             ),
             *optimization_summary_rows(design),
-            *design_provenance_rows(design),
-            *load_summary_rows(design.antenna.loads, labeler=translator.report),
+            *design_provenance_rows(design, display_units),
+            *load_summary_rows(
+                design.antenna.loads,
+                labeler=translator.report,
+                display_units=display_units,
+            ),
+            *transmission_line_summary_rows(
+                design.antenna.transmission_lines,
+                labeler=translator.report,
+                display_units=display_units,
+            ),
         ),
         translator.report,
     ):
@@ -339,7 +364,11 @@ def write_construction_pdf(
         feed_z = feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio
         row(
             translator.t("construction.feed_height"),
-            f"{feed_z:.4f} m",
+            (
+                f"{feed_z:.4f} m"
+                if display_units is None
+                else display_units.format_length(feed_z, trim=False)
+            ),
         )
     y += 12.0
 
@@ -425,7 +454,7 @@ def write_construction_pdf(
             value,
         )
     for label, value in localize_rows(
-        bom_summary_rows(design.antenna),
+        bom_summary_rows(design.antenna, display_units),
         translator.report,
     ):
         row(label, value)
@@ -497,7 +526,11 @@ def write_construction_pdf(
         y += 12.0
 
     section(translator.t("construction.wire_schedule"))
-    for line in wire_schedule_lines(design, labeler=translator.report):
+    for line in wire_schedule_lines(
+        design,
+        labeler=translator.report,
+        display_units=display_units,
+    ):
         row("", line)
     y += 12.0
 

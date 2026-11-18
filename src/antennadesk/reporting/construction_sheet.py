@@ -57,6 +57,7 @@ from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
+from ..presentation.units import DisplayUnits, LengthPolicy, UnitSystem
 from .bom_costs import bom_cost_entries, bom_cost_total, format_cost, hardware_cost_key
 from .construction_package import (
     as_built_rows,
@@ -89,6 +90,7 @@ from .wire_schedule import (
     conductor_bom_rows,
     feed_schedule_row,
     wire_schedule_html_rows,
+    wire_schedule_table_unit,
 )
 
 CSS = """
@@ -264,6 +266,26 @@ def _preflight_section(report: PreflightReport | None, tr: Labeler) -> str:
 """
 
 
+def _length(
+    value_m: float,
+    display_units: DisplayUnits | None,
+    *,
+    decimals: int = 4,
+) -> str:
+    if display_units is None:
+        return f"{value_m:.{decimals}f} m"
+    return display_units.format_length(value_m, trim=False)
+
+
+def _units_title(display_units: DisplayUnits | None) -> str:
+    if display_units is None:
+        return "SI (m, MHz, Ω)"
+    system = "Metric" if display_units.system is UnitSystem.METRIC else "Imperial"
+    policy = "auto" if display_units.length_policy is LengthPolicy.AUTO else "fixed"
+    units = "mm/cm/m" if display_units.system is UnitSystem.METRIC else "in/ft"
+    return f"{system} {policy} ({units}, MHz, Ω)"
+
+
 def render_construction_sheet(
     project: Project,
     design: DesignVariant,
@@ -276,6 +298,7 @@ def render_construction_sheet(
     labeler: Labeler | None = None,
     language: str = "en",
     preflight: PreflightReport | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -306,8 +329,13 @@ def render_construction_sheet(
                     parameters,
                     labeler=tr,
                     project_network=project.matching_network,
+                    display_units=display_units,
                 ),
-                *installation_profile_rows(project.active_installation_profile, labeler=tr),
+                *installation_profile_rows(
+                    project.active_installation_profile,
+                    labeler=tr,
+                    display_units=display_units,
+                ),
                 *feed_matching_rows(
                     project.matching_network,
                     project.feed_line,
@@ -315,13 +343,19 @@ def render_construction_sheet(
                     labeler=tr,
                     position=project.matching_network_position,
                     current_balun=project.current_balun,
+                    display_units=display_units,
                 ),
                 *optimization_summary_rows(design),
-                *design_provenance_rows(design),
-                *load_summary_rows(design.antenna.loads, labeler=tr),
+                *design_provenance_rows(design, display_units),
+                *load_summary_rows(
+                    design.antenna.loads,
+                    labeler=tr,
+                    display_units=display_units,
+                ),
                 *transmission_line_summary_rows(
                     design.antenna.transmission_lines,
                     labeler=tr,
+                    display_units=display_units,
                 ),
             ),
             tr,
@@ -336,10 +370,11 @@ def render_construction_sheet(
 <table class="title-block">
 <tr><th>Project</th><td>{_escape(project.name)}</td><th>Design</th><td>{_escape(design.name)}</td></tr>
 <tr><th>Antenna</th><td>{_escape(antenna_label)}</td><th>Frequency</th><td>{parameters.frequency_hz / 1e6:.6f} MHz</td></tr>
-<tr><th>Units</th><td>SI (m, MHz, Ω)</td><th>Updated</th><td>{project.updated_at:%Y-%m-%d}</td></tr>
+<tr><th>Units</th><td>{_escape(_units_title(display_units))}</td><th>Updated</th><td>{project.updated_at:%Y-%m-%d}</td></tr>
 </table>
 """
-    schedule_rows = "".join(wire_schedule_html_rows(design))
+    schedule_rows = "".join(wire_schedule_html_rows(design, display_units))
+    schedule_unit = wire_schedule_table_unit(design, display_units)
     feed = feed_schedule_row(antenna)
     cost_entries = {entry.key: entry for entry in bom_cost_entries(project, design, tr)}
     costs = project.bom_costs
@@ -365,14 +400,14 @@ def render_construction_sheet(
         f"<td>{_escape(tr(row.material))}</td>"
         f'<td class="num">Ø{row.diameter_mm:.3f} mm</td>'
         f'<td class="num">{row.wire_count}</td>'
-        f'<td class="num">{row.total_length_m:.4f} m</td>'
+        f'<td class="num">{_length(row.total_length_m, display_units)}</td>'
         f"{_cost_cells(row.cost_key)}"
         "</tr>"
         for row in conductor_bom_rows(antenna)
     )
     bom_summary = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in localize_rows(bom_summary_rows(antenna), tr)
+        for label, value in localize_rows(bom_summary_rows(antenna, display_units), tr)
     )
     bom_section = f"""
 <h2>Bill of materials</h2>
@@ -538,7 +573,7 @@ def render_construction_sheet(
 <h2>Wire schedule</h2>
 <table class="schedule">
 <thead>
-<tr><th>#</th><th>Wire</th><th>Start (m)</th><th>End (m)</th><th>Length (m)</th><th>Ø (mm)</th><th>Material</th></tr>
+<tr><th>#</th><th>Wire</th><th>Start ({schedule_unit})</th><th>End ({schedule_unit})</th><th>Length ({schedule_unit})</th><th>Ø (mm)</th><th>Material</th></tr>
 </thead>
 <tbody>
 {schedule_rows}
@@ -1699,7 +1734,7 @@ def render_construction_sheet(
 <body>
 <h1>{_escape(project.name)} — {_escape(design.name)}</h1>
 {title_block}
-<p class="muted">{_escape(tr("AntennaDesk construction sheet · SI units (m, MHz, Ω)"))}</p>
+<p class="muted">{_escape(tr("AntennaDesk construction sheet · SI units (m, MHz, Ω)") if display_units is None else "AntennaDesk construction sheet · " + _units_title(display_units))}</p>
 {figure_section}
 <h2>Dimensions</h2>
 <table>
@@ -1748,6 +1783,7 @@ def write_construction_sheet(
     labeler: Labeler | None = None,
     language: str = "en",
     preflight: PreflightReport | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> None:
     path.write_text(
         render_construction_sheet(
@@ -1761,6 +1797,7 @@ def write_construction_sheet(
             labeler=labeler,
             language=language,
             preflight=preflight,
+            display_units=display_units,
         ),
         encoding="utf-8",
         newline="\n",

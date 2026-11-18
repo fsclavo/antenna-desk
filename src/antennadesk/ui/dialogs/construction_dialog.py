@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from ...domain.design.preflight import PreflightReport
 from ...domain.projects.project import DesignVariant, Project
 from ...domain.simulation.result import SimulationResult
+from ...presentation.units import DisplayUnits
 from ...reporting.construction_sheet import (
     render_construction_sheet,
     write_construction_sheet,
@@ -65,9 +66,11 @@ class ConstructionDialog(QDialog):
         isometric_svg: bytes | None = None,
         auxiliary_kind: str | None = None,
         preflight: PreflightReport | None = None,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._display_units = display_units
         self._project = project
         self._design = design
         self._result = result
@@ -120,6 +123,7 @@ class ConstructionDialog(QDialog):
                 labeler=translator.report,
                 language=translator.language.value,
                 preflight=self._preflight,
+                display_units=self._display_units,
             )
         )
         self._browser.setDocument(document)
@@ -169,6 +173,7 @@ class ConstructionDialog(QDialog):
                 isometric_png_data_uri=self._isometric_data_uri,
                 auxiliary_kind=self._auxiliary_kind,
                 preflight=self._preflight,
+                display_units=self._display_units,
             )
         except Exception as exc:
             QMessageBox.critical(
@@ -213,6 +218,7 @@ class ConstructionDialog(QDialog):
                 isometric_svg=self._isometric_svg,
                 auxiliary_kind=self._auxiliary_kind,
                 preflight=self._preflight,
+                display_units=self._display_units,
             )
         except Exception as exc:
             QMessageBox.critical(
@@ -257,6 +263,7 @@ class ConstructionDialog(QDialog):
                 isometric_svg=self._isometric_svg,
                 auxiliary_kind=self._auxiliary_kind,
                 preflight=self._preflight,
+                display_units=self._display_units,
             )
         except Exception as exc:
             QMessageBox.critical(

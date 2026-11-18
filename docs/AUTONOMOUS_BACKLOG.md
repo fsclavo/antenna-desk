@@ -138,7 +138,7 @@ external service and must not be invented or simulated into existence.
 | ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
 | ~~U3~~ | ~~Adaptive units in antenna-family forms and tables~~ | M–L | U1 | **Done 2026-11-18:** all 26 family editors use `LengthFieldSpec`, including the discone, Moxon, hexbeam, quad beam, trapped Yagi, phased vertical, vertical, OCFD, beverage, fan dipole, dipoles/folded dipole/loop, inverted L/V, magnetic loop, biquad, Ringo, SCV, T2FD, Zepp, J-pole, transmission-line doublet, Yagi, log-periodic, and end-fed fields. The editable Yagi, log-periodic, and fan-dipole tables choose one unit per table and show it in the header; radius/diameter cells stay mm/in. The global length floor is 1 mm / 0.003 ft for small UHF features, and all forms are covered by fixed and automatic metric/imperial round-trip tests plus a frozen-suffix edit test. Acceptance met: physical values survive unit/policy switches, no silent clamping, table headers updated, and UI tests pass. |
 | ~~U4~~ | ~~Adaptive units in optimization, synthesis, and auxiliary dialogs~~ | M | U1, U3 | **Done 2026-11-18:** the bounded length optimizer, family optimizer constraints, feed-line length, G5RV/ZS6BKW heights, synthesis bounds, design-from-frequency height/base/end fields, comparison reference height, transmission-line offsets/lengths, custom-wire coordinate table/radial length/feed offset, and robustness result formatting use `LengthFieldSpec`/`DisplayUnits`. Dialog-level `length_bounds` initialization was removed where per-field ranges replace it. Result formatting picks a unit per value without changing solver inputs. Acceptance met: auto/fixed and metric/imperial tests, no range regressions, EN/ES help unchanged, no solver change. |
-| U5 | Adaptive units in construction sheets and human-readable reports | M–L | U1, U2, U3 | Format design-summary rows, wire schedule, BOM, feed/matching rows, and report tables with `DisplayUnits`; update the title block to state auto/fixed metric or imperial. SVG/PNG/PDF figures follow the UI. CSV stays canonical meters/mm; DXF stays canonical meters with meter dimension text and `$INSUNITS=6`. Acceptance: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. |
+| U5 | Adaptive units in construction sheets and human-readable reports | M–L | U1, U2, U3 | **Partially delivered 2026-11-18:** construction-sheet and HTML/PDF report design-summary rows, installation profiles, feed/matching rows, loads, transmission lines, BOM total conductor, feed height, wire schedule, and custom report title/footer use `DisplayUnits`. The wire schedule picks one coordinate/length unit per table and shows it in the HTML header; the native PDF schedule and CSV/BOM remain canonical. CSV stays meters/mm and DXF keeps `$INSUNITS=6`. Remaining: the family-specific construction-dimension/notes blocks in `construction_sheet.py`, the BOM conductor table headers for automatic units, and final HTML/PDF/package visual QA. Acceptance: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. |
 | U6 | Units documentation, help audit, and visual QA | S–M | U2–U5 | Update the user guide and changelog; verify the EN/ES help manifest for the Units preference and table headers; run light/dark and font-scaling QA on the sketch, forms, and construction sheet; re-run the full gate. Acceptance: documentation links, help coverage, manual QA notes, full gate green. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
@@ -204,9 +204,9 @@ against the published 0.61 m. C6 corrects the topology before C7 nests bands.
 
 ## Adaptive length display units (queued 2026-11-17)
 
-**Status:** spec closed; implementation started. U0–U4 are complete; U5–U6 are
-queued. The release plan decides whether the track lands in 0.10.0 or a later
-release.
+**Status:** spec closed; implementation started. U0–U4 are complete; U5 is in
+progress and U6 is queued. The release plan decides whether the track lands in
+0.10.0 or a later release.
 **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md).
 **Normative spec:** [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
 
@@ -2825,11 +2825,13 @@ model and solver contract must land first.
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
     unchanged. No new translation or help keys. The UX queue is now closed.
-19. **U1–U4 are complete.** The shared `DisplayUnits` formatter, Units
-    preference, adaptive geometry scenes, unit-aware scale bar, all family
-    editors and editable tables, and the optimization/synthesis/auxiliary
-    dialogs are migrated. Continue with U5 construction/report surfaces and U6
-    documentation/QA. Prepare the release after that remaining scope.
+19. **U1–U4 are complete; U5 is in progress.** The shared `DisplayUnits`
+    formatter, Units preference, adaptive geometry scenes, unit-aware scale
+    bar, all family editors and editable tables, and the
+    optimization/synthesis/auxiliary dialogs are migrated. U5 now covers the
+    report summary, feed/matching, load, transmission-line, BOM-total, PDF feed
+    height, wire schedule, and title-block surfaces. Continue with the
+    family-specific construction-dimension blocks, then U6 documentation/QA.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2860,9 +2862,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,519 passed, 1 skipped** on 2026-11-18 after the U4 dialog
-  completion, with `NEC2C` and the optional `cross-engine` group; the skip is
-  the Windows-only console-hiding test on Linux. Rerun without PyNEC if the
+- Full gate: **3,520 passed, 1 skipped** on 2026-11-18 after the first U5
+  reporting slice, with `NEC2C` and the optional `cross-engine` group; the skip
+  is the Windows-only console-hiding test on Linux. Rerun without PyNEC if the
   environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults

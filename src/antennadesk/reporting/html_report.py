@@ -13,6 +13,7 @@ from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.band_summary import summarize_band
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
+from ..presentation.units import DisplayUnits
 from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
@@ -213,6 +214,7 @@ def render_html_report(
     labeler: Labeler | None = None,
     language: str = "en",
     geometry_svg: str | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -224,8 +226,13 @@ def render_html_report(
                     parameters,
                     labeler=tr,
                     project_network=project.matching_network,
+                    display_units=display_units,
                 ),
-                *installation_profile_rows(project.active_installation_profile, labeler=tr),
+                *installation_profile_rows(
+                    project.active_installation_profile,
+                    labeler=tr,
+                    display_units=display_units,
+                ),
                 *feed_matching_rows(
                     project.matching_network,
                     project.feed_line,
@@ -233,13 +240,19 @@ def render_html_report(
                     labeler=tr,
                     position=project.matching_network_position,
                     current_balun=project.current_balun,
+                    display_units=display_units,
                 ),
                 *optimization_summary_rows(design),
-                *design_provenance_rows(design),
-                *load_summary_rows(design.antenna.loads, labeler=tr),
+                *design_provenance_rows(design, display_units),
+                *load_summary_rows(
+                    design.antenna.loads,
+                    labeler=tr,
+                    display_units=display_units,
+                ),
                 *transmission_line_summary_rows(
                     design.antenna.transmission_lines,
                     labeler=tr,
+                    display_units=display_units,
                 ),
             ),
             tr,
@@ -455,6 +468,7 @@ def write_html_report(
     labeler: Labeler | None = None,
     language: str = "en",
     geometry_svg: str | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> None:
     path.write_text(
         render_html_report(
@@ -465,6 +479,7 @@ def write_html_report(
             labeler=labeler,
             language=language,
             geometry_svg=geometry_svg,
+            display_units=display_units,
         ),
         encoding="utf-8",
         newline="\n",

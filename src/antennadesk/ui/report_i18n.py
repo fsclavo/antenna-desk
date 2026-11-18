@@ -1037,12 +1037,12 @@ REPORT_SPANISH: dict[str, str] = {
     "{count} segments per wire": "{count} segmentos por hilo",
     "{start:g}-{stop:g} MHz, {count} points": ("{start:g}-{stop:g} MHz, {count} puntos"),
     # Native PDF wire schedule.
-    "Feed: {wire} @ {offset} m · ({x}, {y}, {z}) · height {height} m": (
-        "Alimentación: {wire} @ {offset} m · ({x}, {y}, {z}) · altura {height} m"
+    "Feed: {wire} @ {offset} · ({x}, {y}, {z}) · height {height}": (
+        "Alimentación: {wire} @ {offset} · ({x}, {y}, {z}) · altura {height}"
     ),
-    "W{index} {wire}: ({start_x}, {start_y}, {start_z}) -> ({end_x}, {end_y}, {end_z}) · {length} m · Ø{diameter} mm · {material}": (  # noqa: E501
+    "W{index} {wire}: ({start_x}, {start_y}, {start_z}) -> ({end_x}, {end_y}, {end_z}) · {length} {unit} · Ø{diameter} mm · {material}": (  # noqa: E501
         "W{index} {wire}: ({start_x}, {start_y}, {start_z}) -> ({end_x}, "
-        "{end_y}, {end_z}) · {length} m · Ø{diameter} mm · {material}"
+        "{end_y}, {end_z}) · {length} {unit} · Ø{diameter} mm · {material}"
     ),
     # Additional values.
     "A (reference)": "A (referencia)",
@@ -1114,8 +1114,8 @@ REPORT_SPANISH: dict[str, str] = {
     ),
     ", Q {q:g}": ", Q {q:g}",
     "{network} · {state}": "{network} · {state}",
-    "{impedance:g} Ω, {length:.4f} m, velocity factor {velocity:g}": (
-        "{impedance:g} Ω, {length:.4f} m, factor de velocidad {velocity:g}"
+    "{impedance:g} Ω, {length}, velocity factor {velocity:g}": (
+        "{impedance:g} Ω, {length}, factor de velocidad {velocity:g}"
     ),
     "{loss:.3f} dB at {frequency:.6f} MHz (exponent {exponent:g})": (
         "{loss:.3f} dB a {frequency:.6f} MHz (exponente {exponent:g})"

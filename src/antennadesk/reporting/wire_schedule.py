@@ -30,6 +30,7 @@ from ..domain.antennas.geometry import Point3D
 from ..domain.antennas.wire import Wire
 from ..domain.projects.bom_costs import BomCostRecord
 from ..domain.projects.project import DesignVariant
+from ..presentation.units import DisplayUnits, LengthUnit
 from .localization import Labeler, identity_labeler
 
 _ENDFED_PARTITION_IDS = frozenset(
@@ -245,13 +246,22 @@ def conductor_bom_rows(model: AntennaModel) -> tuple[ConductorBomRow, ...]:
     )
 
 
-def bom_summary_rows(model: AntennaModel) -> tuple[tuple[str, str], ...]:
+def bom_summary_rows(
+    model: AntennaModel,
+    display_units: DisplayUnits | None = None,
+) -> tuple[tuple[str, str], ...]:
     """Return the non-conductor totals shown in the bill of materials."""
 
     wires = _physical_wires(model)
+    total_length = sum(wire.length_m for wire in wires)
+    total_text = (
+        f"{total_length:.4f} m"
+        if display_units is None
+        else display_units.format_length(total_length, trim=False)
+    )
     return (
         ("Wires", str(len(wires))),
-        ("Total conductor", f"{sum(wire.length_m for wire in wires):.4f} m"),
+        ("Total conductor", total_text),
         ("Loads", str(len(model.loads))),
         ("Transmission lines", str(len(model.transmission_lines))),
         ("Driven sources", str(1 + len(model.sources))),
@@ -325,18 +335,59 @@ def write_bom_csv(
     path.write_text(bom_to_csv(design, costs=costs), encoding="utf-8", newline="\n")
 
 
-def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:
+def wire_schedule_table_unit(
+    design: DesignVariant,
+    display_units: DisplayUnits | None = None,
+) -> LengthUnit:
+    if display_units is None:
+        return "m"
+    values = [
+        value
+        for row in schedule_rows_for_design(design)
+        for value in (
+            row.start.x_m,
+            row.start.y_m,
+            row.start.z_m,
+            row.end.x_m,
+            row.end.y_m,
+            row.end.z_m,
+            row.length_m,
+        )
+    ]
+    return display_units.table_unit(values)
+
+
+def _schedule_number(
+    value_m: float,
+    table_unit: LengthUnit,
+    display_units: DisplayUnits | None,
+) -> str:
+    if display_units is None:
+        return f"{value_m:.4f}"
+    value = value_m / display_units.meters_per_unit(table_unit)
+    return f"{value:.{display_units.decimals_for(table_unit)}f}"
+
+
+def wire_schedule_html_rows(
+    design: DesignVariant,
+    display_units: DisplayUnits | None = None,
+) -> tuple[str, ...]:
     """Return pre-escaped HTML table rows for the construction sheet."""
 
+    table_unit = wire_schedule_table_unit(design, display_units)
     rows: list[str] = []
     for row in schedule_rows_for_design(design):
         rows.append(
             "<tr>"
             f"<td>{row.index}</td>"
             f"<td><code>{html.escape(row.wire_id, quote=True)}</code></td>"
-            f'<td class="num">{row.start.x_m:.4f}, {row.start.y_m:.4f}, {row.start.z_m:.4f}</td>'
-            f'<td class="num">{row.end.x_m:.4f}, {row.end.y_m:.4f}, {row.end.z_m:.4f}</td>'
-            f'<td class="num">{row.length_m:.4f}</td>'
+            f'<td class="num">{_schedule_number(row.start.x_m, table_unit, display_units)}, '
+            f"{_schedule_number(row.start.y_m, table_unit, display_units)}, "
+            f"{_schedule_number(row.start.z_m, table_unit, display_units)}</td>"
+            f'<td class="num">{_schedule_number(row.end.x_m, table_unit, display_units)}, '
+            f"{_schedule_number(row.end.y_m, table_unit, display_units)}, "
+            f"{_schedule_number(row.end.z_m, table_unit, display_units)}</td>"
+            f'<td class="num">{_schedule_number(row.length_m, table_unit, display_units)}</td>'
             f'<td class="num">{row.diameter_mm:.3f}</td>'
             f"<td>{html.escape(row.material, quote=True)}</td>"
             "</tr>"
@@ -347,40 +398,54 @@ def wire_schedule_html_rows(design: DesignVariant) -> tuple[str, ...]:
 def wire_schedule_lines(
     design: DesignVariant,
     labeler: Labeler | None = None,
+    *,
+    display_units: DisplayUnits | None = None,
 ) -> tuple[str, ...]:
     """Return compact lines for the native PDF construction sheet."""
 
     tr = labeler or identity_labeler
+    table_unit = wire_schedule_table_unit(design, display_units)
     lines: list[str] = []
     for row in schedule_rows_for_design(design):
         lines.append(
             tr(
                 "W{index} {wire}: ({start_x}, {start_y}, {start_z}) -> "
-                "({end_x}, {end_y}, {end_z}) · {length} m · Ø{diameter} mm · "
+                "({end_x}, {end_y}, {end_z}) · {length} {unit} · Ø{diameter} mm · "
                 "{material}",
                 index=row.index,
                 wire=row.wire_id,
-                start_x=f"{row.start.x_m:.3f}",
-                start_y=f"{row.start.y_m:.3f}",
-                start_z=f"{row.start.z_m:.3f}",
-                end_x=f"{row.end.x_m:.3f}",
-                end_y=f"{row.end.y_m:.3f}",
-                end_z=f"{row.end.z_m:.3f}",
-                length=f"{row.length_m:.4f}",
+                start_x=_schedule_number(row.start.x_m, table_unit, display_units),
+                start_y=_schedule_number(row.start.y_m, table_unit, display_units),
+                start_z=_schedule_number(row.start.z_m, table_unit, display_units),
+                end_x=_schedule_number(row.end.x_m, table_unit, display_units),
+                end_y=_schedule_number(row.end.y_m, table_unit, display_units),
+                end_z=_schedule_number(row.end.z_m, table_unit, display_units),
+                length=_schedule_number(row.length_m, table_unit, display_units),
+                unit=table_unit,
                 diameter=f"{row.diameter_mm:.3f}",
                 material=tr(row.material),
             )
         )
     feed = feed_schedule_row(design.antenna)
+    offset_text = (
+        f"{feed.offset_m:.4f} m"
+        if display_units is None
+        else display_units.format_length(feed.offset_m, trim=False)
+    )
+    height_text = (
+        f"{feed.height_m:.4f} m"
+        if display_units is None
+        else display_units.format_length(feed.height_m, trim=False)
+    )
     lines.append(
         tr(
-            "Feed: {wire} @ {offset} m · ({x}, {y}, {z}) · height {height} m",
+            "Feed: {wire} @ {offset} · ({x}, {y}, {z}) · height {height}",
             wire=feed.wire_id,
-            offset=f"{feed.offset_m:.4f}",
-            x=f"{feed.point.x_m:.3f}",
-            y=f"{feed.point.y_m:.3f}",
-            z=f"{feed.point.z_m:.3f}",
-            height=f"{feed.height_m:.4f}",
+            offset=offset_text,
+            x=_schedule_number(feed.point.x_m, table_unit, display_units),
+            y=_schedule_number(feed.point.y_m, table_unit, display_units),
+            z=_schedule_number(feed.point.z_m, table_unit, display_units),
+            height=height_text,
         )
     )
     return tuple(lines)

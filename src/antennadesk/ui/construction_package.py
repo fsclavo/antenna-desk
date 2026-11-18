@@ -14,6 +14,7 @@ from PySide6.QtGui import QImage
 from ..domain.design.preflight import PreflightReport, PreflightStatus
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult
+from ..presentation.units import DisplayUnits
 from ..reporting.bom_costs import (
     bom_cost_entries,
     bom_cost_total,
@@ -126,6 +127,7 @@ def write_construction_package(
     isometric_svg: bytes | None = None,
     auxiliary_kind: str | None = None,
     preflight: PreflightReport | None = None,
+    display_units: DisplayUnits | None = None,
 ) -> None:
     """Write HTML, PDF, CSVs, and build notes into one ZIP archive."""
 
@@ -147,6 +149,7 @@ def write_construction_package(
             labeler=translator.report,
             language=translator.language.value,
             preflight=preflight,
+            display_units=display_units,
         )
         write_construction_pdf(
             translator,
@@ -162,6 +165,7 @@ def write_construction_package(
             isometric_svg=isometric_svg,
             auxiliary_kind=auxiliary_kind,
             preflight=preflight,
+            display_units=display_units,
         )
         write_wire_schedule_csv(design, root / "wire-schedule.csv")
         write_bom_csv(design, root / "bom.csv", costs=project.bom_costs)
