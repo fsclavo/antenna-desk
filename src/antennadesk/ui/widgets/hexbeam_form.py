@@ -29,17 +29,22 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import (
+    LengthField,
+    LengthFieldSpec,
+    apply_radius_units,
+)
 from .ground_presets import GroundPresetController
 from .starting_dimensions import StartingDimensionsState
 
@@ -58,11 +63,17 @@ class HexbeamForm(QWidget):
         unit_system: UnitSystem,
         parameters: HexbeamParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="hexbeam")
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
@@ -106,6 +117,49 @@ class HexbeamForm(QWidget):
         self._element_separation.setRange(0.0, maximum_length)
         self._element_separation.setDecimals(4)
         self._element_separation.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._driver_half_field = LengthField(
+            self._driver_half,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._reflector_half_field = LengthField(
+            self._reflector_half,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._turning_radius_field = LengthField(
+            self._turning_radius,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._tip_gap_field = LengthField(
+            self._tip_gap,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._feed_gap_field = LengthField(
+            self._feed_gap,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._element_separation_field = LengthField(
+            self._element_separation,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -315,34 +369,24 @@ class HexbeamForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._driver_half,
-                self._reflector_half,
-                self._turning_radius,
-                self._tip_gap,
-                self._height,
-                self._feed_gap,
-                self._element_separation,
-            )
-            for spin in (
-                self._driver_half,
-                self._reflector_half,
-                self._turning_radius,
+            for field in (
+                self._driver_half_field,
+                self._reflector_half_field,
+                self._turning_radius_field,
+                self._tip_gap_field,
+                self._feed_gap_field,
+                self._element_separation_field,
+                self._height_field,
             ):
-                spin.setRange(minimum_length, maximum_length)
-            small_minimum = _small_length_minimum(unit_system)
-            self._tip_gap.setRange(small_minimum, maximum_length)
-            self._feed_gap.setRange(small_minimum, maximum_length)
-            self._element_separation.setRange(0.0, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
+                field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -354,21 +398,13 @@ class HexbeamForm(QWidget):
         self._updating = True
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._driver_half.setValue(
-                length_from_m(parameters.driver_half_length_m, self._unit_system)
-            )
-            self._reflector_half.setValue(
-                length_from_m(parameters.reflector_half_length_m, self._unit_system)
-            )
-            self._turning_radius.setValue(
-                length_from_m(parameters.turning_radius_m, self._unit_system)
-            )
-            self._tip_gap.setValue(length_from_m(parameters.tip_gap_m, self._unit_system))
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
-            self._feed_gap.setValue(length_from_m(parameters.feed_gap_m, self._unit_system))
-            self._element_separation.setValue(
-                length_from_m(parameters.element_separation_m, self._unit_system)
-            )
+            self._driver_half_field.configure(parameters.driver_half_length_m)
+            self._reflector_half_field.configure(parameters.reflector_half_length_m)
+            self._turning_radius_field.configure(parameters.turning_radius_m)
+            self._tip_gap_field.configure(parameters.tip_gap_m)
+            self._height_field.configure(parameters.height_m)
+            self._feed_gap_field.configure(parameters.feed_gap_m)
+            self._element_separation_field.configure(parameters.element_separation_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
@@ -415,13 +451,13 @@ class HexbeamForm(QWidget):
     def parameters(self) -> HexbeamParameters:
         return HexbeamParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            driver_half_length_m=length_to_m(self._driver_half.value(), self._unit_system),
-            reflector_half_length_m=length_to_m(self._reflector_half.value(), self._unit_system),
-            turning_radius_m=length_to_m(self._turning_radius.value(), self._unit_system),
-            tip_gap_m=length_to_m(self._tip_gap.value(), self._unit_system),
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            feed_gap_m=length_to_m(self._feed_gap.value(), self._unit_system),
-            element_separation_m=length_to_m(self._element_separation.value(), self._unit_system),
+            driver_half_length_m=self._driver_half_field.value_m(),
+            reflector_half_length_m=self._reflector_half_field.value_m(),
+            turning_radius_m=self._turning_radius_field.value_m(),
+            tip_gap_m=self._tip_gap_field.value_m(),
+            height_m=self._height_field.value_m(),
+            feed_gap_m=self._feed_gap_field.value_m(),
+            element_separation_m=self._element_separation_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),

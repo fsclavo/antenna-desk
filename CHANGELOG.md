@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Moxon form migration.** Width, depth, reflector/driven tips, and height now
   use `LengthFieldSpec`; the automatic policy shows the 435 MHz dimensions in
   cm while preserving the installation height in meters.
+- **Hexbeam form migration.** Driver/reflector half-lengths, turning radius,
+  tip gap, feed gap, element separation, and height now use `LengthFieldSpec`;
+  automatic units show the 435 MHz details in cm while keeping the installation
+  height in meters.
 
 ### Changed
 

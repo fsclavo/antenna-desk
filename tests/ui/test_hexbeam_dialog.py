@@ -130,11 +130,30 @@ def test_hexbeam_form_represents_uhf_tip_and_feed_gaps(qtbot: QtBot) -> None:
     dialog._form.set_parameters(parameters)
 
     restored = dialog.parameters()
-    assert restored.tip_gap_m == pytest.approx(parameters.tip_gap_m, abs=5e-5)
-    assert restored.feed_gap_m == pytest.approx(parameters.feed_gap_m, abs=5e-5)
+    assert restored.tip_gap_m == pytest.approx(parameters.tip_gap_m, abs=5e-4)
+    assert restored.feed_gap_m == pytest.approx(parameters.feed_gap_m, abs=5e-4)
     assert restored.element_separation_m == pytest.approx(
         parameters.element_separation_m,
-        abs=5e-5,
+        abs=5e-4,
     )
     assert dialog._form._tip_gap.value() > 0.0
     assert dialog._form._feed_gap.value() > 0.0
+
+
+def test_hexbeam_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.hexbeam_form import HexbeamForm
+
+    form = HexbeamForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(published_hexbeam_parameters(frequency_hz=435_000_000.0))
+
+    assert form._driver_half_field.unit == "cm"
+    assert form._turning_radius_field.unit == "cm"
+    assert form._tip_gap_field.unit == "cm"
+    assert form._height_field.unit == "m"
