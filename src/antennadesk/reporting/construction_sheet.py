@@ -581,19 +581,19 @@ def render_construction_sheet(
 </table>
 <table>
 <tr><th>Feed wire</th><td><code>{_escape(feed.wire_id)}</code></td></tr>
-<tr><th>Feed offset</th><td>{_escape(tr("{offset:.4f} m from the wire start", offset=feed.offset_m))}</td></tr>
-<tr><th>Feed coordinates</th><td>{feed.point.x_m:.4f}, {feed.point.y_m:.4f}, {feed.point.z_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed.height_m:.4f} m</td></tr>
+<tr><th>Feed offset</th><td>{_escape(tr("{offset} from the wire start", offset=_length(feed.offset_m, display_units)))}</td></tr>
+<tr><th>Feed coordinates</th><td>{feed.point.x_m:.4f}, {feed.point.y_m:.4f}, {_length(feed.point.z_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed.height_m, display_units)}</td></tr>
 </table>
 """
     if isinstance(parameters, DipoleParameters):
         if parameters.sag_m > 0.0:
             feed_rows = f"""
-<tr><th>Span</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>Conductor length</th><td>{parameters.conductor_length_m:.4f} m</td></tr>
-<tr><th>Wire height at supports</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Center sag</th><td>{parameters.sag_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Span</th><td>{_length(parameters.total_length_m, display_units)}</td></tr>
+<tr><th>Conductor length</th><td>{_length(parameters.conductor_length_m, display_units)}</td></tr>
+<tr><th>Wire height at supports</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Center sag</th><td>{_length(parameters.sag_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
             construction_note = _note(
                 tr,
@@ -609,10 +609,10 @@ def render_construction_sheet(
         else:
             other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
             feed_rows = f"""
-<tr><th>First leg (from wire start)</th><td>{feed_offset_m:.4f} m</td></tr>
-<tr><th>Second leg (from feed)</th><td>{other_leg_m:.4f} m</td></tr>
-<tr><th>Wire height at start</th><td>{feed_wire.start.z_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>First leg (from wire start)</th><td>{_length(feed_offset_m, display_units)}</td></tr>
+<tr><th>Second leg (from feed)</th><td>{_length(other_leg_m, display_units)}</td></tr>
+<tr><th>Wire height at start</th><td>{_length(feed_wire.start.z_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
             construction_note = _note(
                 tr,
@@ -625,14 +625,14 @@ def render_construction_sheet(
     elif isinstance(parameters, TrapDipoleParameters):
         left_position, right_position = parameters.trap_positions_m
         feed_rows = f"""
-<tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>Center section</th><td>{parameters.inner_length_m:.4f} m</td></tr>
-<tr><th>Outer sections</th><td>{_escape(tr("{length:.4f} m each", length=parameters.outer_length_m))}</td></tr>
-<tr><th>Trap positions</th><td>{_escape(tr("{left:.4f} m, {right:.4f} m from wire start", left=left_position, right=right_position))}</td></tr>
+<tr><th>Total wire length</th><td>{_length(parameters.total_length_m, display_units)}</td></tr>
+<tr><th>Center section</th><td>{_length(parameters.inner_length_m, display_units)}</td></tr>
+<tr><th>Outer sections</th><td>{_escape(tr("{length} each", length=_length(parameters.outer_length_m, display_units)))}</td></tr>
+<tr><th>Trap positions</th><td>{_escape(tr("{left}, {right} from wire start", left=_length(left_position, display_units), right=_length(right_position, display_units)))}</td></tr>
 <tr><th>Trap frequency</th><td>{parameters.trap_frequency_hz / 1e6:.6f} MHz</td></tr>
 <tr><th>Trap inductance</th><td>{parameters.trap_inductance_h * 1e6:.4f} µH</td></tr>
 <tr><th>Trap capacitance</th><td>{parameters.trap_capacitance_f * 1e12:.4f} pF</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -650,12 +650,12 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, T2FDParameters):
         feed_rows = f"""
-<tr><th>Element length</th><td>{_escape(tr("{length:.4f} m each", length=parameters.length_m))}</td></tr>
-<tr><th>Conductor spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Element length</th><td>{_escape(tr("{length} each", length=_length(parameters.length_m, display_units)))}</td></tr>
+<tr><th>Conductor spacing</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
 <tr><th>Design band</th><td>{parameters.frequency_hz / 1e6:.6f} MHz to {parameters.highest_frequency_hz / 1e6:.6f} MHz</td></tr>
 <tr><th>Termination resistor</th><td>{parameters.termination_resistance_ohm:g} Ω non-inductive</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -673,11 +673,11 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, FoldedDipoleParameters):
         feed_rows = f"""
-<tr><th>Driven element length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>End connector length</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Driven element length</th><td>{_length(parameters.total_length_m, display_units)}</td></tr>
+<tr><th>End connector length</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
 <tr><th>Feed location</th><td>{_escape(tr("center of driven element"))}</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         if parameters.transformer_ratio == 1.0:
             construction_note = _note(
@@ -719,15 +719,15 @@ def render_construction_sheet(
             )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
-<tr><th>Horizontal length</th><td>{parameters.horizontal_length_m:.4f} m</td></tr>
-<tr><th>Horizontal segment</th><td>{_escape(tr("{length:.4f} m each", length=parameters.horizontal_segment_m))}</td></tr>
-<tr><th>Vertical length</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
+<tr><th>Horizontal length</th><td>{_length(parameters.horizontal_length_m, display_units)}</td></tr>
+<tr><th>Horizontal segment</th><td>{_escape(tr("{length} each", length=_length(parameters.horizontal_segment_m, display_units)))}</td></tr>
+<tr><th>Vertical length</th><td>{_length(parameters.vertical_height_m, display_units)}</td></tr>
 <tr><th>Vertical elements</th><td>{parameters.vertical_count}</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
-<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
-<tr><th>Feed offset below top</th><td>{parameters.feed_offset_m:.4f} m</td></tr>
-<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Top height</th><td>{_length(parameters.top_height_m, display_units)}</td></tr>
+<tr><th>Feed offset below top</th><td>{_length(parameters.feed_offset_m, display_units)}</td></tr>
+<tr><th>Total conductor</th><td>{_length(parameters.total_conductor_length_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -761,11 +761,11 @@ def render_construction_sheet(
         )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
-<tr><th>Active length</th><td>{parameters.active_length_m:.4f} m</td></tr>
-<tr><th>Full length</th><td>{parameters.total_length_m:.4f} m</td></tr>
-<tr><th>Link offset</th><td>{parameters.link_offset_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Active length</th><td>{_length(parameters.active_length_m, display_units)}</td></tr>
+<tr><th>Full length</th><td>{_length(parameters.total_length_m, display_units)}</td></tr>
+<tr><th>Link offset</th><td>{_length(parameters.link_offset_m, display_units)}</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -780,12 +780,12 @@ def render_construction_sheet(
     elif isinstance(parameters, HexbeamParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{parameters.template_name}</td></tr>
-<tr><th>Driver half-length</th><td>{parameters.driver_half_length_m:.4f} m</td></tr>
-<tr><th>Reflector half-length</th><td>{parameters.reflector_half_length_m:.4f} m</td></tr>
-<tr><th>Turning radius</th><td>{parameters.turning_radius_m:.4f} m</td></tr>
-<tr><th>Tip gap</th><td>{parameters.tip_gap_m:.4f} m</td></tr>
-<tr><th>Overall span</th><td>{parameters.overall_span_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Driver half-length</th><td>{_length(parameters.driver_half_length_m, display_units)}</td></tr>
+<tr><th>Reflector half-length</th><td>{_length(parameters.reflector_half_length_m, display_units)}</td></tr>
+<tr><th>Turning radius</th><td>{_length(parameters.turning_radius_m, display_units)}</td></tr>
+<tr><th>Tip gap</th><td>{_length(parameters.tip_gap_m, display_units)}</td></tr>
+<tr><th>Overall span</th><td>{_length(parameters.overall_span_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -804,13 +804,13 @@ def render_construction_sheet(
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Elements</th><td>{parameters.element_count}</td></tr>
-<tr><th>Driven element</th><td>{parameters.driven_length_m:.4f} m</td></tr>
-<tr><th>Reflector element</th><td>{parameters.reflector_length_m:.4f} m</td></tr>
-<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
-<tr><th>Trap inset</th><td>{parameters.trap_inset_m:.4f} m</td></tr>
+<tr><th>Driven element</th><td>{_length(parameters.driven_length_m, display_units)}</td></tr>
+<tr><th>Reflector element</th><td>{_length(parameters.reflector_length_m, display_units)}</td></tr>
+<tr><th>Boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
+<tr><th>Trap inset</th><td>{_length(parameters.trap_inset_m, display_units)}</td></tr>
 <tr><th>Trap frequency</th><td>{parameters.trap_frequency_hz / 1e6:.3f} MHz</td></tr>
 <tr><th>Trap inductance</th><td>{parameters.trap_inductance_h * 1e6:.3f} µH</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -830,11 +830,11 @@ def render_construction_sheet(
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Radial wires</th><td>{parameters.wire_count}</td></tr>
-<tr><th>Cone height</th><td>{parameters.cone_height_m:.4f} m</td></tr>
-<tr><th>Cone base radius</th><td>{parameters.cone_radius_m:.4f} m</td></tr>
-<tr><th>Disc radius</th><td>{parameters.disc_radius_m:.4f} m</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+<tr><th>Cone height</th><td>{_length(parameters.cone_height_m, display_units)}</td></tr>
+<tr><th>Cone base radius</th><td>{_length(parameters.cone_radius_m, display_units)}</td></tr>
+<tr><th>Disc radius</th><td>{_length(parameters.disc_radius_m, display_units)}</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(parameters.feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -855,15 +855,15 @@ def render_construction_sheet(
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Elements</th><td>{parameters.element_count}</td></tr>
 <tr><th>Band</th><td>{parameters.frequency_low_hz / 1e6:.3f}-{parameters.frequency_high_hz / 1e6:.3f} MHz</td></tr>
-<tr><th>Longest element</th><td>{parameters.longest_element_length_m:.4f} m</td></tr>
-<tr><th>Shortest element</th><td>{parameters.shortest_element_length_m:.4f} m</td></tr>
+<tr><th>Longest element</th><td>{_length(parameters.longest_element_length_m, display_units)}</td></tr>
+<tr><th>Shortest element</th><td>{_length(parameters.shortest_element_length_m, display_units)}</td></tr>
 <tr><th>Tau</th><td>{parameters.tau:.4f}</td></tr>
 <tr><th>Sigma</th><td>{parameters.sigma:.4f}</td></tr>
-<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
+<tr><th>Boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
 <tr><th>Phase-line Z0</th><td>{parameters.phase_line_impedance_ohm:.1f} Ω</td></tr>
 <tr><th>Phase-line velocity factor</th><td>{parameters.phase_line_velocity_factor:.3f}</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.feed_transformer_ratio:.1f}:1</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -894,13 +894,13 @@ def render_construction_sheet(
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Loops</th><td>{parameters.element_count}</td></tr>
-<tr><th>Driven loop side</th><td>{parameters.loop_side_m:.4f} m</td></tr>
-<tr><th>Reflector side</th><td>{parameters.reflector_side_m:.4f} m</td></tr>
-<tr><th>Reflector spacing</th><td>{parameters.reflector_spacing_m:.4f} m</td></tr>
-<tr><th>Boom length</th><td>{parameters.boom_length_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Driven loop side</th><td>{_length(parameters.loop_side_m, display_units)}</td></tr>
+<tr><th>Reflector side</th><td>{_length(parameters.reflector_side_m, display_units)}</td></tr>
+<tr><th>Reflector spacing</th><td>{_length(parameters.reflector_spacing_m, display_units)}</td></tr>
+<tr><th>Boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Feed height above ground</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(parameters.feed_height_m, display_units)}</td></tr>
 """
         transformer_note = (
             tr(
@@ -930,15 +930,15 @@ def render_construction_sheet(
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Verticals</th><td>{parameters.element_count}</td></tr>
-<tr><th>Element spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
-<tr><th>Vertical element length</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Element spacing</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
+<tr><th>Vertical element length</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
 <tr><th>Phase step</th><td>{parameters.phase_step_deg:.1f}°</td></tr>
 <tr><th>Amplitude taper</th><td>{parameters.amplitude_taper * 100.0:.0f}%</td></tr>
 <tr><th>Radials per element</th><td>{parameters.radial_count}</td></tr>
-<tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
-<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Radial length</th><td>{_length(parameters.radial_length_m, display_units)}</td></tr>
+<tr><th>Total conductor</th><td>{_length(parameters.total_conductor_length_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -974,11 +974,11 @@ def render_construction_sheet(
         )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr("Beverage"))}</td></tr>
-<tr><th>Length</th><td>{parameters.length_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
+<tr><th>Length</th><td>{_length(parameters.length_m, display_units)}</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 <tr><th>Termination</th><td>{termination_row}</td></tr>
-<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Total conductor</th><td>{_length(parameters.total_conductor_length_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1003,14 +1003,14 @@ def render_construction_sheet(
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Loops</th><td>{parameters.loop_count}</td></tr>
-<tr><th>Loop side</th><td>{parameters.loop_side_m:.4f} m</td></tr>
-<tr><th>Stack height</th><td>{parameters.total_height_m:.4f} m</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
-<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
-<tr><th>Reflector</th><td>{_escape(tr("{spacing:.4f} m behind", spacing=parameters.reflector_spacing_m))}</td></tr>
-<tr><th>Total conductor</th><td>{parameters.total_conductor_length_m:.4f} m</td></tr>
+<tr><th>Loop side</th><td>{_length(parameters.loop_side_m, display_units)}</td></tr>
+<tr><th>Stack height</th><td>{_length(parameters.total_height_m, display_units)}</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Feed height</th><td>{_length(parameters.feed_height_m, display_units)}</td></tr>
+<tr><th>Reflector</th><td>{_escape(tr("{spacing} behind", spacing=_length(parameters.reflector_spacing_m, display_units)))}</td></tr>
+<tr><th>Total conductor</th><td>{_length(parameters.total_conductor_length_m, display_units)}</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         transformer_note = (
             tr(
@@ -1036,9 +1036,9 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, RingoParameters):
         feed_rows = f"""
-<tr><th>Radiator length</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
-<tr><th>Ring diameter</th><td>{parameters.ring_diameter_m:.4f} m</td></tr>
-<tr><th>Ring height</th><td>{parameters.ring_height_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{_length(parameters.radiator_height_m, display_units)}</td></tr>
+<tr><th>Ring diameter</th><td>{_length(parameters.ring_diameter_m, display_units)}</td></tr>
+<tr><th>Ring height</th><td>{_length(parameters.ring_height_m, display_units)}</td></tr>
 <tr><th>Ring sides</th><td>{parameters.ring_sides}</td></tr>
 """
         construction_note = _note(
@@ -1052,10 +1052,10 @@ def render_construction_sheet(
     elif isinstance(parameters, JPoleParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
-<tr><th>Radiator length</th><td>{parameters.radiator_height_m:.4f} m</td></tr>
-<tr><th>Stub length</th><td>{parameters.stub_length_m:.4f} m</td></tr>
-<tr><th>Stub spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
-<tr><th>Feed offset</th><td>{parameters.feed_offset_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{_length(parameters.radiator_height_m, display_units)}</td></tr>
+<tr><th>Stub length</th><td>{_length(parameters.stub_length_m, display_units)}</td></tr>
+<tr><th>Stub spacing</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
+<tr><th>Feed offset</th><td>{_length(parameters.feed_offset_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1102,17 +1102,17 @@ def render_construction_sheet(
             )
         return_path_row = f"<tr><th>Return path</th><td>{_escape(return_path_label)}</td></tr>\n"
         coax_shield_row = (
-            f"<tr><th>Coax shield</th><td>{parameters.effective_return_length_m:.4f} m</td></tr>\n"
+            f"<tr><th>Coax shield</th><td>{_length(parameters.effective_return_length_m, display_units)}</td></tr>\n"
             if parameters.coax_shield_active
             else ""
         )
         feed_section_row = (
-            f"<tr><th>Feed section</th><td>{parameters.feed_section_length_m:.4f} m</td></tr>\n"
+            f"<tr><th>Feed section</th><td>{_length(parameters.feed_section_length_m, display_units)}</td></tr>\n"
             if parameters.feed_section_active
             else ""
         )
         installation_return_row = (
-            f"<tr><th>Installation return (proxy)</th><td>{parameters.installation_return_length_m:.4f} m (coax/mast proxy)</td></tr>\n"
+            f"<tr><th>Installation return (proxy)</th><td>{_length(parameters.installation_return_length_m, display_units)} (coax/mast proxy)</td></tr>\n"
             if parameters.installation_return_active
             else ""
         )
@@ -1139,15 +1139,15 @@ def render_construction_sheet(
                     f"({_escape(design_status)})</td></tr>\n"
                 )
         height_rows = (
-            f"<tr><th>Vertical section</th><td>{parameters.bend_vertical_length_m:.4f} m</td></tr>\n"
-            f"<tr><th>Horizontal run</th><td>{parameters.bend_horizontal_length_m:.4f} m</td></tr>\n"
-            f"<tr><th>Top height</th><td>{parameters.bend_top_height_m:.4f} m</td></tr>\n"
+            f"<tr><th>Vertical section</th><td>{_length(parameters.bend_vertical_length_m, display_units)}</td></tr>\n"
+            f"<tr><th>Horizontal run</th><td>{_length(parameters.bend_horizontal_length_m, display_units)}</td></tr>\n"
+            f"<tr><th>Top height</th><td>{_length(parameters.bend_top_height_m, display_units)}</td></tr>\n"
             if parameters.bend_active
-            else f"<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>\n"
+            else f"<tr><th>End height</th><td>{_length(parameters.end_height_m, display_units)}</td></tr>\n"
         )
         feed_rows = f"""
-<tr><th>Wire length</th><td>{parameters.length_m:.4f} m</td></tr>
-{feed_section_row}<tr><th>Feed height</th><td>{parameters.feed_height_m:.4f} m</td></tr>
+<tr><th>Wire length</th><td>{_length(parameters.length_m, display_units)}</td></tr>
+{feed_section_row}<tr><th>Feed height</th><td>{_length(parameters.feed_height_m, display_units)}</td></tr>
 {height_rows}<tr><th>Transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
 <tr><th>Transformer loss</th><td>{_escape(transformer_loss_label)}</td></tr>
 {matching_rows}{design_matching_rows}{return_path_row}<tr><th>Counterpoise</th><td>{counterpoise}</td></tr>
@@ -1291,8 +1291,8 @@ def render_construction_sheet(
 <tr><th>Element lengths</th><td>{_escape(lengths)}</td></tr>
 <tr><th>Included angles</th><td>{_escape(angles)}</td></tr>
 <tr><th>End heights</th><td>{_escape(end_heights)}</td></tr>
-<tr><th>Apex height</th><td>{parameters.apex_height_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Apex height</th><td>{_length(parameters.apex_height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1306,12 +1306,12 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, MoxonParameters):
         feed_rows = f"""
-<tr><th>Element width</th><td>{parameters.width_m:.4f} m</td></tr>
-<tr><th>Element spacing</th><td>{parameters.depth_m:.4f} m</td></tr>
-<tr><th>Reflector tip</th><td>{parameters.reflector_tip_m:.4f} m</td></tr>
-<tr><th>Driven tip</th><td>{parameters.driven_tip_m:.4f} m</td></tr>
-<tr><th>Tip gap</th><td>{parameters.gap_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Element width</th><td>{_length(parameters.width_m, display_units)}</td></tr>
+<tr><th>Element spacing</th><td>{_length(parameters.depth_m, display_units)}</td></tr>
+<tr><th>Reflector tip</th><td>{_length(parameters.reflector_tip_m, display_units)}</td></tr>
+<tr><th>Driven tip</th><td>{_length(parameters.driven_tip_m, display_units)}</td></tr>
+<tr><th>Tip gap</th><td>{_length(parameters.gap_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1329,7 +1329,7 @@ def render_construction_sheet(
         if parameters.driven_folded:
             folded_row = f"""
 <tr><th>Folded driven element</th><td>{_escape(tr("yes"))}</td></tr>
-<tr><th>Fold spacing</th><td>{parameters.driven_fold_spacing_m:.4f} m</td></tr>
+<tr><th>Fold spacing</th><td>{_length(parameters.driven_fold_spacing_m, display_units)}</td></tr>
 """
             transformer_row = (
                 f"<tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>"
@@ -1350,8 +1350,8 @@ def render_construction_sheet(
         if parameters.match_type.value == "beta_hairpin":
             match_row = f"""
 <tr><th>Feed match</th><td>{_escape(tr("beta / hairpin"))}</td></tr>
-<tr><th>Hairpin length</th><td>{parameters.match_length_m:.4f} m</td></tr>
-<tr><th>Hairpin spacing</th><td>{parameters.match_spacing_m:.4f} m</td></tr>
+<tr><th>Hairpin length</th><td>{_length(parameters.match_length_m, display_units)}</td></tr>
+<tr><th>Hairpin spacing</th><td>{_length(parameters.match_spacing_m, display_units)}</td></tr>
 """
             match_note = tr(
                 " A beta/hairpin stub is connected across the {spacing:.4f} m "
@@ -1361,13 +1361,13 @@ def render_construction_sheet(
             )
         feed_rows = f"""
 <tr><th>Elements</th><td>{len(parameters.elements)}</td></tr>
-<tr><th>Boom length</th><td>{max(positions) - min(positions):.4f} m</td></tr>
+<tr><th>Boom length</th><td>{_length(max(positions) - min(positions), display_units)}</td></tr>
 <tr><th>Driven element</th><td>{parameters.driven_index + 1}</td></tr>
 {folded_row}
 {transformer_row}
 {match_row}
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1381,13 +1381,13 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, InvertedLParameters):
         feed_rows = f"""
-<tr><th>Vertical section</th><td>{parameters.vertical_height_m:.4f} m</td></tr>
-<tr><th>Horizontal top run</th><td>{parameters.horizontal_length_m:.4f} m</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
-<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
-<tr><th>Total wire length</th><td>{parameters.total_length_m:.4f} m</td></tr>
+<tr><th>Vertical section</th><td>{_length(parameters.vertical_height_m, display_units)}</td></tr>
+<tr><th>Horizontal top run</th><td>{_length(parameters.horizontal_length_m, display_units)}</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Top height</th><td>{_length(parameters.top_height_m, display_units)}</td></tr>
+<tr><th>Total wire length</th><td>{_length(parameters.total_length_m, display_units)}</td></tr>
 <tr><th>Azimuth</th><td>{parameters.azimuth_deg:.1f}°</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1403,9 +1403,9 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, InvertedVParameters):
         feed_rows = f"""
-<tr><th>Leg length</th><td>{parameters.leg_length_m:.4f} m</td></tr>
-<tr><th>Apex height</th><td>{parameters.apex_height_m:.4f} m</td></tr>
-<tr><th>End height</th><td>{parameters.end_height_m:.4f} m</td></tr>
+<tr><th>Leg length</th><td>{_length(parameters.leg_length_m, display_units)}</td></tr>
+<tr><th>Apex height</th><td>{_length(parameters.apex_height_m, display_units)}</td></tr>
+<tr><th>End height</th><td>{_length(parameters.end_height_m, display_units)}</td></tr>
 <tr><th>Included angle</th><td>{parameters.included_angle_deg:.1f}°</td></tr>
 """
         construction_note = _note(
@@ -1422,7 +1422,7 @@ def render_construction_sheet(
         if parameters.top_hat_enabled:
             top_hat_rows = f"""
 <tr><th>Top hat wires</th><td>{parameters.top_hat_wire_count}</td></tr>
-<tr><th>Top hat radius</th><td>{parameters.top_hat_radius_m:.4f} m</td></tr>
+<tr><th>Top hat radius</th><td>{_length(parameters.top_hat_radius_m, display_units)}</td></tr>
 """
             top_hat_note = tr(
                 " Add {count} horizontal top-hat wires of {radius:.4f} m at the radiator top.",
@@ -1430,12 +1430,12 @@ def render_construction_sheet(
                 radius=parameters.top_hat_radius_m,
             )
         feed_rows = f"""
-<tr><th>Radiator length</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
 <tr><th>Radials</th><td>{parameters.radial_count}</td></tr>
-<tr><th>Radial length</th><td>{parameters.radial_length_m:.4f} m</td></tr>
+<tr><th>Radial length</th><td>{_length(parameters.radial_length_m, display_units)}</td></tr>
 {top_hat_rows}
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1451,9 +1451,9 @@ def render_construction_sheet(
     elif isinstance(parameters, OCFDParameters):
         other_leg_m = max(feed_wire.length_m - feed_offset_m, 0.0)
         feed_rows = f"""
-<tr><th>Feed offset from start</th><td>{feed_offset_m:.4f} m</td></tr>
-<tr><th>Remaining leg</th><td>{other_leg_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed offset from start</th><td>{_length(feed_offset_m, display_units)}</td></tr>
+<tr><th>Remaining leg</th><td>{_length(other_leg_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1465,16 +1465,16 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, MagneticLoopParameters):
         feed_rows = f"""
-<tr><th>Loop diameter</th><td>{parameters.diameter_m:.4f} m</td></tr>
-<tr><th>Loop circumference</th><td>{parameters.circumference_m:.4f} m</td></tr>
-<tr><th>Metal conductor length</th><td>{parameters.loop_conductor_length_m:.4f} m</td></tr>
+<tr><th>Loop diameter</th><td>{_length(parameters.diameter_m, display_units)}</td></tr>
+<tr><th>Loop circumference</th><td>{_length(parameters.circumference_m, display_units)}</td></tr>
+<tr><th>Metal conductor length</th><td>{_length(parameters.loop_conductor_length_m, display_units)}</td></tr>
 <tr><th>Polygon sides</th><td>{parameters.sides}</td></tr>
-<tr><th>Tuning gap</th><td>{parameters.gap_length_m:.4f} m</td></tr>
+<tr><th>Tuning gap</th><td>{_length(parameters.gap_length_m, display_units)}</td></tr>
 <tr><th>Tuning capacitance</th><td>{parameters.tuning_capacitance_f * 1e12:.3f} pF</td></tr>
 <tr><th>Capacitor ESR</th><td>{parameters.capacitor_esr_ohm:.3f} Ω</td></tr>
-<tr><th>Bottom height</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Top height</th><td>{parameters.top_height_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Bottom height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Top height</th><td>{_length(parameters.top_height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1492,18 +1492,18 @@ def render_construction_sheet(
     elif isinstance(parameters, LoopParameters):
         horizontal = parameters.orientation is LoopOrientation.HORIZONTAL
         height_row = (
-            f"<tr><th>Plane height</th><td>{parameters.height_m:.4f} m</td></tr>"
+            f"<tr><th>Plane height</th><td>{_length(parameters.height_m, display_units)}</td></tr>"
             if horizontal
-            else f"<tr><th>Base height</th><td>{parameters.height_m:.4f} m</td></tr>"
+            else f"<tr><th>Base height</th><td>{_length(parameters.height_m, display_units)}</td></tr>"
         )
         feed_rows = f"""
 <tr><th>Orientation</th><td>{_escape(tr(parameters.orientation.value))}</td></tr>
-<tr><th>Side length</th><td>{parameters.side_length_m:.4f} m</td></tr>
+<tr><th>Side length</th><td>{_length(parameters.side_length_m, display_units)}</td></tr>
 {height_row}
 <tr><th>Feed side</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
 <tr><th>Feed location</th><td>{_escape(tr("midpoint of the first side"))}</td></tr>
 <tr><th>Feed transformer</th><td>{parameters.transformer_ratio:g}:1</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         plane = tr("horizontal" if horizontal else "vertical")
         if parameters.transformer_ratio == 1.0:
@@ -1532,10 +1532,10 @@ def render_construction_sheet(
     elif isinstance(parameters, TransmissionLineDoubletParameters):
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
-<tr><th>Dipole length</th><td>{parameters.dipole_total_length_m:.4f} m</td></tr>
-<tr><th>Height</th><td>{parameters.height_m:.4f} m</td></tr>
-<tr><th>Matching line</th><td>{parameters.line_impedance_ohm:g} Ω, {parameters.line_length_m:.4f} m, vf={parameters.line_velocity_factor:.3f}</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Dipole length</th><td>{_length(parameters.dipole_total_length_m, display_units)}</td></tr>
+<tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
+<tr><th>Matching line</th><td>{parameters.line_impedance_ohm:g} Ω, {_length(parameters.line_length_m, display_units)}, vf={parameters.line_velocity_factor:.3f}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1555,13 +1555,13 @@ def render_construction_sheet(
             parameters.wire_radius_m,
         )
         feed_rows = f"""
-<tr><th>Radiator length</th><td>{parameters.radiator_length_m:.4f} m</td></tr>
-<tr><th>Matching section</th><td>{parameters.matching_section_length_m:.4f} m</td></tr>
-<tr><th>Conductor spacing</th><td>{parameters.spacing_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{_length(parameters.radiator_length_m, display_units)}</td></tr>
+<tr><th>Matching section</th><td>{_length(parameters.matching_section_length_m, display_units)}</td></tr>
+<tr><th>Conductor spacing</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
 <tr><th>Estimated stub impedance</th><td>{impedance:.1f} Ω</td></tr>
-<tr><th>Base height</th><td>{parameters.base_height_m:.4f} m</td></tr>
-<tr><th>Radiator height</th><td>{parameters.base_height_m + parameters.matching_section_length_m:.4f} m</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Radiator height</th><td>{_length(parameters.base_height_m + parameters.matching_section_length_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
@@ -1601,12 +1601,12 @@ def render_construction_sheet(
             )
             impedance_ohm = parallel_wire_impedance_ohm(spacing_m, matching_feed.radius_m)
             feed_rows = f"""
-<tr><th>Radiator length</th><td>{radiator.length_m:.4f} m</td></tr>
-<tr><th>Matching stub length</th><td>{matching_feed.length_m:.4f} m</td></tr>
-<tr><th>Conductor spacing</th><td>{spacing_m:.4f} m</td></tr>
+<tr><th>Radiator length</th><td>{_length(radiator.length_m, display_units)}</td></tr>
+<tr><th>Matching stub length</th><td>{_length(matching_feed.length_m, display_units)}</td></tr>
+<tr><th>Conductor spacing</th><td>{_length(spacing_m, display_units)}</td></tr>
 <tr><th>Estimated stub impedance</th><td>{impedance_ohm:.1f} Ω</td></tr>
-<tr><th>Feed/base height</th><td>{feed_height_m:.4f} m</td></tr>
-<tr><th>Radiator height</th><td>{radiator.start.z_m:.4f} m</td></tr>
+<tr><th>Feed/base height</th><td>{_length(feed_height_m, display_units)}</td></tr>
+<tr><th>Radiator height</th><td>{_length(radiator.start.z_m, display_units)}</td></tr>
 """
             construction_note = _note(
                 tr,
@@ -1622,9 +1622,9 @@ def render_construction_sheet(
             total_conductor_m = sum(wire.length_m for wire in antenna.wires)
             feed_rows = f"""
 <tr><th>Wires</th><td>{len(antenna.wires)}</td></tr>
-<tr><th>Total conductor</th><td>{total_conductor_m:.4f} m</td></tr>
+<tr><th>Total conductor</th><td>{_length(total_conductor_m, display_units)}</td></tr>
 <tr><th>Feed wire</th><td>{_escape(antenna.feed.wire_id)}</td></tr>
-<tr><th>Feed height above ground</th><td>{feed_height_m:.4f} m</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
             construction_note = _note(
                 tr,

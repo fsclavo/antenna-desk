@@ -167,12 +167,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with `DisplayUnits`.
 - **U5 report summary and schedule migration.** Construction-sheet and
   HTML/PDF report summary rows, installation profiles, feed/matching rows,
-  loads, transmission lines, BOM totals, feed height, and wire schedules now
-  accept `DisplayUnits`. The wire schedule picks one unit per table and shows it
-  in the HTML header; the PDF schedule uses the same unit. The title block and
-  footer state metric/imperial auto/fixed. CSV stays canonical meters/mm and
-  DXF keeps meter coordinates with `$INSUNITS=6`. `DisplayUnits` now lives in a
-  Qt-free `presentation` module shared by the UI and reporting layers.
+  loads, transmission lines, BOM totals, feed height, family dimension tables,
+  and wire schedules now accept `DisplayUnits`. The wire schedule picks one unit
+  per table and shows it in the HTML header; the PDF schedule uses the same
+  unit. The title block and footer state metric/imperial auto/fixed. CSV stays
+  canonical meters/mm and DXF keeps meter coordinates with `$INSUNITS=6`.
+  `DisplayUnits` now lives in a Qt-free `presentation` module shared by the UI
+  and reporting layers. Construction-prose notes still quote SI meters and
+  remain a follow-up.
 
 ### Changed
 

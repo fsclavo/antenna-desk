@@ -1359,4 +1359,5 @@ def test_construction_sheet_uses_automatic_units(sample_project: Project) -> Non
 
     assert "Metric auto (mm/cm/m, MHz, Ω)" in sheet
     assert "33.00 cm" in sheet
+    assert "16.50 cm from the wire start" in sheet
     assert "Length (cm)" in sheet

@@ -996,14 +996,18 @@ REPORT_SPANISH: dict[str, str] = {
         "la unión superior de la vertical central y los hilos superiores"
     ),
     "{length:.4f} m each": "{length:.4f} m cada uno",
+    "{length} each": "{length} cada uno",
     "{offset:.4f} m from feed": "{offset:.4f} m desde la alimentación",
     "{left:.4f} m, {right:.4f} m from wire start": (
         "{left:.4f} m, {right:.4f} m desde el inicio del hilo"
     ),
+    "{left}, {right} from wire start": "{left}, {right} desde el inicio del hilo",
     "{material} ({conductivity:.3g} S/m)": ("{material} ({conductivity:.3g} S/m)"),
     "{offset:.4f} m from the wire start": "{offset:.4f} m desde el inicio del hilo",
+    "{offset} from the wire start": "{offset} desde el inicio del hilo",
     "{resistance:.1f} Ω to ground": "{resistance:.1f} Ω a tierra",
     "{spacing:.4f} m behind": "{spacing:.4f} m detrás",
+    "{spacing} behind": "{spacing} detrás",
     # HTML report phrases and templates.
     "<strong>Reproducibility.</strong> Model/spec fingerprint <code>{fingerprint}</code> · solver <strong>{solver} {version}</strong> · status <strong>{status}</strong>.": (  # noqa: E501
         "<strong>Reproducibilidad.</strong> Huella del modelo/spec "
