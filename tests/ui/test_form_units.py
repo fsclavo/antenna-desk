@@ -10,16 +10,27 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
-from antennadesk.ui.units import UnitSystem, length_to_m, radius_to_m
+from antennadesk.ui.units import (
+    DisplayUnits,
+    LengthPolicy,
+    UnitSystem,
+    diameter_to_m,
+    length_to_m,
+    radius_to_m,
+)
 from antennadesk.ui.widgets.beverage_form import BeverageForm
 from antennadesk.ui.widgets.biquad_form import BiquadForm
+from antennadesk.ui.widgets.dipole_form import DipoleForm
 from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
 from antennadesk.ui.widgets.hexbeam_form import HexbeamForm
+from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
 from antennadesk.ui.widgets.j_pole_form import JPoleForm
 from antennadesk.ui.widgets.loaded_dipole_form import LoadedDipoleForm
+from antennadesk.ui.widgets.log_periodic_form import LogPeriodicForm
+from antennadesk.ui.widgets.magnetic_loop_form import MagneticLoopForm
 from antennadesk.ui.widgets.moxon_form import MoxonForm
 from antennadesk.ui.widgets.ocfd_form import OCFDForm
 from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
@@ -134,10 +145,29 @@ FORMS = (
         ZeppForm,
         ("_radiator_length", "_matching_length", "_spacing", "_base_height"),
     ),
+    (
+        DipoleForm,
+        ("_length", "_spacing", "_height", "_sag"),
+    ),
+    (
+        InvertedLForm,
+        ("_vertical_height", "_horizontal_length", "_base_height"),
+    ),
+    (
+        MagneticLoopForm,
+        ("_diameter", "_height", "_gap"),
+    ),
+    (
+        LogPeriodicForm,
+        ("_longest_element", "_height"),
+    ),
 )
 
 
-@pytest.mark.parametrize("form_type", [item[0] for item in FORMS])
+@pytest.mark.parametrize(
+    "form_type",
+    [item[0] for item in FORMS if item[0] is not DipoleForm],
+)
 def test_unit_switch_preserves_wire_radius(
     qtbot: QtBot,
     form_type: type[QWidget],
@@ -208,6 +238,21 @@ def test_unit_switch_preserves_physical_lengths(
             abs=0.002,
         )
     assert changes == []
+
+
+def test_dipole_diameter_converts(qtbot: QtBot) -> None:
+    form = DipoleForm(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(form)
+    before_m = diameter_to_m(form._diameter.value(), UnitSystem.METRIC)
+
+    form.set_unit_system(UnitSystem.IMPERIAL)
+
+    assert form._diameter.suffix().strip() == "in"
+    assert diameter_to_m(form._diameter.value(), UnitSystem.IMPERIAL) == pytest.approx(
+        before_m,
+        rel=1e-3,
+        abs=0.002,
+    )
 
 
 def test_vertical_top_hat_radius_converts(qtbot: QtBot) -> None:
@@ -286,3 +331,64 @@ def test_main_window_unit_switch_updates_all_forms(window: MainWindow) -> None:
     assert window._yagi_form._height.suffix().strip() == "ft"
     assert window._endfed_form._length.suffix().strip() == "ft"
     assert window._dirty is False
+
+
+def _physical_length_fields(parameters: object) -> dict[str, float]:
+    from dataclasses import fields
+
+    lengths: dict[str, float] = {}
+    for field in fields(parameters):
+        value = getattr(parameters, field.name)
+        if (
+            field.name.endswith("_m")
+            and "radius" not in field.name
+            and "diameter" not in field.name
+            and isinstance(value, (int, float))
+        ):
+            lengths[field.name] = float(value)
+    return lengths
+
+
+@pytest.mark.parametrize("form_type", [item[0] for item in FORMS])
+def test_auto_unit_switch_preserves_physical_lengths(
+    qtbot: QtBot,
+    form_type: type[QWidget],
+) -> None:
+    translator = Translator(Language.ENGLISH)
+    form = form_type(
+        translator,
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    before = _physical_length_fields(form.parameters())
+    changes: list[bool] = []
+    form.changed.connect(lambda: changes.append(True))
+
+    form.set_unit_system(UnitSystem.IMPERIAL)
+
+    after = _physical_length_fields(form.parameters())
+    assert set(after) == set(before)
+    for name, meters in before.items():
+        assert after[name] == pytest.approx(meters, rel=1e-3, abs=0.002)
+    assert changes == []
+
+
+@pytest.mark.parametrize(("form_type", "length_fields"), FORMS)
+def test_auto_unit_suffix_is_frozen_while_editing(
+    qtbot: QtBot,
+    form_type: type[QWidget],
+    length_fields: tuple[str, ...],
+) -> None:
+    form = form_type(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    field = getattr(form, length_fields[0])
+    suffix = field.suffix()
+
+    field.setValue(field.value() * 1.05 + field.singleStep())
+
+    assert field.suffix() == suffix

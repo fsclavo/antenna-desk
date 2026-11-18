@@ -67,12 +67,17 @@ class LogPeriodicForm(QWidget):
         unit_system: UnitSystem,
         parameters: LogPeriodicParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="log_periodic")
         self._unit_system = unit_system
-        self._display_units = DisplayUnits(unit_system, LengthPolicy.AUTO)
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.AUTO,
+        )
         self._table_unit: LengthUnit = "m" if unit_system is UnitSystem.METRIC else "ft"
         self._updating = False
         self._last_frequency_low_mhz = 28.0

@@ -150,6 +150,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   meters, so mixed auto units cannot clamp or reinterpret the bend geometry.
   The shared `LengthField` now exposes a dynamic physical range and a value
   setter that keeps the chosen display unit.
+- **U3 family-editor audit.** Every antenna-family editor now uses
+  `LengthFieldSpec`, and the editable Yagi, log-periodic, and fan-dipole tables
+  use one unit per table. New parameterized tests cover all 26 forms for
+  automatic metric/imperial round-trips and frozen field suffixes while
+  editing, alongside the existing fixed-unit and radius coverage.
 
 ### Changed
 

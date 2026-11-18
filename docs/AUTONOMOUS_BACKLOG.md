@@ -136,7 +136,7 @@ external service and must not be invented or simulated into existence.
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
 | ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
-| U3 | Adaptive units in antenna-family forms and tables | M–L | U1 | **Partially delivered 2026-11-17:** the Moxon height field no longer inherits Qt's `99.99` maximum; the hexbeam tip/feed gaps and element separation can represent 435 MHz values; the editable Yagi table now uses one unit per table with the unit in the header (m at 145 MHz, cm at 435 MHz), the log-periodic table follows the same per-table rule, the global length floor is lowered to 1 mm / 0.003 ft for small UHF features, the shared `LengthFieldSpec`/`LengthField` helper is in place, the discone cone fields plus base height/disc gap, Moxon width/depth/tips/height, hexbeam driver/reflector/radius/gaps/height, quad-beam loop/spacings/height, trap-Yagi driven/spacings/trap-inset/height, phased-vertical spacing/height/base/radials, vertical height/base/radials/coil offset/top-hat radius, OCFD length/height, beverage length/height, and fan-dipole apex height plus its editable table, inverted-L height/length/base, inverted-V apex/leg, magnetic-loop diameter/height/gap, biquad side/spacing/base, Ringo radiator/diameter/height, trap-dipole inner/outer/height, loaded-dipole length/height/link offset, the main dipole/folded-dipole/loop length/spacing/height/sag fields, SCV horizontal/vertical/base/feed offset, T2FD length/spacing/height, Zepp radiator/matching/spacing/base, J-pole/Slim-Jim dimensions, the transmission-line-doublet dipole/height/feed/line dimensions, Yagi height/taper/fold/match details, log-periodic longest-element/height fields, and end-fed length/feed-section/heights/bend/coil/counterpoise/installation-return dimensions use `LengthFieldSpec`/per-table units. Remaining: wire every family editor to `LengthFieldSpec` and `DisplayUnits`, freeze field units while editing, migrate the remaining editable/report tables, and audit every small-feature field. Acceptance remains: physical values survive metric/imperial and auto/fixed switches, no silent clamping, updated table headers/help, and UI tests. |
+| ~~U3~~ | ~~Adaptive units in antenna-family forms and tables~~ | M–L | U1 | **Done 2026-11-18:** all 26 family editors use `LengthFieldSpec`, including the discone, Moxon, hexbeam, quad beam, trapped Yagi, phased vertical, vertical, OCFD, beverage, fan dipole, dipoles/folded dipole/loop, inverted L/V, magnetic loop, biquad, Ringo, SCV, T2FD, Zepp, J-pole, transmission-line doublet, Yagi, log-periodic, and end-fed fields. The editable Yagi, log-periodic, and fan-dipole tables choose one unit per table and show it in the header; radius/diameter cells stay mm/in. The global length floor is 1 mm / 0.003 ft for small UHF features, and all forms are covered by fixed and automatic metric/imperial round-trip tests plus a frozen-suffix edit test. Acceptance met: physical values survive unit/policy switches, no silent clamping, table headers updated, and UI tests pass. |
 | U4 | Adaptive units in optimization, synthesis, and auxiliary dialogs | M | U1, U3 | Apply the same policy to optimization, family optimization, synthesis, parameter sweep, robustness, tolerance, design-from-frequency, feed-line, and related length surfaces. Audit `length_bounds` callers and per-field ranges; keep plot axes and budgets legible. Acceptance: dialog tests for auto/fixed and metric/imperial, no range regressions, EN/ES help, no solver change. |
 | U5 | Adaptive units in construction sheets and human-readable reports | M–L | U1, U2, U3 | Format design-summary rows, wire schedule, BOM, feed/matching rows, and report tables with `DisplayUnits`; update the title block to state auto/fixed metric or imperial. SVG/PNG/PDF figures follow the UI. CSV stays canonical meters/mm; DXF stays canonical meters with meter dimension text and `$INSUNITS=6`. Acceptance: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. |
 | U6 | Units documentation, help audit, and visual QA | S–M | U2–U5 | Update the user guide and changelog; verify the EN/ES help manifest for the Units preference and table headers; run light/dark and font-scaling QA on the sketch, forms, and construction sheet; re-run the full gate. Acceptance: documentation links, help coverage, manual QA notes, full gate green. |
@@ -204,9 +204,9 @@ against the published 0.61 m. C6 corrects the topology before C7 nests bands.
 
 ## Adaptive length display units (queued 2026-11-17)
 
-**Status:** spec closed; implementation started. U0–U2 are complete; U3 is
-partially delivered (range fixes only); U3 remainder–U6 are queued. The release
-plan decides whether the track lands in 0.10.0 or a later release.
+**Status:** spec closed; implementation started. U0–U3 are complete; U4–U6 are
+queued. The release plan decides whether the track lands in 0.10.0 or a later
+release.
 **Decision:** [ADR-0044](ADR/0044-adaptive-length-display-units.md).
 **Normative spec:** [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md).
 
@@ -2825,13 +2825,13 @@ model and solver contract must land first.
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
     unchanged. No new translation or help keys. The UX queue is now closed.
-19. **U1 and U2 are complete; U3 is partial.** The shared `DisplayUnits`
-    formatter, Units preference, adaptive geometry scenes, unit-aware scale
-    bar, and tightened anchor tolerance are in place. U3 delivered the Moxon
-    height and hexbeam UHF gap range fixes; the full family-form/table
-    migration remains queued. Continue with the U3 remainder, then U4–U6.
-    Forms and reports still use the previous fixed presentation until their
-    slices land. Prepare the release after the agreed display-units scope.
+19. **U1–U3 are complete.** The shared `DisplayUnits` formatter, Units
+    preference, adaptive geometry scenes, unit-aware scale bar, and tightened
+    anchor tolerance are in place. U3 now covers every family editor, the three
+    editable family tables, the small-feature floor, and fixed/automatic
+    metric/imperial round-trip tests. Continue with U4 dialogs, U5 reports, and
+    U6 documentation/QA. Prepare the release after the remaining display-units
+    scope.
 
 ## Technical debt pass (2026-11-08)
 
@@ -2862,10 +2862,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,448 passed, 1 skipped** on 2026-11-18 after the U3 end-fed
-  form migration, with `NEC2C` and the optional `cross-engine` group; the skip
-  is the Windows-only console-hiding test on Linux. Rerun without PyNEC if the
-  environment lacks it.
+- Full gate: **3,508 passed, 1 skipped** on 2026-11-18 after the U3
+  family-editor and table audit, with `NEC2C` and the optional `cross-engine`
+  group; the skip is the Windows-only console-hiding test on Linux. Rerun
+  without PyNEC if the environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run
