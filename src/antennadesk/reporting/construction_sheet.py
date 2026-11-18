@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import html
 import math
+import re
 from pathlib import Path
 
 from ..domain.antennas.beverage import BeverageParameters
@@ -201,10 +202,40 @@ def _network_branch_text(inductance_h: float, capacitance_f: float) -> str:
     return "—"
 
 
-def _note(labeler: Labeler, template: str, **values: object) -> str:
+def _render_note(
+    labeler: Labeler,
+    template: str,
+    *,
+    display_units: DisplayUnits | None = None,
+    **values: object,
+) -> str:
     """Render one localized construction paragraph."""
 
-    return f"<p>{labeler(template, **values)}</p>"
+    if display_units is None:
+        return f"<p>{labeler(template, **values)}</p>"
+    names = re.findall(r"\{(\w+)(?::[^}]*)?\} m", template)
+    lengths: list[float] = []
+    for name in names:
+        raw = values.get(name)
+        try:
+            lengths.append(float(raw))  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+    if not lengths:
+        return f"<p>{labeler(template, **values)}</p>"
+    unit = display_units.unit_for(max(lengths))
+    factor = display_units.meters_per_unit(unit)
+    decimals = display_units.decimals_for(unit)
+    converted = dict(values)
+    for name in names:
+        raw = values.get(name)
+        try:
+            meters = float(raw)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            continue
+        converted[name] = f"{meters / factor:.{decimals}f}"
+    text = labeler(template, **converted).replace(" m", f" {unit}")
+    return f"<p>{text}</p>"
 
 
 def _resonance_text(result: SimulationResult | None, tr: Labeler) -> str:
@@ -303,6 +334,15 @@ def render_construction_sheet(
     tr = labeler or identity_labeler
     parameters = design.parameters
     antenna = design.antenna
+
+    def _note(labeler: Labeler, template: str, **values: object) -> str:
+        return _render_note(
+            labeler,
+            template,
+            display_units=display_units,
+            **values,
+        )
+
     feed_detail = feed_connection_detail(
         parameters,
         antenna,

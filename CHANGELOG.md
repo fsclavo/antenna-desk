@@ -173,8 +173,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unit. The title block and footer state metric/imperial auto/fixed. CSV stays
   canonical meters/mm and DXF keeps meter coordinates with `$INSUNITS=6`.
   `DisplayUnits` now lives in a Qt-free `presentation` module shared by the UI
-  and reporting layers. Construction-prose notes still quote SI meters and
-  remain a follow-up.
+  and reporting layers.
+- **U5 construction notes and family dimensions.** Every family-specific
+  construction dimension row now uses `DisplayUnits`, and construction-prose
+  notes choose one unit per note from their largest length while preserving the
+  canonical geometry. Fixed-unit callers retain the previous four-decimal meter
+  presentation. This closes U5.
 
 ### Changed
 
