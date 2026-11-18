@@ -2862,8 +2862,8 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **54**.
-- Full gate: **3,520 passed, 1 skipped** on 2026-11-18 after the first U5
-  reporting slice, with `NEC2C` and the optional `cross-engine` group; the skip
+- Full gate: **3,524 passed, 1 skipped** on 2026-11-18 after the canonical-input
+  regression tests, with `NEC2C` and the optional `cross-engine` group; the skip
   is the Windows-only console-hiding test on Linux. Rerun without PyNEC if the
   environment lacks it.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`

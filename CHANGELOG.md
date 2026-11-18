@@ -155,6 +155,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   use one unit per table. New parameterized tests cover all 26 forms for
   automatic metric/imperial round-trips and frozen field suffixes while
   editing, alongside the existing fixed-unit and radius coverage.
+- **Canonical-result regressions.** New tests assert that unit changes preserve
+  the canonical Moxon solver geometry, design-from-frequency estimates, bounded
+  optimization bounds, and synthesis variable bounds. These complement the
+  unchanged solver/domain suites and prove that the presentation work does not
+  alter simulation, estimation, or optimization inputs.
 - **U4 optimization and synthesis dialogs.** The bounded length optimizer,
   family-optimizer boom/turning constraints, feed-line length, G5RV/ZS6BKW
   heights, synthesis bounds, and design-from-frequency height/base/end fields
