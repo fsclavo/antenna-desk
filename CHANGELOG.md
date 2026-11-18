@@ -62,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   length unit per table from its largest position/length and shows it in the
   header: meters at 145 MHz and centimeters at 435 MHz. Radius cells remain
   mm/in. The table unit re-evaluates on frequency, preset, and model loads.
+- **Adaptive log-periodic table.** The read-only element table follows the same
+  per-table unit policy and shows the selected unit in its headers.
 
 ### Changed
 

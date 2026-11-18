@@ -148,3 +148,14 @@ def test_log_periodic_dialog_accepts_a_valid_design(qtbot: QtBot) -> None:
     dialog._accept()
 
     assert isinstance(dialog.result_parameters(), LogPeriodicParameters)
+
+
+def test_log_periodic_table_uses_cm_at_uhf(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.log_periodic import log_periodic_parameters
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._form.set_parameters(log_periodic_parameters(frequency_hz=435_000_000.0))
+
+    assert "(cm)" in dialog._form._table.horizontalHeaderItem(1).text()
+    assert "(cm)" in dialog._form._table.horizontalHeaderItem(2).text()

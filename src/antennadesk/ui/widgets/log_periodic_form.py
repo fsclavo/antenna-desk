@@ -41,6 +41,9 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
+    LengthUnit,
     UnitSystem,
     height_bounds,
     length_bounds,
@@ -70,6 +73,8 @@ class LogPeriodicForm(QWidget):
         self._translator = translator
         self._labels = FormLabels(translator, self, family="log_periodic")
         self._unit_system = unit_system
+        self._display_units = DisplayUnits(unit_system, LengthPolicy.AUTO)
+        self._table_unit: LengthUnit = "m" if unit_system is UnitSystem.METRIC else "ft"
         self._updating = False
         self._last_frequency_low_mhz = 28.0
 
@@ -273,6 +278,7 @@ class LogPeriodicForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
+        self._display_units = DisplayUnits(unit_system, self._display_units.length_policy)
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
         previous_updating = self._updating
@@ -345,9 +351,9 @@ class LogPeriodicForm(QWidget):
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("log_periodic.element"),
-                self._translator.t("log_periodic.length"),
-                self._translator.t("log_periodic.spacing"),
-                self._translator.t("log_periodic.position"),
+                f"{self._translator.t('log_periodic.length')} ({self._table_unit})",
+                f"{self._translator.t('log_periodic.spacing')} ({self._table_unit})",
+                f"{self._translator.t('log_periodic.position')} ({self._table_unit})",
             ]
         )
         fit_header_sections(self._table)
@@ -431,6 +437,8 @@ class LogPeriodicForm(QWidget):
         lengths = parameters.element_lengths_m
         spacings = parameters.element_spacings_m
         positions = parameters.element_positions_m
+        self._table_unit = self._display_units.table_unit((*lengths, *spacings, *positions))
+        self._retranslate_table_headers()
         self._table.setRowCount(len(lengths))
         for row, (length, position) in enumerate(zip(lengths, positions, strict=True)):
             spacing = "" if row == 0 else self._format_length(spacings[row - 1])
@@ -446,7 +454,8 @@ class LogPeriodicForm(QWidget):
                 self._table.setItem(row, column, item)
 
     def _format_length(self, value_m: float) -> str:
-        return f"{length_from_m(value_m, self._unit_system):.3f}"
+        value = value_m / self._display_units.meters_per_unit(self._table_unit)
+        return f"{value:.{self._display_units.decimals_for(self._table_unit)}f}"
 
     def _update_geometry(self) -> None:
         try:
