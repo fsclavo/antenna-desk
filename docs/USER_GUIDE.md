@@ -580,6 +580,14 @@ conductor diameter. The same check runs in the domain model and the family
 optimizer. A scaled reference whose gap cannot clear a thick wire is reported
 as unsupported rather than silently changing the conductor.
 
+**Design → Estimate Dimensions...** is reference-scaled only inside the 20 m
+band (14.0–14.35 MHz); the exact 14.17 MHz dimensions are preserved. Outside
+that band the estimate is heuristic, with a wider tolerance and a warning that
+the wire radius is not scaled. The scaled gap must clear two conductor
+diameters; if it does not, the estimate is rejected. Reduce the wire radius or
+use a higher frequency, and verify the high-frequency Moxon with simulation or
+measurement.
+
 ## Create a log-periodic array
 
 Choose **File → New Antenna... → Log-periodic (LPDA)** to generate a

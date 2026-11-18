@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Moxon high-frequency estimate policy.** The Cebik 20 m Moxon is
+  reference-scaled only inside the 20 m band (14.0–14.35 MHz). Outside it, the
+  estimate is explicitly heuristic with a wider `max(5% width, gap)` tolerance,
+  an extrapolation assumption, and a high-frequency warning that the wire
+  radius is not scaled. The starting gap must clear two conductor diameters;
+  otherwise the estimate is unsupported. The 14.17 MHz reference stays exact,
+  the 28.5 MHz default stays heuristic, and no high-frequency published
+  reference is implied.
 - **High-frequency Yagi bounds and QA.** The Yagi optimizer no longer uses the
   absolute 0.05 m element floor or 0.01 m steps. Element, gap, height, folded,
   and beta-hairpin bounds are relative to the current frequency-scaled design,

@@ -421,6 +421,49 @@ def test_moxon_scales_the_published_reference() -> None:
     assert parameters.depth_m == pytest.approx(reference.depth_m)
     assert parameters.reflector_tip_m == pytest.approx(reference.reflector_tip_m)
     assert parameters.driven_tip_m == pytest.approx(reference.driven_tip_m)
+    assert estimate.confidence is Confidence.REFERENCE_SCALED
+    assert estimate.assumptions == ("estimator.assumption.reference_scaling",)
+    assert "estimator.warning.moxon_high_frequency" not in estimate.warnings
+
+
+def test_moxon_estimate_outside_the_20m_band_is_heuristic() -> None:
+    estimate = estimate_intent(
+        _intent("moxon", frequency_hz=28_500_000.0, height_m=10.0, wire_radius_m=0.001)
+    )
+
+    assert estimate.confidence is Confidence.HEURISTIC
+    assert "estimator.assumption.moxon_extrapolation" in estimate.assumptions
+    assert "estimator.warning.moxon_high_frequency" in estimate.warnings
+    assert estimate.tolerance_m >= estimate.parameters.gap_m
+    assert estimate.tolerance_m == pytest.approx(estimate.parameters.width_m * 0.05)
+
+
+def test_moxon_estimate_at_2_4_ghz_is_heuristic_and_radius_aware() -> None:
+    estimate = estimate_intent(
+        _intent(
+            "moxon",
+            frequency_hz=2_400_000_000.0,
+            height_m=1.0,
+            wire_radius_m=0.0002,
+        )
+    )
+
+    assert estimate.confidence is Confidence.HEURISTIC
+    assert "estimator.warning.moxon_high_frequency" in estimate.warnings
+    assert estimate.tolerance_m >= estimate.parameters.gap_m
+    assert estimate.parameters.gap_m > 4.0 * 0.0002
+
+
+def test_moxon_estimate_rejects_a_gap_below_two_conductor_diameters() -> None:
+    with pytest.raises(UnsupportedEstimateError, match="starting clearance"):
+        estimate_intent(
+            _intent(
+                "moxon",
+                frequency_hz=2_400_000_000.0,
+                height_m=1.0,
+                wire_radius_m=0.0005,
+            )
+        )
 
 
 def test_custom_geometry_is_explicitly_unsupported() -> None:

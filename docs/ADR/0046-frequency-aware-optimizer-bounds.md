@@ -221,7 +221,7 @@ The implementation is sliced in
 | HF3 | Frequency-aware bounds across all families | Implemented 2026-11-18 |
 | HF4 | Moxon geometry contract, gap variable, and constraints | Implemented 2026-11-18 |
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | Implemented 2026-11-18 |
-| HF6 | Moxon high-frequency estimator, radius, and confidence | Queued |
+| HF6 | Moxon high-frequency estimator, radius, and confidence | Implemented 2026-11-18 |
 | HF7 | Thin-wire model-quality gate | Queued |
 | HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Queued |
 | HF9 | Regression matrix, evidence, and documentation | Queued |
@@ -278,9 +278,10 @@ not gain/SWR references, and they do not encode the control's 4.86 mm gap.
 The 0.67λ failure is rejected by the gap/λ and gap/depth checks. Tests cover
 the exact Cebik dimensions, 28.5/144/435/1500/2400 MHz scaled references, the
 0.67λ and conductor-clearance rejections, the optimizer rebuild, and the UI
-warning. Until HF6, the estimator scales the Cebik gap directly; if the scaled
-gap cannot clear the conductor, it reports an explicit unsupported estimate
-instead of silently changing the wire radius.
+warning. HF6 adds a radius-aware two-diameter starting clearance and the
+high-frequency confidence/tolerance policy; the estimator still scales the
+Cebik gap directly, but rejects a gap that cannot clear the conductor instead
+of silently changing the wire radius.
 
 ### HF5 implementation note
 
@@ -295,6 +296,23 @@ empty taper violations, span-normalized steps, and exact rebuild. Real NEC2C
 smoke runs cover 2.4 GHz 15/32 elements and 5.8 GHz 5/15 elements and assert
 completion, finite R/X, and no solver error; they make no gain or pattern
 claim.
+
+### HF6 implementation note
+
+The Cebik 20 m Moxon estimator is reference-scaled only inside the 20 m
+amateur band (14.0–14.35 MHz). Outside it, the estimate is explicitly
+heuristic: `Confidence.HEURISTIC`, an extrapolation assumption, a high-frequency
+warning that states the wire radius is not scaled, and a tolerance of
+`max(5% width, gap)` so the tolerance is never smaller than the gap. The
+14.17 MHz dimensions remain exact; the 28.5 MHz editor default remains a
+documented heuristic. No 2.4 GHz published reference was invented.
+
+The starting geometry is radius-aware at the construction boundary: if the
+scaled gap is below two conductor diameters, the estimate raises
+`UnsupportedEstimateError` instead of returning a design whose gap is
+comparable to the wire. This is a starting-clearance rule, not a performance
+claim. A later source or measurement can be recorded separately if one becomes
+available.
 
 ## Test contract
 

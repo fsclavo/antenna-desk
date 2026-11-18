@@ -77,6 +77,13 @@ from .yagi_reference import MAX_YAGI_ELEMENTS, MIN_YAGI_ELEMENTS, dl6wu_elements
 ENDFED_TRANSFORMER_RATIO = 49.0
 ENDFED_COUNTERPOISE_FACTOR = 0.05
 
+# The Cebik 20 m wire Moxon is the only independently published reference in
+# this family. Scaling it inside the 20 m amateur band is reference-scaled;
+# everything else is a labelled heuristic extrapolation. The starting gap must
+# clear two conductor diameters so the thin-wire geometry is buildable.
+MOXON_REFERENCE_BAND_HZ = (14_000_000.0, 14_350_000.0)
+MOXON_MIN_STARTING_GAP_DIAMETERS = 2.0
+
 
 class UnsupportedEstimateError(ValueError):
     """The requested family or intent has no estimator."""
@@ -665,17 +672,40 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
             f"a vertical Moxon at {intent.frequency_hz / 1e6:.3f} MHz needs "
             "a higher height_m; increase height_m or use horizontal polarization"
         ) from exc
+    minimum_gap_m = 2.0 * MOXON_MIN_STARTING_GAP_DIAMETERS * intent.wire_radius_m
+    if parameters.gap_m < minimum_gap_m:
+        raise UnsupportedEstimateError(
+            f"the scaled Moxon at {intent.frequency_hz / 1e6:.3f} MHz has a "
+            f"{parameters.gap_m * 1000.0:.3f} mm gap, below the "
+            f"{minimum_gap_m * 1000.0:.3f} mm two-diameter starting clearance "
+            f"for a {intent.wire_radius_m * 1000.0:.3f} mm wire radius; "
+            "reduce wire_radius_m"
+        )
+    reference_scaled = (
+        MOXON_REFERENCE_BAND_HZ[0] <= intent.frequency_hz <= MOXON_REFERENCE_BAND_HZ[1]
+    )
+    warnings = [
+        "estimator.warning.starting_point",
+        "estimator.warning.moxon_gap",
+    ]
+    if not reference_scaled:
+        warnings.append("estimator.warning.moxon_high_frequency")
     return DimensionEstimate(
         parameters=parameters,
         method_id="moxon.cebik_20m_scaled",
-        confidence=Confidence.REFERENCE_SCALED,
-        tolerance_m=parameters.width_m * 0.02,
-        source_ids=(SOURCE_CEBIK_MOXON,),
-        assumptions=("estimator.assumption.reference_scaling",),
-        warnings=(
-            "estimator.warning.starting_point",
-            "estimator.warning.moxon_gap",
+        confidence=(Confidence.REFERENCE_SCALED if reference_scaled else Confidence.HEURISTIC),
+        tolerance_m=(
+            parameters.width_m * 0.02
+            if reference_scaled
+            else max(parameters.width_m * 0.05, parameters.gap_m)
         ),
+        source_ids=(SOURCE_CEBIK_MOXON,),
+        assumptions=(
+            "estimator.assumption.reference_scaling"
+            if reference_scaled
+            else "estimator.assumption.moxon_extrapolation",
+        ),
+        warnings=tuple(warnings),
         rows=(
             _length_row("geometry.width", parameters.width_m),
             _length_row("geometry.depth", parameters.depth_m),

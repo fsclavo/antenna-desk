@@ -167,7 +167,7 @@ external service and must not be invented or simulated into existence.
 | ~~HF3~~ | ~~Replace absolute length floors with frequency-aware bounds~~ | L | HF1, HF2 | **Done 2026-11-18:** `_length`/`around` now use relative bounds around the current frequency-scaled design; the old 0.1/0.5/0.05 m practical floors were removed. Remaining absolute floors are genuine: zero for heights/base planes, conductor clearance for gaps/spacings/tips, the end-fed feed-section structure, electrical component minima, and the biquad small-feature reference. Variable steps are span-normalized. A 1.8–5800 MHz matrix covers all supported optimizer families; a genuine conductor-floor violation still returns an explicit HF2 unavailable reason. No universal frequency cutoff was invented. |
 | ~~HF4~~ | ~~Moxon geometry contract, gap variable, and constraints~~ | M–L | HF1–HF3 | **Done 2026-11-18:** added a shared `validate_moxon_geometry` used by the domain constructor, optimizer descriptor, and editor warning. The family optimizer exposes `gap_m` directly and derives the driven tip; the two redundant tip variables are gone. Gap/λ, gap/depth, gap/width, width/depth, tip/depth, and tip-sum envelopes are anchored to the Cebik 14.17 MHz reference and the exploratory 2.4 GHz control, with a hard conductor-clearance check. The 0.67λ failure is rejected. Tests cover 14.17/28.5/144/435/1500/2400 MHz, the exact reference, the optimizer rebuild, and the UI warning. No schema change. |
 | ~~HF5~~ | ~~Yagi wavelength-relative bounds and high-element-count QA~~ | M | HF1–HF3 | **Done 2026-11-18:** the Yagi descriptor uses only relative bounds around the current normalized design; element, gap, height, fold-spacing, and hairpin bounds are radius-relative and steps are span-normalized. The 0.05 m element floor is gone. Tests cover 5/10/15/20/32 elements at 1.5/2.4/5.8 GHz, the DL6WU taper constraints, exact rebuild, and folded/beta-hairpin variables. Real NEC2C smoke runs complete for 2.4 GHz 15/32 elements and 5.8 GHz 5/15 elements with finite R/X; no gain claim. |
-| HF6 | Moxon high-frequency estimator, radius, and confidence policy | M | HF1, HF4 | **Queued 2026-11-18:** document the valid linear-scaling envelope; make the starting gap radius-aware; downgrade confidence and tolerance outside the envelope; add a strong warning and EN/ES help; keep 14.17 MHz exact; do not invent a high-frequency reference. |
+| ~~HF6~~ | ~~Moxon high-frequency estimator, radius, and confidence policy~~ | M | HF1, HF4 | **Done 2026-11-18:** the Cebik 20 m Moxon is reference-scaled only inside the 20 m band (14.0–14.35 MHz); outside it is explicitly heuristic with a high-frequency warning, an extrapolation assumption, and tolerance `max(5% width, gap)`. The starting gap must clear two conductor diameters or the estimate is unsupported. The 14.17 MHz reference stays exact; the 28.5 MHz default is heuristic; no 2.4 GHz published reference was invented. EN/ES warning and estimator-guide policy added. |
 | HF7 | Thin-wire model-quality gate for high-frequency optimization | M–L | HF1, HF2 | **Queued 2026-11-18:** define segment/radius and Moxon-gap resolution policy; expose or select the extended thin-wire kernel; block candidates with errors or unacceptable warnings; test 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi with and without the extended kernel; document the chosen default. |
 | HF8 | High-frequency optimizer diagnostics, defaults, and Apply Best guard | M | HF4–HF6 | **Queued 2026-11-18:** enable bound-hit diagnostics for all families; show initial versus clamped values, gap/λ, and gap/radius; review the Moxon default objective; block or confirm **Apply Best** on implausible geometry; use adaptive units in the optimizer table; EN/ES help and tests. |
 | HF9 | High-frequency regression matrix, evidence, and documentation | M | HF2–HF8 | **Queued 2026-11-18:** add the frequency/family matrix, an old-behavior regression for the 2.4 GHz Moxon gap, invariant and solver-completion assertions, and a no-silent-clamp check; update the ADR, estimator guide, user guide, and `CHANGELOG.md`; make no accuracy claim without a traceable source. |
@@ -179,9 +179,9 @@ external service and must not be invented or simulated into existence.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-**Status:** HF1–HF5 are implemented on 2026-11-18;
+**Status:** HF1–HF6 are implemented on 2026-11-18;
 [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) is the accepted
-contract. HF6–HF10 are queued; HF6–HF8 are the high-frequency fidelity slice,
+contract. HF7–HF10 are queued; HF7–HF8 are the high-frequency fidelity slice,
 and HF9 closes the track.
 
 **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
@@ -335,10 +335,10 @@ These are construction-validity limits anchored to the Cebik 20 m reference
 control (gap/λ 0.039, gap/depth 0.282, gap/width 0.108). They are not
 performance values and do not encode the control's 4.86 mm gap. The domain
 constructor, optimizer validation, and editor warning share the same function;
-a 0.67λ gap is rejected before optimization. The pre-HF6 estimator still scales
-the Cebik gap directly, so a scaled gap that cannot clear the conductor is
-reported as an explicit unsupported estimate rather than silently changing the
-wire radius.
+a 0.67λ gap is rejected before optimization. The estimator scales the Cebik gap
+directly; HF6 adds a radius-aware two-diameter starting clearance and a
+high-frequency confidence/tolerance policy, so an unbuildable thin-wire gap is
+reported explicitly rather than silently changing the wire radius.
 
 Requirements:
 
@@ -395,6 +395,16 @@ Requirements:
 - No solver or schema change.
 
 ### HF6 — Moxon high-frequency estimator
+
+**Implemented 2026-11-18.** The Cebik 20 m reference is reference-scaled only
+inside the 20 m amateur band (14.0–14.35 MHz). Outside that band the estimate is
+`Confidence.HEURISTIC`, carries `estimator.assumption.moxon_extrapolation`, and
+emits `estimator.warning.moxon_high_frequency`. Its tolerance is
+`max(5% width, gap)`, so it is never smaller than the gap. The wire radius is
+not scaled; the starting gap must clear two conductor diameters or the estimate
+is explicitly unsupported. The 14.17 MHz reference remains exact, the 28.5 MHz
+editor default remains heuristic, and no high-frequency published reference was
+invented.
 
 Requirements:
 
@@ -3725,8 +3735,8 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,761 passed, 1 skipped** on 2026-11-18 after the HF5 Yagi
-  high-frequency bounds and QA, with `NEC2C` auto-detected by the test
+- Full gate: **3,764 passed, 1 skipped** on 2026-11-18 after the HF6 Moxon
+  high-frequency estimator policy, with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults

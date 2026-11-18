@@ -68,7 +68,7 @@ warnings, and a dimension tolerance.
 | Zepp | 0.5λ radiator above a 0.25λ two-wire stub; spacing and radius set the stub impedance | empirical | Published 3/4-wave topology; the real second conductor is modeled, but the 1:1 choke and common-mode current are not |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; the editor starts at 145 MHz with the NBS five-element preset scaled from its 50.1 MHz reference; optimize for the target; horizontal or vertical polarization; a folded driven element starts with an ideal 4:1 transformer |
-| Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled | The editor starts at 28.5 MHz with the Cebik reference scaled from 14.17 MHz; gap and tips are sensitive; horizontal or vertical polarization. If the scaled gap cannot clear the conductor, the estimate is reported unsupported until the HF6 radius-aware policy lands. |
+| Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled only in the 20 m band; heuristic outside | The 14.17 MHz dimensions are exact and the 14.0–14.35 MHz band is reference-scaled. Outside it the estimate is heuristic with tolerance `max(5% width, gap)` and a high-frequency warning; the wire radius is not scaled. A scaled gap below two conductor diameters is unsupported. The 28.5 MHz editor default is heuristic; horizontal or vertical polarization is kept. |
 | Quad beam | quarter-wave side, fifth-wave spacing; 4:1 ideal transformer for 2 elements and 2:1 for 3 | heuristic | Starting geometry; tune the loop side to resonance; feedpoint impedance is not independently validated |
 | Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
 | Beverage | length `1.0λ`; height and termination from the editor | heuristic | Receiving antenna; the termination and low gain are not independently validated |
@@ -516,6 +516,16 @@ parameters. Both polarizations keep the boom horizontal. Vertical geometry
 uses `height_m` as the boom centerline and fails when the longest element would
 reach the ground, so the user must raise the boom before applying the estimate.
 The Moxon estimator applies the same rule with `height_m - width_m / 2`.
+
+The Moxon estimate is reference-scaled only inside the 20 m amateur band
+(14.0–14.35 MHz); the 14.17 MHz dimensions remain exact. Outside that band it
+is a labelled heuristic extrapolation: the tolerance is
+`max(5% width, gap)`, a high-frequency warning states that the wire radius is
+not scaled and that the gap may be comparable to the conductor diameter, and
+the 28.5 MHz editor default is heuristic. The scaled gap must clear two
+conductor diameters; otherwise the estimate is explicitly unsupported rather
+than returning an unbuildable tip gap. No high-frequency published reference is
+implied.
 
 ## Source policy
 

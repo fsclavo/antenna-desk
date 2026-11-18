@@ -2818,6 +2818,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "dimensions are scaled from a published reference design",
         Language.SPANISH: "las dimensiones se escalan desde un diseño de referencia publicado",
     },
+    "estimator.assumption.moxon_extrapolation": {
+        Language.ENGLISH: (
+            "dimensions are extrapolated from the Cebik 20 m reference; this is "
+            "not an independently validated high-frequency Moxon"
+        ),
+        Language.SPANISH: (
+            "las dimensiones se extrapolan de la referencia Cebik de 20 m; este "
+            "no es un Moxon de alta frecuencia validado independientemente"
+        ),
+    },
     "estimator.warning.t2fd_broadband": {
         Language.ENGLISH: "T2FD dimensions are broadband starting points; verify termination and transformer",
         Language.SPANISH: "Las dimensiones del T2FD son puntos de partida de banda ancha; verificá terminación y transformador",
@@ -2921,6 +2931,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "estimator.warning.moxon_gap": {
         Language.ENGLISH: "the Moxon gap is sensitive; verify the scaled design",
         Language.SPANISH: "el gap del Moxon es sensible; verificar el diseño escalado",
+    },
+    "estimator.warning.moxon_high_frequency": {
+        Language.ENGLISH: (
+            "the Cebik 20 m reference is extrapolated outside the 20 m band; the "
+            "wire radius is not scaled and the gap may be comparable to the "
+            "conductor diameter. Verify the high-frequency Moxon with simulation "
+            "or measurement."
+        ),
+        Language.SPANISH: (
+            "la referencia Cebik de 20 m se extrapola fuera de la banda de 20 m; "
+            "el radio del conductor no se escala y el gap puede ser comparable al "
+            "diámetro del conductor. Verificá el Moxon de alta frecuencia con "
+            "simulación o medición."
+        ),
     },
     "source.cebik.dl6wu.32_element_rsgb": {
         Language.ENGLISH: "Cebik DL6WU 32-element reference (RSGB VHF/UHF DX Book)",
