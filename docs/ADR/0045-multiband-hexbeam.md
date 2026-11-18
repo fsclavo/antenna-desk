@@ -37,10 +37,14 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
 3. **Band fields.** Each `HexbeamBand` stores a short label, frequency, driver
    half, reflector half, tip gap, feed gap, and vertical offset above the
    reference plane. The first band is the lowest-frequency/largest element and
-   must match the scalar fields. Labels and frequencies must be unique. The
-   current limit is five bands. The preset frequencies are common band centers
-   (14.184, 18.118, 21.2, 24.94, and 28.5 MHz); the published table supplies the
-   lengths and spacing, not a unique design frequency for each row.
+   must match the scalar fields. Labels and frequencies must be unique, and the
+   rows must stay ordered from lowest to highest frequency. The current limit
+   is five bands. The preset frequencies are common band centers (14.184,
+   18.118, 21.2, 24.94, and 28.5 MHz); the published table supplies the lengths
+   and spacing, not a unique design frequency for each row. The editor can
+   replace any row with custom values or a custom label/frequency. Custom rows
+   are user-supplied and are marked as such; they are not published reference
+   data.
 
 4. **Height and vertical offsets.** `height_m` is the reference plane of the
    lowest band in the stack (10 m for the standard five-band set). Each band
@@ -92,8 +96,9 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
 10. **Presentation.** The scene draws every band's canonical wires. A transient
     active-band selector chooses which band's dimensions and feed marker are
     shown and emphasizes that band; the other bands remain visible. The selector
-    is view-only and not persisted. Reports add a per-band table. Adaptive
-    display units apply to every per-band value.
+    is view-only and not persisted. Reports add a per-band table and mark the
+    band set as published, reference-scaled, or custom. Adaptive display units
+    apply to every per-band value.
 
 ## Consequences
 
@@ -113,6 +118,8 @@ Negative:
 - The selected-band optimizer cannot improve the other bands or the shared
   frame; optimizing each band independently is not the same as optimizing the
   complete stack.
+- Custom band rows have no published reference values; the user owns their
+  validation and the reports mark them as custom.
 
 ## Execution slices
 
@@ -122,10 +129,12 @@ Negative:
 | C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, nested scene rendering, per-band reports | Implemented 2026-11-18 |
 | C7c | Feed-harness limitations and validation/evidence audit | Implemented 2026-11-18; full multi-band optimizer remains explicitly unavailable |
 | C7d | Selected-band optimizer with the shared frame and other bands fixed | Implemented 2026-11-18; full-stack optimization remains unavailable |
+| C7f | Editable band table, add/remove rows, and custom labels/frequencies | Implemented 2026-11-18; custom rows are marked in the editor and reports |
 
-C7a–C7d are complete: the multi-band preset, editor, scene, reports, validation,
-and selected-band optimizer are implemented; full multi-band optimization and
-automatic frequency scaling remain explicit unavailable paths.
+C7a–C7f are complete: the multi-band preset, editor, scene, reports, validation,
+editable custom band rows, and selected-band optimizer are implemented; full
+multi-band optimization and automatic frequency scaling remain explicit
+unavailable paths.
 
 ## References
 

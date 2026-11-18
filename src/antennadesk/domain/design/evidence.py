@@ -596,9 +596,10 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         limitation=(
             "The model reconstructs the M-shaped driver and rear U-shaped reflector "
             "on the six-spreader frame; every wire point stays inside the turning "
-            "radius, and the tip spacer matches the published gap. It does not "
-            "reproduce the exact commercial frame, spreader sag, feed harness, "
-            "balun, or inter-band coupling. Gain, front-to-back ratio, and "
+            "radius, and the tip spacer matches the published gap. Custom band rows "
+            "are user-supplied and are not covered by the published reference. It "
+            "does not reproduce the exact commercial frame, spreader sag, feed "
+            "harness, balun, or inter-band coupling. Gain, front-to-back ratio, and "
             "impedance are not independently validated."
         ),
     ),

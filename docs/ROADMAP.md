@@ -347,15 +347,17 @@ version is implemented.
   starting values (B); multi-band gain, SWR, and front-to-back ratio are not
   validated.
 
-Optional HexBeam follow-ups are queued in the execution backlog: **C7f**
-editable band table/custom sets, **C7h** 6 m band, and **C7i**
-feed-harness/inter-band coupling (blocked on a traceable model or measurement).
-**C7d** selected-band optimization is implemented: the active band's driver and
-reflector halves, tip gap, and height are optimized while the shared frame and
-the other bands stay fixed; full-stack optimization remains unavailable.
-**C7e** active-band dimensions/highlight is implemented: the scene dimensions
-and feed marker follow a transient band selector while the other bands remain
-visible.
+Optional HexBeam follow-ups are queued in the execution backlog: **C7h** 6 m
+band and **C7i** feed-harness/inter-band coupling (blocked on a traceable model
+or measurement). **C7d** selected-band optimization is implemented: the active
+band's driver and reflector halves, tip gap, and height are optimized while the
+shared frame and the other bands stay fixed; full-stack optimization remains
+unavailable. **C7e** active-band dimensions/highlight is implemented: the scene
+dimensions and feed marker follow a transient band selector while the other
+bands remain visible. **C7f** editable band rows/custom sets are implemented:
+published checkboxes seed the table, rows can be added or removed, custom
+labels and frequencies are marked as custom, and replacing them with a
+published preset requires confirmation.
 **C7g** band-aware starting-set scaling is implemented: the primary-frequency
 field can uniformly scale the selected published stack within its primary band,
 with a reference-scaled warning. A general multiband frequency-first estimator

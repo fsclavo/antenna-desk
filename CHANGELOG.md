@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   chooses which band's feed marker, half-lengths, tip gap, turning radius, span,
   and detail inset are shown. The selected band's wires are emphasized and the
   other bands remain visible. The selection is view-only and not persisted.
+- **Editable HexBeam band table and custom band sets.** Published checkboxes
+  now seed an editable table with label, frequency, driver/reflector halves,
+  tip gap, feed gap, and vertical offset columns. Rows can be added or removed
+  within one to five bands; removing down to one row returns to a single-band
+  design. Rows must stay ordered from lowest to highest frequency. Unchanged
+  cells keep their exact canonical values, custom labels and frequencies are
+  allowed, and custom sets are marked in the editor and in reports. Switching
+  to a published preset asks before discarding custom or reference-scaled rows.
 - **Selected-band HexBeam optimizer.** For a multi-band design, **Optimize**
   targets the **Active band**. It searches only that band's driver/reflector
   halves, tip gap, and height while the shared turning radius, conductor, and

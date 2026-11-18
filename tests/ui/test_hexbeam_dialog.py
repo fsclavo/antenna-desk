@@ -172,6 +172,193 @@ def test_hexbeam_form_selects_the_five_band_preset(qtbot: QtBot) -> None:
     assert form.active_band() == "15m"
 
 
+def _band_length_text(form: object, value_m: float) -> str:
+    return form._display_units.format_number(  # type: ignore[attr-defined]
+        value_m,
+        unit=form._band_table_unit,  # type: ignore[attr-defined]
+        trim=False,
+    )
+
+
+def test_hexbeam_form_edits_one_band_without_touching_the_others(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for check in form._band_checks.values():
+        check.setChecked(True)
+    original = dialog.parameters()
+
+    form._band_table.item(2, 2).setText(_band_length_text(form, 3.68))
+
+    parameters = dialog.parameters()
+
+    assert parameters.bands[0] == original.bands[0]
+    assert parameters.bands[1] == original.bands[1]
+    assert parameters.bands[3] == original.bands[3]
+    assert parameters.bands[4] == original.bands[4]
+    assert parameters.bands[2].driver_half_length_m == pytest.approx(3.68)
+    assert "custom" in form._bands_note.text().lower()
+
+
+def test_hexbeam_form_edits_custom_labels_and_frequencies(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for check in form._band_checks.values():
+        check.setChecked(True)
+    form._band_table.item(2, 0).setText("custom-15")
+    form._band_table.item(2, 1).setText("21.250")
+
+    parameters = dialog.parameters()
+
+    assert parameters.bands[2].label == "custom-15"
+    assert parameters.bands[2].frequency_hz == pytest.approx(21_250_000.0)
+    assert form._band_checks["15m"].isChecked() is False
+    texts = tuple(
+        form._active_band_combo.itemText(index) for index in range(form._active_band_combo.count())
+    )
+    assert "custom-15" in texts
+    assert "custom" in form._bands_note.text().lower()
+
+
+def test_hexbeam_form_adds_and_removes_custom_band_rows(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for label in ("20m", "17m", "15m"):
+        form._band_checks[label].setChecked(True)
+    assert form._band_table.rowCount() == 3
+
+    form._add_band.click()
+
+    assert form._band_table.rowCount() == 4
+    assert "complete" in form._bands_note.text().lower()
+
+    row = 3
+    values = (
+        "custom-24",
+        "24.000",
+        _band_length_text(form, 3.24),
+        _band_length_text(form, 3.08),
+        _band_length_text(form, 0.359),
+        _band_length_text(form, 0.028),
+        _band_length_text(form, 0.0),
+    )
+    for column, value in enumerate(values):
+        form._band_table.item(row, column).setText(value)
+
+    parameters = dialog.parameters()
+    assert tuple(band.label for band in parameters.bands) == (
+        "20m",
+        "17m",
+        "15m",
+        "custom-24",
+    )
+    assert parameters.bands[-1].frequency_hz == pytest.approx(24_000_000.0)
+
+    form._band_table.setCurrentCell(3, 0)
+    form._remove_band.click()
+
+    assert form._band_table.rowCount() == 3
+    assert tuple(band.label for band in dialog.parameters().bands) == (
+        "20m",
+        "17m",
+        "15m",
+    )
+
+
+def test_hexbeam_form_removing_to_one_row_returns_to_single_band(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for label in ("20m", "17m"):
+        form._band_checks[label].setChecked(True)
+    form._band_table.setCurrentCell(1, 0)
+    form._remove_band.click()
+
+    parameters = dialog.parameters()
+    assert parameters.bands == ()
+    assert parameters.frequency_hz == pytest.approx(14_184_000.0)
+    assert form._band_table.isHidden()
+    assert form._driver_half.isEnabled()
+
+
+def test_hexbeam_form_rejects_invalid_custom_rows(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for label in ("20m", "17m"):
+        form._band_checks[label].setChecked(True)
+
+    form._band_table.item(1, 0).setText("20m")
+
+    with pytest.raises(ValueError, match="labels must be unique"):
+        dialog.parameters()
+    assert "complete" in form._bands_note.text().lower()
+
+
+def test_hexbeam_form_confirms_before_replacing_custom_rows(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from PySide6.QtWidgets import QMessageBox
+
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for label in ("20m", "17m"):
+        form._band_checks[label].setChecked(True)
+    form._band_table.item(1, 2).setText(_band_length_text(form, 4.0))
+    custom_value = dialog.parameters().bands[1].driver_half_length_m
+
+    monkeypatch.setattr(
+        "antennadesk.ui.widgets.hexbeam_form.QMessageBox.question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.No,
+    )
+    form._band_checks["15m"].setChecked(True)
+
+    assert dialog.parameters().bands[1].driver_half_length_m == pytest.approx(custom_value)
+    assert tuple(band.label for band in dialog.parameters().bands) == ("20m", "17m")
+
+    monkeypatch.setattr(
+        "antennadesk.ui.widgets.hexbeam_form.QMessageBox.question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+    form._band_checks["15m"].setChecked(True)
+
+    published = dialog.parameters()
+    assert tuple(band.label for band in published.bands) == ("20m", "17m", "15m")
+    assert published.bands[1].driver_half_length_m == pytest.approx(
+        169.5 * 0.0254,
+        abs=1e-3,
+    )
+
+
+def test_hexbeam_form_custom_rows_need_published_labels_for_starting_dimensions(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    for label in ("20m", "17m"):
+        form._band_checks[label].setChecked(True)
+    form._band_table.item(1, 0).setText("custom-17")
+    form._band_table.item(1, 2).setText(_band_length_text(form, 4.0))
+    edited = dialog.parameters()
+
+    form._starting.click()
+
+    assert dialog.parameters() == edited
+    assert "published band labels" in form._bands_note.text().lower()
+
+
 def test_hexbeam_form_scales_the_band_stack_within_the_primary_band(qtbot: QtBot) -> None:
     dialog = _dialog()
     qtbot.addWidget(dialog)

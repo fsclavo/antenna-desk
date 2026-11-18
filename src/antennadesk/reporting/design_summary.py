@@ -15,7 +15,11 @@ from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
-from ..domain.antennas.hexbeam import HexbeamParameters
+from ..domain.antennas.hexbeam import (
+    HexbeamBandSetKind,
+    HexbeamParameters,
+    hexbeam_band_set_kind,
+)
 from ..domain.antennas.inverted_l import InvertedLParameters
 from ..domain.antennas.inverted_v import InvertedVParameters
 from ..domain.antennas.j_pole import JPoleParameters
@@ -55,6 +59,19 @@ from ..domain.projects.installation import InstallationProfile
 from ..domain.projects.project import DesignVariant
 from ..presentation.units import DisplayUnits
 from .localization import Labeler, identity_labeler
+
+_HEXBEAM_BAND_SET_LABELS: dict[HexbeamBandSetKind, str] = {
+    HexbeamBandSetKind.PUBLISHED: "published G3TXQ",
+    HexbeamBandSetKind.SCALED: "reference-scaled",
+    HexbeamBandSetKind.CUSTOM: "custom",
+}
+
+
+def hexbeam_band_set_label(parameters: HexbeamParameters) -> str:
+    """Return the report label for a multi-band HexBeam band set."""
+
+    kind = hexbeam_band_set_kind(parameters)
+    return _HEXBEAM_BAND_SET_LABELS.get(kind, "custom")
 
 
 def _length(
@@ -798,6 +815,7 @@ def design_summary_rows(
             ]
         )
         if len(parameters.bands) > 1:
+            rows.append(("Band set", hexbeam_band_set_label(parameters)))
             rows.append(("Bands", str(len(parameters.bands))))
             rows.append(
                 (

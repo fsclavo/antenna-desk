@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import replace
 
 from PySide6.QtCore import Qt, Signal
@@ -18,6 +17,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
 from ...domain.antennas.hexbeam import (
     HEXBEAM_BAND_LABELS,
     HexbeamBand,
+    HexbeamBandSetKind,
     HexbeamParameters,
+    hexbeam_band_set_kind,
     published_hexbeam_multiband_parameters,
     published_hexbeam_parameters,
 )
@@ -45,6 +47,7 @@ from ..material_combo import (
 from ..units import (
     DisplayUnits,
     LengthPolicy,
+    LengthUnit,
     UnitSystem,
     height_bounds,
     length_bounds,
@@ -90,8 +93,10 @@ class HexbeamForm(QWidget):
             LengthPolicy.FIXED,
         )
         self._updating = False
-        self._preserved_bands: tuple[HexbeamBand, ...] = ()
+        self._band_table_updating = False
+        self._band_table_unit: LengthUnit = "m"
         self._bands_scaled = False
+        self._bands_custom = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
 
@@ -225,20 +230,42 @@ class HexbeamForm(QWidget):
         for label in HEXBEAM_BAND_LABELS:
             check = QCheckBox(translator.t(f"hexbeam.band.{label}"), self._band_group)
             check.setObjectName(f"band_{label}")
-            check.toggled.connect(self._band_toggled)
+            check.toggled.connect(
+                lambda checked, band_label=label: self._band_toggled(
+                    band_label,
+                    checked,
+                )
+            )
             apply_help(check, translator, f"band_{label}", family="hexbeam")
             self._band_checks[label] = check
             checks_layout.addWidget(check)
         self._bands_note = QLabel(translator.t("hexbeam.bands_hint"), self._band_group)
         self._bands_note.setWordWrap(True)
-        self._band_table = QTableWidget(0, 6, self._band_group)
+        self._band_table = QTableWidget(0, 7, self._band_group)
         self._band_table.verticalHeader().setVisible(False)
         self._band_table.setAlternatingRowColors(True)
-        self._band_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self._band_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self._band_table.setMinimumHeight(130)
+        self._band_table.setEditTriggers(
+            QAbstractItemView.EditTrigger.DoubleClicked
+            | QAbstractItemView.EditTrigger.EditKeyPressed
+            | QAbstractItemView.EditTrigger.SelectedClicked
+        )
+        self._band_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self._band_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
+        self._band_table.setMinimumHeight(140)
         self._band_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._band_table.itemChanged.connect(self._band_table_item_changed)
+        apply_help(self._band_table, translator, "band_table", family="hexbeam")
         self._retranslate_band_table_headers()
+        self._add_band = QPushButton(translator.t("hexbeam.add_band"), self._band_group)
+        self._remove_band = QPushButton(translator.t("hexbeam.remove_band"), self._band_group)
+        self._add_band.clicked.connect(self._add_band_row)
+        self._remove_band.clicked.connect(self._remove_band_rows)
+        apply_help(self._add_band, translator, "add_band", family="hexbeam")
+        apply_help(self._remove_band, translator, "remove_band", family="hexbeam")
+        band_buttons = QHBoxLayout()
+        band_buttons.addWidget(self._add_band)
+        band_buttons.addWidget(self._remove_band)
+        band_buttons.addStretch(1)
         self._active_band_label = QLabel(
             translator.t("hexbeam.active_band"),
             self._band_group,
@@ -254,6 +281,7 @@ class HexbeamForm(QWidget):
         band_layout.addLayout(active_row)
         band_layout.addWidget(self._bands_note)
         band_layout.addWidget(self._band_table)
+        band_layout.addLayout(band_buttons)
         apply_help(self._band_group, translator, "bands", family="hexbeam")
 
         self._starting = QPushButton(
@@ -357,16 +385,15 @@ class HexbeamForm(QWidget):
         for label, check in self._band_checks.items():
             check.setText(self._translator.t(f"hexbeam.band.{label}"))
             apply_help(check, self._translator, f"band_{label}", family="hexbeam")
+        self._add_band.setText(self._translator.t("hexbeam.add_band"))
+        self._remove_band.setText(self._translator.t("hexbeam.remove_band"))
+        apply_help(self._add_band, self._translator, "add_band", family="hexbeam")
+        apply_help(self._remove_band, self._translator, "remove_band", family="hexbeam")
+        apply_help(self._band_table, self._translator, "band_table", family="hexbeam")
+        self._retranslate_band_table_headers(str(self._band_table_unit))
         labels = self._selected_band_labels()
         self._refresh_active_band_combo(labels)
-        preserved_labels = tuple(band.label for band in self._preserved_bands)
-        if self._preserved_bands and preserved_labels == labels:
-            self._populate_band_table(self._preserved_bands)
-        elif len(labels) > 1:
-            self._populate_band_table(self._multiband_parameters_for(labels).bands)
-        else:
-            self._band_table.setRowCount(0)
-            self._band_table.setVisible(False)
+        self._update_band_buttons()
         self._refresh_bands_note()
         self._update_geometry()
 
@@ -378,15 +405,14 @@ class HexbeamForm(QWidget):
     def _frequency_changed(self, value: float) -> None:
         if self._updating:
             return
-        if len(self._selected_band_labels()) > 1:
+        if self._table_bands_visible():
             self._scale_bands_to_frequency(value * 1_000_000.0)
             return
-        if self._selected_band_labels():
+        if self._checked_band_labels():
             self._set_band_checks(())
             self._refresh_active_band_combo(())
             self._set_multiband_widgets(False)
-            self._band_table.setRowCount(0)
-            self._band_table.setVisible(False)
+            self._clear_band_table()
         if self._starting_state.pristine:
             try:
                 self.load_starting_dimensions()
@@ -400,10 +426,9 @@ class HexbeamForm(QWidget):
     def _band_dimension_changed(self, *_args: object) -> None:
         if self._updating:
             return
-        if self._selected_band_labels():
+        if self._checked_band_labels():
             self._set_band_checks(())
-            self._band_table.setRowCount(0)
-            self._band_table.setVisible(False)
+            self._clear_band_table()
         self._managed_field_changed()
 
     def _managed_field_changed(self, *_args: object) -> None:
@@ -441,8 +466,41 @@ class HexbeamForm(QWidget):
         value = self._material.currentData()
         return value if isinstance(value, ConductorMaterial) else COPPER
 
-    def _selected_band_labels(self) -> tuple[str, ...]:
+    def _checked_band_labels(self) -> tuple[str, ...]:
         return tuple(label for label in HEXBEAM_BAND_LABELS if self._band_checks[label].isChecked())
+
+    def _table_bands_visible(self) -> bool:
+        return not self._band_table.isHidden() and self._band_table.rowCount() >= 2
+
+    def _table_labels(self) -> tuple[str, ...]:
+        labels: list[str] = []
+        for row in range(self._band_table.rowCount()):
+            item = self._band_table.item(row, 0)
+            if item is not None and item.text().strip():
+                labels.append(item.text().strip())
+        return tuple(dict.fromkeys(labels))
+
+    def _selected_band_labels(self) -> tuple[str, ...]:
+        if self._table_bands_visible():
+            return self._table_labels()
+        return self._checked_band_labels()
+
+    def _clear_band_table(self) -> None:
+        previous = self._band_table_updating
+        self._band_table_updating = True
+        try:
+            self._band_table.setRowCount(0)
+            self._band_table.setVisible(False)
+        finally:
+            self._band_table_updating = previous
+        self._update_band_buttons()
+
+    def _update_band_buttons(self) -> None:
+        visible = self._table_bands_visible()
+        self._add_band.setVisible(visible)
+        self._remove_band.setVisible(visible)
+        self._add_band.setEnabled(visible and self._band_table.rowCount() < 5)
+        self._remove_band.setEnabled(visible and self._band_table.rowCount() > 0)
 
     def active_band(self) -> str | None:
         data = self._active_band_combo.currentData()
@@ -457,11 +515,9 @@ class HexbeamForm(QWidget):
         self._updating = True
         try:
             self._active_band_combo.clear()
-            for label in labels:
-                self._active_band_combo.addItem(
-                    self._translator.t(f"hexbeam.band.{label}"),
-                    label,
-                )
+            for label in dict.fromkeys(labels):
+                text = self._translator.optional(f"hexbeam.band.{label}") or label
+                self._active_band_combo.addItem(text, label)
             if isinstance(current, str) and current in labels:
                 index = labels.index(current)
             else:
@@ -499,57 +555,234 @@ class HexbeamForm(QWidget):
                 f"{self._translator.t('hexbeam.driver_half')}{suffix}",
                 f"{self._translator.t('hexbeam.reflector_half')}{suffix}",
                 f"{self._translator.t('hexbeam.tip_gap')}{suffix}",
+                f"{self._translator.t('hexbeam.feed_gap')}{suffix}",
                 f"{self._translator.t('hexbeam.vertical_offset')}{suffix}",
             )
         )
 
     def _populate_band_table(self, bands: tuple[HexbeamBand, ...]) -> None:
-        if len(bands) < 2:
-            self._band_table.setRowCount(0)
-            self._band_table.setVisible(False)
-            return
-        values = [
-            value
-            for band in bands
-            for value in (
-                band.driver_half_length_m,
-                band.reflector_half_length_m,
-                band.tip_gap_m,
-                band.vertical_offset_m,
-            )
-        ]
-        unit = self._display_units.table_unit(values)
-        self._retranslate_band_table_headers(str(unit))
-        self._band_table.setRowCount(len(bands))
-        for row, band in enumerate(bands):
-            items = (
-                self._translator.t(f"hexbeam.band.{band.label}"),
-                f"{band.frequency_hz / 1_000_000.0:.3f}",
-                self._display_units.format_number(
+        previous = self._band_table_updating
+        self._band_table_updating = True
+        try:
+            if len(bands) < 2:
+                self._band_table.setRowCount(0)
+                self._band_table.setVisible(False)
+                return
+            values = [
+                value
+                for band in bands
+                for value in (
                     band.driver_half_length_m,
-                    unit=unit,
-                    trim=False,
-                ),
-                self._display_units.format_number(
                     band.reflector_half_length_m,
-                    unit=unit,
-                    trim=False,
-                ),
-                self._display_units.format_number(band.tip_gap_m, unit=unit, trim=False),
-                self._display_units.format_number(
+                    band.tip_gap_m,
+                    band.feed_gap_m,
                     band.vertical_offset_m,
-                    unit=unit,
-                    trim=False,
-                ),
-            )
-            for column, text in enumerate(items):
-                item = QTableWidgetItem(text)
-                if column > 0:
-                    item.setTextAlignment(
-                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-                    )
+                )
+            ]
+            self._band_table_unit = self._display_units.table_unit(values)
+            self._retranslate_band_table_headers(str(self._band_table_unit))
+            self._band_table.setRowCount(len(bands))
+            for row, band in enumerate(bands):
+                items = (
+                    band.label,
+                    self._format_frequency_mhz(band.frequency_hz),
+                    self._format_band_length(band.driver_half_length_m),
+                    self._format_band_length(band.reflector_half_length_m),
+                    self._format_band_length(band.tip_gap_m),
+                    self._format_band_length(band.feed_gap_m),
+                    self._format_band_length(band.vertical_offset_m),
+                )
+                canonical: tuple[float | None, ...] = (
+                    None,
+                    band.frequency_hz,
+                    band.driver_half_length_m,
+                    band.reflector_half_length_m,
+                    band.tip_gap_m,
+                    band.feed_gap_m,
+                    band.vertical_offset_m,
+                )
+                for column, (text, value) in enumerate(zip(items, canonical, strict=True)):
+                    item = QTableWidgetItem(text)
+                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+                    if value is not None:
+                        item.setData(Qt.ItemDataRole.UserRole, value)
+                    if column > 0:
+                        item.setTextAlignment(
+                            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                        )
+                    self._band_table.setItem(row, column, item)
+            self._band_table.setVisible(True)
+        finally:
+            self._band_table_updating = previous
+        self._update_band_buttons()
+
+    def _format_frequency_mhz(self, frequency_hz: float) -> str:
+        return f"{frequency_hz / 1_000_000.0:.6f}".rstrip("0").rstrip(".")
+
+    def _format_band_length(self, value_m: float) -> str:
+        return self._display_units.format_number(
+            value_m,
+            unit=self._band_table_unit,
+            trim=False,
+        )
+
+    def _table_text(self, row: int, column: int) -> str:
+        item = self._band_table.item(row, column)
+        return item.text().strip() if item is not None else ""
+
+    def _parse_table_number(self, text: str) -> float:
+        if not text:
+            raise ValueError("band table cells must not be empty")
+        return float(text.replace(",", "."))
+
+    def _band_value_m(self, text: str) -> float:
+        return self._parse_table_number(text) * self._display_units.meters_per_unit(
+            self._band_table_unit
+        )
+
+    def _stored_number(self, row: int, column: int) -> float | None:
+        item = self._band_table.item(row, column)
+        value = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        return float(value) if isinstance(value, (int, float)) else None
+
+    def _band_length_m(self, row: int, column: int) -> float:
+        stored = self._stored_number(row, column)
+        if stored is not None:
+            return stored
+        return self._band_value_m(self._table_text(row, column))
+
+    def _band_frequency_hz(self, row: int) -> float:
+        stored = self._stored_number(row, 1)
+        if stored is not None:
+            return stored
+        return self._parse_table_number(self._table_text(row, 1)) * 1_000_000.0
+
+    def _band_from_row(self, row: int) -> HexbeamBand:
+        label = self._table_text(row, 0)
+        if not label:
+            raise ValueError("band labels must not be empty")
+        return HexbeamBand(
+            label=label,
+            frequency_hz=self._band_frequency_hz(row),
+            driver_half_length_m=self._band_length_m(row, 2),
+            reflector_half_length_m=self._band_length_m(row, 3),
+            tip_gap_m=self._band_length_m(row, 4),
+            feed_gap_m=self._band_length_m(row, 5),
+            vertical_offset_m=self._band_length_m(row, 6),
+        )
+
+    def _bands_from_table(self) -> tuple[HexbeamBand, ...]:
+        if self._band_table.rowCount() < 2:
+            raise ValueError("a multi-band stack needs at least two rows")
+        return tuple(self._band_from_row(row) for row in range(self._band_table.rowCount()))
+
+    def _band_table_item_changed(self, item: QTableWidgetItem) -> None:
+        if self._updating or self._band_table_updating:
+            return
+        item.setData(Qt.ItemDataRole.UserRole, None)
+        labels = self._table_labels()
+        self._set_band_checks(tuple(label for label in labels if label in HEXBEAM_BAND_LABELS))
+        self._refresh_active_band_combo(labels)
+        self._refresh_bands_note()
+        self._update_geometry()
+        self.changed.emit()
+
+    def _next_custom_label(self) -> str:
+        labels = {label.casefold() for label in self._table_labels()}
+        index = 1
+        while f"custom-{index}".casefold() in labels:
+            index += 1
+        return f"custom-{index}"
+
+    def _add_band_row(self) -> None:
+        if self._band_table.rowCount() >= 5:
+            return
+        previous = self._band_table_updating
+        self._band_table_updating = True
+        try:
+            row = self._band_table.rowCount()
+            self._band_table.insertRow(row)
+            label_item = QTableWidgetItem(self._next_custom_label())
+            label_item.setFlags(label_item.flags() | Qt.ItemFlag.ItemIsEditable)
+            self._band_table.setItem(row, 0, label_item)
+            for column in range(1, self._band_table.columnCount()):
+                item = QTableWidgetItem("")
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self._band_table.setItem(row, column, item)
-        self._band_table.setVisible(True)
+            self._band_table.setVisible(True)
+            self._band_table.setCurrentCell(row, 1)
+        finally:
+            self._band_table_updating = previous
+        self._update_band_buttons()
+        self._refresh_active_band_combo(self._table_labels())
+        self._refresh_bands_note()
+        self._update_geometry()
+        self.changed.emit()
+
+    def _remove_band_rows(self) -> None:
+        selected = sorted(
+            {index.row() for index in self._band_table.selectedIndexes()},
+        )
+        if not selected and self._band_table.currentRow() >= 0:
+            selected = [self._band_table.currentRow()]
+        if not selected:
+            return
+        remaining = [row for row in range(self._band_table.rowCount()) if row not in selected]
+        if len(remaining) == 1:
+            try:
+                band = self._band_from_row(remaining[0])
+            except (ValueError, TypeError):
+                self._bands_note.setText(self._translator.t("hexbeam.bands_incomplete"))
+                return
+            self._remove_table_rows(selected)
+            self._convert_to_single_band(band)
+            return
+        self._remove_table_rows(selected)
+        if not remaining:
+            self._clear_band_table()
+            self._set_band_checks(())
+            self._refresh_active_band_combo(())
+            self._set_multiband_widgets(False)
+            self._refresh_bands_note()
+            self._update_geometry()
+            self.changed.emit()
+            return
+        self._update_band_buttons()
+        self._refresh_active_band_combo(self._table_labels())
+        self._refresh_bands_note()
+        self._update_geometry()
+        self.changed.emit()
+
+    def _remove_table_rows(self, rows: list[int]) -> None:
+        previous = self._band_table_updating
+        self._band_table_updating = True
+        try:
+            for row in sorted(rows, reverse=True):
+                self._band_table.removeRow(row)
+        finally:
+            self._band_table_updating = previous
+
+    def _convert_to_single_band(self, band: HexbeamBand) -> None:
+        parameters = HexbeamParameters(
+            frequency_hz=band.frequency_hz,
+            driver_half_length_m=band.driver_half_length_m,
+            reflector_half_length_m=band.reflector_half_length_m,
+            turning_radius_m=self._turning_radius_field.value_m(),
+            tip_gap_m=band.tip_gap_m,
+            height_m=self._height_field.value_m(),
+            feed_gap_m=band.feed_gap_m,
+            element_separation_m=self._element_separation_field.value_m(),
+            azimuth_deg=self._azimuth.value(),
+            wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
+            material=self._selected_material(),
+            ground=self._ground_model(),
+        )
+        self.set_parameters(parameters)
+        checks = (band.label,) if band.label in HEXBEAM_BAND_LABELS else ()
+        self._set_band_checks(checks)
+        self._starting_state.mark_non_pristine()
+        self.changed.emit()
 
     def _set_multiband_widgets(self, multiband: bool) -> None:
         self._frequency.setEnabled(True)
@@ -597,33 +830,19 @@ class HexbeamForm(QWidget):
             bands=bands,
         )
 
-    def _bands_match_published(self, bands: tuple[HexbeamBand, ...]) -> bool:
-        labels = tuple(band.label for band in bands)
-        try:
-            published = published_hexbeam_multiband_parameters(labels=labels).bands
-        except ValueError:
-            return False
-        expected = {band.label: band for band in published}
-        if set(labels) != set(expected):
-            return False
-        for band in bands:
-            reference = expected[band.label]
-            values = (
-                (band.frequency_hz, reference.frequency_hz),
-                (band.driver_half_length_m, reference.driver_half_length_m),
-                (band.reflector_half_length_m, reference.reflector_half_length_m),
-                (band.tip_gap_m, reference.tip_gap_m),
-                (band.feed_gap_m, reference.feed_gap_m),
-                (band.vertical_offset_m, reference.vertical_offset_m),
-            )
-            if not all(
-                math.isclose(actual, wanted, rel_tol=1e-9, abs_tol=1e-12)
-                for actual, wanted in values
-            ):
-                return False
-        return True
-
     def _refresh_bands_note(self) -> None:
+        if self._table_bands_visible():
+            try:
+                bands = self._bands_from_table()
+                candidate = self._parameters_from_bands(bands)
+            except (ValueError, TypeError):
+                self._bands_scaled = False
+                self._bands_custom = True
+                self._bands_note.setText(self._translator.t("hexbeam.bands_incomplete"))
+                return
+            kind = hexbeam_band_set_kind(candidate)
+            self._bands_scaled = kind is HexbeamBandSetKind.SCALED
+            self._bands_custom = kind is HexbeamBandSetKind.CUSTOM
         if self._bands_scaled:
             self._bands_note.setText(
                 self._translator.t(
@@ -631,6 +850,8 @@ class HexbeamForm(QWidget):
                     primary=f"{self._frequency.value():.3f}",
                 )
             )
+        elif self._bands_custom:
+            self._bands_note.setText(self._translator.t("hexbeam.custom_bands_hint"))
         else:
             self._bands_note.setText(self._translator.t("hexbeam.bands_hint"))
 
@@ -659,11 +880,23 @@ class HexbeamForm(QWidget):
         self._refresh_bands_note()
         self.changed.emit()
 
-    def _band_toggled(self, _checked: bool) -> None:
+    def _band_toggled(self, _label: str, _checked: bool) -> None:
         if self._updating:
             return
-        self._preserved_bands = ()
-        labels = self._selected_band_labels()
+        if (self._bands_custom or self._bands_scaled) and self._table_bands_visible():
+            answer = QMessageBox.question(
+                self,
+                self._translator.t("hexbeam.title"),
+                self._translator.t("hexbeam.replace_custom_confirm"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self._set_band_checks(
+                    tuple(label for label in self._table_labels() if label in HEXBEAM_BAND_LABELS)
+                )
+                return
+        labels = self._checked_band_labels()
         if len(labels) > 1:
             self.set_parameters(self._multiband_parameters_for(labels))
             self._starting_state.mark_pristine()
@@ -673,10 +906,10 @@ class HexbeamForm(QWidget):
             self._starting_state.mark_pristine()
         else:
             self._set_multiband_widgets(False)
-            self._band_table.setRowCount(0)
-            self._band_table.setVisible(False)
+            self._clear_band_table()
             self._refresh_active_band_combo(())
             self._bands_scaled = False
+            self._bands_custom = False
             self._refresh_bands_note()
             self._starting_state.mark_non_pristine()
             self._emit_changed()
@@ -684,6 +917,9 @@ class HexbeamForm(QWidget):
     def load_starting_dimensions(self) -> None:
         labels = self._selected_band_labels()
         if labels:
+            if any(label not in HEXBEAM_BAND_LABELS for label in labels):
+                self._bands_note.setText(self._translator.t("hexbeam.starting_needs_published"))
+                return
             parameters = (
                 self._multiband_parameters_for(labels)
                 if len(labels) > 1
@@ -783,17 +1019,14 @@ class HexbeamForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
             labels = tuple(band.label for band in parameters.bands)
             multiband = len(parameters.bands) > 1
-            if multiband:
-                published = self._bands_match_published(parameters.bands)
-                self._preserved_bands = () if published else parameters.bands
-                self._bands_scaled = not published
-            else:
-                self._preserved_bands = ()
-                self._bands_scaled = False
+            kind = hexbeam_band_set_kind(parameters)
+            self._bands_scaled = kind is HexbeamBandSetKind.SCALED
+            self._bands_custom = kind is HexbeamBandSetKind.CUSTOM
             self._set_band_checks(labels)
             self._refresh_active_band_combo(labels)
-            self._populate_band_table(parameters.bands)
+            self._populate_band_table(parameters.bands if multiband else ())
             self._set_multiband_widgets(multiband)
+            self._update_band_buttons()
             self._refresh_bands_note()
         finally:
             self._updating = False
@@ -839,12 +1072,10 @@ class HexbeamForm(QWidget):
         )
 
     def parameters(self) -> HexbeamParameters:
-        labels = self._selected_band_labels()
-        if len(labels) > 1:
-            preserved_labels = tuple(band.label for band in self._preserved_bands)
-            if self._preserved_bands and preserved_labels == labels:
-                return self._parameters_from_bands(self._preserved_bands)
-            return self._multiband_parameters_for(labels)
+        if self._table_bands_visible():
+            bands = self._bands_from_table()
+            if len(bands) > 1:
+                return self._parameters_from_bands(bands)
         parameters = HexbeamParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             driver_half_length_m=self._driver_half_field.value_m(),
@@ -859,6 +1090,4 @@ class HexbeamForm(QWidget):
             material=self._selected_material(),
             ground=self._ground_model(),
         )
-        if self._preserved_bands:
-            return replace(parameters, bands=self._preserved_bands)
         return parameters

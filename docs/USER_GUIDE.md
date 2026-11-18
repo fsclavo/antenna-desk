@@ -994,11 +994,17 @@ three sides, and 24 in tip spacers connect the driver tips to the reflector
 ends. The modeled span is the frame diameter, about 6.60 m at 20 m, and every
 wire point stays inside the turning radius.
 
-Use the **Bands** checkboxes to build a nested 20/17/15/12/10 m stack. Two or
-more selected bands use the published G3TXQ rows, displayed read-only in the
-band table. The largest selected band defines the shared turning radius; the
-reference height is the lowest selected band, and the other bands are stacked
-by their published vertical offsets. Use **Active band** to choose which band's
+Use the **Bands** checkboxes to seed a nested 20/17/15/12/10 m stack from the
+published G3TXQ rows. The band table is editable: double-click a cell to change
+the label, frequency, driver/reflector halves, tip gap, feed gap, or vertical
+offset. **Add band** appends an empty row (up to five) and **Remove band**
+deletes the selected row; removing down to one row returns to a single-band
+design. Rows must stay ordered from lowest to highest frequency, and the first
+row is the largest band that defines the shared turning radius. Unchanged cells
+keep their exact values; custom rows are marked in the editor and in reports,
+and switching to a published preset asks before discarding them. The reference
+height is the lowest selected band, and the other bands are stacked by their
+vertical offsets. Use **Active band** to choose which band's
 dimensions and feed marker are shown and emphasized in the scene; the other
 bands stay visible and the selection is not saved with the design. The 20 m row used by the family is
 218 in driver half, 412 in reflector total, 24 in tip gap, and 130 in turning

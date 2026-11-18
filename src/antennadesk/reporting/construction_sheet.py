@@ -71,6 +71,7 @@ from .design_summary import (
     design_provenance_rows,
     design_summary_rows,
     feed_matching_rows,
+    hexbeam_band_set_label,
     installation_profile_rows,
     load_summary_rows,
     optimization_summary_rows,
@@ -821,6 +822,7 @@ def render_construction_sheet(
         band_rows = ""
         if len(parameters.bands) > 1:
             band_rows = (
+                f"<tr><th>Band set</th><td>{hexbeam_band_set_label(parameters)}</td></tr>"
                 f"<tr><th>Bands</th><td>{len(parameters.bands)}</td></tr>"
                 "<tr><th>Feed model</th><td>one driven band; other bands passive; "
                 "coax harness and balun not modeled</td></tr>"

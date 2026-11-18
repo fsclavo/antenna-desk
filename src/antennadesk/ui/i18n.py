@@ -3645,15 +3645,47 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.hexbeam.bands": {
         Language.ENGLISH: (
-            "Published G3TXQ bands. The largest selected band defines the shared "
-            "turning radius; higher bands are nested inboard and stacked by their "
-            "vertical offsets. Optimize targets the Active band and leaves the "
-            "others fixed."
+            "Published G3TXQ bands. Check boxes seed the stack; the table rows are "
+            "editable and become the source of truth. The largest (lowest-frequency) "
+            "band must be first; higher bands are nested inboard and stacked by "
+            "vertical offset."
         ),
         Language.SPANISH: (
-            "Bandas publicadas G3TXQ. La banda más grande fija el radio compartido; "
-            "las superiores se anidan y apilan con sus desplazamientos verticales. "
-            "Optimizar usa la banda activa y deja fijas las demás."
+            "Bandas publicadas G3TXQ. Las casillas inician la pila; las filas son "
+            "editables y pasan a ser la fuente de verdad. La banda más grande (menor "
+            "frecuencia) va primero; las superiores se anidan y apilan por "
+            "desplazamiento vertical."
+        ),
+    },
+    "help.hexbeam.band_table": {
+        Language.ENGLISH: (
+            "Double-click a cell to edit the band label, frequency, half-lengths, "
+            "gaps, or vertical offset. Rows must stay ordered from the lowest "
+            "frequency (largest band) to the highest."
+        ),
+        Language.SPANISH: (
+            "Hacé doble clic en una celda para editar la etiqueta, la frecuencia, "
+            "las semilongitudes, las separaciones o el desplazamiento vertical. Las "
+            "filas deben quedar ordenadas de menor a mayor frecuencia."
+        ),
+    },
+    "help.hexbeam.add_band": {
+        Language.ENGLISH: (
+            "Append an empty band row. Fill every cell; up to five bands are supported."
+        ),
+        Language.SPANISH: (
+            "Agrega una fila de banda vacía. Completá todas las celdas; se admiten "
+            "hasta cinco bandas."
+        ),
+    },
+    "help.hexbeam.remove_band": {
+        Language.ENGLISH: (
+            "Remove the selected band row. Removing down to one row returns to a "
+            "single-band design."
+        ),
+        Language.SPANISH: (
+            "Quita la fila de banda seleccionada. Si queda una sola fila, se vuelve "
+            "a un diseño de banda única."
         ),
     },
     "help.hexbeam.band_20m": {
@@ -10919,17 +10951,68 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "hexbeam.bands_hint": {
         Language.ENGLISH: (
-            "Select two or more published bands to build a nested stack. One "
-            "selected band loads its published row; no selection edits a custom "
-            "single band. The largest band defines the shared frame. The real "
-            "coax harness, inter-band coupling, and balun are not modeled."
+            "Select published bands to seed the stack, or edit the table rows. "
+            "Two or more rows form a nested stack; the largest (lowest-frequency) "
+            "band must be first. The real coax harness, inter-band coupling, and "
+            "balun are not modeled."
         ),
         Language.SPANISH: (
-            "Seleccioná dos o más bandas publicadas para construir una pila "
-            "anidada. Una banda seleccionada carga su fila publicada; sin selección "
-            "se edita una banda única personalizada. La banda más grande define el "
-            "marco compartido. No se modelan el arnés de coaxil real, el "
-            "acoplamiento entre bandas ni el balun."
+            "Seleccioná bandas publicadas para iniciar la pila o editá las filas de "
+            "la tabla. Dos o más filas forman una pila anidada; la banda más grande "
+            "(menor frecuencia) debe ir primero. No se modelan el arnés de coaxil "
+            "real, el acoplamiento entre bandas ni el balun."
+        ),
+    },
+    "hexbeam.add_band": {
+        Language.ENGLISH: "Add band",
+        Language.SPANISH: "Agregar banda",
+    },
+    "hexbeam.remove_band": {
+        Language.ENGLISH: "Remove band",
+        Language.SPANISH: "Quitar banda",
+    },
+    "hexbeam.custom_bands_hint": {
+        Language.ENGLISH: (
+            "Custom band set: these rows are user-supplied, not a published G3TXQ "
+            "reference. Verify the shared frame fit, vertical clearance, and "
+            "performance."
+        ),
+        Language.SPANISH: (
+            "Set de bandas personalizado: estas filas son provistas por el usuario, "
+            "no son una referencia publicada G3TXQ. Verificá el encaje en el marco "
+            "compartido, la separación vertical y el desempeño."
+        ),
+    },
+    "hexbeam.bands_incomplete": {
+        Language.ENGLISH: (
+            "Complete the band table or remove empty rows. Every band needs a unique "
+            "label, frequency, half-lengths, gaps, and vertical offset, ordered from "
+            "lowest to highest frequency."
+        ),
+        Language.SPANISH: (
+            "Completá la tabla de bandas o quitá las filas vacías. Cada banda "
+            "necesita etiqueta y frecuencia únicas, semilongitudes, separaciones y "
+            "desplazamiento vertical, ordenadas de menor a mayor frecuencia."
+        ),
+    },
+    "hexbeam.starting_needs_published": {
+        Language.ENGLISH: (
+            "Load starting dimensions needs published band labels. Rename the "
+            "custom rows or edit their values directly."
+        ),
+        Language.SPANISH: (
+            "Cargar dimensiones iniciales requiere etiquetas de bandas publicadas. "
+            "Renombrá las filas personalizadas o editá sus valores directamente."
+        ),
+    },
+    "hexbeam.replace_custom_confirm": {
+        Language.ENGLISH: (
+            "Replace the current band rows with the selected published set? Values "
+            "that differ from the published rows will be lost."
+        ),
+        Language.SPANISH: (
+            "¿Reemplazar las filas actuales por el set publicado seleccionado? Se "
+            "perderán los valores que difieran de las filas publicadas."
         ),
     },
     "hexbeam.scaled_bands_hint": {

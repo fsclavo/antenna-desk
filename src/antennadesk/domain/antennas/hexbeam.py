@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from enum import StrEnum
 
 from ..common import units
 from ..common.units import ensure_non_negative, ensure_positive
@@ -34,6 +35,16 @@ PUBLISHED_TURNING_RADIUS_M = 130.0 * 0.0254
 DEFAULT_FEED_GAP_M = 1.25 * 0.0254
 DEFAULT_ELEMENT_SEPARATION_M = 0.0
 HEXBEAM_BAND_LABELS = ("20m", "17m", "15m", "12m", "10m")
+
+
+class HexbeamBandSetKind(StrEnum):
+    """How a HexBeam's band rows relate to the published starting table."""
+
+    SINGLE = "single"
+    PUBLISHED = "published"
+    SCALED = "scaled"
+    CUSTOM = "custom"
+
 
 _FRONT_HALF_ANGLE_RAD = math.radians(30.0)
 _FRONT_COS = math.cos(_FRONT_HALF_ANGLE_RAD)
@@ -357,7 +368,18 @@ class HexbeamParameters:
                 raise ValueError(
                     "the first hexbeam band must be the lowest frequency (largest element)"
                 )
+            previous_frequency_hz = primary.frequency_hz
+            for band in self.bands[1:]:
+                if band.frequency_hz <= previous_frequency_hz:
+                    raise ValueError(
+                        "hexbeam bands must be ordered from lowest to highest frequency"
+                    )
+                previous_frequency_hz = band.frequency_hz
             for band in self.bands:
+                if band.tip_gap_m <= 2.0 * self.wire_radius_m:
+                    raise ValueError(
+                        "each hexbeam band tip_gap_m must exceed the conductor diameter"
+                    )
                 hexbeam_frame_geometry(
                     turning_radius_m=self.band_radius_m(band),
                     driver_half_length_m=band.driver_half_length_m,
@@ -599,3 +621,74 @@ class HexbeamParameters:
             feed=FeedPoint(feed_ids[excited_index], feed_offsets[excited_index]),
             environment=Environment(ground=self.ground),
         )
+
+
+def _hexbeam_bands_match_reference(
+    bands: tuple[HexbeamBand, ...],
+    reference: tuple[HexbeamBand, ...],
+) -> bool:
+    if len(bands) != len(reference):
+        return False
+    for band, published in zip(bands, reference, strict=True):
+        for actual, expected in (
+            (band.frequency_hz, published.frequency_hz),
+            (band.driver_half_length_m, published.driver_half_length_m),
+            (band.reflector_half_length_m, published.reflector_half_length_m),
+            (band.tip_gap_m, published.tip_gap_m),
+            (band.feed_gap_m, published.feed_gap_m),
+            (band.vertical_offset_m, published.vertical_offset_m),
+        ):
+            if not math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-12):
+                return False
+    return True
+
+
+def _hexbeam_bands_are_uniformly_scaled(
+    bands: tuple[HexbeamBand, ...],
+    reference: tuple[HexbeamBand, ...],
+) -> bool:
+    if len(bands) != len(reference):
+        return False
+    frequency_ratios: list[float] = []
+    length_ratios: list[float] = []
+    for band, published in zip(bands, reference, strict=True):
+        frequency_ratios.append(band.frequency_hz / published.frequency_hz)
+        for actual, expected in (
+            (band.driver_half_length_m, published.driver_half_length_m),
+            (band.reflector_half_length_m, published.reflector_half_length_m),
+            (band.tip_gap_m, published.tip_gap_m),
+            (band.feed_gap_m, published.feed_gap_m),
+            (band.vertical_offset_m, published.vertical_offset_m),
+        ):
+            if expected == 0.0:
+                if actual != 0.0:
+                    return False
+                continue
+            length_ratios.append(actual / expected)
+    if not frequency_ratios or not length_ratios:
+        return False
+
+    def consistent(values: list[float]) -> bool:
+        mean = sum(values) / len(values)
+        return all(math.isclose(value, mean, rel_tol=1e-6, abs_tol=1e-9) for value in values)
+
+    if not consistent(frequency_ratios) or not consistent(length_ratios):
+        return False
+    return math.isclose(frequency_ratios[0] * length_ratios[0], 1.0, rel_tol=1e-6)
+
+
+def hexbeam_band_set_kind(parameters: HexbeamParameters) -> HexbeamBandSetKind:
+    """Classify a band set as single, published, uniformly scaled, or custom."""
+
+    if len(parameters.bands) <= 1:
+        return HexbeamBandSetKind.SINGLE
+    labels = tuple(band.label for band in parameters.bands)
+    try:
+        reference = published_hexbeam_multiband_parameters(labels=labels).bands
+    except ValueError:
+        return HexbeamBandSetKind.CUSTOM
+    if _hexbeam_bands_match_reference(parameters.bands, reference):
+        return HexbeamBandSetKind.PUBLISHED
+    if _hexbeam_bands_are_uniformly_scaled(parameters.bands, reference):
+        return HexbeamBandSetKind.SCALED
+    return HexbeamBandSetKind.CUSTOM

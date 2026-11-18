@@ -401,6 +401,77 @@ def test_hexbeam_multiband_requires_the_largest_band_first() -> None:
         replace(parameters, bands=tuple(reversed(parameters.bands)))
 
 
+def test_hexbeam_band_set_kind_distinguishes_published_scaled_and_custom() -> None:
+    from antennadesk.domain.antennas.hexbeam import (
+        HexbeamBandSetKind,
+        hexbeam_band_set_kind,
+    )
+
+    published = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    assert hexbeam_band_set_kind(published) is HexbeamBandSetKind.PUBLISHED
+
+    scale = 0.98
+    scaled_bands = tuple(
+        replace(
+            band,
+            frequency_hz=band.frequency_hz / scale,
+            driver_half_length_m=band.driver_half_length_m * scale,
+            reflector_half_length_m=band.reflector_half_length_m * scale,
+            tip_gap_m=band.tip_gap_m * scale,
+            feed_gap_m=band.feed_gap_m * scale,
+            vertical_offset_m=band.vertical_offset_m * scale,
+        )
+        for band in published.bands
+    )
+    scaled = replace(
+        published,
+        frequency_hz=scaled_bands[0].frequency_hz,
+        driver_half_length_m=scaled_bands[0].driver_half_length_m,
+        reflector_half_length_m=scaled_bands[0].reflector_half_length_m,
+        tip_gap_m=scaled_bands[0].tip_gap_m,
+        feed_gap_m=scaled_bands[0].feed_gap_m,
+        turning_radius_m=published.turning_radius_m * scale,
+        bands=scaled_bands,
+    )
+    assert hexbeam_band_set_kind(scaled) is HexbeamBandSetKind.SCALED
+
+    custom_band = replace(
+        published.bands[1],
+        driver_half_length_m=published.bands[1].driver_half_length_m + 0.01,
+    )
+    custom = replace(published, bands=(published.bands[0], custom_band))
+    assert hexbeam_band_set_kind(custom) is HexbeamBandSetKind.CUSTOM
+
+    assert hexbeam_band_set_kind(published_hexbeam_parameters()) is HexbeamBandSetKind.SINGLE
+
+
+def test_hexbeam_multiband_requires_strict_frequency_order() -> None:
+    parameters = _published_multiband()
+
+    with pytest.raises(ValueError, match="ordered from lowest to highest frequency"):
+        replace(
+            parameters,
+            bands=(
+                parameters.bands[0],
+                parameters.bands[2],
+                parameters.bands[1],
+                parameters.bands[3],
+                parameters.bands[4],
+            ),
+        )
+
+
+def test_hexbeam_multiband_rejects_tip_gaps_below_the_conductor_diameter() -> None:
+    parameters = _published_multiband()
+    too_tight = replace(
+        parameters.bands[1],
+        tip_gap_m=2.0 * parameters.wire_radius_m,
+    )
+
+    with pytest.raises(ValueError, match="tip_gap_m must exceed the conductor diameter"):
+        replace(parameters, bands=(parameters.bands[0], too_tight, *parameters.bands[2:]))
+
+
 def test_hexbeam_multiband_validates_unique_labels_and_frequencies() -> None:
     parameters = _published_multiband()
     duplicate_label = replace(parameters.bands[1], label=parameters.bands[0].label)

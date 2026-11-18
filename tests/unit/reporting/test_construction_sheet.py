@@ -595,12 +595,34 @@ def test_hexbeam_multiband_construction_sheet_lists_the_bands(
     hexbeam = design.with_parameters(published_hexbeam_multiband_parameters())
     sheet = render_construction_sheet(sample_project, hexbeam, None)
 
+    assert "Band set" in sheet
+    assert "published G3TXQ" in sheet
     assert "Bands" in sheet
     assert "Band" in sheet
     assert "20m:" in sheet
     assert "10m:" in sheet
     assert "one driven band" in sheet
     assert sheet.count("Band</th>") >= 5
+
+
+def test_hexbeam_custom_band_set_construction_sheet_is_marked_custom(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    design = sample_project.designs[0]
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    custom_band = replace(
+        parameters.bands[1],
+        driver_half_length_m=parameters.bands[1].driver_half_length_m + 0.01,
+    )
+    custom = replace(parameters, bands=(parameters.bands[0], custom_band))
+    sheet = render_construction_sheet(sample_project, design.with_parameters(custom), None)
+
+    assert "Band set" in sheet
+    assert "custom" in sheet
 
 
 def test_trap_yagi_construction_sheet_lists_the_traps(

@@ -47,6 +47,7 @@ def test_hexbeam_multiband_summary_lists_each_band() -> None:
     rows = design_summary_rows(parameters)
     values = dict(rows)
 
+    assert values["Band set"] == "published G3TXQ"
     assert values["Bands"] == "5"
     assert "one driven band" in values["Feed model"]
     band_rows = [value for label, value in rows if label == "Band"]
@@ -54,6 +55,23 @@ def test_hexbeam_multiband_summary_lists_each_band() -> None:
     assert band_rows[0].startswith("20m:")
     assert "offset" in band_rows[0]
     assert values["Overall span"] == "6.6040 m"
+
+
+def test_hexbeam_custom_band_set_summary_is_marked_custom() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+
+    parameters = published_hexbeam_multiband_parameters(labels=("20m", "15m"))
+    custom_band = replace(
+        parameters.bands[1],
+        driver_half_length_m=parameters.bands[1].driver_half_length_m + 0.01,
+    )
+    custom = replace(parameters, bands=(parameters.bands[0], custom_band))
+
+    values = dict(design_summary_rows(custom))
+
+    assert values["Band set"] == "custom"
 
 
 def test_trap_yagi_summary_reports_the_traps() -> None:
