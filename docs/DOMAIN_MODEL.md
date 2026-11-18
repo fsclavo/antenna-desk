@@ -532,12 +532,13 @@ G3TXQ bands on the same frame. The first band is the largest/lowest-frequency
 element and defines the shared turning radius; each higher band uses
 `turning_radius × f_first / f_band` as its effective nested radius. The scalar
 parameters mirror `bands[0]` for backward compatibility. `height_m` is the
-reference plane of the lowest band, and each band adds its vertical offset. The
-first band's feed wire is the primary `FeedPoint`; additional bands use ideal
-unit-amplitude, zero-phase `Source` records. The coax harness, jumper lengths,
-inter-band coupling, and balun are not modeled. Schema 55 adds the optional
-band list; old single-band documents migrate with an empty list and keep their
-stored scalar values.
+reference plane of the lowest band, and each band adds its vertical offset.
+`to_antenna(active_band=...)` places the primary `FeedPoint` on the selected
+band while the other bands remain passive conductors; this avoids driving
+several separated ideal voltage sources at once. The coax harness, jumper
+lengths, inter-band coupling, and balun are not modeled. Schema 55 adds the
+optional band list; old single-band documents migrate with an empty list and
+keep their stored scalar values.
 
 ### TrapYagiParameters
 

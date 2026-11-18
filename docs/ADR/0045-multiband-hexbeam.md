@@ -48,11 +48,12 @@ model, persistence, and presentation decision rather than a UI-only checkbox.
    20 m, 15 in for 17 m, 9 in for 15 m, 5 in for 12 m, and 0 for 10 m. A
    single-band design has offset 0 and keeps the previous height meaning.
 
-5. **Feed model.** The first band's feed wire is the primary `FeedPoint`. Each
-   additional band's feed wire is an ideal `Source` with unit amplitude and
-   zero phase. The real coax harness, jumper lengths, coupling between bands,
-   and the balun are not modeled. The UI and reports must state that
-   limitation.
+5. **Feed model.** A simulation excites one band at a time through its feed
+   wire; the other bands remain present as passive conductors. Driving several
+   separated ideal voltage sources at once can absorb power and produce a
+   negative input resistance away from the selected band, so it is not the
+   default. The real coax harness, jumper lengths, coupling between bands, and
+   the balun are not modeled. The UI and reports must state that limitation.
 
 6. **Published rows.** The multi-band preset uses the G3TXQ five-band table:
    20 m 218 in driver half / 412 in reflector total / 24 in end spacing,
@@ -104,7 +105,7 @@ Negative:
 
 | Slice | Scope | Status |
 |---|---|---|
-| C7a | ADR, `HexbeamBand`, optional `bands`, sources, schema v55, domain/persistence/registry tests | Implemented 2026-11-18 |
+| C7a | ADR, `HexbeamBand`, optional `bands`, one-driven-band model, schema v55, domain/persistence/registry tests | Implemented 2026-11-18 |
 | C7b | Published 20/17/15/12/10 preset, 218/412 reconciliation, band table/editor, nested scene rendering, per-band reports | Implemented 2026-11-18 |
 | C7c | Selected-band optimizer, feed-harness limitations, validation/evidence audit | Implemented 2026-11-18; multi-band optimizer remains explicitly unavailable |
 

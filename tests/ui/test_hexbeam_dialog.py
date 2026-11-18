@@ -158,7 +158,8 @@ def test_hexbeam_form_selects_the_five_band_preset(qtbot: QtBot) -> None:
         "10m",
     )
     assert len(parameters.to_antenna().wires) == 50
-    assert len(parameters.to_antenna().sources) == 4
+    assert len(parameters.to_antenna().sources) == 0
+    assert parameters.to_antenna(active_band="15m").feed.wire_id == "hexbeam-band3-feed"
     assert form._band_table.rowCount() == 5
     assert not form._band_table.isHidden()
     assert not form._frequency.isEnabled()

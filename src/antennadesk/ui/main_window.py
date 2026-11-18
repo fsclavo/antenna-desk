@@ -4071,7 +4071,10 @@ class MainWindow(QMainWindow):
                 ),
             )
             spec = self._with_project_chain(design.parameters, spec)
-            requests.append(BandSimulationRequest(selection.band, spec))
+            model = design.antenna
+            if isinstance(design.parameters, HexbeamParameters):
+                model = design.parameters.to_antenna(active_band=selection.band.name)
+            requests.append(BandSimulationRequest(selection.band, spec, model=model))
 
         fitted = self._fit_band_specs_to_budget(
             design.antenna,

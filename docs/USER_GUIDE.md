@@ -1000,10 +1000,15 @@ band table. The largest selected band defines the shared turning radius; the
 reference height is the lowest selected band, and the other bands are stacked
 by their published vertical offsets. The 20 m row used by the family is
 218 in driver half, 412 in reflector total, 24 in tip gap, and 130 in turning
-radius. Multi-band optimization and automatic frequency scaling are not
-available yet; the real coax harness, inter-band coupling, and balun are not
-modeled. **Optimize...** searches the driver and reflector halves, turning
-radius, tip gap, height, and conductor radius jointly for a single-band design.
+radius. **Analyze Bands** defaults to the bands selected in the design and
+drives one band at a time while the other bands remain passive; this avoids
+driving several separated ideal sources at once. **Estimate Dimensions...**
+creates a single-band reference-scaled start and warns that the remaining
+bands must be added in the editor. Multi-band optimization and automatic
+frequency scaling are not available yet; the real coax harness, inter-band
+coupling, and balun are not modeled. **Optimize...** searches the driver and
+reflector halves, turning radius, tip gap, height, and conductor radius jointly
+for a single-band design.
 Gain, front-to-back ratio, and impedance are not independently validated.
 
 ## Create a trapped Yagi

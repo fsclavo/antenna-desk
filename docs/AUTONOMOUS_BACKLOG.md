@@ -43,10 +43,10 @@ external service and must not be invented or simulated into existence.
 | ~~C4~~ | ~~Discone~~ | L | none | **Done 2026-11-08:** radial-wire cone and disc with apex feed gap, schema 27, editor, scene, reports, construction notes, and optimizer. Evidence stays C because the wire approximation and feed transition are not validated. |
 | ~~C5~~ | ~~Trapped / multiband Yagi~~ | L | trap model reuse | **Done 2026-11-08:** two-band trapped Yagi with ideal parallel LC trap pairs on each element, schema 28, editor, scene, reports, construction notes, and optimizer. Evidence stays C because trap loss and boom mounting are not modeled. |
 | ~~C6~~ | ~~HexBeam geometry correctness~~ | M | published G3TXQ/K4KIO drawing | **Done 2026-11-18:** the single-band model now routes the M driver and rear U reflector on the six-spreader frame. Ten canonical wires, 6.604 m span, 0.6096 m tip gap, all wire points at or inside the 3.302 m turning radius, reflector midpoint at the rear, and a zero published fore-aft trim. Domain and optimizer share one frame helper; scene dimensions, golden scenes, reports, help, and docs are updated. Tests: 3,533 passed, 1 skipped; ruff/format/mypy pass; no schema or solver change. See `docs/spikes/c6-hexbeam-geometry.md`. |
-| ~~C7~~ | ~~Multi-band HexBeam (1-5 bands)~~ | L | C6; feed-model decision; published 5-band table | **Done 2026-11-18 via C7a–C7c:** selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, ideal equal-phase sources, band editor/table, nested scene, per-band reports, and a real NEC2C five-source run. 6 m remains optional; multi-band performance is not validated. |
-| ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, primary feed plus ideal sources, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped at C7a; no solver change. |
+| ~~C7~~ | ~~Multi-band HexBeam (1-5 bands)~~ | L | C6; feed-model decision; published 5-band table | **Done 2026-11-18 via C7a–C7c:** selectable band set and count (1-5) on a shared frame with nested G3TXQ 20/17/15/12/10 pairs, per-band tip gap and vertical offset, one driven band at a time, band editor/table, nested scene, per-band reports, and real NEC2C runs for 20/15/10 m. 6 m remains optional; multi-band performance is not validated. |
+| ~~C7a~~ | ~~Multi-band HexBeam domain and schema~~ | M | C6; ADR-0045 | **Done 2026-11-18:** [ADR-0045](ADR/0045-multiband-hexbeam.md) accepted. `HexbeamBand`, optional `bands`, shared frame with linear per-band radius, one driven band at a time, schema 55 with no-value-rewrite migration, optimizer and frequency-scaling unavailable reasons. Domain, persistence, migration, and registry tests pass; full gate 3,542 passed, 1 skipped at C7a; no solver change. |
 | ~~C7b~~ | ~~Multi-band HexBeam preset, editor, scene, and reports~~ | L | C7a | **Done 2026-11-18:** published 20/17/15/12/10 preset and 218/412 reconciliation; band checkboxes and read-only per-band table; nested scene rendering with the primary band emphasized and a band note; per-band summary/construction rows; EN/ES help; golden scenes updated. Multi-band optimization/scaling remain explicitly unavailable. |
-| ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; a real NEC2C five-band run completed with five driven sources and a finite pattern result; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
+| ~~C7c~~ | ~~Multi-band HexBeam validation and optimizer scope~~ | M | C7b | **Done 2026-11-18:** multi-band optimization remains explicitly unavailable with a translated reason; feed-harness, inter-band coupling, and balun limitations are visible in help/evidence/report rows; real NEC2C 20/15/10 m runs completed with one driven source per analysis and finite pattern results; validation/evidence docs updated; full gate 3,553 passed, 1 skipped. |
 | ~~E1~~ | ~~Raise the simulation timeout default to 180 s and expose an override~~ | S | none | **Done 2026-11-08:** `SimulationSpec.timeout_s` defaults to 180 s; **Advanced simulation → Solver** exposes a 10–3600 s override applied to single runs, band analysis, and family optimizations; tests cover the default and override. |
 | ~~E2~~ | ~~Parallelize independent optimizer evaluations with a bounded worker pool~~ | M–L | E1 | **Done 2026-11-08:** the engine accepts an optional batch evaluator and the command runs 1–8 bounded workers (dialog default `min(4, max(1, CPU − 1))`, sequential when 1). Candidate order and results are deterministic for a fixed configuration, cancellation reaches every in-flight solver process, and single-solve behavior is unchanged. |
 | ~~E3~~ | ~~Parallelize band analysis with the same bounded pool~~ | M | E2 | **Done 2026-11-08:** bands run in bounded batches (dialog 1–4, command 1–8, sequential default) with results and progress in selection order; cancellation reaches running bands and keeps completed results. The real `nec2c` benchmark measured **1.3–1.8×** speedup with four workers, +14 MiB parent peak RSS, and 2.4–2.8 MiB per solver child; see `docs/MULTIBAND_PERFORMANCE.md`. Re-measured after E5 on 2026-11-10: the sequential path is 10–20 % faster and the four-worker speedup is **1.2–1.5×**. |
@@ -137,6 +137,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
 | UX39 | Raise generated single-design impedance/SWR sweeps to at least 100 computed points | S–M | none | Generated templates default to 100 points (including the two-band shared plan); every computed point remains in the chart, table, and exports; marker density is bounded without dropping data; tests and docs updated; no schema or solver change. |
+| UX40 | Add a static 3D far-field lobe figure to the HTML and PDF simulation reports | S–M | UX26, UX21 | **Queued 2026-11-18:** add one deterministic, Qt-free isometric SVG wireframe of the full far-field grid to the primary far-field section, with a dBi legend, maximum-gain marker, ground ring when applicable, bounded decimation, and explicit single-cut/unavailable states. Band sections and the two 2D cuts remain unchanged. EN/ES labels, HTML/PDF vector tests, determinism and size-bound tests, user guide, architecture, validation plan, and changelog; no schema, solver, or domain change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
 | ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
@@ -565,8 +566,8 @@ closed; C7 remains queued.
 ### C7 acceptance
 
 C7a is implemented on 2026-11-18: [ADR-0045](ADR/0045-multiband-hexbeam.md)
-records the shared-frame model, per-band radius, ideal-source feed, schema 55,
-and optimizer/scaling limits. The domain accepts 1-5 bands, builds ten wires per
+records the shared-frame model, per-band radius, one-driven-band feed, schema
+55, and optimizer/scaling limits. The domain accepts 1-5 bands, builds ten wires per
 band, derives each band's nested radius from the largest band, and exposes
 explicit unavailable reasons for multi-band optimization and frequency scaling.
 
@@ -577,8 +578,15 @@ EN/ES help.
 
 C7c is implemented on 2026-11-18: multi-band optimization remains explicitly
 unavailable, the feed-harness/inter-band-coupling/balun limitation is visible
-in help/evidence/reports, and a real NEC2C five-band run completed with five
-driven sources. C7 is complete.
+in help/evidence/reports, and real NEC2C 20/15/10 m runs completed with one
+driven band per analysis and positive input resistance. C7 is complete.
+
+Post-C7 fix on 2026-11-18: **Analyze Bands** now defaults to the bands selected
+in the design and passes a band-specific one-source model per analysis; this
+removes the negative input resistance and "Simulation failed" results at 15
+and 10 m. **Estimate Dimensions...** is enabled with a single-band
+reference-scaled starting design. Multi-band optimization remains explicitly
+unavailable.
 
 - `HexbeamParameters` carries a shared frame plus 1-5 per-band records; schema
   migration maps an existing single-band design to one band.
@@ -594,8 +602,9 @@ driven sources. C7 is complete.
   and the help coverage manifest include every new field and action.
 - Scene draws all bands on the shared frame, highlights the selected band, and
   dimensions per band; reports and construction sheet include a per-band table.
-- Feed model is explicit. Ideal equal-phase sources are the default
-  approximation; the real coax harness, coupling, and balun are limitations.
+- Feed model is explicit. One selected band is driven per analysis and the
+  other bands are passive; the real coax harness, coupling, and balun are
+  limitations.
 - NEC2C integration covers multiple driven bands. The optimizer exposes the
   selected band only; full multi-band optimization is unavailable with a reason.
 - Evidence stays B for published starting dimensions; performance is not
@@ -731,7 +740,8 @@ feedback and was completed the same day.
 UX32–UX37 were queued on 2026-11-17 from frequency-first starting-dimension
 feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
 new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
-from impedance/SWR point-density feedback; it is the only open UX item.
+from impedance/SWR point-density feedback, and UX40 was queued the same day
+from the 3D-report request. Both are open UX items.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -2945,6 +2955,187 @@ of selected bands.
 - The pattern budget may coarsen the pattern at high point counts. Keep the
   existing diagnostic visible; do not trade away the impedance sweep.
 
+## UX40 — Static 3D far-field lobe in the HTML/PDF reports (queue note, 2026-11-18)
+
+**Status:** queued. The feasibility analysis is recorded here; no code or
+schema change has been made.
+
+### Request and problem
+
+The HTML and native PDF reports show azimuth and elevation cuts at the
+maximum-gain direction. When the result contains the sampled theta/phi grid
+(the normal UI path does), a third, holistic view is possible without another
+solver run. A static 3D wireframe helps directional antennas (Yagi, Moxon, quad,
+hexbeam, phased arrays) show sidelobes and nulls that can fall between two
+orthogonal cuts.
+
+UX26 deliberately kept reports 2D and vector and listed 3D report rendering as
+out of scope. This item reverses that presentation-only exclusion for one
+static vector figure. It does not reopen the interactive 3D strategy or add a
+3D engine.
+
+### Feasibility evidence
+
+- `FrequencyResult.far_field` stores `theta_deg`, `phi_deg`, and
+  `gain_total_db` for every sampled direction. The normal UI request is a 5°
+  grid: 37×73 points in free space and 19×73 with ground; the user may choose a
+  finer step, and the pattern budget may coarsen it to 30° (7×13 in free space,
+  4×13 with ground), which is still enough for a wireframe.
+- `ui/widgets/radiation_pattern_3d_view.py` already defines the useful
+  visual language: gain normalization, green/yellow/red bins, orthographic
+  projection at yaw 38° and pitch 26°, a ground grid/ring, a maximum-gain
+  marker, and X/Y/Z axes. It is a QWidget and must not be imported into
+  `reporting/`, which is Qt-free.
+- The report pipeline already builds dependency-free SVG (`svg_chart.py`) and
+  the native PDF renders SVG through `QSvgRenderer` as vector content
+  (`report_pdf.py`). No new dependency is needed.
+- A decimated 19×37 mesh with one path per gain bin is tens of kilobytes, not
+  megabytes. One figure per report is well below the existing report size.
+- The main risk is data availability, not rendering. `FarFieldRequest` allows
+  `phi_count=1` for a single cut, and older or imported results may not contain
+  a 2D grid. The figure must say so explicitly; it must never interpolate a
+  surface from two cuts.
+
+### Recommendation
+
+**Viable and recommended with a bounded scope.** Add exactly one static 3D
+wireframe to the primary far-field section of both reports. Treat it as a visual
+complement to the quantitative cuts, not a replacement. Do not add a figure per
+band and do not make it interactive. The value is highest for directional
+antennas; for a simple dipole or vertical the existing cuts still carry the
+quantitative story, but one small figure is consistent and harmless.
+
+### Decision
+
+- Add one 3D figure at the same pattern frequency as the existing cuts, after
+  the azimuth and elevation charts, in HTML and native PDF.
+- Build a pure, deterministic SVG in `reporting/pattern_lobe.py`. The HTML
+  report stays Qt-free and the PDF keeps vector content. Do not call
+  `QWidget.grab()`, `save_pattern_image()`, or any live-widget capture.
+- Use a fixed light palette and fixed orientation matching the Pattern tab
+  default, so the same immutable snapshot and language produce identical
+  output.
+- Draw only valid grid points. Do not interpolate a surface, synthesize a shape
+  from the cuts, or fill missing angles. Filter non-finite values and use the
+  same low-gain display floor as the Pattern tab so a deep null does not
+  collapse the lobe. When the model uses ground, ignore theta samples below the
+  ground plane, matching the Pattern tab.
+- Decimate the displayed mesh to at most 19 theta × 37 phi positions, including
+  both endpoints, and group segments by gain bin. Keep the stored pattern, the
+  2D cuts, and the pattern export at full resolution.
+- Use the same `gain_total_db` field as the cuts. Label the legend and caption
+  as total gain in dBi, matching the cut series label; do not imply directivity
+  or realized gain.
+- Add a numeric min/max legend, a maximum-gain marker with direction, X/Y/Z
+  orientation cues, and a ground ring when the model uses ground. State in the
+  caption that the geometry figure carries the antenna orientation. Color is
+  decorative; the legend and caption carry the values.
+- Add `role="img"` and SVG `<title>`/`<desc>`, plus a visible caption with
+  frequency, angular sampling, and maximum gain/direction.
+- Explicit unavailable states:
+  - no far-field data: keep the existing "No far-field pattern available.";
+  - fewer than two theta samples, fewer than two phi samples, or fewer than
+    four valid points: "3D pattern unavailable: the far-field data does not
+    contain a 2D angular grid.";
+  - all gains unavailable: use the same explicit unavailable message.
+- Band sections keep their existing 2D cuts only. The report contains at most
+  one 3D figure.
+- No report option or preferences dialog in this item. Include the figure
+  whenever a usable grid exists; a user toggle is a separate UI decision.
+
+### Implementation contract
+
+- New `src/antennadesk/reporting/pattern_lobe.py`: pure builder that accepts a
+  `FrequencyResult`, a labeler, and a ground flag, and returns either an SVG
+  string or an explicit unavailable reason. No PySide6 import.
+- `src/antennadesk/reporting/html_report.py`: add a sibling to
+  `_pattern_cut_charts` for the 3D figure in the primary "Far field" section;
+  pass ground from
+  `design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE`.
+- `src/antennadesk/ui/report_pdf.py`: call the same builder and render the SVG
+  with the existing chart helper in the primary pattern section. Keep the band
+  sections unchanged.
+- `src/antennadesk/ui/report_i18n.py`: add the new English source labels and
+  their Spanish translations.
+- Do not change the Pattern tab, `RadiationPattern3DView`, the solver, the
+  stored result, the model fingerprint, or the project schema.
+
+### Tests and acceptance
+
+- [ ] A new `tests/unit/reporting/test_pattern_lobe.py` uses a regular synthetic
+      grid and asserts that the SVG contains the wireframe paths, legend,
+      maximum-gain marker, title/description, and ground ring as applicable.
+- [ ] Repeated rendering of the same snapshot and language is byte-identical.
+- [ ] Free-space and ground patterns both render; the ground ring is absent in
+      free space.
+- [ ] Missing or non-finite gains do not produce NaN coordinates; a single-cut
+      pattern returns the explicit unavailable reason and no SVG.
+- [ ] The displayed mesh respects the 19×37 vertex cap and a documented
+      segment/path-size bound; stored points are not mutated.
+- [ ] HTML tests assert exactly one 3D figure in the primary section, none per
+      band, and the localized reason for far-field-disabled and single-cut
+      results.
+- [ ] The native PDF test confirms the figure is included and adds no new
+      `/Subtype /Image` object; the existing vector assertion still passes.
+- [ ] Every new static report label is in `REPORT_SPANISH`; the placeholder
+      parity and static-label coverage tests pass.
+- [ ] A manual A4 light-theme/grayscale check confirms that the figure, legend,
+      caption, and marker remain legible and do not overwhelm the two cuts.
+- [ ] Update `docs/USER_GUIDE.md` (report contents), `docs/ARCHITECTURE.md`
+      (report contents), `docs/VALIDATION_PLAN.md` (report checks), and
+      `CHANGELOG.md`. Do not rewrite historical UX26 text; add the new
+      decision and link this note.
+- [ ] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
+      passes, and `NEC2C=... uv run pytest`.
+
+### Out of scope
+
+- Interactive rotation or zoom, animation, WebGL/three.js, or any new runtime
+  dependency.
+- One 3D figure per band, per pattern snapshot, or per frequency.
+- A report-specific power/directivity/realized-gain selector; that remains
+  deferred from UX26.
+- Changing the Pattern tab or the existing 3D view.
+- Adding the pattern figure to the construction sheet; that sheet remains the
+  build artifact with its geometry views.
+- Replacing the 2D cuts or presenting the static 3D wireframe as a
+  quantitative measurement.
+- Domain, solver, persistence, schema, or fingerprint changes.
+
+### Risks
+
+- Single-cut and legacy results have no 2D grid. The unavailable message must
+  be visible and must not be replaced by a synthesized surface.
+- A fixed viewpoint can hide lobes behind the wireframe. Keep the familiar
+  default orientation, pair the figure with both cuts, and do not imply that
+  the reader can rotate it.
+- Print and grayscale legibility is weaker than on screen. Use darker
+  report-specific colors, a numeric legend, and a visible caption.
+- Report size and length can grow if the figure is repeated. Cap it at one
+  figure and one decimated mesh, and record the generated size in the tests or
+  manual check.
+- The color mapping can drift from the Pattern tab. Preserve the green/yellow/
+  red gain order and test the semantic mapping; exact RGB parity is not
+  required for print.
+
+### Alternatives considered
+
+| Alternative | Reason for rejection |
+|---|---|
+| Render the live widget or capture a PNG | Depends on theme, DPI, size, and zoom; not reproducible; bloats HTML and violates the vector/Qt-free report contract |
+| Import `RadiationPattern3DView` into `reporting/` | Adds Qt to the HTML reporting path and reuses an interactive widget as a document renderer |
+| Offscreen widget adapter in the UI layer | Reuses interactive hints/legend and palette; harder to make byte-deterministic across platforms and to strip the "drag to rotate" chrome; a report-specific pure builder is simpler |
+| Interactive WebGL/three.js in HTML | New dependency, not printable, not self-contained, and outside the static report contract |
+| Derive a 3D surface from the azimuth/elevation cuts | Invents data and misrepresents the sampled pattern |
+| Add a figure for every band | Multiplies pages and size with little new information; the band table and 2D cuts already compare bands |
+
+### Decision record
+
+UX26's exclusion was a presentation decision, not a domain or solver decision.
+This item reverses it for one static vector figure. No new ADR is required
+unless the renderer is promoted to a shared 3D visualization strategy; in that
+case, write the ADR before sharing it beyond reports.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -3381,7 +3572,8 @@ model and solver contract must land first.
     `_create_project_from_parameters()` selects the Design tab. It covers
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
-    unchanged. No new translation or help keys. UX39 is the only open UX item.
+    unchanged. No new translation or help keys. UX39 and UX40 are the open UX
+    items.
 19. **U1–U5 are complete; U6 documentation is done.** The shared
     `DisplayUnits` formatter, Units preference, adaptive geometry scenes,
     unit-aware scale bar, all family editors and editable tables, the
@@ -3393,6 +3585,10 @@ model and solver contract must land first.
     computed points, keep every point in the chart/table/exports, and bound
     marker density. It does not change band-analysis defaults, the solver, or
     the schema; see the UX39 note above.
+21. **UX40 is queued after UX39.** Add one static, deterministic 3D far-field
+    lobe to the primary report section, keep it out of the band sections, and
+    keep the HTML Qt-free and the PDF vector. It complements, and does not
+    replace, the two cuts; see the UX40 note above.
 
 ## Technical debt pass (2026-11-08)
 
@@ -3423,9 +3619,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,553 passed, 1 skipped** on 2026-11-18 after the multi-band
-  HexBeam validation slice, with `NEC2C` auto-detected by the test
-  configuration; the skip is the Windows-only console-hiding test on Linux.
+- Full gate: **3,561 passed, 1 skipped** on 2026-11-18 after the multi-band
+  HexBeam per-band analysis and estimator fix, with `NEC2C` auto-detected by
+  the test configuration; the skip is the Windows-only console-hiding test on
+  Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

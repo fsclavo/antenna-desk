@@ -266,6 +266,14 @@ def default_band_plan(
             "band.note.trap_yagi",
         )
     if isinstance(parameters, HexbeamParameters):
+        if parameters.bands:
+            plan = _plan_from_ids(tuple(band.label for band in parameters.bands))
+            if plan:
+                return BandDefault(
+                    plan,
+                    BandEvidence.PUBLISHED,
+                    "band.note.hexbeam",
+                )
         return BandDefault(
             _current_band_plan(parameters.frequency_hz),
             BandEvidence.CURRENT,

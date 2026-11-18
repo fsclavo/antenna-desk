@@ -514,7 +514,6 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "log_periodic",
         "discone",
         "trap_yagi",
-        "hexbeam",
         "phased_vertical",
         "trap_dipole",
         "zepp",

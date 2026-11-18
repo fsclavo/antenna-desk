@@ -61,10 +61,21 @@ def test_hexbeam_completes_a_pattern_run() -> None:
     assert len(point.source_results) == 1
 
 
-def test_multiband_hexbeam_completes_with_all_driven_bands() -> None:
+@pytest.mark.parametrize(
+    ("band_label", "frequency_hz"),
+    [
+        ("20m", 14_184_000.0),
+        ("15m", 21_200_000.0),
+        ("10m", 28_500_000.0),
+    ],
+)
+def test_multiband_hexbeam_completes_with_one_driven_band(
+    band_label: str,
+    frequency_hz: float,
+) -> None:
     parameters = published_hexbeam_multiband_parameters(ground=GroundModel.free_space())
     spec = SimulationSpec(
-        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        frequency_plan=FrequencyPlan.single(frequency_hz),
         segmentation=SegmentationPolicy(min_segments_per_wire=3),
         far_field=FarFieldRequest(
             enabled=True,
@@ -74,7 +85,7 @@ def test_multiband_hexbeam_completes_with_all_driven_bands() -> None:
     )
 
     result = Nec2cSolver(Path(os.environ["NEC2C"])).run(
-        parameters.to_antenna(),
+        parameters.to_antenna(active_band=band_label),
         spec,
     )
 
@@ -83,7 +94,8 @@ def test_multiband_hexbeam_completes_with_all_driven_bands() -> None:
     point = result.frequencies[0]
     assert math.isfinite(point.impedance_ohm.real)
     assert math.isfinite(point.impedance_ohm.imag)
+    assert point.impedance_ohm.real > 0.0
     assert point.currents
     assert point.far_field
-    assert result.raw_input.count("EX 0 ") == 5
-    assert len(point.source_results) == 5
+    assert result.raw_input.count("EX 0 ") == 1
+    assert len(point.source_results) == 1

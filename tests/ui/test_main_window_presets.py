@@ -961,7 +961,7 @@ def test_hexbeam_multiband_preset_uses_the_inline_editor(window: MainWindow) -> 
     )
     assert restored.height_m == pytest.approx(12.0)
     assert len(window._project.designs[0].antenna.wires) == 50
-    assert len(window._project.designs[0].antenna.sources) == 4
+    assert len(window._project.designs[0].antenna.sources) == 0
     assert window._optimize_action.isEnabled() is False
     window._dirty = False
 

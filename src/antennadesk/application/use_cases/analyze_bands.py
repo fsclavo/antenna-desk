@@ -27,10 +27,11 @@ BandProgressCallback = Callable[[int, int, AmateurBand], None]
 
 @dataclass(frozen=True, slots=True)
 class BandSimulationRequest:
-    """One band and the simulation spec that covers it."""
+    """One band, its simulation spec, and an optional band-specific model."""
 
     band: AmateurBand
     spec: SimulationSpec
+    model: AntennaModel | None = None
 
     def __post_init__(self) -> None:
         if not self.band.name.strip():
@@ -159,7 +160,7 @@ class AnalyzeBands:
         try:
             return RunSimulation(self.solver).execute(
                 RunSimulationCommand(
-                    model=command.model,
+                    model=request.model or command.model,
                     spec=request.spec,
                     cancel_token=command.cancel_token,
                 )

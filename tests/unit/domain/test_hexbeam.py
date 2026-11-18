@@ -330,20 +330,20 @@ def test_published_multiband_rejects_unknown_labels() -> None:
         published_hexbeam_multiband_parameters(labels=("30m",))
 
 
-def test_hexbeam_multiband_builds_nested_bands_and_sources() -> None:
+def test_hexbeam_multiband_builds_nested_bands_with_one_driven_band() -> None:
     parameters = _published_multiband()
     model = parameters.to_antenna()
 
     assert len(parameters.resolved_bands) == 5
     assert len(model.wires) == 50
-    assert len(model.sources) == 4
+    assert len(model.sources) == 0
     assert model.feed.wire_id == "hexbeam-feed"
-    assert {source.wire_id for source in model.sources} == {
-        "hexbeam-band2-feed",
-        "hexbeam-band3-feed",
-        "hexbeam-band4-feed",
-        "hexbeam-band5-feed",
-    }
+
+    driven_15m = parameters.to_antenna(active_band="15m")
+    assert driven_15m.feed.wire_id == "hexbeam-band3-feed"
+    assert driven_15m.design_frequency_hz == pytest.approx(21_200_000.0)
+    feed_wire = _wire(driven_15m, "hexbeam-band3-feed")
+    assert feed_wire.start.z_m == pytest.approx(10.2286)
 
     expected_offsets = (0.9652, 0.3810, 0.2286, 0.1270, 0.0)
     band_z = tuple(

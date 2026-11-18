@@ -338,11 +338,11 @@ version is implemented.
   published G3TXQ 20/17/15/12/10 m table, with the 20 m row reconciled to
   218/412. The editor selects the band set and shows a read-only per-band
   table; the scene draws every band with the primary band emphasized, and
-  reports include per-band rows. Every driven element is excited by an ideal
-  unit-amplitude, zero-phase source in the model; a real NEC2C five-band run
-  completed with five driven sources. Coax jumpers, inter-band coupling, the
-  balun, spreader sag, and frame hardware remain unmodeled. Multi-band
-  optimization and automatic frequency scaling are explicitly unavailable.
+  reports include per-band rows. Each analysis excites one selected band while
+  the other bands remain passive; a real NEC2C run completed for 20, 15, and
+  10 m. Coax jumpers, inter-band coupling, the balun, spreader sag, and frame
+  hardware remain unmodeled. Multi-band optimization and automatic frequency
+  scaling are explicitly unavailable.
   6 m can be added later as an optional sixth band. The published dimensions are
   starting values (B); multi-band gain, SWR, and front-to-back ratio are not
   validated.

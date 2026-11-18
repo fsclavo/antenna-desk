@@ -30,6 +30,7 @@ class FakeBandSolver:
     def __init__(self, *, fail_hz: float | None = None) -> None:
         self.fail_hz = fail_hz
         self.specs: list[SimulationSpec] = []
+        self.models: list[object] = []
 
     def version(self) -> SolverMetadata:
         return SolverMetadata(name="fake", version="1")
@@ -39,6 +40,7 @@ class FakeBandSolver:
 
     def run(self, model: object, spec: SimulationSpec, **kwargs: object) -> SimulationResult:
         self.specs.append(spec)
+        self.models.append(model)
         if self.fail_hz is not None and abs(spec.frequency_plan.start_hz - self.fail_hz) < 1.0:
             raise RuntimeError("solver failed")
         return SimulationResult(
@@ -120,6 +122,23 @@ class CancelledResultBandSolver(FakeBandSolver):
                 frequencies=(),
             )
         return super().run(model, spec, **kwargs)
+
+
+def test_band_request_can_override_the_model() -> None:
+    solver = FakeBandSolver()
+    base_model = _model()
+    override_model = replace(base_model, name="Band-specific model")
+    request = replace(_request("15m"), model=override_model)
+
+    AnalyzeBands(solver).execute(
+        AnalyzeBandsCommand(
+            design_id=uuid4(),
+            model=base_model,
+            requests=(request,),
+        )
+    )
+
+    assert solver.models == [override_model]
 
 
 def test_analyze_bands_runs_one_result_per_band() -> None:

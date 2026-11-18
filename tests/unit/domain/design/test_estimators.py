@@ -8,6 +8,10 @@ from antennadesk.domain.antennas.custom import ANTENNA_TYPE_CUSTOM
 from antennadesk.domain.antennas.dipole import DipoleOrientation
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters
+from antennadesk.domain.antennas.hexbeam import (
+    HexbeamParameters,
+    published_hexbeam_parameters,
+)
 from antennadesk.domain.antennas.j_pole import JPoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.moxon import MoxonParameters, moxon_20m_wire
@@ -472,6 +476,7 @@ def test_registry_covers_every_current_domain_antenna_type() -> None:
         ("quad_beam", 144_000_000.0, {"quad_beam_elements": 3}),
         ("yagi", 146_000_000.0, {"yagi_elements": 5}),
         ("moxon", 14_170_000.0, {}),
+        ("hexbeam", 14_184_000.0, {}),
         ("t2fd", 7_100_000.0, {"highest_frequency_hz": 30_000_000.0}),
     ],
 )
@@ -493,6 +498,27 @@ def test_every_supported_estimator_produces_a_valid_antenna(
         Confidence.EMPIRICAL,
         Confidence.REFERENCE_SCALED,
         Confidence.HEURISTIC,
+    }
+
+
+def test_hexbeam_estimate_scales_the_published_20m_row() -> None:
+    estimate = estimate_intent(_intent("hexbeam", 21_200_000.0))
+    expected = published_hexbeam_parameters(frequency_hz=21_200_000.0)
+
+    assert isinstance(estimate.parameters, HexbeamParameters)
+    assert estimate.parameters.driver_half_length_m == pytest.approx(expected.driver_half_length_m)
+    assert estimate.parameters.reflector_half_length_m == pytest.approx(
+        expected.reflector_half_length_m
+    )
+    assert estimate.parameters.bands == ()
+    assert estimate.confidence is Confidence.REFERENCE_SCALED
+    assert "estimator.warning.hexbeam_single_band" in estimate.warnings
+    assert {row.label_key for row in estimate.rows} == {
+        "hexbeam.driver_half",
+        "hexbeam.reflector_half",
+        "hexbeam.tip_gap",
+        "hexbeam.turning_radius",
+        "field.height",
     }
 
 
@@ -603,12 +629,15 @@ def test_estimator_type_for_the_current_template() -> None:
     ringo = estimate_intent(_intent("ringo")).parameters
     dipole = estimate_intent(_intent("wire_dipole")).parameters
     quad_beam = estimate_intent(_intent("quad_beam")).parameters
+    hexbeam = estimate_intent(_intent("hexbeam")).parameters
 
     assert estimator_type_for(ringo) == "ringo"
     assert estimator_type_for(dipole) == "wire_dipole"
     assert estimator_type_for(quad_beam) == "quad_beam"
+    assert estimator_type_for(hexbeam) == "hexbeam"
     assert supports_estimation(ringo) is True
     assert supports_estimation(quad_beam) is True
+    assert supports_estimation(hexbeam) is True
 
 
 def test_loaded_vertical_has_no_frequency_first_estimator() -> None:

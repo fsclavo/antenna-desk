@@ -12,7 +12,7 @@ from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.environment import Environment
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
-from .feed import FeedPoint, Source
+from .feed import FeedPoint
 from .geometry import Point3D
 from .materials import ALUMINUM, COPPER, ConductorMaterial
 from .wire import Wire
@@ -304,8 +304,8 @@ class HexbeamParameters:
     ``bands`` optionally carries one to five nested pairs. The first band is the
     largest/lowest-frequency element, defines the shared turning radius, and
     must match the scalar fields. ``height_m`` is the reference plane of the
-    lowest band; each band adds its vertical offset. Additional bands are
-    excited by ideal unit-amplitude, zero-phase sources.
+    lowest band; each band adds its vertical offset. ``to_antenna()`` excites
+    one selected band while the other bands remain passive conductors.
 
     The model is a wire approximation. The support frame, spreader sag, feed
     harness, balun, and inter-band coupling are not modeled.
@@ -452,15 +452,27 @@ class HexbeamParameters:
             for band in self.resolved_bands
         )
 
-    def to_antenna(self, *, name: str | None = None) -> AntennaModel:
+    def to_antenna(
+        self,
+        *,
+        name: str | None = None,
+        active_band: str | None = None,
+    ) -> AntennaModel:
+        """Build the canonical model with one driven band at a time.
+
+        ``active_band`` selects the band label whose feed wire is excited. The
+        other bands remain present as passive conductors. This avoids driving
+        several separated ideal voltage sources at once, which can absorb power
+        and produce a negative input resistance away from the selected band.
+        """
+
         angle = units.degrees_to_radians(self.azimuth_deg)
         cos_angle = math.cos(angle)
         sin_angle = math.sin(angle)
         trim = self.element_separation_m
         wires: list[Wire] = []
-        sources: list[Source] = []
-        primary_feed_id = HEXBEAM_FEED_ID
-        primary_feed_offset = self.feed_gap_m / 2.0
+        feed_ids: list[str] = []
+        feed_offsets: list[float] = []
 
         for index, band in enumerate(self.resolved_bands):
             prefix = "hexbeam-" if index == 0 else f"hexbeam-band{index + 1}-"
@@ -569,17 +581,21 @@ class HexbeamParameters:
                     ),
                 ]
             )
-            if index == 0:
-                primary_feed_id = feed_id
-                primary_feed_offset = band.feed_gap_m / 2.0
-            else:
-                sources.append(Source(feed_id, band.feed_gap_m / 2.0))
+            feed_ids.append(feed_id)
+            feed_offsets.append(band.feed_gap_m / 2.0)
+
+        labels = [band.label.casefold() for band in self.resolved_bands]
+        excited_index = 0
+        if active_band is not None:
+            try:
+                excited_index = labels.index(active_band.casefold())
+            except ValueError:
+                excited_index = 0
 
         return AntennaModel(
             name=name or self.template_name,
-            design_frequency_hz=self.frequency_hz,
+            design_frequency_hz=self.resolved_bands[excited_index].frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint(primary_feed_id, primary_feed_offset),
+            feed=FeedPoint(feed_ids[excited_index], feed_offsets[excited_index]),
             environment=Environment(ground=self.ground),
-            sources=tuple(sources),
         )

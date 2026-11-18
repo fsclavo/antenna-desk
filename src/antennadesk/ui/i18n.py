@@ -2776,6 +2776,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cebik, W4RNL — Moxon review, Table 1",
         Language.SPANISH: "Cebik, W4RNL — revisión Moxon, Tabla 1",
     },
+    "source.g3txq.broadband_hexbeam.20m_reference": {
+        Language.ENGLISH: "G3TXQ — broadband HexBeam 20 m reference",
+        Language.SPANISH: "G3TXQ — referencia de 20 m del HexBeam de banda ancha",
+    },
     "source.antennadesk.heuristic.application_preset": {
         Language.ENGLISH: "AntennaDesk application preset (heuristic)",
         Language.SPANISH: "Preset de aplicación de AntennaDesk (heurístico)",
@@ -2821,6 +2825,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "estimator.warning.starting_point": {
         Language.ENGLISH: "starting point only; verify with simulation or measurement",
         Language.SPANISH: "solo punto de partida; verificar con simulación o medición",
+    },
+    "estimator.warning.hexbeam_single_band": {
+        Language.ENGLISH: (
+            "this estimate creates one scaled band; add the remaining published "
+            "bands in the HexBeam editor"
+        ),
+        Language.SPANISH: (
+            "esta estimación crea una sola banda escalada; agregá las demás "
+            "bandas publicadas en el editor del HexBeam"
+        ),
     },
     "estimator.warning.inverted_v_angle_increased": {
         Language.ENGLISH: ("the included angle was widened to keep the leg ends above ground"),
@@ -7066,9 +7080,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "band.note.hexbeam": {
-        Language.ENGLISH: ("Current band only; the hexbeam is a single-band starting design."),
+        Language.ENGLISH: (
+            "The design's bands; one driven band per analysis, with the other bands passive."
+        ),
         Language.SPANISH: (
-            "Solo la banda actual; el hexbeam es un diseño de partida de una sola banda."
+            "Las bandas del diseño; una banda excitada por análisis y las demás pasivas."
         ),
     },
     "status.analyzing_bands": {

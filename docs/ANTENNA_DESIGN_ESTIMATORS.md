@@ -161,6 +161,19 @@ This is a starting geometry, not a validated gain, front-to-back-ratio, or
 feedpoint-impedance claim. The quarter-wave side is usually short and reactive
 at the design frequency; tune it with the solver before judging the match.
 
+### HexBeam starting estimate
+
+The frequency-first estimator supports a single-band HexBeam. It scales the
+published G3TXQ 20 m reference (218 in driver half, 412 in reflector total,
+24 in tip gap, 130 in turning radius at 14.184 MHz) linearly to the requested
+frequency, preserving the requested height, conductor radius, material, ground,
+and azimuth. The tolerance is 2% of the driver half-length.
+
+This creates one scaled band. The result carries a warning that the remaining
+published bands must be added in the HexBeam editor; it does not invent a
+frequency-first multi-band layout. The estimator does not claim validated gain,
+front-to-back ratio, impedance, feed harness, or coupling between bands.
+
 ### J Pole and Slim Jim starting point
 
 M0UKD's published calculator defines the J pole as 0.75 λ overall, split into a

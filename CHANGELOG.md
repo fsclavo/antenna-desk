@@ -13,21 +13,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   optional tuple of `HexbeamBand` records for one to five nested bands on the
   shared six-spreader frame. The largest band defines the turning radius; each
   higher band uses a linearly scaled nested radius. Each band adds its own
-  driver/reflector halves, tip gap, feed gap, and vertical offset; additional
-  bands are excited by ideal unit-amplitude, zero-phase sources. Schema 55 adds
-  the optional band list without rewriting existing single-band values. The
-  editor, published five-band preset, scene highlight, and per-band reports
-  remain queued for C7b; multi-band optimizer and frequency scaling are
+  driver/reflector halves, tip gap, feed gap, and vertical offset; each
+  simulation excites one selected band while the other bands remain passive.
+  Schema 55 adds the optional band list without rewriting existing single-band
+  values. The published five-band preset, editor, nested scene, and per-band
+  reports were added in C7b; multi-band optimizer and frequency scaling are
   explicitly unavailable. The real coax harness, coupling, and balun are not
   modeled.
+- **HexBeam frequency-first estimate.** **Estimate Dimensions...** now scales
+  the published G3TXQ 20 m row linearly to the requested frequency and creates a
+  single-band starting design. The result warns that the other published bands
+  must be added in the editor; no multi-band performance or feed-harness claim
+  is made.
 - **Multi-band HexBeam preset and editor.** The HexBeam editor now offers
   checkboxes for the published 20/17/15/12/10 m set, a read-only per-band table,
   and nested scene rendering. Two or more selected bands use the G3TXQ table;
   the largest band defines the shared turning radius and the lowest band sets
   the reference height. The single-band 20 m reference was reconciled from
   219/207 to 218/412 in driver/reflector dimensions. Reports include per-band
-  rows. A real NEC2C five-band run completes with five driven sources.
-  Multi-band optimization and automatic frequency scaling remain unavailable;
+  rows. Each analysis excites one selected band while the other bands remain
+  passive; real NEC2C runs complete for 20, 15, and 10 m. Multi-band
+  optimization and automatic frequency scaling remain unavailable;
   the coax harness, inter-band coupling, and balun are not modeled.
 - **Biquad and double-biquad feed transformer.** New designs start with an
   ideal 4:1 feed transformer, editable in the design panel and persisted in
@@ -60,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Multi-band HexBeam analysis and estimator.** **Analyze Bands** now
+  defaults to the bands selected in the design and excites one band at a time,
+  leaving the other bands as passive conductors. This removes the negative
+  input resistance and "Simulation failed" results at 15 and 10 m caused by
+  driving several separated ideal sources simultaneously. **Estimate
+  Dimensions...** is enabled for a single-band reference-scaled HexBeam start.
+  Multi-band optimization remains explicitly unavailable.
 - **HexBeam geometry.** The single-band model now routes the M-shaped driver
   and rear U-shaped reflector on the six-spreader frame instead of solving the
   wire tips outside the turning radius. At 20 m the span is the 6.60 m frame

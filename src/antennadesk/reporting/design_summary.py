@@ -799,7 +799,12 @@ def design_summary_rows(
         )
         if len(parameters.bands) > 1:
             rows.append(("Bands", str(len(parameters.bands))))
-            rows.append(("Feed model", "ideal sources; coax harness and balun not modeled"))
+            rows.append(
+                (
+                    "Feed model",
+                    "one driven band; other bands passive; coax harness and balun not modeled",
+                )
+            )
             for band in parameters.bands:
                 rows.append(
                     (

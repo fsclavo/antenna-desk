@@ -24,6 +24,10 @@ from ..antennas.folded_dipole import (
     FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
     FoldedDipoleParameters,
 )
+from ..antennas.hexbeam import (
+    ANTENNA_TYPE_HEXBEAM,
+    published_hexbeam_parameters,
+)
 from ..antennas.inverted_v import ANTENNA_TYPE_INVERTED_V, InvertedVParameters
 from ..antennas.j_pole import ANTENNA_TYPE_J_POLE, JPoleParameters
 from ..antennas.loop import (
@@ -55,6 +59,7 @@ from .formulas import (
     SOURCE_CEBIK_MOXON,
     SOURCE_CEBIK_T2FD,
     SOURCE_DL6WU_YAGI,
+    SOURCE_G3TXQ_HEXBEAM,
     SOURCE_M0UKD_J_POLE,
     SOURCE_PA9X_EFHW,
     default_radial_length_m,
@@ -673,6 +678,36 @@ def estimate_moxon(intent: DesignIntent) -> DimensionEstimate:
     )
 
 
+def estimate_hexbeam(intent: DesignIntent) -> DimensionEstimate:
+    parameters = published_hexbeam_parameters(
+        frequency_hz=intent.frequency_hz,
+        height_m=intent.height_m,
+        azimuth_deg=intent.azimuth_deg,
+        wire_radius_m=intent.wire_radius_m,
+        material=intent.material,
+        ground=intent.ground,
+    )
+    return DimensionEstimate(
+        parameters=parameters,
+        method_id="hexbeam.g3txq_20m_scaled",
+        confidence=Confidence.REFERENCE_SCALED,
+        tolerance_m=parameters.driver_half_length_m * 0.02,
+        source_ids=(SOURCE_G3TXQ_HEXBEAM,),
+        assumptions=("estimator.assumption.reference_scaling",),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.hexbeam_single_band",
+        ),
+        rows=(
+            _length_row("hexbeam.driver_half", parameters.driver_half_length_m),
+            _length_row("hexbeam.reflector_half", parameters.reflector_half_length_m),
+            _length_row("hexbeam.tip_gap", parameters.tip_gap_m),
+            _length_row("hexbeam.turning_radius", parameters.turning_radius_m),
+            _length_row("field.height", intent.height_m),
+        ),
+    )
+
+
 ESTIMATORS = {
     ANTENNA_TYPE_WIRE_DIPOLE: estimate_dipole,
     ANTENNA_TYPE_FOLDED_DIPOLE: estimate_folded_dipole,
@@ -687,6 +722,7 @@ ESTIMATORS = {
     ANTENNA_TYPE_QUAD_BEAM: estimate_quad_beam,
     ANTENNA_TYPE_YAGI: estimate_yagi,
     ANTENNA_TYPE_MOXON: estimate_moxon,
+    ANTENNA_TYPE_HEXBEAM: estimate_hexbeam,
     ANTENNA_TYPE_T2FD: estimate_t2fd,
 }
 

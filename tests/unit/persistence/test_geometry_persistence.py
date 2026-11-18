@@ -909,7 +909,7 @@ def test_multiband_hexbeam_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna == original.designs[0].antenna
     assert restored.designs[0].antenna_type == "hexbeam"
     assert len(restored.designs[0].antenna.wires) == 20
-    assert len(restored.designs[0].antenna.sources) == 1
+    assert len(restored.designs[0].antenna.sources) == 0
 
 
 def test_trap_yagi_round_trips_through_the_schema() -> None:

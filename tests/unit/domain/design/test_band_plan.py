@@ -8,6 +8,10 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters, EndFedPreset
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.g5rv import g5rv_parameters
+from antennadesk.domain.antennas.hexbeam import (
+    published_hexbeam_multiband_parameters,
+    published_hexbeam_parameters,
+)
 from antennadesk.domain.antennas.ocfd import OCFDParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
@@ -263,3 +267,13 @@ def test_operating_frequencies_use_band_centers_for_non_harmonic_families() -> N
     targets = operating_frequencies_for(parameters, BandPlan(bands))
 
     assert targets == pytest.approx(tuple(selection.center_hz for selection in bands))
+
+
+def test_hexbeam_default_band_plan_uses_the_design_bands() -> None:
+    single = default_band_plan(published_hexbeam_parameters())
+    multi = default_band_plan(published_hexbeam_multiband_parameters(labels=("20m", "15m", "10m")))
+
+    assert single.plan.band_ids == ("20m",)
+    assert multi.plan.band_ids == ("20m", "15m", "10m")
+    assert multi.evidence is BandEvidence.PUBLISHED
+    assert multi.note_key == "band.note.hexbeam"

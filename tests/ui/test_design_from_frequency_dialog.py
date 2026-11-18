@@ -322,6 +322,7 @@ def test_changing_an_input_invalidates_the_estimate(qtbot: QtBot) -> None:
         "quad_beam",
         "yagi",
         "moxon",
+        "hexbeam",
         "t2fd",
     ],
 )
