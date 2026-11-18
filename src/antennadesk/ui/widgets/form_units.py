@@ -55,7 +55,6 @@ class LengthField:
             spec.minimum_m,
             scale_hint=spec.scale_hint,
         )
-        self.configure(spec.minimum_m)
 
     @property
     def unit(self) -> LengthUnit:

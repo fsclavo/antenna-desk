@@ -150,3 +150,23 @@ def test_moxon_form_allows_tall_installation_heights(qtbot: QtBot) -> None:
     dialog._form._height.setValue(120.0)
 
     assert dialog.parameters().height_m == pytest.approx(120.0)
+
+
+def test_moxon_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.moxon import moxon_20m_wire
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.moxon_form import MoxonForm
+
+    form = MoxonForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(moxon_20m_wire(frequency_hz=435_000_000.0, height_m=10.0))
+
+    assert form._width_field.unit == "cm"
+    assert form._depth_field.unit == "cm"
+    assert form._reflector_tip_field.unit == "cm"
+    assert form._driven_tip_field.unit == "cm"
+    assert form._height_field.unit == "m"

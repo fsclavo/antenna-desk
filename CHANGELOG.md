@@ -74,6 +74,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Discone form migration.** The cone height, cone radius, and disc radius now
   use `LengthFieldSpec`; with the automatic policy they switch to cm for UHF
   designs while fixed-unit forms keep the previous behavior.
+- **Moxon form migration.** Width, depth, reflector/driven tips, and height now
+  use `LengthFieldSpec`; the automatic policy shows the 435 MHz dimensions in
+  cm while preserving the installation height in meters.
 
 ### Changed
 
