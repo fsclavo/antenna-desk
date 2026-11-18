@@ -87,6 +87,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Trap-Yagi form migration.** Driven length, reflector/director spacing, trap
   inset, and height now use `LengthFieldSpec`; automatic units show UHF element
   details in cm while keeping the installation height in meters.
+- **Phased-vertical form migration.** Element spacing, element height, base
+  height, and radial length now use `LengthFieldSpec`; automatic units choose
+  the unit per field, so a 14 MHz array keeps its main dimensions in meters
+  while a 0.25 m base height shows in centimeters.
 
 ### Changed
 

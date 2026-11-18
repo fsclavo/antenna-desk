@@ -135,3 +135,28 @@ def test_phased_vertical_form_converts_units(qtbot: QtBot) -> None:
     assert parameters.height_m == pytest.approx(5.0, rel=1e-3)
     assert parameters.spacing_m == pytest.approx(6.0, rel=1e-3)
     assert dialog._form._height.suffix().strip() == "ft"
+
+
+def test_phased_vertical_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
+
+    form = PhasedVerticalForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    parameters = replace(
+        phased_vertical_parameters(frequency_hz=14_100_000.0),
+        base_height_m=0.25,
+    )
+    form.set_parameters(parameters)
+
+    assert form._spacing_field.unit == "m"
+    assert form._radial_length_field.unit == "m"
+    assert form._height_field.unit == "m"
+    assert form._base_height_field.unit == "cm"

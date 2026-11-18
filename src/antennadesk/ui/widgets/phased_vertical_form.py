@@ -33,17 +33,18 @@ from ..material_combo import (
     retranslate_material_combo,
 )
 from ..units import (
+    DisplayUnits,
+    LengthPolicy,
     UnitSystem,
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .starting_dimensions import StartingDimensionsState
 
@@ -57,11 +58,17 @@ class PhasedVerticalForm(QWidget):
         unit_system: UnitSystem,
         parameters: PhasedVerticalParameters | None = None,
         parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="phased_vertical")
         self._unit_system = unit_system
+        self._display_units = display_units or DisplayUnits(
+            unit_system,
+            LengthPolicy.FIXED,
+        )
         self._updating = False
         minimum_length, maximum_length = length_bounds(unit_system)
         minimum_height, maximum_height = height_bounds(unit_system)
@@ -89,6 +96,25 @@ class PhasedVerticalForm(QWidget):
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
+        self._spacing_field = LengthField(
+            self._spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._base_height_field = LengthField(
+            self._base_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+
         self._phase_step = QDoubleSpinBox(self)
         self._phase_step.setRange(-360.0, 360.0)
         self._phase_step.setDecimals(1)
@@ -106,6 +132,12 @@ class PhasedVerticalForm(QWidget):
         self._radial_length.setRange(minimum_length, maximum_length)
         self._radial_length.setDecimals(3)
         self._radial_length.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._radial_length_field = LengthField(
+            self._radial_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
 
         self._radial_angle = QDoubleSpinBox(self)
         self._radial_angle.setRange(0.0, 360.0)
@@ -336,24 +368,21 @@ class PhasedVerticalForm(QWidget):
         except (ValueError, TypeError):
             parameters = None
         self._unit_system = unit_system
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
+        self._display_units = DisplayUnits(
+            unit_system,
+            self._display_units.length_policy,
+        )
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._spacing,
-                self._height,
-                self._base_height,
-                self._radial_length,
-            )
-            self._spacing.setRange(minimum_length, maximum_length)
-            self._radial_length.setRange(minimum_length, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
-            self._base_height.setRange(minimum_height, maximum_height)
+            for field in (
+                self._spacing_field,
+                self._height_field,
+                self._base_height_field,
+                self._radial_length_field,
+            ):
+                field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -366,15 +395,13 @@ class PhasedVerticalForm(QWidget):
         try:
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
             self._element_count.setValue(parameters.element_count)
-            self._spacing.setValue(length_from_m(parameters.spacing_m, self._unit_system))
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
-            self._base_height.setValue(length_from_m(parameters.base_height_m, self._unit_system))
+            self._spacing_field.configure(parameters.spacing_m)
+            self._height_field.configure(parameters.height_m)
+            self._base_height_field.configure(parameters.base_height_m)
             self._phase_step.setValue(parameters.phase_step_deg)
             self._amplitude_taper.setValue(parameters.amplitude_taper)
             self._radial_count.setValue(parameters.radial_count)
-            self._radial_length.setValue(
-                length_from_m(parameters.radial_length_m, self._unit_system)
-            )
+            self._radial_length_field.configure(parameters.radial_length_m)
             self._radial_angle.setValue(parameters.radial_angle_deg)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
@@ -423,20 +450,14 @@ class PhasedVerticalForm(QWidget):
     def parameters(self) -> PhasedVerticalParameters:
         return PhasedVerticalParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
-            height_m=length_to_m(self._height.value(), self._unit_system),
-            spacing_m=length_to_m(self._spacing.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
+            spacing_m=self._spacing_field.value_m(),
             element_count=self._element_count.value(),
-            base_height_m=length_to_m(
-                self._base_height.value(),
-                self._unit_system,
-            ),
+            base_height_m=self._base_height_field.value_m(),
             phase_step_deg=self._phase_step.value(),
             amplitude_taper=self._amplitude_taper.value(),
             radial_count=self._radial_count.value(),
-            radial_length_m=length_to_m(
-                self._radial_length.value(),
-                self._unit_system,
-            ),
+            radial_length_m=self._radial_length_field.value_m(),
             radial_angle_deg=self._radial_angle.value(),
             azimuth_deg=self._azimuth.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
