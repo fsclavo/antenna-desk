@@ -125,3 +125,26 @@ def test_trap_yagi_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> 
     assert parameters.driven_length_m == pytest.approx(20.0, rel=1e-3)
     assert parameters.trap_inset_m == pytest.approx(3.0, rel=1e-3)
     assert dialog._form._driven_length.suffix().strip() == "ft"
+
+
+def test_trap_yagi_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.trap_yagi_form import TrapYagiForm
+
+    form = TrapYagiForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(
+        trap_yagi_parameters(
+            frequency_hz=435_000_000.0,
+            high_band_frequency_hz=870_000_000.0,
+        )
+    )
+
+    assert form._driven_length_field.unit == "cm"
+    assert form._trap_inset_field.unit == "cm"
+    assert form._height_field.unit == "m"

@@ -84,6 +84,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Quad-beam form migration.** Loop side, reflector/director spacing, and
   height now use `LengthFieldSpec`; automatic units show UHF loop dimensions in
   cm while keeping the installation height in meters.
+- **Trap-Yagi form migration.** Driven length, reflector/director spacing, trap
+  inset, and height now use `LengthFieldSpec`; automatic units show UHF element
+  details in cm while keeping the installation height in meters.
 
 ### Changed
 
