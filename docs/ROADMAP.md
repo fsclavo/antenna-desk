@@ -316,11 +316,11 @@ point; `C` is structural/experimental only.
 | 19 | Trapped / multiband Yagi | New family | L | High | B/C | **Implemented on 2026-11-08:** two-band Yagi with one ideal parallel LC trap pair per element, schema 28, inline editor, scene contract, reports, construction notes, and family optimizer. Trap loss, boom mounting, feed line, and matching remain unvalidated. |
 | 20 | Shortened loaded EFHW | EndFed variant | M | Medium | B/C | **Implemented on 2026-11-09, matching model extended 2026-11-10, inverted-L option 2026-11-11:** 80-10 m (20.35 m + 110 µH + 2.39 m) and 40-20-10 m (10.01 m + 23 µH + 1.85 m) presets with a 49:1 transformer, editable series coil, schema 33 for the matching values, schema 34 for the project design target, and schema 35 for the optional inverted-L bend, catalog entries, band plans, reports, construction notes, and optimizer variables. The optional primary 100 pF shunt and 0.198 µH leakage estimate are modeled; an optional measured 49:1 loss table from Squash Practice/AF7NX is available, and the bend uses a sharp 90° corner with an 8 m vertical starting section and no independent validation. An optional feedpoint common-mode choke accepts measured series R/X on the coax shield (ADR-0037), and an optional design-specific L-network can replace the fixed internal match (ADR-0038); shack-end choke placement, shield transfer impedance, ground, capacitor ESR, and winding capacitance are not modeled. Edited or scaled geometry is experimental. |
 
-### HexBeam follow-ups (C6 implemented 2026-11-18; C7 queued)
+### HexBeam follow-ups (C6/C7 implemented 2026-11-18)
 
 These extend an existing family; they are not new antenna families. The
-single-band HexBeam in item 16 was corrected on 2026-11-18; the multi-band
-version remains queued.
+single-band HexBeam in item 16 was corrected on 2026-11-18, and the multi-band
+version is implemented.
 
 - **HexBeam geometry correctness (M) — implemented 2026-11-18.** The
   single-band G3TXQ broadband wire path now follows the six-spreader frame:

@@ -519,13 +519,14 @@ Documentation:
 - **The exploratory control is not a reference.** Do not turn 4.86 mm,
   7.27 mm, or 25 dB into golden values without a traceable source.
 
-## HexBeam follow-ups (C6 complete 2026-11-18; C7 queued)
+## HexBeam follow-ups (C6/C7 complete 2026-11-18)
 
-C6 is complete. The former single-band model derived each tip from the
+C6 and C7 are complete. The former single-band model derived each tip from the
 published wire half-length and placed it outside the 130 in frame, producing a
 9.03 m span on a 3.30 m turning radius and a 0.67 m drawn tip gap against the
 published 0.61 m. The corrected model has a 6.604 m span, a 0.6096 m tip gap,
-and every wire point inside the 3.302 m turning radius. C7 can now start.
+and every wire point inside the 3.302 m turning radius. C7 adds the published
+20/17/15/12/10 preset, editor, nested scene, reports, and NEC2C coverage.
 
 ### C6 acceptance (implemented 2026-11-18)
 
