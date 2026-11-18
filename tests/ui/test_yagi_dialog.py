@@ -168,7 +168,7 @@ def test_yagi_dialog_supports_tapered_element_tips(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
     form = dialog._form
-    form._taper_length.setValue(0.3)
+    form._taper_length.setValue(300.0)
     form._taper_radius.setValue(radius_from_m(0.002, UnitSystem.METRIC))
 
     parameters = dialog.parameters()
@@ -186,7 +186,7 @@ def test_yagi_dialog_rejects_taper_with_a_folded_driven_element(
     qtbot.addWidget(dialog)
     form = dialog._form
     form._driven_folded.setChecked(True)
-    form._taper_length.setValue(0.3)
+    form._taper_length.setValue(300.0)
     form._taper_radius.setValue(radius_from_m(0.002, UnitSystem.METRIC))
 
     with pytest.raises(ValueError, match="tapered elements"):
@@ -198,7 +198,7 @@ def test_yagi_dialog_supports_a_folded_driven_element(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     dialog._driven_folded.setChecked(True)
-    dialog._driven_fold_spacing.setValue(0.08)
+    dialog._driven_fold_spacing.setValue(8.0)
     parameters = dialog.parameters()
 
     assert parameters.driven_folded is True
@@ -230,8 +230,8 @@ def test_yagi_dialog_supports_a_beta_hairpin_match(qtbot: QtBot) -> None:
 
     index = dialog._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
     dialog._match_type.setCurrentIndex(index)
-    dialog._match_length.setValue(0.2)
-    dialog._match_spacing.setValue(0.1)
+    dialog._match_length.setValue(20.0)
+    dialog._match_spacing.setValue(10.0)
     parameters = dialog.parameters()
 
     assert parameters.match_type is YagiMatchType.BETA_HAIRPIN
@@ -249,13 +249,14 @@ def test_yagi_dialog_does_not_scale_matching_hardware_with_frequency(qtbot: QtBo
     qtbot.addWidget(dialog)
     index = dialog._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
     dialog._match_type.setCurrentIndex(index)
-    dialog._match_length.setValue(0.2)
-    dialog._match_spacing.setValue(0.1)
+    dialog._match_length.setValue(20.0)
+    dialog._match_spacing.setValue(10.0)
 
     dialog._form._frequency.setValue(7.1)
 
-    assert dialog._match_length.value() == pytest.approx(0.2)
-    assert dialog._match_spacing.value() == pytest.approx(0.1)
+    parameters = dialog.parameters()
+    assert parameters.match_length_m == pytest.approx(0.2)
+    assert parameters.match_spacing_m == pytest.approx(0.1)
 
 
 def test_yagi_dialog_disables_match_with_folded_driven(qtbot: QtBot) -> None:
@@ -350,3 +351,14 @@ def test_yagi_table_uses_cm_at_435_mhz(qtbot: QtBot) -> None:
     assert "(cm)" in dialog._table.horizontalHeaderItem(1).text()
     assert "(cm)" in dialog._table.horizontalHeaderItem(2).text()
     assert dialog._table.item(0, 2).text().count(".") == 1
+
+
+def test_yagi_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    assert form._height_field.unit == "m"
+    assert form._driven_fold_spacing_field.unit == "cm"
+    assert form._match_length_field.unit == "cm"
+    assert form._match_spacing_field.unit == "cm"

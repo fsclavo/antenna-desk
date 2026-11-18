@@ -43,14 +43,13 @@ from ..units import (
     LengthUnit,
     UnitSystem,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
     radius_unit_key,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .table_headers import fit_header_sections
 
@@ -195,6 +194,42 @@ class YagiForm(QWidget):
         self._match_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
         self._match_spacing.setValue(length_from_m(0.1, unit_system))
         self._match_note = QLabel(translator.t("yagi.gamma_note"), self)
+
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._taper_length_field = LengthField(
+            self._taper_length,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._driven_fold_spacing_field = LengthField(
+            self._driven_fold_spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._match_length_field = LengthField(
+            self._match_length,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._match_spacing_field = LengthField(
+            self._match_spacing,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field.configure(12.0)
+        self._taper_length_field.configure(0.0)
+        self._driven_fold_spacing_field.configure(0.1)
+        self._match_length_field.configure(0.2)
+        self._match_spacing_field.configure(0.1)
         self._match_note.setWordWrap(True)
 
         self._geometry = QLabel(self)
@@ -435,7 +470,7 @@ class YagiForm(QWidget):
     def _update_clearance_warning(self) -> None:
         vertical = self._selected_polarization() is Polarization.VERTICAL
         required = self._longest_element_m() / 2.0
-        current = length_to_m(self._height.value(), self._unit_system)
+        current = self._height_field.value_m()
         invalid = vertical and required > 0.0 and current <= required
         self._clearance_warning.setText(
             self._translator.t(
@@ -485,17 +520,14 @@ class YagiForm(QWidget):
         try:
             yagi = nbs_five_element(
                 frequency_hz=self._frequency.value() * 1_000_000.0,
-                height_m=length_to_m(self._height.value(), self._unit_system),
+                height_m=self._height_field.value_m(),
                 azimuth_deg=self._azimuth.value(),
                 polarization=self._selected_polarization(),
                 material=self._selected_material(),
                 ground=self._ground_model(),
                 radius_m=self._radius_m(),
                 folded_driven=self._driven_folded.isChecked(),
-                folded_spacing_m=length_to_m(
-                    self._driven_fold_spacing.value(),
-                    self._unit_system,
-                ),
+                folded_spacing_m=self._driven_fold_spacing_field.value_m(),
             )
         except ValueError:
             self._update_clearance_warning()
@@ -576,15 +608,14 @@ class YagiForm(QWidget):
         )
         apply_radius_units(self._translator, unit_system, self._radius)
         apply_radius_units(self._translator, unit_system, self._taper_radius)
-        apply_length_suffixes(
-            self._translator,
-            unit_system,
-            self._height,
-            self._taper_length,
-            self._driven_fold_spacing,
-            self._match_length,
-            self._match_spacing,
-        )
+        for field in (
+            self._height_field,
+            self._taper_length_field,
+            self._driven_fold_spacing_field,
+            self._match_length_field,
+            self._match_spacing_field,
+        ):
+            field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -593,7 +624,7 @@ class YagiForm(QWidget):
         try:
             self._last_frequency_mhz = parameters.frequency_hz / 1_000_000.0
             self._frequency.setValue(parameters.frequency_hz / 1_000_000.0)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             polarization_index = self._polarization.findData(parameters.polarization.value)
             if polarization_index >= 0:
@@ -602,9 +633,7 @@ class YagiForm(QWidget):
                 self._radius.setValue(
                     radius_from_m(parameters.elements[0].radius_m, self._unit_system)
                 )
-            self._taper_length.setValue(
-                length_from_m(parameters.taper_tip_length_m, self._unit_system)
-            )
+            self._taper_length_field.configure(parameters.taper_tip_length_m)
             self._taper_radius.setValue(
                 radius_from_m(parameters.taper_tip_radius_m, self._unit_system)
             )
@@ -619,17 +648,13 @@ class YagiForm(QWidget):
             if parameters.ground.conductivity_s_per_m is not None:
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
             self._driven_folded.setChecked(parameters.driven_folded)
-            self._driven_fold_spacing.setValue(
-                length_from_m(parameters.driven_fold_spacing_m, self._unit_system)
-            )
+            self._driven_fold_spacing_field.configure(parameters.driven_fold_spacing_m)
             self._transformer.setValue(parameters.transformer_ratio)
             match_index = self._match_type.findData(parameters.match_type.value)
             if match_index >= 0:
                 self._match_type.setCurrentIndex(match_index)
-            self._match_length.setValue(length_from_m(parameters.match_length_m, self._unit_system))
-            self._match_spacing.setValue(
-                length_from_m(parameters.match_spacing_m, self._unit_system)
-            )
+            self._match_length_field.configure(parameters.match_length_m)
+            self._match_spacing_field.configure(parameters.match_spacing_m)
             self._table.setRowCount(0)
             self._set_table_unit_from_elements(parameters.elements)
             for element in parameters.elements:
@@ -659,7 +684,7 @@ class YagiForm(QWidget):
             return
         invalid: list[str] = []
         if self._driven_folded.isChecked():
-            spacing_m = length_to_m(self._driven_fold_spacing.value(), self._unit_system)
+            spacing_m = self._driven_fold_spacing_field.value_m()
             if spacing_m <= 2.0 * radius_m:
                 invalid.append(
                     self._translator.t(
@@ -669,8 +694,8 @@ class YagiForm(QWidget):
                     )
                 )
         if self._selected_match_type() is YagiMatchType.BETA_HAIRPIN:
-            spacing_m = length_to_m(self._match_spacing.value(), self._unit_system)
-            length_m = length_to_m(self._match_length.value(), self._unit_system)
+            spacing_m = self._match_spacing_field.value_m()
+            length_m = self._match_length_field.value_m()
             minimum = 2.0 * radius_m
             if spacing_m <= minimum or length_m <= minimum:
                 invalid.append(
@@ -745,14 +770,11 @@ class YagiForm(QWidget):
         driven_index = next(
             index for index, (row, _element) in enumerate(rows) if row == driven_row
         )
-        taper_length_m = length_to_m(
-            self._taper_length.value(),
-            self._unit_system,
-        )
+        taper_length_m = self._taper_length_field.value_m()
         return YagiParameters(
             frequency_hz=self._frequency.value() * 1_000_000.0,
             elements=tuple(element for _row, element in rows),
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
             taper_tip_length_m=taper_length_m,
             taper_tip_radius_m=(
                 radius_to_m(self._taper_radius.value(), self._unit_system)
@@ -761,13 +783,10 @@ class YagiForm(QWidget):
             ),
             driven_index=driven_index,
             driven_folded=self._driven_folded.isChecked(),
-            driven_fold_spacing_m=length_to_m(
-                self._driven_fold_spacing.value(),
-                self._unit_system,
-            ),
+            driven_fold_spacing_m=self._driven_fold_spacing_field.value_m(),
             match_type=self._selected_match_type(),
-            match_length_m=length_to_m(self._match_length.value(), self._unit_system),
-            match_spacing_m=length_to_m(self._match_spacing.value(), self._unit_system),
+            match_length_m=self._match_length_field.value_m(),
+            match_spacing_m=self._match_spacing_field.value_m(),
             transformer_ratio=(
                 self._transformer.value() if self._driven_folded.isChecked() else 1.0
             ),

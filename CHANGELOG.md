@@ -138,6 +138,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dipole/height/feed/line dimensions now use `LengthFieldSpec`; a 145 MHz
   J-pole shows its 1 m radiator in meters and its small stub/gap details in
   centimeters.
+- **Yagi detail and log-periodic field migrations.** Yagi height, taper tip,
+  folded-driven spacing, and beta-hairpin length/spacing now use
+  `LengthFieldSpec` alongside the adaptive element table. The log-periodic
+  longest-element and height fields use the same wrapper; its existing
+  frequency scaling now works in canonical meters, so the table and field units
+  stay consistent.
 
 ### Changed
 

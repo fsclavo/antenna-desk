@@ -48,13 +48,12 @@ from ..units import (
     height_bounds,
     length_bounds,
     length_from_m,
-    length_to_m,
     length_unit_key,
     radius_from_m,
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
-from .form_units import apply_length_suffixes, apply_radius_units
+from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .table_headers import fit_header_sections
 
@@ -128,6 +127,19 @@ class LogPeriodicForm(QWidget):
         self._height.setRange(minimum_height, maximum_height)
         self._height.setDecimals(3)
         self._height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+
+        self._longest_element_field = LengthField(
+            self._longest_element,
+            LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
+        self._height_field = LengthField(
+            self._height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
 
         self._azimuth = QDoubleSpinBox(self)
         self._azimuth.setRange(0.0, 360.0)
@@ -279,20 +291,12 @@ class LogPeriodicForm(QWidget):
             parameters = None
         self._unit_system = unit_system
         self._display_units = DisplayUnits(unit_system, self._display_units.length_policy)
-        minimum_length, maximum_length = length_bounds(unit_system)
-        minimum_height, maximum_height = height_bounds(unit_system)
         previous_updating = self._updating
         self._updating = True
         try:
             apply_radius_units(self._translator, unit_system, self._radius)
-            apply_length_suffixes(
-                self._translator,
-                unit_system,
-                self._longest_element,
-                self._height,
-            )
-            self._longest_element.setRange(minimum_length, maximum_length)
-            self._height.setRange(minimum_height, maximum_height)
+            self._longest_element_field.set_display_units(self._display_units)
+            self._height_field.set_display_units(self._display_units)
         finally:
             self._updating = previous_updating
         if parameters is not None:
@@ -307,16 +311,14 @@ class LogPeriodicForm(QWidget):
             self._frequency_low.setValue(parameters.frequency_low_hz / 1_000_000.0)
             self._frequency_high.setValue(parameters.frequency_high_hz / 1_000_000.0)
             self._last_frequency_low_mhz = parameters.frequency_low_hz / 1_000_000.0
-            self._longest_element.setValue(
-                length_from_m(parameters.longest_element_length_m, self._unit_system)
-            )
+            self._longest_element_field.configure(parameters.longest_element_length_m)
             self._tau.setValue(parameters.tau)
             self._sigma.setValue(parameters.sigma)
             self._element_count.setValue(parameters.element_count)
             self._phase_line_impedance.setValue(parameters.phase_line_impedance_ohm)
             self._phase_line_velocity_factor.setValue(parameters.phase_line_velocity_factor)
             self._feed_transformer_ratio.setValue(parameters.feed_transformer_ratio)
-            self._height.setValue(length_from_m(parameters.height_m, self._unit_system))
+            self._height_field.configure(parameters.height_m)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             self._select_material(parameters.material)
@@ -330,10 +332,7 @@ class LogPeriodicForm(QWidget):
         return LogPeriodicParameters(
             frequency_low_hz=self._frequency_low.value() * 1_000_000.0,
             frequency_high_hz=self._frequency_high.value() * 1_000_000.0,
-            longest_element_length_m=length_to_m(
-                self._longest_element.value(),
-                self._unit_system,
-            ),
+            longest_element_length_m=self._longest_element_field.value_m(),
             tau=self._tau.value(),
             sigma=self._sigma.value(),
             element_count=self._element_count.value(),
@@ -341,7 +340,7 @@ class LogPeriodicForm(QWidget):
             phase_line_impedance_ohm=self._phase_line_impedance.value(),
             phase_line_velocity_factor=self._phase_line_velocity_factor.value(),
             feed_transformer_ratio=self._feed_transformer_ratio.value(),
-            height_m=length_to_m(self._height.value(), self._unit_system),
+            height_m=self._height_field.value_m(),
             azimuth_deg=self._azimuth.value(),
             material=self._selected_material(),
             ground=self._ground_model(),
@@ -406,7 +405,9 @@ class LogPeriodicForm(QWidget):
         try:
             self._last_frequency_low_mhz = value
             self._frequency_high.setValue(self._frequency_high.value() * frequency_scale)
-            self._longest_element.setValue(self._longest_element.value() * length_scale)
+            self._longest_element_field.set_value_m(
+                self._longest_element_field.value_m() * length_scale
+            )
             self._update_table()
             self._update_geometry()
         finally:
@@ -485,7 +486,7 @@ class LogPeriodicForm(QWidget):
         self.set_parameters(
             log_periodic_parameters(
                 frequency_hz=self._frequency_low.value() * 1_000_000.0,
-                height_m=length_to_m(self._height.value(), self._unit_system),
+                height_m=self._height_field.value_m(),
                 azimuth_deg=self._azimuth.value(),
                 material=self._selected_material(),
                 ground=self._ground_model(),
