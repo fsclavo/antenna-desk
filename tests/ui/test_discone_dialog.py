@@ -116,3 +116,22 @@ def test_discone_form_preserves_lengths_when_switching_units(qtbot: QtBot) -> No
     assert parameters.cone_height_m == pytest.approx(0.5, rel=1e-3)
     assert parameters.disc_radius_m == pytest.approx(0.6, rel=1e-3)
     assert dialog._form._cone_height.suffix().strip() == "ft"
+
+
+def test_discone_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.discone import discone_parameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+    from antennadesk.ui.widgets.discone_form import DisconeForm
+
+    form = DisconeForm(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(form)
+    form.set_parameters(discone_parameters(frequency_hz=435_000_000.0))
+
+    assert form._cone_height_field.unit == "cm"
+    assert form._cone_radius_field.unit == "cm"
+    assert form._disc_radius_field.unit == "cm"
+    assert form._cone_height.suffix().strip() == "cm"

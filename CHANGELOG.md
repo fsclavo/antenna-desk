@@ -71,6 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `LengthField` wrapper for physical ranges, steps, decimals, suffixes, scale
   hints, and metric/imperial/automatic unit conversion. It is tested but not yet
   wired into every family form.
+- **Discone form migration.** The cone height, cone radius, and disc radius now
+  use `LengthFieldSpec`; with the automatic policy they switch to cm for UHF
+  designs while fixed-unit forms keep the previous behavior.
 
 ### Changed
 
