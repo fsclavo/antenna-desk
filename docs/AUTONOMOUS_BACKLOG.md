@@ -28,9 +28,10 @@ external service and must not be invented or simulated into existence.
 
 ## Queue
 
-The 2026-11-19 product trust and station wave (TS1–TS7, DL1–DL9; DL8 is
-post-1.2) is the active product sequence. Its rows are in the table; scope,
-acceptance, evidence, and risk are in §Product trust and station wave below.
+The 2026-11-19 product trust and station wave is the active product sequence.
+Wave 0 (TS1–TS7 and DL9) is **done 2026-11-19**; wave 1 (DL1, DL2, DL5) is
+next, and DL8 remains post-1.2. Its rows are in the table; scope, acceptance,
+evidence, and risk are in §Product trust and station wave below.
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
@@ -203,7 +204,8 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 
 ## Product trust and station wave (queued 2026-11-19)
 
-**Status:** queued 2026-11-19; waves 0–2 are the active product sequence.
+**Status:** wave 0 (TS1–TS7, DL9) is **done 2026-11-19**; wave 1 (DL1, DL2,
+DL5) is next. Waves 1–2 are the active product sequence.
 **Scope:** product trust, station completeness, and site awareness. **Product
 scope:** [`ROADMAP.md`](ROADMAP.md). This wave pauses new antenna families: the
 catalog is broad enough, and the next value is answering the questions an
@@ -213,9 +215,9 @@ This wave is part of the single active queue above. The queue table is
 canonical; the subsections below define scope, dependencies, acceptance
 criteria, evidence, and risk for each item.
 
-**Priority:** P0 = TS1–TS7 and DL9; P1 = DL1, DL2, and DL5; P2 = DL3, DL4,
-DL6, and DL7; P3 = DL8. P0 is the 1.0 gate; P1 and P2 are the 1.1 and 1.2
-slices.
+**Priority:** P0 = TS1–TS7 and DL9, **done 2026-11-19**; P1 = DL1, DL2, and
+DL5, next; P2 = DL3, DL4, DL6, and DL7; P3 = DL8. P0 was the 1.0 gate; P1 and
+P2 are the 1.1 and 1.2 slices.
 
 **Not in this wave:** the measurement-calibrated model, true multi-band
 optimization, parametric custom geometry, CLI/API, a second engine as a
@@ -228,22 +230,22 @@ content tracks and must not be smuggled into 1.0.
 
 | Wave | Release | IDs | Exit criterion |
 |---|---|---|---|
-| 0 | 1.0 Confidence | TS1–TS7, DL9 | Trust and interoperability green; documentation truthful; no new family work |
+| 0 | 1.0 Confidence | TS1–TS7, DL9 | **Done 2026-11-19.** Trust and interoperability green; documentation truthful; no new family work |
 | 1 | 1.1 Station | DL1, DL2, DL5 | Smith, tuner/components, and support structures usable end to end |
 | 2 | 1.2 Site and exploration | DL3, DL4, DL6, DL7 | Live preview, near-field, stacking, and native ground screen/cliff with visible limits |
 | 3 | post-1.2 | DL8 | Only after a validated terrain ADR; otherwise explicitly unavailable |
 
-**Execution order within wave 0:** TS7 → TS3 → TS6 → TS4 → TS1 → TS2 + DL9 →
-TS5. The first four are quick wins that make the application feel 1.0; the
-convergence and metric work follows; VNA import closes the interoperability
-side.
+**Wave 0 order (completed 2026-11-19):** TS7 → TS3 → TS6 → TS4 → TS1 → TS2 +
+DL9 → TS5. The quick wins made the application feel 1.0; convergence and
+metrics followed; VNA import closed the interoperability side.
 
-**Execution order within wave 1:** DL1 and DL5 can run in parallel; DL2 follows
-DL1 for the best UX, but the domain tuner model can start first.
+**Wave 1 order:** DL1 and DL5 can run in parallel; DL2 follows DL1 for the best
+UX, but the domain tuner model can start first. DL1 is the next implementation
+slice.
 
-**Execution order within wave 2:** start the DL4 and DL7 spikes early; implement
-DL7 before DL8. DL6 can start without DL5, but the mast/support integration is
-better after DL5.
+**Wave 2 order:** start the DL4 and DL7 spikes early; implement DL7 before
+DL8. DL6 can start without DL5, but the mast/support integration is better
+after DL5.
 
 ### Wave rules
 
@@ -1578,8 +1580,9 @@ new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
 from impedance/SWR point-density feedback, UX40 was queued the same day from the
 3D-report request, and UX41 was queued from optimizer operating-mode feedback
 and completed on 2026-11-19. UX39 and UX40 were completed on 2026-11-19; the
-UX queue is clear. The next product wave is the trust and station track queued
-on 2026-11-19; see §Product trust and station wave above.
+UX queue is clear. The product trust and station track started on 2026-11-19;
+wave 0 (TS1–TS7, DL9) is done and wave 1 (DL1, DL2, DL5) is next. See
+§Product trust and station wave above.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -4581,10 +4584,12 @@ model and solver contract must land first.
 
 ## Recommended order
 
-**Active product sequence (2026-11-19):** the product trust and station wave
-(TS1–TS7 and DL9 first, then DL1–DL8) supersedes new-family work. The numbered
-items below are historical context for completed or blocked work; the queue
-table and §Product trust and station wave above are the executable order.
+**Active product sequence (2026-11-19):** wave 0 of the product trust and
+station track (TS1–TS7 and DL9) is **done 2026-11-19**. Wave 1 (DL1, DL2,
+DL5) is next; DL1 is the immediate slice. Waves 2 and post-1.2 remain queued.
+The numbered items below are historical context for completed or blocked work;
+the queue table and §Product trust and station wave above are the executable
+order.
 
 1. The shortened-EFHW correctness work (G24, G25, G26, G28) is done.
    **G27** is split: transformer loss (EF7b), feedpoint choke (EF8), and

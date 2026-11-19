@@ -271,7 +271,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | queued 2026-11-19; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; waves 1–2 queued; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -532,14 +532,14 @@ and new catalog presets) waits until this track closes.
 
 | Release | ID | Item | Outcome | Size | Evidence | Status |
 |---|---|---|---|---|---|---|
-| 1.0 Confidence | TS1 | Convergence study | 3–5 density ladder with a self-consistency verdict | M | n/a | queued 2026-11-19 |
-| 1.0 Confidence | TS2 | Decision metrics and band overlay | 2:1 bandwidth, HPBW, F/B, takeoff, band edges | M | B | queued 2026-11-19 |
-| 1.0 Confidence | DL9 | Circular-polarization metrics | Axial ratio, sense, CP gain, cross-pol | S–M | B | queued with TS2 |
-| 1.0 Confidence | TS3 | NEC-2 deck export | Portable, auditable deck and copy action | S | n/a | queued 2026-11-19 |
-| 1.0 Confidence | TS4 | Autosave and crash recovery | Atomic recovery file and restore prompt | S–M | n/a | queued 2026-11-19 |
-| 1.0 Confidence | TS5 | VNA import 2.0 | `.s2p`, presets, mapping, locale-aware parsing | M | n/a | queued 2026-11-19 |
-| 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | queued 2026-11-19 |
-| 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS1 | Convergence study | 3–5 density ladder with a self-consistency verdict | M | n/a | done 2026-11-19 |
+| 1.0 Confidence | TS2 | Decision metrics and band overlay | 2:1 bandwidth, HPBW, F/B, takeoff, band edges | M | B | done 2026-11-19 |
+| 1.0 Confidence | DL9 | Circular-polarization metrics | Axial ratio, sense, CP gain, cross-pol | S–M | B | done 2026-11-19 with TS2 |
+| 1.0 Confidence | TS3 | NEC-2 deck export | Portable, auditable deck and copy action | S | n/a | done 2026-11-19 |
+| 1.0 Confidence | TS4 | Autosave and crash recovery | Atomic recovery file and restore prompt | S–M | n/a | done 2026-11-19 |
+| 1.0 Confidence | TS5 | VNA import 2.0 | `.s2p`, presets, mapping, locale-aware parsing | M | n/a | done 2026-11-19 |
+| 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | done 2026-11-19 |
+| 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, line/network preview, export | M–L | n/a | queued 2026-11-19 |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | "Will my ATU match it?" with real values | M–L | B/C | queued 2026-11-19 |
 | 1.1 Station | DL5 | Support structures | Boom, mast, tower, and guy wires in the model | M–L | B/C | queued 2026-11-19 |
@@ -549,12 +549,13 @@ and new catalog presets) waits until this track closes.
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | NEC-2 `GN` screen/second medium, B/C | M–L | B/C | queued after spike |
 | post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
 
-Release sequence for this track: **1.0 Confidence** closes truth,
-interoperability, convergence, metrics, and recovery. **1.1 Station** adds
-Smith, tuner/components, and support structures. **1.2 Site and exploration**
-adds live preview, near-field, stacking, and native ground screen/cliff.
-**DL8** remains post-1.2 until a validated terrain ADR exists. The names and
-numbers are working labels; the backlog is the executable order.
+Release sequence for this track: **1.0 Confidence** closed truth,
+interoperability, convergence, metrics, and recovery on 2026-11-19. **1.1
+Station** adds Smith, tuner/components, and support structures; DL1 is the
+next slice. **1.2 Site and exploration** adds live preview, near-field,
+stacking, and native ground screen/cliff. **DL8** remains post-1.2 until a
+validated terrain ADR exists. The names and numbers are working labels; the
+backlog is the executable order.
 
 ## Next
 
@@ -571,10 +572,11 @@ Product track:
    **Sustain** slice is complete. The UX queue is closed. The adaptive length
    display-units track is implemented through U5; U6 documentation/help and
    manual visual QA remain before release preparation.
-2. The 2026-11-19 **product trust and station** track is queued: 1.0
-   Confidence (TS1–TS7, DL9), 1.1 Station (DL1, DL2, DL5), and 1.2 Site and
-   exploration (DL3, DL4, DL6, DL7). DL8 remains post-1.2 until a validated
-   terrain ADR exists. Execution and acceptance criteria are in
+2. The 2026-11-19 **product trust and station** track has completed wave 0:
+   1.0 Confidence (TS1–TS7, DL9) is done. Wave 1 Station (DL1, DL2, DL5) is
+   next; DL1 (Smith chart and matching workbench) is the immediate slice.
+   Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays post-1.2 until a
+   validated terrain ADR exists. Execution and acceptance criteria are in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
 
 Modeling track:
@@ -605,9 +607,10 @@ Release track:
 8. `v0.7.0`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` were published after
    this section was written; see [`CHANGELOG.md`](../CHANGELOG.md) and the
    release QA records for details.
-9. The 1.0 Confidence, 1.1 Station, and 1.2 Site and exploration sequence is
-   defined by the 2026-11-19 trust/station track. It has no committed dates and
-   is gated by the acceptance criteria in the backlog.
+9. The 2026-11-19 trust/station track completed 1.0 Confidence on 2026-11-19.
+   1.1 Station and 1.2 Site and exploration remain queued; there are no
+   committed dates, and each release is gated by the acceptance criteria in the
+   backlog.
 
 Validation track:
 
