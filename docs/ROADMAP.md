@@ -540,7 +540,7 @@ and new catalog presets) waits until this track closes.
 | 1.0 Confidence | TS5 | VNA import 2.0 | `.s2p`, presets, mapping, locale-aware parsing | M | n/a | done 2026-11-19 |
 | 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | done 2026-11-19 |
 | 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
-| 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, line/network preview, export | M–L | n/a | queued 2026-11-19 |
+| 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, export; editable values remain | M–L | n/a | partial 2026-11-19 |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | "Will my ATU match it?" with real values | M–L | B/C | queued 2026-11-19 |
 | 1.1 Station | DL5 | Support structures | Boom, mast, tower, and guy wires in the model | M–L | B/C | queued 2026-11-19 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Coarse drag-to-preview, commit to full run | M–L | n/a | queued 2026-11-19 |
@@ -574,9 +574,11 @@ Product track:
    manual visual QA remain before release preparation.
 2. The 2026-11-19 **product trust and station** track has completed wave 0:
    1.0 Confidence (TS1–TS7, DL9) is done. Wave 1 Station (DL1, DL2, DL5) is
-   next; DL1 (Smith chart and matching workbench) is the immediate slice.
-   Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays post-1.2 until a
-   validated terrain ADR exists. Execution and acceptance criteria are in
+   next. DL1's first slice (Smith tab, reference planes, measured overlay, and
+   export) is implemented; editable feed-line and arbitrary matching-value
+   preview, DL2, and DL5 remain. Wave 2 (DL3, DL4, DL6, DL7) remains queued,
+   and DL8 stays post-1.2 until a validated terrain ADR exists. Execution and
+   acceptance criteria are in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
 
 Modeling track:

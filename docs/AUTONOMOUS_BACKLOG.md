@@ -188,7 +188,7 @@ evidence, and risk are in §Product trust and station wave below.
 | ~~TS5~~ | ~~VNA import 2.0~~ | M | none | **Done 2026-11-19:** multi-file/drag-drop CSV, `.s1p`, and port-selected `.s2p`; locale numbers, semicolons, per-row units, analyzer detection, mapping fallback with session memory, duplicate handling, row-context errors, and size/row limits. Full gate 4,166 passed, 1 skipped; NEC2C 165 passed. No schema change. |
 | ~~TS6~~ | ~~Recent projects and start-page examples~~ | S | none | **Done 2026-11-19:** QSettings recent list (file name only, ten entries, missing-file removal), start-page dipole/Yagi/vertical examples, reference-library route, and optional restore-last-project preference. No schema change. Full gate 4,120 passed, 1 skipped. |
 | ~~TS7~~ | ~~Documentation truth pass and status review~~ | S | none | **Done 2026-11-19:** stale claims were corrected in README, USER_GUIDE, SOLVER_ADAPTER, ARCHITECTURE, DOMAIN_MODEL, and the evidence text; the pre-alpha label became pre-1.0; schema 56 and the template-limitation source are documented; `tests/unit/test_documentation_truth.py` guards the known strings. Full gate 4,098 passed, 1 skipped. |
-| DL1 | Smith chart and matching workbench | M–L | matching network, feed line | **Wave 1.** Interactive impedance locus, measured/simulated overlay, line transformation, L/Pi/T preview, cursor, export. See §DL1. |
+| DL1 | Smith chart and matching workbench (first slice) | M–L | matching network, feed line | **Partially done 2026-11-19.** Smith tab, normalized locus, reference planes, measured overlay, hover, marker, and PNG/SVG/CSV export are implemented. Remaining: editable feed-line values and arbitrary L/Pi/T preview. See §DL1. |
 | DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Wave 1.** Tuner C/L ranges, best effort/bypass, loss, voltage/current, E-series values, and per-band table. See §DL2. |
 | DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
@@ -575,6 +575,12 @@ checklist of the known examples mitigate it.
 
 ### DL1 — Smith chart and matching workbench
 
+**Status:** **Partially done 2026-11-19.** The Smith tab, normalized locus,
+reference-plane selector, measured overlay, hover readout, marker, and
+PNG/SVG/CSV export are implemented. The feed-line plane uses the project feed
+line; editable feed-line values and arbitrary L/Pi/T value previews remain a
+follow-up.
+
 **Goal:** make impedance transformation visible and interactive.
 
 **Scope (MVP):**
@@ -589,6 +595,10 @@ checklist of the known examples mitigate it.
 
 **Out of scope:** full circuit editor, arbitrary S2P blocks, network optimizer
 (separate).
+
+**Remaining follow-up:** editable feed-line length, Z0, and velocity factor,
+plus arbitrary L/Pi/T value preview. The current **Feed line only** plane uses
+the project feed line and excludes the matching network.
 
 **Dependencies:** existing `MatchingNetwork`, `FeedLine`, and
 `FrequencyResult`.

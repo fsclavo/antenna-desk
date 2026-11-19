@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Smith chart and matching workbench (first slice).** The results area now
+  has a **Smith** tab with a normalized impedance locus, constant-resistance
+  circles and reactance arcs, a hover readout, and a frequency marker. A
+  reference-plane selector shows the post-chain result, the raw antenna
+  feedpoint, or a project-feed-line-only preview. Imported measurements can be
+  overlaid on the display reference impedance, and the chart exports to
+  PNG/SVG or CSV with every stored point. The feed-line-only plane excludes the
+  matching network; arbitrary matching-value preview remains a follow-up. No
+  solver, schema, or electromagnetic-model change. See
+  [`docs/SMITH_CHART.md`](docs/SMITH_CHART.md).
 - **VNA import 2.0.** Import multiple CSV, `.s1p`, or `.s2p` files or drop
   them onto the main window. CSV parsing handles decimal commas, semicolon
   delimiters, thousands separators, per-row Hz–GHz units, and NanoVNA

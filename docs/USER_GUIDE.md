@@ -1439,6 +1439,9 @@ with a large top load.
 - **Impedance / SWR**: table of frequency, resistance, reactance, magnitude,
   and SWR, plus impedance and SWR charts side by side over the sweep. Resonance points
   where the reactance crosses zero are marked and listed above the table.
+- **Smith**: normalized impedance locus with a reference-plane selector, a
+  frequency marker, an optional measured overlay, and PNG/SVG/CSV export. See
+  **Smith chart** below.
 - **Sources**: for multi-source designs, one row per frequency and driven
   source with the source number, wire, amplitude, phase, resistance,
   reactance, and ideal input power. Negative power marks a source that absorbs
@@ -1574,6 +1577,35 @@ is a standard accuracy/performance compromise. Very large models can still be
 slow, so reduce the **Points** value, radial count/length, or pattern
 resolution for routine exploration. A larger point count does not improve the
 accuracy at each frequency; it only resolves the curve more finely.
+
+### Smith chart
+
+The **Smith** tab plots the normalized impedance locus in the reflection-
+coefficient plane. The grid shows constant normalized resistance circles and
+constant normalized reactance arcs. The center of the chart is the reference
+impedance (`Z0`, normally 50 Ω). The **Reference plane** selector changes what
+the locus represents:
+
+- **As simulated** is the post-chain impedance stored in the result table. It
+  includes the project feed line, matching network, balun loss model, and ideal
+  feed transformer when they are configured.
+- **Antenna feedpoint** is the raw primary-source impedance before the ideal
+  feed transformer. It does not apply the feed line or matching network.
+- **Feed line only** applies the project feed line to the antenna-side load and
+  deliberately excludes the matching network. It is a preview, not a second
+  simulation.
+
+The **Marker frequency** selector highlights one point and reports its
+frequency, resistance, reactance, reflection magnitude, and SWR when you hover
+over the locus. **Measured overlay** adds an imported measurement. Measured
+points are normalized to the display `Z0`; when the measurement's reference
+impedance differs, the tab states both values. The drawing is decimated for
+large sweeps, but the CSV export keeps every computed point.
+
+**PNG...**, **SVG...**, and **CSV...** export the current chart and the
+simulated/measured Smith points. The Smith chart is a presentation of the
+stored impedance; it does not add electromagnetic accuracy or transform the
+simulation result.
 
 ## Import VNA measurements
 

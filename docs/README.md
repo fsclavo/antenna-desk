@@ -53,6 +53,8 @@ of truth before adding another planning document.
   contract.
 - [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) — adaptive length display
   units, formatting, form/table/drawing rules, and report/export policy.
+- [`SMITH_CHART.md`](SMITH_CHART.md) — Smith-chart normalization, reference
+  planes, measured overlay, and export contract.
 - [`spikes/c3-log-periodic-spike.md`](spikes/c3-log-periodic-spike.md) —
   log-periodic transposed-feed validation against the published Cebik 10 m
   NEC-4 reference.

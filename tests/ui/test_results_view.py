@@ -132,7 +132,7 @@ def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
 
     view.set_result(_make_result())
 
-    assert view._tabs.count() == 7
+    assert view._tabs.count() == 8
     assert view._table.rowCount() == 3
     assert view._currents_frequency.count() == 3
     assert len(view._currents_plot.listDataItems()) >= 1
@@ -778,7 +778,7 @@ def test_results_view_shows_imported_measurements(qtbot: QtBot) -> None:
 
     view.set_measurements((measurement,))
 
-    assert view._tabs.count() == 7
+    assert view._tabs.count() == 8
     assert view._measurement_selector.count() == 1
     assert view._measurement_table.rowCount() == 2
     assert view._measurement_plot.listDataItems()
@@ -858,7 +858,7 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
 
     view.set_band_analysis(analysis)
 
-    assert view._tabs.count() == 8
+    assert view._tabs.count() == 9
     assert view._tabs.indexOf(view._bands_tab) == 0
     assert view._bands_tab_index == 0
     assert view._bands_table.rowCount() == 2
@@ -896,7 +896,7 @@ def test_results_view_adds_a_band_summary_tab(qtbot: QtBot) -> None:
     assert view._tabs.currentWidget() is view._bands_tab
 
     view.set_band_analysis(None)
-    assert view._tabs.count() == 7
+    assert view._tabs.count() == 8
     assert view._bands_tab_index == -1
     assert view._tabs.currentWidget() is view._impedance_tab
     assert view._band_bar.isHidden()
@@ -1072,3 +1072,87 @@ def test_results_view_selects_the_pattern_gain_metric(qtbot: QtBot) -> None:
     )
     assert "unavailable" in view._azimuth_plot.plotItem.titleLabel.text
     assert "unavailable" in view._pattern_metric_summary.text()
+
+
+def test_results_view_smith_tab_tracks_locus_and_csv(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(_make_result())
+    view.show_smith()
+
+    assert view.current_view() == "smith"
+    assert len(view._smith_view.simulated_points()) == 3
+    assert view._smith_plane.count() == 1
+    assert view._smith_frequency.count() == 3
+
+    csv_text = view._smith_csv_text()
+    assert csv_text.startswith("series,frequency_hz")
+    assert csv_text.count("simulated,") == 3
+
+
+def test_results_view_smith_tab_exposes_the_raw_antenna_plane(qtbot: QtBot) -> None:
+    base = _make_result()
+    source = SourceResult(
+        wire_id="wire-1",
+        offset_m=0.0,
+        tag=1,
+        segment=2,
+        amplitude=1.0,
+        phase_deg=0.0,
+        voltage_v=1.0 + 0.0j,
+        current_a=0.01 + 0.0j,
+        impedance_ohm=complex(120.0, 5.0),
+        power_w=0.01,
+    )
+    frequencies = tuple(
+        replace(frequency, source_results=(source,)) for frequency in base.frequencies
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(replace(base, frequencies=frequencies))
+
+    assert view._smith_plane.count() == 2
+    index = view._smith_plane.findData("antenna")
+    assert index >= 0
+    view._smith_plane.setCurrentIndex(index)
+
+    assert view._smith_view.simulated_points()[0].impedance_ohm == pytest.approx(
+        complex(120.0, 5.0)
+    )
+    assert "120.000000,5.000000" in view._smith_csv_text()
+
+
+def test_results_view_smith_tab_offers_the_project_feed_line_plane(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.feed_line import FeedLine
+
+    base = _make_result()
+    line = FeedLine(characteristic_impedance_ohm=50.0, length_m=10.0, velocity_factor=0.66)
+    result = replace(base, spec=replace(base.spec, feed_line=line))
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(result)
+
+    assert view._smith_plane.findData("feed_line") >= 0
+
+
+def test_results_view_smith_tab_overlays_a_measurement(qtbot: QtBot) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.measurement import Measurement, MeasurementPoint
+
+    measurement = Measurement(
+        id=uuid4(),
+        name="measured",
+        created_at=datetime(2026, 11, 19, tzinfo=UTC),
+        reference_impedance_ohm=75.0,
+        points=(MeasurementPoint(7_100_000.0, complex(75.0, 0.0)),),
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(_make_result())
+    view.set_measurements((measurement,))
+    view._smith_measurement.setCurrentIndex(1)
+
+    assert len(view._smith_view.measured_points()) == 1
+    assert "measured," in view._smith_csv_text()

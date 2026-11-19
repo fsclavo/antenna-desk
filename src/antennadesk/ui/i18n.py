@@ -2299,6 +2299,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "SWR versus frequency for the selected reference impedance.",
         Language.SPANISH: "ROE en función de la frecuencia para la impedancia de referencia.",
     },
+    "help.chart.smith": {
+        Language.ENGLISH: (
+            "Normalized impedance locus. Hover to read frequency, R, X, "
+            "reflection coefficient, and SWR."
+        ),
+        Language.SPANISH: (
+            "Locus de impedancia normalizada. Pasá el cursor para leer frecuencia, "
+            "R, X, coeficiente de reflexión y ROE."
+        ),
+    },
     "help.chart.pattern": {
         Language.ENGLISH: "Far-field gain pattern at the selected snapshot frequency.",
         Language.SPANISH: "Patrón de ganancia de campo lejano en la frecuencia seleccionada.",
@@ -2314,6 +2324,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.band.selector": {
         Language.ENGLISH: "Select the band shown in the result tabs.",
         Language.SPANISH: "Seleccioná la banda que se muestra en las pestañas de resultados.",
+    },
+    "help.smith.plane": {
+        Language.ENGLISH: "Select the reference plane shown on the Smith chart.",
+        Language.SPANISH: "Seleccioná el plano de referencia que se muestra en la carta de Smith.",
+    },
+    "help.smith.frequency": {
+        Language.ENGLISH: "Frequency highlighted by the Smith-chart marker.",
+        Language.SPANISH: "Frecuencia resaltada por el marcador de la carta de Smith.",
+    },
+    "help.smith.measurement": {
+        Language.ENGLISH: "Overlay an imported measurement on the Smith chart.",
+        Language.SPANISH: "Superponé una medición importada en la carta de Smith.",
+    },
+    "help.smith.export_png": {
+        Language.ENGLISH: "Export the Smith chart as a PNG image.",
+        Language.SPANISH: "Exportá la carta de Smith como imagen PNG.",
+    },
+    "help.smith.export_svg": {
+        Language.ENGLISH: "Export the Smith chart as an SVG image.",
+        Language.SPANISH: "Exportá la carta de Smith como imagen SVG.",
+    },
+    "help.smith.export_csv": {
+        Language.ENGLISH: "Export the simulated and measured Smith points as CSV.",
+        Language.SPANISH: "Exportá los puntos simulados y medidos de la carta de Smith como CSV.",
     },
     "help.pattern.frequency": {
         Language.ENGLISH: "Snapshot frequency used for the pattern.",
@@ -5978,6 +6012,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Impedance, SWR, and band charts.",
         Language.SPANISH: "Gráficos de impedancia, ROE y bandas.",
     },
+    "help.tab.smith": {
+        Language.ENGLISH: "Impedance locus and reference-plane preview on the Smith chart.",
+        Language.SPANISH: (
+            "Locus de impedancia y vista previa del plano de referencia en la carta de Smith."
+        ),
+    },
     "help.tab.sources": {
         Language.ENGLISH: "Per-source voltage, current, impedance, and power for multi-source antennas.",
         Language.SPANISH: "Tensión, corriente, impedancia y potencia por fuente para antenas multifuente.",
@@ -7596,6 +7636,7 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "tab.design": {Language.ENGLISH: "Design", Language.SPANISH: "Diseño"},
     "tab.simulation": {Language.ENGLISH: "Simulation", Language.SPANISH: "Simulación"},
     "tab.impedance": {Language.ENGLISH: "Impedance / SWR", Language.SPANISH: "Impedancia / ROE"},
+    "tab.smith": {Language.ENGLISH: "Smith", Language.SPANISH: "Smith"},
     "tab.sources": {Language.ENGLISH: "Sources", Language.SPANISH: "Fuentes"},
     "tab.pattern": {Language.ENGLISH: "Pattern", Language.SPANISH: "Patrón"},
     "tab.currents": {Language.ENGLISH: "Currents", Language.SPANISH: "Corrientes"},
@@ -16511,6 +16552,122 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "plot.impedance": {Language.ENGLISH: "Impedance", Language.SPANISH: "Impedancia"},
     "plot.impedance_axis": {Language.ENGLISH: "Impedance (Ω)", Language.SPANISH: "Impedancia (Ω)"},
     "plot.swr": {Language.ENGLISH: "SWR", Language.SPANISH: "ROE"},
+    "plot.smith": {Language.ENGLISH: "Smith chart", Language.SPANISH: "Carta de Smith"},
+    "smith.plane": {
+        Language.ENGLISH: "Reference plane",
+        Language.SPANISH: "Plano de referencia",
+    },
+    "smith.plane.simulated": {
+        Language.ENGLISH: "As simulated",
+        Language.SPANISH: "Según simulación",
+    },
+    "smith.plane.antenna": {
+        Language.ENGLISH: "Antenna feedpoint",
+        Language.SPANISH: "Punto de alimentación",
+    },
+    "smith.plane.feed_line": {
+        Language.ENGLISH: "Feed line only",
+        Language.SPANISH: "Solo línea de alimentación",
+    },
+    "smith.frequency": {
+        Language.ENGLISH: "Marker frequency",
+        Language.SPANISH: "Frecuencia del marcador",
+    },
+    "smith.measurement": {
+        Language.ENGLISH: "Measured overlay",
+        Language.SPANISH: "Superposición medida",
+    },
+    "smith.measurement.none": {
+        Language.ENGLISH: "None",
+        Language.SPANISH: "Ninguna",
+    },
+    "smith.no_data": {
+        Language.ENGLISH: "No impedance data to plot.",
+        Language.SPANISH: "No hay datos de impedancia para graficar.",
+    },
+    "smith.axis_hint": {
+        Language.ENGLISH: "Resistance circles and reactance arcs are normalized to Z0.",
+        Language.SPANISH: "Los círculos de resistencia y arcos de reactancia están normalizados a Z0.",
+    },
+    "smith.legend_simulated": {
+        Language.ENGLISH: "Simulated",
+        Language.SPANISH: "Simulada",
+    },
+    "smith.legend_measured": {
+        Language.ENGLISH: "Measured",
+        Language.SPANISH: "Medida",
+    },
+    "smith.summary": {
+        Language.ENGLISH: "Z0 {z0} Ω · {count} points · {plane}",
+        Language.SPANISH: "Z0 {z0} Ω · {count} puntos · {plane}",
+    },
+    "smith.target": {
+        Language.ENGLISH: "Z0",
+        Language.SPANISH: "Z0",
+    },
+    "smith.note.simulated": {
+        Language.ENGLISH: (
+            "As simulated includes the project feed line, matching network, "
+            "balun, and ideal transformer."
+        ),
+        Language.SPANISH: (
+            "La vista simulada incluye la línea de alimentación, la red de "
+            "adaptación, el balun y el transformador ideal del proyecto."
+        ),
+    },
+    "smith.note.antenna": {
+        Language.ENGLISH: (
+            "Raw primary-source impedance before the ideal feed transformer; "
+            "feed line and matching network are not applied."
+        ),
+        Language.SPANISH: (
+            "Impedancia cruda de la fuente primaria antes del transformador "
+            "ideal; no se aplican línea ni red de adaptación."
+        ),
+    },
+    "smith.note.feed_line": {
+        Language.ENGLISH: ("Project feed-line-only preview; the matching network is not applied."),
+        Language.SPANISH: (
+            "Vista previa solo con la línea del proyecto; no se aplica la red de adaptación."
+        ),
+    },
+    "smith.measured_note": {
+        Language.ENGLISH: (
+            "Measured points use display Z0 = {z0} Ω; the measurement reference is {measured_z0} Ω."
+        ),
+        Language.SPANISH: (
+            "Los puntos medidos usan Z0 de pantalla = {z0} Ω; la referencia de "
+            "la medición es {measured_z0} Ω."
+        ),
+    },
+    "smith.export_title": {
+        Language.ENGLISH: "Export Smith chart",
+        Language.SPANISH: "Exportar carta de Smith",
+    },
+    "smith.export_png": {
+        Language.ENGLISH: "PNG...",
+        Language.SPANISH: "PNG...",
+    },
+    "smith.export_svg": {
+        Language.ENGLISH: "SVG...",
+        Language.SPANISH: "SVG...",
+    },
+    "smith.export_csv": {
+        Language.ENGLISH: "CSV...",
+        Language.SPANISH: "CSV...",
+    },
+    "smith.export_filter_png": {
+        Language.ENGLISH: "PNG image (*.png)",
+        Language.SPANISH: "Imagen PNG (*.png)",
+    },
+    "smith.export_filter_svg": {
+        Language.ENGLISH: "SVG image (*.svg)",
+        Language.SPANISH: "Imagen SVG (*.svg)",
+    },
+    "smith.export_filter_csv": {
+        Language.ENGLISH: "CSV file (*.csv)",
+        Language.SPANISH: "Archivo CSV (*.csv)",
+    },
     "plot.pattern": {
         Language.ENGLISH: "Power gain pattern",
         Language.SPANISH: "Patrón de ganancia de potencia",

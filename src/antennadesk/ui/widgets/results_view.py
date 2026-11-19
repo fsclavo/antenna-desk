@@ -15,11 +15,13 @@ from PySide6.QtGui import QColor, QFont, QFontDatabase, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QFileDialog,
     QGroupBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QMenu,
+    QMessageBox,
     QPlainTextEdit,
     QPushButton,
     QSplitter,
@@ -34,6 +36,12 @@ from ...domain.common.validation import Diagnostic, Severity
 from ...domain.design.matching_design import (
     MatchingNetworkDesign,
     matching_network_design_from_frequency,
+)
+from ...domain.design.smith_chart import (
+    SmithPlane,
+    available_smith_planes,
+    smith_points_for_measurement,
+    smith_points_for_result,
 )
 from ...domain.environment.ground import GroundKind
 from ...domain.measurement import Measurement, MeasurementPoint, MeasurementSession
@@ -69,6 +77,7 @@ from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
 from .polar_pattern_view import PolarPatternView
 from .radiation_pattern_3d_view import RadiationPattern3DView
+from .smith_chart_view import SmithChartView
 
 DEFAULT_MARKER_LIMIT = 20
 
@@ -187,6 +196,48 @@ class ResultsView(QWidget):
         impedance_layout.addWidget(impedance_splitter)
 
         self._impedance_layout = impedance_layout
+
+        self._smith_tab = QWidget(self)
+        self._smith_plane = QComboBox(self._smith_tab)
+        self._smith_plane_label = QLabel(self._smith_tab)
+        self._smith_frequency = QComboBox(self._smith_tab)
+        self._smith_frequency_label = QLabel(self._smith_tab)
+        self._smith_measurement = QComboBox(self._smith_tab)
+        self._smith_measurement.addItem(translator.t("smith.measurement.none"), None)
+        self._smith_measurement_label = QLabel(self._smith_tab)
+        self._smith_view = SmithChartView(translator, self._smith_tab)
+        self._smith_note = QLabel(self._smith_tab)
+        self._smith_note.setWordWrap(True)
+        self._smith_export_png = QPushButton(self._smith_tab)
+        self._smith_export_svg = QPushButton(self._smith_tab)
+        self._smith_export_csv = QPushButton(self._smith_tab)
+        self._smith_export_png.clicked.connect(lambda: self._export_smith_image(".png"))
+        self._smith_export_svg.clicked.connect(lambda: self._export_smith_image(".svg"))
+        self._smith_export_csv.clicked.connect(self._export_smith_csv)
+        self._smith_plane.currentIndexChanged.connect(self._render_smith)
+        self._smith_measurement.currentIndexChanged.connect(self._render_smith)
+        self._smith_frequency.currentIndexChanged.connect(self._on_smith_frequency_changed)
+        smith_controls = QHBoxLayout()
+        smith_controls.addWidget(self._smith_plane_label)
+        smith_controls.addWidget(self._smith_plane)
+        smith_controls.addSpacing(12)
+        smith_controls.addWidget(self._smith_frequency_label)
+        smith_controls.addWidget(self._smith_frequency)
+        smith_controls.addSpacing(12)
+        smith_controls.addWidget(self._smith_measurement_label)
+        smith_controls.addWidget(self._smith_measurement)
+        smith_controls.addStretch(1)
+        smith_exports = QHBoxLayout()
+        smith_exports.addWidget(self._smith_note, 1)
+        smith_exports.addWidget(self._smith_export_png)
+        smith_exports.addWidget(self._smith_export_svg)
+        smith_exports.addWidget(self._smith_export_csv)
+        smith_layout = QVBoxLayout(self._smith_tab)
+        smith_layout.setContentsMargins(0, 0, 0, 0)
+        smith_layout.addLayout(smith_controls)
+        smith_layout.addWidget(self._smith_view, 1)
+        smith_layout.addLayout(smith_exports)
+        self._set_smith_controls_enabled(False)
 
         self._sources_tab = QWidget(self)
         self._sources_table = QTableWidget(0, 8, self._sources_tab)
@@ -454,6 +505,7 @@ class ResultsView(QWidget):
         raw_layout.addWidget(self._raw_tabs)
 
         self._tabs.addTab(self._impedance_tab, "")
+        self._tabs.addTab(self._smith_tab, "")
         self._tabs.addTab(self._sources_tab, "")
         self._tabs.addTab(self._pattern_tab, "")
         self._tabs.addTab(self._currents_tab, "")
@@ -545,6 +597,7 @@ class ResultsView(QWidget):
         self._azimuth_polar.update()
         self._elevation_polar.update()
         self._pattern_3d.update()
+        self._smith_view.update()
 
     def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.PaletteChange:
@@ -657,6 +710,8 @@ class ResultsView(QWidget):
         current = self._tabs.currentWidget()
         if current is self._impedance_tab:
             return "impedance"
+        if current is self._smith_tab:
+            return "smith"
         if current is self._measurements_tab:
             return "measurements"
         if current is self._diagnostics_tab:
@@ -665,6 +720,9 @@ class ResultsView(QWidget):
 
     def show_impedance(self) -> None:
         self._tabs.setCurrentWidget(self._impedance_tab)
+
+    def show_smith(self) -> None:
+        self._tabs.setCurrentWidget(self._smith_tab)
 
     def show_diagnostics(self) -> None:
         self._tabs.setCurrentWidget(self._diagnostics_tab)
@@ -700,6 +758,16 @@ class ResultsView(QWidget):
             self._measurement_selector.setCurrentIndex(0)
         self._measurement_compare.setEnabled(len(measurements) >= 2)
         self._render_measurements()
+        self._smith_measurement.blockSignals(True)
+        self._smith_measurement.clear()
+        self._smith_measurement.addItem(
+            self._translator.t("smith.measurement.none"),
+            None,
+        )
+        for measurement in measurements:
+            self._smith_measurement.addItem(measurement.name, measurement)
+        self._smith_measurement.blockSignals(False)
+        self._render_smith()
 
     def set_result(
         self,
@@ -713,13 +781,19 @@ class ResultsView(QWidget):
             self._sync_band_selector(band)
         self._pattern_frequency.blockSignals(True)
         self._currents_frequency.blockSignals(True)
+        self._smith_frequency.blockSignals(True)
         self._pattern_frequency.clear()
         self._currents_frequency.clear()
+        self._smith_frequency.clear()
         self._pattern_frequencies = ()
         self._pattern_band_results = ()
         if result is not None:
             for frequency in result.frequencies:
                 self._currents_frequency.addItem(f"{frequency.frequency_hz / 1e6:g} MHz")
+                self._smith_frequency.addItem(
+                    f"{frequency.frequency_hz / 1e6:g} MHz",
+                    frequency.frequency_hz,
+                )
             entries = self._pattern_entries(result)
             self._pattern_frequencies = tuple(frequency for _band, frequency in entries)
             self._pattern_band_results = tuple(band for band, _frequency in entries)
@@ -754,6 +828,21 @@ class ResultsView(QWidget):
             )
         self._pattern_frequency.blockSignals(False)
         self._currents_frequency.blockSignals(False)
+        self._smith_frequency.blockSignals(False)
+        if self._smith_frequency.count() > 0:
+            target_frequency = (
+                self._design.parameters.frequency_hz
+                if self._design is not None
+                else float(self._smith_frequency.itemData(0))
+            )
+            self._smith_frequency.setCurrentIndex(
+                min(
+                    range(self._smith_frequency.count()),
+                    key=lambda index: abs(
+                        float(self._smith_frequency.itemData(index)) - target_frequency
+                    ),
+                )
+            )
         if self._currents_frequency.count() > 0:
             self._currents_frequency.setCurrentIndex(0)
         self._populate_cut_values()
@@ -891,6 +980,7 @@ class ResultsView(QWidget):
     def retranslate(self) -> None:
         for widget, key, help_key in (
             (self._impedance_tab, "tab.impedance", "help.tab.impedance"),
+            (self._smith_tab, "tab.smith", "help.tab.smith"),
             (self._sources_tab, "tab.sources", "help.tab.sources"),
             (self._pattern_tab, "tab.pattern", "help.tab.pattern"),
             (self._currents_tab, "tab.currents", "help.tab.currents"),
@@ -929,6 +1019,31 @@ class ResultsView(QWidget):
         )
         self._render_confidence()
         self._render_decision_metrics()
+        self._smith_plane_label.setText(self._translator.t("smith.plane"))
+        self._smith_frequency_label.setText(self._translator.t("smith.frequency"))
+        self._smith_measurement_label.setText(self._translator.t("smith.measurement"))
+        self._smith_export_png.setText(self._translator.t("smith.export_png"))
+        self._smith_export_svg.setText(self._translator.t("smith.export_svg"))
+        self._smith_export_csv.setText(self._translator.t("smith.export_csv"))
+        plane_labels = {
+            SmithPlane.SIMULATED.value: "smith.plane.simulated",
+            SmithPlane.ANTENNA.value: "smith.plane.antenna",
+            SmithPlane.FEED_LINE.value: "smith.plane.feed_line",
+        }
+        for index in range(self._smith_plane.count()):
+            data = self._smith_plane.itemData(index)
+            if isinstance(data, str) and data in plane_labels:
+                self._smith_plane.setItemText(
+                    index,
+                    self._translator.t(plane_labels[data]),
+                )
+        if self._smith_measurement.count() > 0:
+            self._smith_measurement.setItemText(
+                0,
+                self._translator.t("smith.measurement.none"),
+            )
+        self._smith_view.retranslate()
+        self._render_smith()
         self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
             [
@@ -1051,6 +1166,7 @@ class ResultsView(QWidget):
 
     def _render(self) -> None:
         self._render_impedance()
+        self._render_smith()
         self._render_patterns()
         self._render_currents()
         self._render_measurements()
@@ -1072,6 +1188,7 @@ class ResultsView(QWidget):
         for plot, key in (
             (self._impedance_plot, "chart.impedance"),
             (self._swr_plot, "chart.swr"),
+            (self._smith_view, "chart.smith"),
             (self._azimuth_plot, "chart.pattern"),
             (self._elevation_plot, "chart.pattern"),
             (self._currents_plot, "chart.currents"),
@@ -1081,6 +1198,12 @@ class ResultsView(QWidget):
         apply_help(self._measurement_sessions, self._translator, "measurement.sessions")
         apply_help(self._measurement_compare, self._translator, "measurement.compare")
         apply_help(self._measurement_tune, self._translator, "measurement.tune")
+        for button, key in (
+            (self._smith_export_png, "smith.export_png"),
+            (self._smith_export_svg, "smith.export_svg"),
+            (self._smith_export_csv, "smith.export_csv"),
+        ):
+            apply_help(button, self._translator, key)
         for control, key in (
             (self._band_selector, "band.selector"),
             (self._pattern_frequency, "pattern.frequency"),
@@ -1088,6 +1211,9 @@ class ResultsView(QWidget):
             (self._elevation_cut, "pattern.elevation_cut"),
             (self._pattern_metric, "pattern.metric"),
             (self._currents_frequency, "currents.frequency"),
+            (self._smith_plane, "smith.plane"),
+            (self._smith_frequency, "smith.frequency"),
+            (self._smith_measurement, "smith.measurement"),
         ):
             apply_help(control, self._translator, key)
         apply_help(self._pattern_metric_summary, self._translator, "pattern.metric_summary")
@@ -1167,6 +1293,146 @@ class ResultsView(QWidget):
                     )
                     line.setToolTip(self._translator.t("results.band_edge", band=band.name))
                     self._swr_plot.addItem(line)
+
+    def _render_smith(self) -> None:
+        result = self._result
+        previous_plane = self._smith_plane.currentData()
+        self._smith_plane.blockSignals(True)
+        self._smith_plane.clear()
+        if result is None or not result.frequencies:
+            self._smith_plane.blockSignals(False)
+            self._smith_view.clear()
+            self._smith_note.clear()
+            self._set_smith_controls_enabled(False)
+            return
+        planes = available_smith_planes(result)
+        labels = {
+            SmithPlane.SIMULATED: "smith.plane.simulated",
+            SmithPlane.ANTENNA: "smith.plane.antenna",
+            SmithPlane.FEED_LINE: "smith.plane.feed_line",
+        }
+        for plane in planes:
+            self._smith_plane.addItem(self._translator.t(labels[plane]), plane.value)
+        available = {plane.value for plane in planes}
+        selected = previous_plane if previous_plane in available else planes[0].value
+        index = self._smith_plane.findData(selected)
+        self._smith_plane.setCurrentIndex(max(index, 0))
+        self._smith_plane.blockSignals(False)
+        plane = SmithPlane(self._smith_plane.currentData() or SmithPlane.SIMULATED.value)
+        points = smith_points_for_result(result, plane)
+        measurement = self._smith_selected_measurement()
+        measured = (
+            smith_points_for_measurement(measurement, result.spec.reference_impedance_ohm)
+            if measurement is not None
+            else ()
+        )
+        measured_note = ""
+        if measurement is not None and (
+            measurement.reference_impedance_ohm != result.spec.reference_impedance_ohm
+        ):
+            measured_note = self._translator.t(
+                "smith.measured_note",
+                z0=f"{result.spec.reference_impedance_ohm:g}",
+                measured_z0=f"{measurement.reference_impedance_ohm:g}",
+            )
+        self._smith_view.set_data(
+            points,
+            measured=measured,
+            reference_impedance_ohm=result.spec.reference_impedance_ohm,
+            plane_label=self._smith_plane.currentText(),
+            measured_note=measured_note,
+        )
+        selected_frequency = self._smith_frequency.currentData()
+        self._smith_view.set_selected_frequency(
+            float(selected_frequency) if isinstance(selected_frequency, (int, float)) else None
+        )
+        self._smith_note.setText(self._translator.t(f"smith.note.{plane.value}"))
+        self._set_smith_controls_enabled(True)
+        has_points = bool(points)
+        self._smith_export_png.setEnabled(has_points)
+        self._smith_export_svg.setEnabled(has_points)
+        self._smith_export_csv.setEnabled(has_points)
+
+    def _set_smith_controls_enabled(self, enabled: bool) -> None:
+        for widget in (
+            self._smith_plane,
+            self._smith_frequency,
+            self._smith_measurement,
+            self._smith_export_png,
+            self._smith_export_svg,
+            self._smith_export_csv,
+        ):
+            widget.setEnabled(enabled)
+
+    def _smith_selected_measurement(self) -> Measurement | None:
+        measurement = self._smith_measurement.currentData()
+        return measurement if isinstance(measurement, Measurement) else None
+
+    def _on_smith_frequency_changed(self, _index: int) -> None:
+        frequency = self._smith_frequency.currentData()
+        self._smith_view.set_selected_frequency(
+            float(frequency) if isinstance(frequency, (int, float)) else None
+        )
+
+    def _export_smith_image(self, suffix: str) -> None:
+        if not self._smith_view.simulated_points():
+            return
+        path_text, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("smith.export_title"),
+            str(Path.home() / f"smith{suffix}"),
+            self._translator.t(
+                "smith.export_filter_svg" if suffix == ".svg" else "smith.export_filter_png"
+            ),
+        )
+        if not path_text:
+            return
+        try:
+            self._smith_view.save_image(Path(path_text))
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                self._translator.t("smith.export_title"),
+                str(exc),
+            )
+
+    def _export_smith_csv(self) -> None:
+        if not self._smith_view.simulated_points():
+            return
+        path_text, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("smith.export_title"),
+            str(Path.home() / "smith.csv"),
+            self._translator.t("smith.export_filter_csv"),
+        )
+        if not path_text:
+            return
+        try:
+            Path(path_text).write_text(self._smith_csv_text(), encoding="utf-8")
+        except Exception as exc:
+            QMessageBox.critical(
+                self,
+                self._translator.t("smith.export_title"),
+                str(exc),
+            )
+
+    def _smith_csv_text(self) -> str:
+        lines = [
+            "series,frequency_hz,resistance_ohm,reactance_ohm,"
+            "gamma_real,gamma_imag,swr,reference_impedance_ohm"
+        ]
+        for series, points in (
+            ("simulated", self._smith_view.simulated_points()),
+            ("measured", self._smith_view.measured_points()),
+        ):
+            for point in points:
+                lines.append(
+                    f"{series},{point.frequency_hz:.6f},"
+                    f"{point.impedance_ohm.real:.6f},{point.impedance_ohm.imag:.6f},"
+                    f"{point.gamma.real:.9f},{point.gamma.imag:.9f},"
+                    f"{point.swr:.6f},{point.reference_impedance_ohm:.3f}"
+                )
+        return "\n".join(lines) + "\n"
 
     def _render_impedance(self) -> None:
         self._table.setRowCount(0)
