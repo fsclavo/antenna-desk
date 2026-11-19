@@ -6969,6 +6969,29 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Analyze Bands...",
         Language.SPANISH: "Analizar bandas...",
     },
+    "band.size_warning": {
+        Language.ENGLISH: (
+            "The selected bands and points are estimated at {size:.1f} MB "
+            "compressed, above the {limit:.0f} MB warning threshold. Continue?"
+        ),
+        Language.SPANISH: (
+            "Las bandas y puntos seleccionados se estiman en {size:.1f} MB "
+            "comprimidos, por encima del umbral de aviso de {limit:.0f} MB. "
+            "¿Continuar?"
+        ),
+    },
+    "band.size_too_large": {
+        Language.ENGLISH: (
+            "The selected bands and points are estimated at {size:.1f} MB "
+            "compressed, above the {limit:.0f} MB project limit. Reduce the "
+            "points per band or the number of bands."
+        ),
+        Language.SPANISH: (
+            "Las bandas y puntos seleccionados se estiman en {size:.1f} MB "
+            "comprimidos, por encima del límite de proyecto de {limit:.0f} MB. "
+            "Reducí los puntos por banda o la cantidad de bandas."
+        ),
+    },
     "band.dialog_title": {
         Language.ENGLISH: "Band analysis",
         Language.SPANISH: "Análisis por bandas",

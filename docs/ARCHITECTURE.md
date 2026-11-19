@@ -366,10 +366,14 @@ command defaults to the sequential path. The adapter still receives one
 contiguous `FrequencyPlan` at a time, so no NEC deck or parser change is
 required. OCFD and custom designs can carry an optional ideal feed-transformer
 ratio in the same `SimulationSpec` cascade used by end-fed and T2FD designs. Each band run carries a stable `band_id` and shared `batch_id`; the
-project reconstructs the latest batch from those runs. Pattern resolution is
-global and snapshots are one per band by default. The architecture leaves a
-future segmented `FrequencyPlan` or multi-`FR` deck as an optimization, not a
-prerequisite for the user workflow.
+project reconstructs the latest batch from those runs. Band plans default to
+100 frequency points per band. Pattern resolution is global and snapshots are
+one per band by default; the batch pattern budget coarsens or disables patterns
+to stay within its 24 MB working estimate. After fitting, the UI classifies the
+estimated compressed project size: above 32 MB it asks for confirmation, and
+above the 64 MB project limit it blocks the run before starting any worker. The
+architecture leaves a future segmented `FrequencyPlan` or multi-`FR` deck as an
+optimization, not a prerequisite for the user workflow.
 
 ## Current limitations
 

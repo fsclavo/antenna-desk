@@ -178,7 +178,7 @@ Advantages:
 
 Costs:
 
-- N solver invocations for N bands. For 3–8 HF bands and 11–31 points per band,
+- N solver invocations for N bands. For 3–8 HF bands and 100 points per band,
   this is small compared with a dense wideband sweep.
 - Batch persistence and latest-run semantics need explicit handling.
 - Raw solver output is stored per band, so the batch report must stay within
@@ -220,8 +220,8 @@ only top-level design actions. The dialog should contain:
 - a preset selector: **Current band**, **40/20/10**, **80–10**, **All HF**,
   **Custom**;
 - a checkbox per band from 160 m to 23 cm;
-- a per-band frequency-sweep point count, defaulting to 11 or 15 for narrow
-  bands and 100 for broadband families;
+- a per-band frequency-sweep point count, defaulting to 100 for every band;
+  the preflight warns above 32 MB compressed and blocks above 64 MB;
 - a short note showing the family default, its evidence level, and any
   limitation (for example "tuner required", "starting point only");
 - a warning if the selection includes a band outside the design's documented

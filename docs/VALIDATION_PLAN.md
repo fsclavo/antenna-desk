@@ -413,9 +413,10 @@ Phase 6 adds tests for:
   validation, scene contracts for both views, persistence round trips, and a
   free-space NEC equivalence check against the horizontal design rotated around
   the boom.
-- Multiband domain plans, family defaults, per-band result metrics, batch
-  cancellation/partial results, band-aware run persistence, and the Bands UI
-  tab.
+- Multiband domain plans, family defaults (100 points per band), per-band
+  result metrics, batch cancellation/partial results, band-aware run
+  persistence, the Bands UI tab, and the 32/64 MB band-analysis storage
+  preflight.
 - UI type switching, conditional spacing/sides fields, automatic Plan view,
   multi-wire rendering, and optimization across generated template families.
 - Generic New Antenna catalog with direct per-template editors, type-aware

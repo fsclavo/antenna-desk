@@ -318,7 +318,7 @@ Use **Simulation → Analyze Bands...** or open the **Simulation** tab in the
 sidebar and use its **Band analysis** group to run the current design over
 several amateur bands. The dialog starts from the family
 default and lets you select any catalog band from 160 m to 23 cm, with a sweep
-point count for each band.
+point count for each band (100 by default).
 
 Band ranges are generic IARU ranges; local allocations differ and the user is
 responsible for operating within them. Family defaults are starting points, not
@@ -344,6 +344,16 @@ double-clicking a row opens the impedance/SWR charts directly. A **Band**
 selector above the result tabs switches bands from any view, and the active band
 name appears in the impedance and SWR chart titles. Completed bands are kept if
 another band fails or the analysis is cancelled.
+
+Before a run, AntennaDesk estimates the compressed project size after fitting
+the pattern resolution to the storage budget. An estimate above the 32 MB
+warning threshold asks for confirmation; an estimate above the 64 MB project
+limit blocks the run and asks you to reduce the points per band or the number
+of bands. The pattern resolution may be coarsened, or the far-field pattern
+disabled, to keep the result within the pattern budget; the effective choice is
+reported. Larger point counts do not improve the accuracy at each frequency;
+they only resolve the curve more finely, at the cost of solver time and file
+size.
 
 The dialog also sets **Parallel workers** (1–4, default
 `min(4, max(1, CPU count - 1))`). Only independent bands are parallelized; the

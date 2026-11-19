@@ -24,7 +24,7 @@ def test_band_dialog_preselects_the_family_default(qtbot: QtBot) -> None:
     plan = dialog.plan()
 
     assert plan.band_ids == ("40m", "20m", "10m")
-    assert all(selection.points == 15 for selection in plan.selections)
+    assert all(selection.points == 100 for selection in plan.selections)
 
 
 def test_band_dialog_exposes_bounded_parallel_workers(qtbot: QtBot) -> None:

@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
 from PySide6.QtCore import QEventLoop, Qt, QThread, QTimer
@@ -423,6 +423,16 @@ from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 DEFAULT_GENERATED_SWEEP_POINTS = 100
 DEFAULT_TWO_BAND_SWEEP_POINTS = 100
 YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
+
+
+def project_size_action(estimated_bytes: int) -> Literal["ok", "warn", "block"]:
+    """Classify an estimated compressed project size before a long run."""
+
+    if estimated_bytes > MAX_PROJECT_SIZE_BYTES:
+        return "block"
+    if estimated_bytes > PROJECT_SIZE_WARNING_BYTES:
+        return "warn"
+    return "ok"
 
 
 class MainWindow(QMainWindow):
@@ -4137,7 +4147,7 @@ class MainWindow(QMainWindow):
             ).spec
             requests.append(BandSimulationRequest(selection.band, spec, model=model))
 
-        fitted = self._fit_band_specs_to_budget(
+        fitted, budget = self._fit_band_specs_to_budget(
             design.antenna,
             tuple(request.spec for request in requests),
         )
@@ -4145,6 +4155,32 @@ class MainWindow(QMainWindow):
             BandSimulationRequest(request.band, spec)
             for request, spec in zip(requests, fitted, strict=True)
         ]
+        if budget is not None:
+            size_mb = budget.estimated_project_bytes / (1024.0 * 1024.0)
+            action = project_size_action(budget.estimated_project_bytes)
+            if action == "block":
+                self._show_error(
+                    self._translator.t(
+                        "band.size_too_large",
+                        size=size_mb,
+                        limit=MAX_PROJECT_SIZE_BYTES / (1024.0 * 1024.0),
+                    )
+                )
+                return
+            if action == "warn":
+                answer = QMessageBox.warning(
+                    self,
+                    self._translator.t("app.title"),
+                    self._translator.t(
+                        "band.size_warning",
+                        size=size_mb,
+                        limit=PROJECT_SIZE_WARNING_BYTES / (1024.0 * 1024.0),
+                    ),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
 
         self._last_result = None
         self._pending_pattern_diagnostic = None
@@ -4415,11 +4451,11 @@ class MainWindow(QMainWindow):
         self,
         model: object,
         specs: tuple[SimulationSpec, ...],
-    ) -> tuple[SimulationSpec, ...]:
+    ) -> tuple[tuple[SimulationSpec, ...], PatternBudget | None]:
         from ..domain.antennas.antenna import AntennaModel
 
         if not specs or not isinstance(model, AntennaModel):
-            return specs
+            return specs, None
         ground = model.environment.ground
         budget = choose_batch_pattern_step(
             frequency_counts=tuple(spec.frequency_plan.count for spec in specs),
@@ -4440,18 +4476,21 @@ class MainWindow(QMainWindow):
         self._custom_last_budget = budget
         self._show_custom_pattern_budget(budget)
         if not budget.far_field_enabled:
-            return tuple(
-                replace(
-                    spec,
-                    far_field=FarFieldRequest(enabled=False),
-                    pattern_frequencies_hz=(),
-                )
-                for spec in specs
+            return (
+                tuple(
+                    replace(
+                        spec,
+                        far_field=FarFieldRequest(enabled=False),
+                        pattern_frequencies_hz=(),
+                    )
+                    for spec in specs
+                ),
+                budget,
             )
         if budget.pattern_step_deg is None:
-            return specs
+            return specs, budget
         request = far_field_request(budget.pattern_step_deg, ground)
-        return tuple(replace(spec, far_field=request) for spec in specs)
+        return tuple(replace(spec, far_field=request) for spec in specs), budget
 
     def _update_custom_sweep_controls(self) -> None:
         enabled = self._custom_sweep.isChecked()

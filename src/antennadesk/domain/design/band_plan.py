@@ -37,8 +37,8 @@ from ..simulation.bands import (
 from ..simulation.frequency import FrequencyPlan
 from . import formulas
 
-DEFAULT_BAND_POINTS = 15
-BROADBAND_BAND_POINTS = 21
+DEFAULT_BAND_POINTS = 100
+BROADBAND_BAND_POINTS = 100
 MAX_BAND_POINTS = 1_000
 
 G5RV_DEFAULT_BAND_IDS = ("80m", "40m", "20m", "15m", "10m")

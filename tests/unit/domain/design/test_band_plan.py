@@ -19,6 +19,7 @@ from antennadesk.domain.antennas.zepp import zepp_parameters
 from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
 from antennadesk.domain.design.band_plan import (
     BROADBAND_BAND_POINTS,
+    DEFAULT_BAND_POINTS,
     BandEvidence,
     BandPlan,
     BandSelection,
@@ -26,6 +27,11 @@ from antennadesk.domain.design.band_plan import (
     operating_frequencies_for,
 )
 from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+
+def test_default_band_points_are_100_for_every_family() -> None:
+    assert DEFAULT_BAND_POINTS == 100
+    assert BROADBAND_BAND_POINTS == 100
 
 
 def test_band_selection_builds_a_sweep() -> None:

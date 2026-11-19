@@ -10,6 +10,7 @@ from antennadesk.domain.simulation.budget import (
     estimate_compressed_project_bytes,
     estimate_project_bytes,
 )
+from antennadesk.persistence.constants import PROJECT_SIZE_WARNING_BYTES
 
 
 def _counts(step_deg: float) -> tuple[int, int]:
@@ -34,6 +35,30 @@ def test_project_size_estimate_accepts_the_41_point_g5rv_default() -> None:
     )
 
     assert estimate < DEFAULT_MAX_PROJECT_BYTES
+
+
+def test_100_point_band_analysis_can_exceed_the_warning_for_large_models() -> None:
+    # Eight 100-point HF bands with 725 segments each: the impedance/current
+    # data alone is above the 32 MB compressed warning threshold.
+    estimate = estimate_compressed_project_bytes(
+        frequency_count=800,
+        far_field_points_per_frequency=0,
+        segment_count=725,
+        pattern_frequency_count=0,
+    )
+
+    assert estimate > PROJECT_SIZE_WARNING_BYTES
+
+
+def test_100_point_band_analysis_for_a_compact_dipole_stays_small() -> None:
+    estimate = estimate_compressed_project_bytes(
+        frequency_count=800,
+        far_field_points_per_frequency=0,
+        segment_count=21,
+        pattern_frequency_count=0,
+    )
+
+    assert estimate < PROJECT_SIZE_WARNING_BYTES
 
 
 def test_auto_pattern_uses_the_finest_step_that_fits() -> None:

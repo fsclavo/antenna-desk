@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Band analysis defaults to 100 points per band.** Family band plans,
+  including broadband families and explicit two-band plans, now start with 100
+  points per band. Before a run, the pattern budget is fitted as before and the
+  estimated compressed project size is checked: above 32 MB the app asks for
+  confirmation, and above the 64 MB project limit it blocks the run with a
+  message to reduce points or bands. The pattern resolution may still be
+  coarsened or disabled to fit the storage budget, and the effective choice is
+  reported.
 - **Static 3D far-field wireframe in reports.** The HTML and native PDF reports
   now include one deterministic vector 3D total-gain wireframe in the primary
   far-field section. It uses the stored angular grid, a numeric dBi legend,

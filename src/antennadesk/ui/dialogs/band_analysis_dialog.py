@@ -19,7 +19,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...domain.design.band_plan import BandDefault, BandPlan, BandSelection
+from ...domain.design.band_plan import (
+    DEFAULT_BAND_POINTS,
+    BandDefault,
+    BandPlan,
+    BandSelection,
+)
 from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_by_id, amateur_band_for
 from ..fonts import scaled_dialog_size
 from ..i18n import Translator
@@ -106,7 +111,7 @@ class BandAnalysisDialog(QDialog):
             points.setValue(
                 selected_plan.selections[0].points
                 if selected_plan is not None and selected_plan.selections
-                else 15
+                else DEFAULT_BAND_POINTS
             )
             self._table.setCellWidget(row, 2, points)
 
