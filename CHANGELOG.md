@@ -37,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Optimizer diagnostics and Moxon Apply Best guard.** Bound-hit
+  recommendations now apply to every family. The optimizer variable table uses
+  adaptive units and states that Current is the start with no silent clamp.
+  Moxon dialogs show initial gap/λ and gap/radius; Apply Best and Apply Best SWR
+  revalidate the selection and ask for confirmation within 5% of a geometry
+  envelope edge or below two conductor diameters. The Moxon default objective
+  is now Target impedance, matching the 50Ω reference.
 - **Thin-wire model-quality gate.** High-frequency models now get a shared
   segment/radius policy. Short wires reduce their segment count to reach a
   ratio of 8 when the resulting segment is still at most 0.1λ; otherwise the

@@ -223,7 +223,7 @@ The implementation is sliced in
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | Implemented 2026-11-18 |
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Implemented 2026-11-18 |
 | HF7 | Thin-wire model-quality gate | Implemented 2026-11-18 |
-| HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Queued |
+| HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Implemented 2026-11-18 |
 | HF9 | Regression matrix, evidence, and documentation | Queued |
 | HF10 | Design-frequency/geometry consistency | Queued |
 
@@ -337,6 +337,21 @@ Observed impedance changes on 2026-11-18 were 3.44/4.62 ohm for the two Moxons
 and 11.06/14.68 ohm for the 2.4/5.8 GHz Yagis. These values document the
 kernel's effect; they are not accuracy references. The tests assert completion,
 finite R/X, and a deterministic non-zero change.
+
+### HF8 implementation note
+
+Bound-hit recommendations are no longer restricted to the shortened end-fed
+descriptors; every descriptor opts in by default. The optimizer table uses
+`DisplayUnits` for adaptive length/radius values and states that Current is the
+initial value with no silent clamp.
+
+For the Moxon, the dialog shows the initial gap/λ and gap/radius. **Apply Best**
+and **Apply Best SWR** revalidate the selected parameters; invalid geometry is
+blocked, and a geometry within 5% of an envelope edge or below two conductor
+diameters asks for confirmation. The default Moxon objective is now
+**Target impedance**, not maximum gain: the Cebik reference is a 50Ω beam and a
+match-focused first run is less likely to drift toward an envelope edge. Gain
+and front-to-back remain selectable objectives.
 
 ## Test contract
 

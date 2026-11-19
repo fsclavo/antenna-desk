@@ -142,7 +142,11 @@ Completed:
 Deferred:
 
 - Live VNA/hardware control.
-- Additional full-wave engines.
+- Additional full-wave engines. A future review of **momwire** as an optional
+  high-fidelity engine is deferred; start it only with the owner's explicit
+  approval. The review must cover release maturity, Linux/Windows packaging,
+  independent validation, and parity with the reference cases before any
+  integration work.
 - Physical antenna validation until measurements are available.
 
 ## Milestones

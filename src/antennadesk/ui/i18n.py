@@ -15179,6 +15179,35 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Target band",
         Language.SPANISH: "Banda objetivo",
     },
+    "optimize.initial_no_clamp": {
+        Language.ENGLISH: (
+            "The run starts from Current and is never silently clamped; an "
+            "out-of-bounds active value blocks the run."
+        ),
+        Language.SPANISH: (
+            "La ejecución parte del valor Actual y nunca se recorta en silencio; "
+            "un valor activo fuera de límites bloquea la ejecución."
+        ),
+    },
+    "optimize.moxon_quality": {
+        Language.ENGLISH: (
+            "Initial Moxon gap {gap} · gap/lambda {wavelength_ratio} · gap/radius {radius_ratio}."
+        ),
+        Language.SPANISH: (
+            "Separación inicial del Moxon {gap} · separación/lambda "
+            "{wavelength_ratio} · separación/radio {radius_ratio}."
+        ),
+    },
+    "optimize.moxon_near_limit_confirm": {
+        Language.ENGLISH: (
+            "The selected Moxon is close to the geometry-envelope edge ({details}). "
+            "Apply it anyway?"
+        ),
+        Language.SPANISH: (
+            "El Moxon seleccionado está cerca del borde del envolvente geométrico "
+            "({details}). ¿Aplicarlo igual?"
+        ),
+    },
     "optimize.context.hexbeam_band": {
         Language.ENGLISH: (
             "Only the selected band's driver and reflector halves, tip gap, and "

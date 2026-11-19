@@ -209,6 +209,70 @@ def validate_moxon_geometry(
     return tuple(issues)
 
 
+MOXON_GUARD_MARGIN = 0.05
+
+
+def moxon_geometry_near_limit(
+    parameters: MoxonParameters,
+    *,
+    margin: float = MOXON_GUARD_MARGIN,
+) -> bool:
+    """Return whether a valid Moxon sits close to a geometry-envelope edge.
+
+    This is an Apply Best confirmation guard, not a validity check. The
+    reference geometry stays comfortably inside the envelope; a design within
+    ``margin`` of a boundary, or with less than two conductor diameters of gap,
+    asks the user to confirm.
+    """
+
+    if not 0.0 < margin < 0.5:
+        raise ValueError("margin must be between 0 and 0.5")
+    wavelength = units.SPEED_OF_LIGHT_M_PER_S / parameters.frequency_hz
+    gap = parameters.gap_m
+    ratios = (
+        (
+            gap / wavelength,
+            MOXON_GAP_MIN_WAVELENGTH_RATIO,
+            MOXON_GAP_MAX_WAVELENGTH_RATIO,
+        ),
+        (
+            gap / parameters.depth_m,
+            MOXON_GAP_MIN_DEPTH_RATIO,
+            MOXON_GAP_MAX_DEPTH_RATIO,
+        ),
+        (
+            gap / parameters.width_m,
+            MOXON_GAP_MIN_WIDTH_RATIO,
+            MOXON_GAP_MAX_WIDTH_RATIO,
+        ),
+        (
+            parameters.width_m / parameters.depth_m,
+            MOXON_WIDTH_MIN_DEPTH_RATIO,
+            MOXON_WIDTH_MAX_DEPTH_RATIO,
+        ),
+        (
+            parameters.reflector_tip_m / parameters.depth_m,
+            MOXON_REFLECTOR_TIP_MIN_DEPTH_RATIO,
+            MOXON_REFLECTOR_TIP_MAX_DEPTH_RATIO,
+        ),
+        (
+            parameters.driven_tip_m / parameters.depth_m,
+            MOXON_DRIVEN_TIP_MIN_DEPTH_RATIO,
+            MOXON_DRIVEN_TIP_MAX_DEPTH_RATIO,
+        ),
+        (
+            (parameters.reflector_tip_m + parameters.driven_tip_m) / parameters.depth_m,
+            MOXON_TIPS_SUM_MIN_DEPTH_RATIO,
+            MOXON_TIPS_SUM_MAX_DEPTH_RATIO,
+        ),
+    )
+    for actual, minimum, maximum in ratios:
+        span = maximum - minimum
+        if actual < minimum + margin * span or actual > maximum - margin * span:
+            return True
+    return gap < 4.0 * parameters.wire_radius_m
+
+
 @dataclass(frozen=True, slots=True)
 class MoxonParameters:
     """A Moxon rectangle with bent reflector and driven-element tips."""

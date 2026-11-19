@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
 from antennadesk.domain.antennas.moxon import (
     MoxonParameters,
     moxon_20m_wire,
+    moxon_geometry_near_limit,
     validate_moxon_geometry,
 )
 from antennadesk.domain.antennas.polarization import Polarization
@@ -175,6 +178,16 @@ def test_moxon_rejects_a_gap_below_the_conductor_clearance() -> None:
             height_m=10.0,
             wire_radius_m=0.2,
         )
+
+
+def test_moxon_reference_is_not_near_the_apply_guard_limit() -> None:
+    assert moxon_geometry_near_limit(moxon_20m_wire()) is False
+
+
+def test_moxon_apply_guard_flags_a_tight_conductor_gap() -> None:
+    reference = moxon_20m_wire()
+
+    assert moxon_geometry_near_limit(replace(reference, wire_radius_m=0.06)) is True
 
 
 def test_moxon_rejects_a_non_moxon_width_depth_ratio() -> None:

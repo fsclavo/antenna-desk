@@ -180,6 +180,91 @@ def test_family_dialog_blocks_an_unlocked_out_of_bounds_variable(
     assert dialog._thread is None
 
 
+def test_family_dialog_shows_moxon_quality_and_guards_near_limit_apply(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from PySide6.QtWidgets import QMessageBox
+
+    from antennadesk.domain.antennas.moxon import moxon_20m_wire
+
+    parameters = moxon_20m_wire()
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        availability.descriptor,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            far_field=far_field_request(5.0, parameters.ground),
+        ),
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._quality_note.isHidden() is False
+    assert "gap/lambda" in dialog._quality_note.text().lower()
+    dialog._selected_parameters = replace(parameters, wire_radius_m=0.06)
+
+    questions: list[str] = []
+    monkeypatch.setattr(
+        "antennadesk.ui.dialogs.family_optimization_dialog.QMessageBox.question",
+        lambda _parent, _title, text, *args, **kwargs: (
+            questions.append(text) or QMessageBox.StandardButton.No
+        ),
+    )
+    dialog._apply_result()
+
+    assert questions
+    assert dialog.result() != QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(
+        "antennadesk.ui.dialogs.family_optimization_dialog.QMessageBox.question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+    dialog._apply_result()
+
+    assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_family_dialog_uses_adaptive_units_in_the_variable_table(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+    from antennadesk.ui.units import DisplayUnits, LengthPolicy
+
+    parameters = YagiParameters(
+        frequency_hz=300_000_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=0.5, radius_m=0.001),
+            YagiElement(position_m=0.1, length_m=0.48, radius_m=0.001),
+        ),
+        height_m=1.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        FakeSolver(),
+        availability.descriptor,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            far_field=far_field_request(5.0, parameters.ground),
+        ),
+        display_units=DisplayUnits(UnitSystem.METRIC, LengthPolicy.AUTO),
+    )
+    qtbot.addWidget(dialog)
+
+    values = [
+        dialog._table.item(row, 3).text()
+        for row in range(dialog._table.rowCount())
+        if dialog._table.item(row, 3) is not None
+    ]
+    assert any("cm" in value for value in values)
+
+
 def test_family_dialog_shows_the_matching_override_warning(qtbot: QtBot) -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,

@@ -36,6 +36,12 @@ from ...application.use_cases.optimize_antenna import (
     OptimizeAntennaResult,
 )
 from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.antennas.moxon import (
+    MoxonParameters,
+    moxon_geometry_near_limit,
+    validate_moxon_geometry,
+)
+from ...domain.common import units
 from ...domain.optimization.constraints import OptimizationMetric, SoftConstraint
 from ...domain.optimization.descriptor import (
     AntennaOptimizerDescriptor,
@@ -61,15 +67,7 @@ from ..fonts import scaled_dialog_size
 from ..help import apply_help
 from ..i18n import Translator
 from ..parallelism import MAX_UI_PARALLEL_WORKERS, default_parallel_workers
-from ..units import (
-    DisplayUnits,
-    LengthPolicy,
-    UnitSystem,
-    length_from_m,
-    length_unit_key,
-    radius_from_m,
-    radius_unit_key,
-)
+from ..units import DisplayUnits, LengthPolicy, UnitSystem
 from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.family_optimization_worker import FamilyOptimizationWorker
@@ -268,6 +266,12 @@ class FamilyOptimizationDialog(QDialog):
         self._table.horizontalHeader().setStretchLastSection(True)
         self._table.itemChanged.connect(self._use_changed)
         self._populate_variables()
+        self._initial_hint = QLabel(translator.t("optimize.initial_no_clamp"), self)
+        self._initial_hint.setWordWrap(True)
+        self._quality_note = QLabel(self)
+        self._quality_note.setWordWrap(True)
+        self._quality_note.setVisible(False)
+        self._populate_quality_note()
 
         self._evaluations = QTableWidget(0, 10, self)
         self._evaluations.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -426,6 +430,8 @@ class FamilyOptimizationDialog(QDialog):
         layout.addWidget(self._last_summary_label)
         layout.addWidget(self._locked_hint)
         layout.addWidget(self._table, 1)
+        layout.addWidget(self._initial_hint)
+        layout.addWidget(self._quality_note)
         layout.addWidget(self._evaluations_label)
         layout.addWidget(self._evaluations, 1)
         layout.addWidget(self._pareto_label)
@@ -643,11 +649,63 @@ class FamilyOptimizationDialog(QDialog):
             return f"{value * 100.0:.1f}%"
         if variable.unit == "ohm":
             return f"{value:.3f} Ω"
-        if variable.unit == "radius":
-            unit = self._translator.t(radius_unit_key(self._unit_system))
-            return f"{radius_from_m(value, self._unit_system):.4f} {unit}"
-        unit = self._translator.t(length_unit_key(self._unit_system))
-        return f"{length_from_m(value, self._unit_system):.3f} {unit}"
+        if variable.unit in {"m", "radius"}:
+            return self._display_units.format_length(value, trim=False)
+        return f"{value:g}"
+
+    def _moxon_quality_text(self, parameters: MoxonParameters) -> str:
+        wavelength = units.wavelength_m(parameters.frequency_hz)
+        return self._translator.t(
+            "optimize.moxon_quality",
+            gap=self._display_units.format_length(parameters.gap_m, trim=False),
+            wavelength_ratio=f"{parameters.gap_m / wavelength:.4f}",
+            radius_ratio=f"{parameters.gap_m / parameters.wire_radius_m:.2f}",
+        )
+
+    def _populate_quality_note(self) -> None:
+        try:
+            parameters = self._descriptor.build_parameters(self._descriptor.initial_values)
+        except Exception:
+            self._quality_note.setVisible(False)
+            return
+        if not isinstance(parameters, MoxonParameters):
+            self._quality_note.setVisible(False)
+            return
+        self._quality_note.setText(self._moxon_quality_text(parameters))
+        self._quality_note.setVisible(True)
+
+    def _confirm_apply(self, parameters: AntennaDesignParameters) -> bool:
+        if not isinstance(parameters, MoxonParameters):
+            return True
+        issues = validate_moxon_geometry(
+            frequency_hz=parameters.frequency_hz,
+            width_m=parameters.width_m,
+            depth_m=parameters.depth_m,
+            reflector_tip_m=parameters.reflector_tip_m,
+            driven_tip_m=parameters.driven_tip_m,
+            wire_radius_m=parameters.wire_radius_m,
+        )
+        if issues:
+            issue = issues[0]
+            QMessageBox.critical(
+                self,
+                self.windowTitle(),
+                self._translator.t(issue.message_key, **issue.message_values()),
+            )
+            return False
+        if not moxon_geometry_near_limit(parameters):
+            return True
+        answer = QMessageBox.question(
+            self,
+            self.windowTitle(),
+            self._translator.t(
+                "optimize.moxon_near_limit_confirm",
+                details=self._moxon_quality_text(parameters),
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return answer == QMessageBox.StandardButton.Yes
 
     def _selected_indices(self) -> tuple[int, ...]:
         return tuple(
@@ -1159,11 +1217,15 @@ class FamilyOptimizationDialog(QDialog):
         parameters = self._best_swr_parameters()
         if parameters is None:
             return
+        if not self._confirm_apply(parameters):
+            return
         self._selected_parameters = parameters
         self.accept()
 
     def _apply_result(self) -> None:
         if self._selected_parameters is None:
+            return
+        if not self._confirm_apply(self._selected_parameters):
             return
         self.accept()
 

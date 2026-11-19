@@ -169,7 +169,7 @@ external service and must not be invented or simulated into existence.
 | ~~HF5~~ | ~~Yagi wavelength-relative bounds and high-element-count QA~~ | M | HF1–HF3 | **Done 2026-11-18:** the Yagi descriptor uses only relative bounds around the current normalized design; element, gap, height, fold-spacing, and hairpin bounds are radius-relative and steps are span-normalized. The 0.05 m element floor is gone. Tests cover 5/10/15/20/32 elements at 1.5/2.4/5.8 GHz, the DL6WU taper constraints, exact rebuild, and folded/beta-hairpin variables. Real NEC2C smoke runs complete for 2.4 GHz 15/32 elements and 5.8 GHz 5/15 elements with finite R/X; no gain claim. |
 | ~~HF6~~ | ~~Moxon high-frequency estimator, radius, and confidence policy~~ | M | HF1, HF4 | **Done 2026-11-18:** the Cebik 20 m Moxon is reference-scaled only inside the 20 m band (14.0–14.35 MHz); outside it is explicitly heuristic with a high-frequency warning, an extrapolation assumption, and tolerance `max(5% width, gap)`. The starting gap must clear two conductor diameters or the estimate is unsupported. The 14.17 MHz reference stays exact; the 28.5 MHz default is heuristic; no 2.4 GHz published reference was invented. EN/ES warning and estimator-guide policy added. |
 | ~~HF7~~ | ~~Thin-wire model-quality gate for high-frequency optimization~~ | M–L | HF1, HF2 | **Done 2026-11-18:** added `resolve_model_quality`. Short wires reduce their segment count to reach a segment/radius ratio of 8 when the resulting segment is still at most 0.1λ; otherwise the extended thin-wire kernel is selected automatically when the solver supports it. Ratio <2 always blocks, and over-segmented long wires (<1e-3λ on a wire ≥0.01λ) block the optimizer; short structural feed/load/return wires are exempt. The main simulation and optimizer specs use the policy, and the optimizer rejects blocked candidates with `optimize.constraint.model_quality`. NEC2C comparisons at 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi record deterministic impedance changes only. |
-| HF8 | High-frequency optimizer diagnostics, defaults, and Apply Best guard | M | HF4–HF6 | **Queued 2026-11-18:** enable bound-hit diagnostics for all families; show initial versus clamped values, gap/λ, and gap/radius; review the Moxon default objective; block or confirm **Apply Best** on implausible geometry; use adaptive units in the optimizer table; EN/ES help and tests. |
+| ~~HF8~~ | ~~High-frequency optimizer diagnostics, defaults, and Apply Best guard~~ | M | HF4–HF6 | **Done 2026-11-18:** bound-hit diagnostics are enabled for every family; the variable table uses adaptive units and states that Current is the start with no silent clamp. Moxon dialogs show initial gap/λ and gap/radius, and **Apply Best**/*Apply Best SWR* confirm when the selected geometry is within 5% of an envelope edge or below two conductor diameters. The Moxon default objective is now **Target impedance** instead of maximum gain, matching the 50Ω reference and keeping the first run match-focused. EN/ES strings and dialog/domain tests added. |
 | HF9 | High-frequency regression matrix, evidence, and documentation | M | HF2–HF8 | **Queued 2026-11-18:** add the frequency/family matrix, an old-behavior regression for the 2.4 GHz Moxon gap, invariant and solver-completion assertions, and a no-silent-clamp check; update the ADR, estimator guide, user guide, and `CHANGELOG.md`; make no accuracy claim without a traceable source. |
 | HF10 | Design-frequency/geometry consistency for Moxon and Yagi | S–M | HF1, HF2; UX34/ADR-0043 | **Queued 2026-11-18:** reconcile the Moxon manual preset and the Yagi auto-scale exception with the pristine-geometry policy; warn or block optimization when geometry is grossly inconsistent with λ; test frequency changes, preset loads, and optimizer availability. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -179,10 +179,10 @@ external service and must not be invented or simulated into existence.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-**Status:** HF1–HF7 are implemented on 2026-11-18;
+**Status:** HF1–HF8 are implemented on 2026-11-18;
 [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) is the accepted
-contract. HF8–HF10 are queued; HF8 is the remaining high-frequency fidelity
-slice, and HF9 closes the track.
+contract. HF9 and HF10 are queued; HF9 closes the regression/documentation
+track and HF10 covers design-frequency/geometry consistency.
 
 **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
 [ADR-0043](ADR/0043-design-versus-analysis-frequency.md),
@@ -465,6 +465,17 @@ Requirements:
 - No universal numerical accuracy claim; use convergence and invariant checks.
 
 ### HF8 — Diagnostics, defaults, and Apply Best
+
+**Implemented 2026-11-18.** Bound-hit recommendations are now enabled for every
+descriptor. The optimizer variable table uses `DisplayUnits` for adaptive
+length and radius values, and a visible hint states that Current is the start
+and is never silently clamped. Moxon dialogs show initial gap/λ and gap/radius;
+**Apply Best** and **Apply Best SWR** revalidate the selected geometry and ask
+for confirmation when it is within 5% of an envelope edge or below two conductor
+diameters. The Moxon default objective changed from maximum gain to **Target
+impedance**, matching the 50Ω reference and keeping the first run
+match-focused. EN/ES labels and tests cover the note, guard, adaptive units, and
+default objective.
 
 Requirements:
 
@@ -3752,9 +3763,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,775 passed, 1 skipped** on 2026-11-18 after the HF7 thin-wire
-  model-quality gate, with `NEC2C` auto-detected by the test configuration; the
-  skip is the Windows-only console-hiding test on Linux.
+- Full gate: **3,780 passed, 1 skipped** on 2026-11-18 after the HF8 optimizer
+  diagnostics, Moxon default, and Apply Best guard, with `NEC2C` auto-detected
+  by the test configuration; the skip is the Windows-only console-hiding test
+  on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

@@ -96,7 +96,7 @@ class AntennaOptimizerDescriptor:
     supports_boom_constraint: bool = False
     context_note_key: str | None = None
     structural_segmentation: StructuralSegmentation | None = None
-    recommends_bound_hits: bool = False
+    recommends_bound_hits: bool = True
     model_builder: ModelBuilder | None = None
     evaluation_frequency_hz: EvaluationFrequency | None = None
 

@@ -518,6 +518,26 @@ def test_moxon_optimizer_exposes_the_gap_and_rejects_non_moxon_geometry() -> Non
     assert any(item.message_key == "optimize.constraint.moxon_geometry" for item in violations)
 
 
+def test_moxon_defaults_to_target_impedance_and_reports_bound_hits() -> None:
+    from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
+
+    availability = optimizer_availability(
+        MoxonParameters(
+            frequency_hz=14_170_000.0,
+            width_m=25.0 * 0.3048,
+            depth_m=9.57 * 0.3048,
+            reflector_tip_m=4.85 * 0.3048,
+            driven_tip_m=4.00 * 0.3048,
+            height_m=10.0,
+            wire_radius_m=0.000912,
+        )
+    )
+
+    assert availability.descriptor is not None
+    assert availability.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
+    assert availability.descriptor.recommends_bound_hits is True
+
+
 def test_only_array_descriptors_support_a_boom_constraint() -> None:
     yagi = optimizer_availability(_yagi())
     moxon = optimizer_availability(
@@ -960,7 +980,7 @@ def test_shortened_endfed_optimizer_marks_the_matching_network_as_context() -> N
     assert shortened.descriptor.recommends_bound_hits is True
     assert standard.descriptor is not None
     assert standard.descriptor.context_note_key is None
-    assert standard.descriptor.recommends_bound_hits is False
+    assert standard.descriptor.recommends_bound_hits is True
     assert standard.descriptor.default_objective is FamilyOptimizationObjective.TARGET_IMPEDANCE
 
 

@@ -2037,7 +2037,18 @@ installation height (including apex, base, feed, counterpoise, and ring
 heights), feed-point placement, conductor radius/diameter, and
 transformer/balun ratios. Check a box to include a context variable; clear it
 to lock it. Any excluded variable marks the run as a partial optimization.
-Material and ground remain installation context outside the optimizer.
+Material and ground remain installation context outside the optimizer. The
+table's **Current** column is the exact starting value; Minimum and Maximum are
+the search bounds, displayed with adaptive units. A hint states that the app
+never silently clamps the starting design. When the best candidate is within 1%
+of a continuous unlocked bound, the summary names the limiting variable(s) for
+every family.
+
+A Moxon optimization starts with **Target impedance**, matching the published
+50Ω reference; gain and front-to-back remain selectable. The dialog shows the
+initial gap/λ and gap/radius. **Apply Best** and **Apply Best SWR** revalidate
+the selected Moxon and ask for confirmation when it is within 5% of a geometry
+envelope edge or has less than two conductor diameters of gap.
 
 The topology is chosen in the family editor and stays fixed during a run:
 orientation, polarization, loop sides, Yagi element count, folded elements,
