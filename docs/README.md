@@ -24,7 +24,8 @@ of truth before adding another planning document.
 ## Planning
 
 - [`ROADMAP.md`](ROADMAP.md) — product direction, milestones, product backlog,
-  and the ordered antenna expansion backlog.
+  the ordered antenna expansion backlog, and the 1.0 trust/1.1 station/1.2 site
+  tracks.
 - [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) — the only active execution
   queue: dependencies, blockers, acceptance criteria, and the current test
   baseline.

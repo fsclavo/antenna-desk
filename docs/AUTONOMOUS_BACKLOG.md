@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-18
+**Date:** 2026-11-19
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -27,6 +27,10 @@ external service and must not be invented or simulated into existence.
 - Do not commit or push unless explicitly requested.
 
 ## Queue
+
+The 2026-11-19 product trust and station wave (TS1–TS7, DL1–DL9; DL8 is
+post-1.2) is the active product sequence. Its rows are in the table; scope,
+acceptance, evidence, and risk are in §Product trust and station wave below.
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
@@ -176,10 +180,612 @@ external service and must not be invented or simulated into existence.
 | ~~HF8~~ | ~~High-frequency optimizer diagnostics, defaults, and Apply Best guard~~ | M | HF4–HF6 | **Done 2026-11-18:** bound-hit diagnostics are enabled for every family; the variable table uses adaptive units and states that Current is the start with no silent clamp. Moxon dialogs show initial gap/λ and gap/radius, and **Apply Best**/*Apply Best SWR* confirm when the selected geometry is within 5% of an envelope edge or below two conductor diameters. The Moxon default objective is now **Target impedance** instead of maximum gain, matching the 50Ω reference and keeping the first run match-focused. EN/ES strings and dialog/domain tests added. |
 | ~~HF9~~ | ~~High-frequency regression matrix, evidence, and documentation~~ | M | HF2–HF8 | **Done 2026-11-18:** a 243-test frequency/family matrix (238 combinations plus five coverage/contract checks) covers all eleven required frequencies and every supported optimizer type, asserting bounds, non-degenerate spans, initial-vector rebuilds, and geometry validity. A 2.4 GHz Moxon regression rejects the old `0.67 λ` gap without a performance reference, including a full optimizer run with a fake solver. Real NEC2C runs complete for 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz quad/biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical. ADR-0046, the estimator guide, user guide, and changelog record the contract. No accuracy claim or evidence promotion. |
 | ~~HF10~~ | ~~Design-frequency/geometry consistency for Moxon and Yagi~~ | S–M | HF1, HF2; UX34/ADR-0043 | **Done 2026-11-18:** the Moxon and Yagi forms use the ADR-0043 pristine policy. A pristine frequency change regenerates the Moxon reference or scales the Yagi table; after an edit, add/remove, loaded project, or optimizer result, geometry is preserved with a stale warning. The Moxon reference button and Yagi NBS preset reset pristine. The Moxon form warns outside the gross `0.15–0.60 λ` width guard. `yagi_gross_frequency_mismatch` rejects a Yagi outside `0.20–0.80 λ` through `optimize.unavailable.frequency_mismatch` before the solver starts. Tests cover pristine/edited changes, preset reloads, loaded parameters, new templates, and optimizer availability. |
+| TS1 | Convergence study for every wire family | M | `resolve_model_quality`, segmentation | **Wave 0.** A 3–5 density ladder reports R/X/Z magnitude/SWR and pattern/gain deltas, Δ/a, a self-consistency verdict, and cancellation. See §TS1. |
+| TS2 | Decision metrics, band-plan overlay, and CP/axial ratio | M | TS1 (soft), band plan, far-field data | **Wave 0.** Results show 2:1 SWR bandwidth, HPBW, F/B, takeoff, efficiency, band edges, and CP/axial ratio; CSV and tests. See §TS2. |
+| TS3 | NEC-2 deck export and copy | S | none | **Wave 0.** The current design/spec exports as a NEC deck with a provenance header; a NEC2C round-trip reproduces the simulation. See §TS3. |
+| TS4 | Autosave and crash recovery | S–M | none | **Wave 0.** Atomic recovery file, restore prompt, opt-out, and tests; no silent overwrite. See §TS4. |
+| TS5 | VNA import 2.0 | M | none | **Wave 0.** `.s2p`, analyzer presets, column mapping, decimal comma, drag-and-drop, and multiple sweeps. See §TS5. |
+| TS6 | Recent projects and start-page examples | S | none | **Wave 0.** Recent list with missing-file handling; start page opens examples and the reference library. See §TS6. |
+| TS7 | Documentation truth pass and status review | S | none | **Wave 0.** Remove stale limitations, single-source the limitation list, and review the pre-alpha label. See §TS7. |
+| DL1 | Smith chart and matching workbench | M–L | matching network, feed line | **Wave 1.** Interactive impedance locus, measured/simulated overlay, line transformation, L/Pi/T preview, cursor, export. See §DL1. |
+| DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Wave 1.** Tuner C/L ranges, best effort/bypass, loss, voltage/current, E-series values, and per-band table. See §DL2. |
+| DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
+| DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
+| DL5 | Support structures | M–L | ADR | **Wave 1.** Boom, mast, tower, and guy wires as conductors with scene, BOM, report, and warnings. See §DL5. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Wave 2.** 2–4 Yagis, spacing, phasing lines, feed split, mutual coupling, optimization, and per-port results. See §DL6. |
+| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Wave 2.** Expose NEC-2 `GN` radial screen and second-medium/edge fields; validate against the manual and the dense-wire screen. See §DL7. |
+| DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
+| DL9 | Circular-polarization metrics | S–M | TS2 | **Wave 0 with TS2.** Axial ratio, sense, CP gain, cross-pol, and a circular reference test. See §TS2. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 | ~~D4~~ | ~~Segmented frequency plan in one NEC deck~~ | M | solver benchmark | **Closed 2026-11-16 by ADR-0042:** the solver-only single deck saves about 0.95 s on 808 frequencies, while the four-worker per-band path is faster than a sequential single deck and preserves the existing result, pattern, project-size, and cancellation contracts. Keep per-band batching; revisit only under the ADR triggers. |
+
+## Product trust and station wave (queued 2026-11-19)
+
+**Status:** queued 2026-11-19; waves 0–2 are the active product sequence.
+**Scope:** product trust, station completeness, and site awareness. **Product
+scope:** [`ROADMAP.md`](ROADMAP.md). This wave pauses new antenna families: the
+catalog is broad enough, and the next value is answering the questions an
+operator asks before building.
+
+This wave is part of the single active queue above. The queue table is
+canonical; the subsections below define scope, dependencies, acceptance
+criteria, evidence, and risk for each item.
+
+**Priority:** P0 = TS1–TS7 and DL9; P1 = DL1, DL2, and DL5; P2 = DL3, DL4,
+DL6, and DL7; P3 = DL8. P0 is the 1.0 gate; P1 and P2 are the 1.1 and 1.2
+slices.
+
+**Not in this wave:** the measurement-calibrated model, true multi-band
+optimization, parametric custom geometry, CLI/API, a second engine as a
+default, macOS packaging, and a large UI refactor. Antenna content work (C7h
+6 m HexBeam, the LPDA 7 MHz swept variant, and new catalog presets) also waits
+until the trust/station wave closes. These belong to the later platform or
+content tracks and must not be smuggled into 1.0.
+
+### Wave map
+
+| Wave | Release | IDs | Exit criterion |
+|---|---|---|---|
+| 0 | 1.0 Confidence | TS1–TS7, DL9 | Trust and interoperability green; documentation truthful; no new family work |
+| 1 | 1.1 Station | DL1, DL2, DL5 | Smith, tuner/components, and support structures usable end to end |
+| 2 | 1.2 Site and exploration | DL3, DL4, DL6, DL7 | Live preview, near-field, stacking, and native ground screen/cliff with visible limits |
+| 3 | post-1.2 | DL8 | Only after a validated terrain ADR; otherwise explicitly unavailable |
+
+**Execution order within wave 0:** TS7 → TS3 → TS6 → TS4 → TS1 → TS2 + DL9 →
+TS5. The first four are quick wins that make the application feel 1.0; the
+convergence and metric work follows; VNA import closes the interoperability
+side.
+
+**Execution order within wave 1:** DL1 and DL5 can run in parallel; DL2 follows
+DL1 for the best UX, but the domain tuner model can start first.
+
+**Execution order within wave 2:** start the DL4 and DL7 spikes early; implement
+DL7 before DL8. DL6 can start without DL5, but the mast/support integration is
+better after DL5.
+
+### Wave rules
+
+- Table-stakes items land before delight items. Do not start DL1/DL2/DL5 while
+  the wave-0 trust gate is open unless the owner explicitly reorders.
+- Every item must leave `ruff`, both `mypy` passes, and the full `pytest` gate
+  green, including real NEC2C integration where the item touches the solver.
+- New UI surfaces require EN/ES strings and help-manifest coverage.
+- New persisted fields require an explicit schema migration and a round-trip
+  test. Items marked "no schema change" must stay schema-free.
+- No new numerical reference, tuner range, terrain correction, or safety claim
+  without a traceable source or a visible experimental label.
+- Do not add a second backlog. Product scope goes to `ROADMAP.md`; execution
+  detail and status stay here.
+
+### TS1 — Convergence study for every wire family
+
+**Goal:** answer "does this model converge?" without pretending that
+self-consistency proves accuracy.
+
+**Scope (MVP):**
+- Domain `ConvergenceStudy`: run the same canonical `AntennaModel` at 3–5
+  segment densities, for example 0.10λ, 0.05λ, 0.025λ, 0.0125λ, or a documented
+  per-wire scale factor.
+- Reuse `resolve_model_quality` and `validate_segmentation`; do not add a new
+  solver or a new accuracy claim. The family adapter is not required; custom
+  and imported wire models participate.
+- Report R, X, Z magnitude, and SWR at the design frequency; pattern gain and
+  takeoff angle at the coarsest and finest densities only (not every density);
+  Δ/a per wire; divergent or invalid points; cancellation.
+- Application use case and worker; results tab or dialog; CSV export.
+- Label the verdict **self-consistency**, not accuracy.
+
+**Out of scope:** cross-engine comparison (separate later item); adaptive mesh
+optimization; automatic geometry repair.
+
+**Dependencies:** existing segmentation policy, `resolve_model_quality`, and
+`Nec2cSolver`. A short design note or ADR records the density ladder and the
+verdict threshold. No schema change.
+
+**Acceptance:**
+- A dipole, a vertical with radials, a Yagi, and a custom wire model can be run
+  at 3+ densities.
+- The result states converged / marginal / not converged and shows the metric
+  spread; the threshold is documented.
+- Cancellation keeps completed densities but marks the study partial.
+- The UI and report say "self-consistency"; no report claims validated accuracy.
+- Unit tests cover the domain study; real NEC2C integration tests cover the
+  representative models.
+
+**Evidence:** no new numerical reference. Use reference cases and convergence
+invariants; an independent reference is required only if a threshold is
+presented as an accuracy limit.
+
+**Risk / mitigation:** medium. The risk is interpreting a flat curve as
+correct. Mitigation: the self-consistency label, a documented threshold, and a
+one-week spike on representative models (dipole, vertical with radials, Yagi,
+custom wire) to calibrate it. A later cross-engine check is the stronger test.
+
+**Effort:** M (2–3 weeks). **Release:** 1.0.
+
+### TS2 — Decision metrics, band-plan overlay, and circular polarization
+
+**Goal:** turn the result tables into a one-screen answer: does this design
+cover the band, how wide is it, where does it point, and what polarization does
+it produce?
+
+**Scope (MVP):**
+- Domain metric module: 2:1 SWR bandwidth (reuse or relocate
+  `measure_bandwidth_hz` from the optimizer into a shared metrics module),
+  half-power beamwidth in azimuth and elevation, front-to-back, sidelobe level,
+  takeoff angle, efficiency, directivity, and realized gain.
+- Amateur-band edges on the SWR chart from the existing band catalog;
+  region-specific plans remain a later content item.
+- CP: axial ratio, polarization sense, CP gain, and cross-polar discrimination,
+  using the existing `axial_ratio`, `tilt_deg`, `polarization`, `e_theta`, and
+  `e_phi` values.
+- Results card and CSV columns; no solver change.
+- Definitions documented in `USER_GUIDE.md` and, if the formulas need a
+  normative home, a new `docs/RESULT_METRICS.md`.
+
+**Out of scope:** propagation, coverage maps, legal band privileges.
+
+**Dependencies:** TS1 soft (shared result extraction); band-plan data.
+
+**Acceptance:**
+- A multiband design shows 2:1 bandwidth against each selected band edge.
+- A 2:1 bandwidth that reaches the sweep edge is reported as unbracketed, not
+  as a finite value.
+- A Yagi shows HPBW in both planes, F/B, and takeoff; HPBW and F/B report the
+  pattern resolution and are not presented as more precise than the sampling.
+- A circular test case shows axial ratio, sense, and CP gain.
+- Missing far-field data produces an explicit unavailable value, never a silent
+  zero.
+- CSV and HTML/PDF report rows cover the new metrics.
+
+**Evidence:** standard definitions; compare with a reference case for each
+formula. CP requires a traceable circular reference or an explicitly heuristic
+test; do not invent a gain value.
+
+**Risk / mitigation:** low–medium. Definition ambiguity (HPBW near nulls, F/B
+cut choice, band edges) is the main risk. Mitigation: one normative definition
+per metric, a test case per definition, and a visible tooltip.
+
+**Effort:** M (2–3 weeks) plus S–M for CP (1–2 weeks). **Release:** 1.0.
+
+### DL9 — Circular-polarization metrics
+
+DL9 is the circular-polarization slice of TS2. It covers axial ratio, sense, CP
+gain, cross-polar discrimination, and a circular reference test. It uses the
+far-field data already parsed by the adapter and does not change the solver.
+See §TS2 for scope, acceptance, evidence, and risk. **Effort:** S–M (1–2
+weeks). **Release:** 1.0 with TS2.
+
+### TS3 — NEC-2 deck export and copy
+
+**Goal:** make the canonical model portable and auditable.
+
+**Scope (MVP):**
+- **File → Export → NEC Deck...** and **Copy NEC Deck**.
+- Reuse `Nec2InputWriter` and the current `SimulationSpec`; include a comment
+  header with project, design, frequency plan, ground, segmentation, and
+  application/solver version.
+- Do not include raw solver output or private paths.
+- Tests: export, parse/run with NEC2C, and compare impedance with the simulation
+  within the documented tolerance.
+
+**Out of scope:** EZNEC `.ez` export, NEC-4/5 cards, batch export of every
+variant.
+
+**Dependencies:** none.
+
+**Acceptance:**
+- The exported deck runs in `nec2c` and reproduces the simulation impedance
+  within the documented tolerance.
+- The file opens in at least one external NEC reader (manual QA).
+- The deck is deterministic for the same project and spec.
+- The action is disabled with an explicit reason when no design exists.
+
+**Evidence:** NEC2C round-trip; external reader QA.
+
+**Risk / mitigation:** low. Format drift is the risk; the round-trip test is the
+guard.
+
+**Effort:** S (3–5 days). **Release:** 1.0.
+
+### TS4 — Autosave and crash recovery
+
+**Goal:** never lose a design to a crash, power loss, or accidental close.
+
+**Scope (MVP):**
+- Atomic autosave to a recovery file in the project directory or a
+  platform-appropriate recovery folder; never overwrite the project.
+- Detect a recovery file on startup; offer restore/discard; preserve the
+  original path and dirty state.
+- Opt-out in Preferences; clear the recovery file after a successful save.
+- Tests: simulated crash, read-only directory, corrupt recovery file, project
+  moved or deleted.
+
+**Out of scope:** cloud sync, version history, auto-commit.
+
+**Dependencies:** none; schema unchanged.
+
+**Acceptance:**
+- Killing the process mid-edit leaves a recoverable file.
+- Restore produces the same project and design state; discard removes it.
+- A missing project path falls back to **Save As**.
+- No recovery file is left after a normal save/close.
+
+**Evidence:** n/a (reliability).
+
+**Risk / mitigation:** low. The risk is a confusing restore or a stale recovery
+file; explicit prompts and tests mitigate it.
+
+**Effort:** S–M (1 week). **Release:** 1.0.
+
+### TS5 — VNA import 2.0
+
+**Goal:** import the sweeps radio amateurs actually have without manual
+spreadsheet surgery.
+
+**Scope (MVP):**
+- `.s2p` in addition to `.s1p`; for `.s2p`, use S11 only with an explicit
+  port selection and never silently use S21. Keep the existing one-port path
+  for S11.
+- Analyzer presets or auto-detection for NanoVNA Saver, RigExpert, miniVNA, and
+  DG8SAQ; keep a manual column-mapping dialog as the fallback.
+- Locale-aware number parsing: decimal comma, semicolon delimiter, thousands
+  separators; units in headers (Hz–GHz).
+- Drag-and-drop and multi-file import; one measurement per file or one session;
+  explicit duplicate handling.
+- Untrusted-input tests: huge files, malformed rows, mixed units. No archive
+  extraction is involved.
+
+**Out of scope:** live VNA control, calibration math beyond the file's
+reference plane, S-parameter de-embedding.
+
+**Dependencies:** none; no domain change.
+
+**Acceptance:**
+- A NanoVNA Saver CSV with decimal comma and `;` imports without editing.
+- A RigExpert `.s1p` and a `.s2p` import with the correct reference impedance.
+- Mapping choices are remembered for the session and shown in the measurement
+  metadata.
+- Malformed data is rejected with a row/column message; no silent drop.
+
+**Evidence:** n/a (data import); keep sample files anonymized in tests.
+
+**Risk / mitigation:** medium. Format variety is the risk; the manual mapping
+dialog is the escape hatch.
+
+**Effort:** M (2–3 weeks). **Release:** 1.0.
+
+### TS6 — Recent projects and start-page examples
+
+**Goal:** reduce the time from launch to a useful design.
+
+**Scope (MVP):**
+- Recent list in QSettings with path, name, and last-opened timestamp;
+  missing-file handling and **Remove from list**.
+- Start page: New, Open, Help me choose, Open example (dipole, Yagi, vertical),
+  and Reference design library.
+- Optional **Restore last project** toggle in Preferences.
+- Show the file name, not the full path, on the start page.
+
+**Out of scope:** cloud recent list, thumbnails, project templates beyond the
+existing catalog.
+
+**Dependencies:** none.
+
+**Acceptance:**
+- The recent list persists across restarts and removes missing files with a
+  message.
+- Opening an example creates a normal project through the existing creation
+  path.
+- No new persistence schema.
+
+**Evidence:** n/a.
+
+**Risk / mitigation:** low. Path privacy is the only concern; the file-name
+display is the mitigation.
+
+**Effort:** S (3–5 days). **Release:** 1.0.
+
+### TS7 — Documentation truth pass and status review
+
+**Goal:** make the documentation match the shipped behavior before 1.0.
+
+**Scope (MVP):**
+- Audit `README.md`, `USER_GUIDE.md`, `SOLVER_ADAPTER.md`, `ARCHITECTURE.md`,
+  `DOMAIN_MODEL.md`, and the evidence/limitation text for stale claims.
+- Known examples: realized gain/directivity separation, boom/turning-radius
+  constraints, feed-line loss in realized gain, persisted results, and progress
+  reporting.
+- Single-source the limitation list where practical; at minimum, link every
+  limitation to its ADR or evidence source.
+- Review the "pre-alpha" status after the 1.0 gate.
+- Add a documentation test or script that fails on the known stale strings.
+
+**Out of scope:** rewriting the user guide, translating docs, marketing.
+
+**Dependencies:** none.
+
+**Acceptance:**
+- No known contradiction remains.
+- The README status matches the release state.
+- The limitation list is generated or checked from one source.
+- The changelog records the documentation correction.
+
+**Evidence:** n/a.
+
+**Risk / mitigation:** low. The risk is missing a contradiction; the test and a
+checklist of the known examples mitigate it.
+
+**Effort:** S (2–4 days). **Release:** 1.0.
+
+### DL1 — Smith chart and matching workbench
+
+**Goal:** make impedance transformation visible and interactive.
+
+**Scope (MVP):**
+- Pure domain `smith_chart.py`: Γ from Z, Z from Γ, normalized/denormalized,
+  constant-R/X circles, and cursor readout.
+- Results view: Smith tab with impedance locus per frequency; measured versus
+  simulated overlay; marker at the selected frequency.
+- Feed-line transformation preview: length, Z0, velocity factor; before/after.
+- Matching network preview: reuse `MatchingNetwork`; L/Pi/T; ideal versus
+  lossy; target marker.
+- Export PNG/SVG and CSV; no solver change.
+
+**Out of scope:** full circuit editor, arbitrary S2P blocks, network optimizer
+(separate).
+
+**Dependencies:** existing `MatchingNetwork`, `FeedLine`, and
+`FrequencyResult`.
+
+**Acceptance:**
+- A 50 Ω load maps to the center; a known L network moves the locus to the
+  target; the cursor readout matches the table.
+- The measured/simulated overlay uses the same reference impedance and reports
+  it.
+- Large sweeps are decimated for drawing but keep every point in CSV.
+- No electromagnetic calculation in the widget.
+
+**Evidence:** Γ/Z identities and network transformations against known values.
+
+**Risk / mitigation:** low–medium. UI performance and network integration are
+the risks; a point cap and pure-domain tests mitigate them.
+
+**Effort:** M–L (3–6 weeks). **Release:** 1.1.
+
+### DL2 — Tuner matchability and realizable components
+
+**Goal:** answer "will my ATU match this, and what real parts do I need?"
+
+**Scope (MVP):**
+- Domain tuner model with C/L ranges, topology (L/Pi/T), best-effort match,
+  bypass, loss, voltage, current, and power dissipation.
+- Per-band table: matchable / best effort / not matchable, achieved SWR,
+  component values, loss, and limiting part.
+- Tuner ranges are analysis inputs; persist a selected tuner only if the editor
+  needs to remember it, with a schema migration.
+- Real component layer: E24/E12 nearest values, Q/ESR, voltage/current ratings,
+  ideal versus real comparison; apply to the existing matching network and load
+  editors.
+- Sources: standard series, manufacturer data, and documented generic ranges
+  where a specific unit is unknown; label generic ranges as such.
+
+**Out of scope:** a full ATU database, automatic band switching, thermal model,
+price catalog.
+
+**Dependencies:** ADR for the tuner model and component-range policy; DL1 soft
+(Smith is the natural front-end); existing `MatchingNetwork`; no solver change.
+
+**Acceptance:**
+- A random wire is marked matchable on the bands the selected tuner covers,
+  with achieved SWR and loss; unsupported bands are explicit.
+- The best-effort state is visible; bypass is never silent.
+- Voltage/current warnings appear near ratings.
+- The BOM/report shows real values and ratings.
+
+**Evidence:** component series; manufacturer/documented tuner ranges. Do not
+claim universal tuner capability without a source.
+
+**Risk / mitigation:** medium. Model fidelity is the risk; keep "generic range"
+labels and a visible limitation.
+
+**Effort:** M–L (3–6 weeks). **Release:** 1.1.
+
+### DL3 — Live tuning preview
+
+**Goal:** make geometry exploration immediate without replacing the full
+simulation.
+
+**Scope (MVP):**
+- Drag a managed dimension (length, height, spacing) and run a coarse
+  single-frequency solve with pattern disabled; debounce and cancel.
+- Preview badge and "preview" label in the status bar; no reports or saved
+  results from preview.
+- Commit applies the value through the normal adapter and runs the full
+  simulation.
+- Performance budget: about 200–500 ms for a typical dipole on the development
+  machine; large models fall back to "release to update".
+- Tests for cancellation, stale responses, and no accidental persistence.
+
+**Out of scope:** continuous full-pattern solving, GPU acceleration, optimizer
+replacement.
+
+**Dependencies:** existing worker/cancellation; no solver change.
+
+**Acceptance:**
+- Dragging a length updates SWR and impedance in preview; releasing stops the
+  worker.
+- A stale result never overwrites a newer one.
+- Commit produces a normal simulation and undo entry.
+- Preview values are visibly marked and never exported as final.
+
+**Evidence:** performance benchmark; no accuracy claim.
+
+**Risk / mitigation:** medium. UI latency and stale results; request IDs,
+cancellation, and a coarse mode mitigate them.
+
+**Effort:** M–L (3–6 weeks). **Release:** 1.2.
+
+### DL4 — Near-field and RF exposure
+
+**Goal:** answer "is it safe to operate here?" with a conservative,
+source-backed near-field estimate.
+
+**Scope (MVP):**
+- Spike: confirm `nec2c` `NE`/`NH` output, parser format, and a validation case
+  against an analytical dipole.
+- Domain near-field request/grid; input writer cards; parser; results view with
+  E/H and power density; selectable standard (FCC OET-65, ICNIRP) and
+  frequency; compliance distance.
+- Conservative assumptions, visible limits, and an explicit "not a safety
+  guarantee" disclaimer.
+- ADR for the model, standards, and UI claims.
+
+**Out of scope:** full SAR, body models, time averaging, arbitrary environments,
+legal certification.
+
+**Dependencies:** ADR; spike; solver parser; existing far-field/results path.
+
+**Acceptance:**
+- A dipole near-field grid matches the analytical/reference case within the
+  documented tolerance.
+- The compliance distance is shown with the selected standard and assumptions.
+- Unsupported frequencies/standards return an explicit unavailable state.
+- The report and UI never claim legal compliance.
+
+**Evidence:** NEC-2 manual, analytical dipole, standard formulas; B/C.
+
+**Risk / mitigation:** high. Solver/parser and safety claims; a spike and a
+conservative label are mandatory. Do not ship without the ADR.
+
+**Effort:** L (6–10 weeks). **Release:** 1.2 (after spike).
+
+### DL5 — Support structures
+
+**Goal:** include the metal around the antenna in the model.
+
+**Scope (MVP):**
+- Domain support objects: boom, mast, tower, and guy wire; material, diameter,
+  height, attachment points, insulated/bonded options. This is a model
+  extension, not a new catalog antenna family.
+- Yagi option **Model boom**; mast/tower object for verticals and beams; guy
+  wires as wires.
+- Scene, wire schedule, BOM, construction notes, and reports.
+- Warnings when a support is visible in the installation profile but not
+  modeled.
+- ADR for the canonical model extension; schema migration.
+
+**Out of scope:** structural analysis, wind load, concrete, climbing safety.
+
+**Dependencies:** ADR; existing `Wire`/`AntennaModel`; scene/report paths.
+
+**Acceptance:**
+- A Yagi with boom and mast simulates and draws both; the wire schedule
+  includes them.
+- Bonded versus insulated attachment changes the model and is visible.
+- The report states what is and is not modeled.
+- Existing projects migrate with no support structures.
+
+**Evidence:** structural tests; evidence B/C. No gain/impedance accuracy claim
+without a reference.
+
+**Risk / mitigation:** medium. Geometry/attachment complexity; tests and a
+narrow MVP (straight cylinders) mitigate it.
+
+**Effort:** M–L (3–6 weeks). **Release:** 1.1.
+
+### DL6 — Stacked Yagi arrays
+
+**Goal:** answer "two stacked Yagis or one bigger one?"
+
+**Scope (MVP):**
+- Composed family: 2–4 identical Yagis, vertical spacing, phase-line lengths,
+  feed split, and optional power-divider loss. This is a composed array
+  capability, not a new catalog antenna family; it reuses the Yagi elements.
+- Multi-source model and `TransmissionLine` reuse; per-port impedance and
+  pattern.
+- Optimizer variables for spacing and phase with mechanical constraints.
+- Scene, reports, construction notes; ADR.
+- Evidence: published stack measurement if available; otherwise B/C and a
+  visible limitation.
+
+**Out of scope:** full antenna farm, arbitrary feed networks, tower interaction
+(covered by DL5 if enabled).
+
+**Dependencies:** DL5 soft; multi-source model; ADR; schema migration for the
+composed stack design.
+
+**Acceptance:**
+- A 2×3 stack runs, shows per-port impedance and the combined pattern.
+- Spacing/phase optimization respects the mechanical envelope.
+- The report shows the stack dimensions and feed notes.
+- No gain claim beyond the evidence level.
+
+**Evidence:** traceable stack reference or B/C. Do not invent a stacking gain.
+
+**Risk / mitigation:** medium–high. Feed network and evidence; a one-week spike
+with a published stack mitigates it.
+
+**Effort:** L (6–8 weeks). **Release:** 1.2.
+
+### DL7 — Native ground screen and cliff ground
+
+**Goal:** use the ground information the engine already supports before building
+a full terrain model.
+
+**Scope (MVP):**
+- Extend `GroundModel` with optional radial-screen and second-medium/edge
+  fields; emit the extended `GN` card; parse the status.
+- UI: ground preset **Radial screen** and **Cliff / second medium**; scene and
+  report notes; schema migration.
+- Compare with the current dense-wire radial approximation and the NEC-2
+  manual examples; label as B/C.
+- Do not claim full terrain; this is a straight edge and a radial screen.
+
+**Out of scope:** faceted terrain, diffraction, arbitrary height profiles,
+buried conductors.
+
+**Dependencies:** ADR; spike on `GN` semantics; existing input writer.
+
+**Acceptance:**
+- A vertical with a radial screen runs with the native card; the result is
+  compared with the dense-wire approximation and the difference is documented.
+- A two-medium/edge case runs and changes the pattern consistently.
+- The UI states the straight-edge limitation.
+- Projects without the new fields migrate unchanged.
+
+**Evidence:** NEC-2 manual; dense-wire comparison; reference case if available.
+No invented terrain correction.
+
+**Risk / mitigation:** medium–high. `GN` semantics and validation are the risks;
+a one-week spike and a strict B/C label mitigate them.
+
+**Effort:** M–L (3–6 weeks). **Release:** 1.2.
+
+### DL8 — Full terrain model
+
+**Goal:** model a real site beyond a straight edge.
+
+**Scope:** only after DL7 and a validated terrain model or a second engine. A
+faceted far-field model or an external engine adapter must be selected by an
+ADR; the current flat-current solve stays explicit.
+
+**Out of scope until the ADR:** arbitrary terrain, buildings, vegetation,
+diffraction, multiple bounces.
+
+**Dependencies:** DL7; ADR; possibly a second engine.
+
+**Acceptance:** the ADR selects a traceable model; the implementation reproduces
+the chosen reference; otherwise the feature remains explicitly unavailable. No
+fudge factor.
+
+**Evidence:** traceable terrain reference or measurement; B/C at best.
+
+**Risk / mitigation:** high. Do not start before DL7 and the ADR.
+
+**Effort:** XL (8+ weeks). **Release:** post-1.2.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
@@ -921,7 +1527,8 @@ new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
 from impedance/SWR point-density feedback, UX40 was queued the same day from the
 3D-report request, and UX41 was queued from optimizer operating-mode feedback
 and completed on 2026-11-19. UX39 and UX40 were completed on 2026-11-19; the
-UX queue is clear.
+UX queue is clear. The next product wave is the trust and station track queued
+on 2026-11-19; see §Product trust and station wave above.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -3827,9 +4434,9 @@ decision:
 | Fan-dipole angle optimization and an explicit per-element feed model | Needs a different antenna model, not another scalar correction | [`ROADMAP.md`](ROADMAP.md), [`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md) |
 | Measured or optimized 20/10 m fan-dipole preset | Needs a traceable source or measurement | [`ROADMAP.md`](ROADMAP.md) |
 | Gamma match for the Yagi | NEC-2 is unreliable for close-spaced gamma assemblies; the beta/hairpin match is implemented | [`ROADMAP.md`](ROADMAP.md) item 6 |
-| Boom-mounting correction | No universal published model; boom mounting is explicitly not modeled | [`ROADMAP.md`](ROADMAP.md) item 14, [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
+| Boom-mounting correction | No universal published model. DL5 models the boom, mast, tower, and guy wires as conductors; an empirical correction factor remains deferred. | [`ROADMAP.md`](ROADMAP.md) item 14 and §DL5, [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | Report-specific metric selection for power, directivity, and realized gain | The UI selector exists; export-specific selection is optional | [`ROADMAP.md`](ROADMAP.md) |
-| General radial-screen and transmission-line geometry beyond the current subset | Architectural change with a larger test surface | [`ROADMAP.md`](ROADMAP.md), [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) |
+| General radial-screen and transmission-line geometry beyond the current subset | DL7 covers the native NEC-2 radial screen and the bounded cliff/second-medium case; arbitrary radial screens and general transmission-line geometry remain deferred | [`ROADMAP.md`](ROADMAP.md), §DL7, [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) |
 | Custom/imported geometry optimization | Deliberately unavailable because arbitrary geometry has no parameterized topology | [`ADR/0026-family-optimizer-architecture.md`](ADR/0026-family-optimizer-architecture.md) |
 | Physical antenna validation | Blocked on measurements; tracked as B4 above | [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | Segmented frequency plan in one NEC deck | Closed by ADR-0042; per-band batching retained | [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md), [ADR-0042](ADR/0042-per-band-frequency-plan.md) |
@@ -3922,6 +4529,11 @@ Do not start C1 by cloning a vertical N times inside a widget. The multi-source
 model and solver contract must land first.
 
 ## Recommended order
+
+**Active product sequence (2026-11-19):** the product trust and station wave
+(TS1–TS7 and DL9 first, then DL1–DL8) supersedes new-family work. The numbered
+items below are historical context for completed or blocked work; the queue
+table and §Product trust and station wave above are the executable order.
 
 1. The shortened-EFHW correctness work (G24, G25, G26, G28) is done.
    **G27** is split: transformer loss (EF7b), feedpoint choke (EF8), and

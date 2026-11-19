@@ -1,10 +1,12 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-17
+**Updated:** 2026-11-19
 **Status:** active product roadmap after catalog, measurement, optimization,
-packaging, and the 2026-11-11 product-experience review.
-**Scope:** product direction, milestones, and the ordered antenna expansion
-backlog. The active execution queue is
+packaging, the 2026-11-11 product-experience review, and the 2026-11-19
+trust/station review.
+**Scope:** product direction, milestones, the ordered antenna expansion
+backlog, and the 1.0 trust/1.1 station/1.2 site tracks. The active execution
+queue is
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md); evidence status is in
 [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md).
 
@@ -269,6 +271,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | queued 2026-11-19; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -288,6 +291,7 @@ decide-build-measure workflow; the new track is below.
 | P2 | Additional full-wave engines | n/a | deferred |
 | P2 | Physical antenna validation | A | blocked: no measurements |
 | P3 | Segmented frequency plan in one NEC deck | B | deferred; benchmark keeps per-band |
+| P3 | Full terrain model (DL8) | B/C | blocked on DL7 and a validated terrain ADR |
 
 ### Antenna backlog
 
@@ -500,11 +504,57 @@ a build package. **0.7 Measure** closes the loop with VNA data. **0.8 Explore**
 adds advanced learning and robustness. **0.9 Sustain** adds content and
 packaging. The names and numbers are working labels, not release commitments.
 
-Deliberate exclusions for this track: server-based community projects, terrain
-and obstacle modeling, common-mode choke and real balun models before G27 has
-measurements or traceable data, a price catalog, live VNA control, additional
-full-wave engines, and new antenna families. These remain deferred, blocked, or
-out of scope; they are not silently implied by the items above.
+Deliberate exclusions for the UX track: server-based community projects, terrain
+and obstacle modeling beyond the bounded DL7 native ground screen/cliff and the
+ADR-gated DL8 full-terrain item, common-mode choke and real balun models before
+G27 has measurements or traceable data, a price catalog, live VNA control,
+additional full-wave engines, and new antenna families. These remain deferred,
+blocked, or out of scope; they are not silently implied by the items above. DL8
+is blocked on a validated terrain ADR; additional full-wave engines remain
+deferred until that ADR selects one.
+
+### Product trust and station track (proposed 2026-11-19)
+
+The 2026-11-19 review shifts the next product slice from catalog breadth to
+trust, station completeness, and site awareness. The catalog is broad enough;
+the next value is answering the questions an operator asks before building:
+does the model converge, does it cover the band, will the ATU match it, where
+does it fall on the Smith chart, and what does the site do to the pattern.
+
+This is product scope. Execution, acceptance criteria, dependencies, and risk
+live in
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
+The UX track rules apply unchanged. This track adds: table-stakes items land
+before delight items; no new antenna families; terrain starts with the bounded
+native ground screen/cliff work; near-field is conservative and never a legal
+guarantee. Antenna content work (C7h 6 m HexBeam, the LPDA 7 MHz swept variant,
+and new catalog presets) waits until this track closes.
+
+| Release | ID | Item | Outcome | Size | Evidence | Status |
+|---|---|---|---|---|---|---|
+| 1.0 Confidence | TS1 | Convergence study | 3–5 density ladder with a self-consistency verdict | M | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS2 | Decision metrics and band overlay | 2:1 bandwidth, HPBW, F/B, takeoff, band edges | M | B | queued 2026-11-19 |
+| 1.0 Confidence | DL9 | Circular-polarization metrics | Axial ratio, sense, CP gain, cross-pol | S–M | B | queued with TS2 |
+| 1.0 Confidence | TS3 | NEC-2 deck export | Portable, auditable deck and copy action | S | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS4 | Autosave and crash recovery | Atomic recovery file and restore prompt | S–M | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS5 | VNA import 2.0 | `.s2p`, presets, mapping, locale-aware parsing | M | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | queued 2026-11-19 |
+| 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | queued 2026-11-19 |
+| 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, line/network preview, export | M–L | n/a | queued 2026-11-19 |
+| 1.1 Station | DL2 | Tuner matchability and realizable components | "Will my ATU match it?" with real values | M–L | B/C | queued 2026-11-19 |
+| 1.1 Station | DL5 | Support structures | Boom, mast, tower, and guy wires in the model | M–L | B/C | queued 2026-11-19 |
+| 1.2 Site and exploration | DL3 | Live tuning preview | Coarse drag-to-preview, commit to full run | M–L | n/a | queued 2026-11-19 |
+| 1.2 Site and exploration | DL4 | Near-field and RF exposure | E/H grid and compliance distance, with limits | L | B/C | queued after ADR/spike |
+| 1.2 Site and exploration | DL6 | Stacked Yagi arrays | 2–4 Yagis with phasing and per-port results | L | B/C | queued 2026-11-19 |
+| 1.2 Site and exploration | DL7 | Native ground screen and cliff | NEC-2 `GN` screen/second medium, B/C | M–L | B/C | queued after spike |
+| post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
+
+Release sequence for this track: **1.0 Confidence** closes truth,
+interoperability, convergence, metrics, and recovery. **1.1 Station** adds
+Smith, tuner/components, and support structures. **1.2 Site and exploration**
+adds live preview, near-field, stacking, and native ground screen/cliff.
+**DL8** remains post-1.2 until a validated terrain ADR exists. The names and
+numbers are working labels; the backlog is the executable order.
 
 ## Next
 
@@ -521,6 +571,11 @@ Product track:
    **Sustain** slice is complete. The UX queue is closed. The adaptive length
    display-units track is implemented through U5; U6 documentation/help and
    manual visual QA remain before release preparation.
+2. The 2026-11-19 **product trust and station** track is queued: 1.0
+   Confidence (TS1–TS7, DL9), 1.1 Station (DL1, DL2, DL5), and 1.2 Site and
+   exploration (DL3, DL4, DL6, DL7). DL8 remains post-1.2 until a validated
+   terrain ADR exists. Execution and acceptance criteria are in
+   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
 
 Modeling track:
 
@@ -550,6 +605,9 @@ Release track:
 8. `v0.7.0`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` were published after
    this section was written; see [`CHANGELOG.md`](../CHANGELOG.md) and the
    release QA records for details.
+9. The 1.0 Confidence, 1.1 Station, and 1.2 Site and exploration sequence is
+   defined by the 2026-11-19 trust/station track. It has no committed dates and
+   is gated by the acceptance criteria in the backlog.
 
 Validation track:
 
