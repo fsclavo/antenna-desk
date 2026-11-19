@@ -334,9 +334,10 @@ Custom/generated editing and view tests:
 
 - Inverted-V geometry can be reconstructed from its custom wires and reopened in
   the generator dialog.
-- Custom simulations default to a 100-point sweep; generated templates use a
-  31-point sweep and 0.05λ segmentation to keep complex radial models within
-  the default solver timeout.
+- Custom and generated simulations default to a 100-point sweep with 0.05λ
+  segmentation. The impedance/SWR charts keep every computed point and thin
+  only the visible marker layer above 20 points; large radial models remain
+  bounded by the timeout and the user-editable Points value.
 - Frequency-first estimators are tested for formula consistency, unit
   conversion, registry coverage, source/confidence metadata, explicit
   unsupported cases, and UI apply/invalidation behavior.
@@ -466,7 +467,7 @@ Phase 6 adds tests for:
 - T2FD: folded-loop geometry, midpoint feed and termination, series `LD 0`
   resistor, transformer ratio in the link budget, odd centered segmentation,
   persistence, scene/default view, catalog routes, construction sheet, and a
-  broadband 31-point NEC smoke run.
+  broadband 100-point NEC smoke run.
 - Pattern snapshots: band-aware and evenly spaced snapshot selection,
   `SimulationSpec` validation, split `FR`/`XQ`/`RP` decks, merge of snapshot far
   fields into sweep results, pattern-only result views, the custom snapshot-count

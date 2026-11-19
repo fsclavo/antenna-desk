@@ -23,7 +23,11 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.widgets.results_view import ResultsView
+from antennadesk.ui.widgets.results_view import (
+    DEFAULT_MARKER_LIMIT,
+    ResultsView,
+    marker_indices,
+)
 
 
 def _make_result() -> SimulationResult:
@@ -48,6 +52,59 @@ def _make_result() -> SimulationResult:
         started_at=datetime(2026, 10, 29, tzinfo=UTC),
         finished_at=datetime(2026, 10, 29, tzinfo=UTC),
     )
+
+
+def test_marker_indices_bound_the_symbol_layer_without_losing_endpoints() -> None:
+    assert marker_indices(3) == (0, 1, 2)
+    assert marker_indices(0) == ()
+    assert marker_indices(100, limit=0) == ()
+
+    indices = marker_indices(100)
+
+    assert len(indices) <= DEFAULT_MARKER_LIMIT
+    assert indices[0] == 0
+    assert indices[-1] == 99
+    assert len(set(indices)) == len(indices)
+
+
+def _dense_result(count: int = 100) -> SimulationResult:
+    base = _make_result()
+    plan = FrequencyPlan.sweep(7_000_000.0, 7_200_000.0, count)
+    points = tuple(
+        replace(
+            base.frequencies[0],
+            frequency_hz=plan.frequencies_hz[index],
+            impedance_ohm=complex(70.0 + index * 0.1, -10.0 + index * 0.2),
+            swr=1.0 + index * 0.01,
+        )
+        for index in range(count)
+    )
+    return replace(base, spec=SimulationSpec(frequency_plan=plan), frequencies=points)
+
+
+def test_impedance_charts_keep_all_points_and_bound_the_marker_layer(
+    qtbot: QtBot,
+) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(_dense_result())
+
+    assert view._table.rowCount() == 100
+    lines = [
+        item
+        for item in view._impedance_plot.listDataItems()
+        if getattr(item, "xData", None) is not None and len(item.xData) == 100
+    ]
+    assert len(lines) == 2
+    assert len(view._impedance_cursor._series[0].x_values) == 100
+    assert len(view._impedance_markers) == 2
+    assert all(len(marker.data) <= DEFAULT_MARKER_LIMIT for marker in view._impedance_markers)
+    assert len(view._swr_markers) == 1
+    assert len(view._swr_markers[0].data) <= DEFAULT_MARKER_LIMIT
+
+    view._impedance_cursor.show_at_x(7.1)
+    assert "MHz" in view._impedance_cursor._label.text()
 
 
 def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:

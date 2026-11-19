@@ -495,7 +495,7 @@ gain, not only the SWR. The model supports flat horizontal and vertical
 installations. It does not model a tilted installation, balun loss, resistor
 temperature rise, or a feed line as part of the antenna.
 
-The design panel starts with a 31-point sweep from the lowest to the highest
+The design panel starts with a 100-point sweep from the lowest to the highest
 design frequency. The pattern is computed at amateur-band snapshots with the
 finest resolution that fits the project storage budget; the effective value is
 reported after a run. **Optimize...** searches element length, conductor
@@ -945,7 +945,7 @@ transmitter coax with **Simulation → Feed Line...** when needed.
 
 The Cebik reference gives usable no-ATU matches on **40, 20, 17, 12, and 10 m**;
 80, 30, and 15 m are poor matches without a tuner. The design panel starts with
-a **61-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
+a **100-point 7.0–29.7 MHz sweep**, and **Band analysis** preselects
 the five no-ATU bands. **Optimize...** searches the wire length, height, feed
 height, line impedance, line length, velocity factor, and conductor radius
 jointly. Dimensions are starting points: height, ground, line velocity factor,
@@ -1472,9 +1472,9 @@ available while the solver is running.
 The **Simulation sweep** group in the **Simulation** tab controls the
 impedance/SWR frequency plan. In
 **Auto (template)** mode the fields show the effective template range and use
-the generator's default: a 31-point ±5% sweep for most generated templates, a
-100-point sweep for basic and custom designs, the wide G5RV range, and the
-family-specific bands for trap, T2FD, and fan designs. Select **Custom** to
+the generator's default: a 100-point ±5% sweep for most generated templates,
+the wide 100-point G5RV/ZS6BKW ranges, and the family-specific bands for trap,
+T2FD, and fan designs. Select **Custom** to
 override Start, Stop, and Points for the next single-design simulation. Band
 analysis ignores this override and uses the per-band point count from its own
 dialog. **Pattern resolution** controls the angular sampling of the radiation
@@ -1502,11 +1502,14 @@ smoother cuts and a smoother 3D lobe, but increase solver time and project
 size; use high resolution for final runs rather than routine exploration.
 Custom designs keep their own template sweep controls; **Auto (template)** uses
 them, while **Custom** in **Simulation sweep** overrides them for one run.
-Generated templates use a 31-point sweep around the design frequency to keep
-large radial models responsive. Default segmentation targets 0.05 wavelength
-per segment; this is a standard accuracy/performance compromise. Very large
-models can still be slow, so reduce radial count/length or pattern resolution
-for routine exploration.
+Generated templates use a 100-point sweep around the design frequency. The
+impedance/SWR line, table, cursor, CSV, and reports keep every computed point;
+only the visible chart symbols are thinned above 20 points so a dense sweep
+stays legible. Default segmentation targets 0.05 wavelength per segment; this
+is a standard accuracy/performance compromise. Very large models can still be
+slow, so reduce the **Points** value, radial count/length, or pattern
+resolution for routine exploration. A larger point count does not improve the
+accuracy at each frequency; it only resolves the curve more finely.
 
 ## Import VNA measurements
 

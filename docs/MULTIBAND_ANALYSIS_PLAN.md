@@ -34,7 +34,7 @@ Deferred:
 
 The G5RV can be inspected over 3.5–30 MHz because it is stored as a custom
 design and the custom design panel exposes an editable frequency sweep. Most
-other multiband families use a fixed 31-point sweep of ±5 % around one design
+other multiband families use a fixed 100-point sweep of ±5 % around one design
 frequency, so the user cannot see what happens on their other bands.
 
 This is a workflow gap, not a solver limitation. NEC already runs over any
@@ -49,12 +49,12 @@ overridden from **Advanced simulation → Simulation sweep → Custom**.
 
 | Family | Auto sweep | Can the user see other bands? |
 |---|---|---|
-| G5RV | Custom panel, 41 points over 3.5–30 MHz by default | Yes, but as one continuous sweep |
-| OCFD | 31 points, 0.95–1.05 × design frequency | No |
-| End-fed, random wire, sloper | 31 points, 0.95–1.05 × design frequency | No |
-| Fan dipole | 31 points, 0.95–1.05 × `frequency_hz` | No, even though each element is a different band |
-| Trap dipole | 31 points from low × 0.95 to high × 1.05 | Partially, with many unused points between bands |
-| T2FD | 31 points from the low to the high limit | Broadband, but sparse and not labelled by band |
+| G5RV | Custom panel, 100 points over 3.5–30 MHz by default | Yes, but as one continuous sweep |
+| OCFD | 100 points, 0.95–1.05 × design frequency | No |
+| End-fed, random wire, sloper | 100 points, 0.95–1.05 × design frequency | No |
+| Fan dipole | 100 points, 0.95–1.05 × `frequency_hz` | No, even though each element is a different band |
+| Trap dipole | 100 points from low × 0.95 to high × 1.05 | Partially, with many unused points between bands |
+| T2FD | 100 points from the low to the high limit | Broadband, but sparse and not labelled by band |
 | Doublet | Dipole form, 100 points, 0.95–1.05 × design frequency | No |
 | Dipole, folded dipole, vertical, Yagi, Moxon, loops | Narrow sweep around the design frequency | Not by default; manual sweep editing varies by family |
 
@@ -221,7 +221,7 @@ only top-level design actions. The dialog should contain:
   **Custom**;
 - a checkbox per band from 160 m to 23 cm;
 - a per-band frequency-sweep point count, defaulting to 11 or 15 for narrow
-  bands and 31 for broadband families;
+  bands and 100 for broadband families;
 - a short note showing the family default, its evidence level, and any
   limitation (for example "tuner required", "starting point only");
 - a warning if the selection includes a band outside the design's documented

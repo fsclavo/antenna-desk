@@ -88,7 +88,7 @@ def test_trap_dipole_spec_sweeps_both_bands(window: MainWindow) -> None:
 
     spec = window._trap_dipole_simulation_spec(parameters)
 
-    assert spec.frequency_plan.count == 61
+    assert spec.frequency_plan.count == 100
     assert spec.frequency_plan.start_hz == pytest.approx(7_100_000.0 * 0.95)
     assert spec.frequency_plan.stop_hz == pytest.approx(14_100_000.0 * 1.05)
 
@@ -184,7 +184,7 @@ def test_t2fd_spec_sweeps_the_design_band_with_centered_termination(
         spec.frequency_plan.stop_hz,
     )
 
-    assert spec.frequency_plan.count == 31
+    assert spec.frequency_plan.count == 100
     assert spec.frequency_plan.start_hz == pytest.approx(3_500_000.0)
     assert spec.frequency_plan.stop_hz == pytest.approx(30_000_000.0)
     assert spec.feed_transformer_ratio == pytest.approx(16.0)
@@ -268,6 +268,7 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("G5RV", True))
 
     window.new_g5rv_antenna()
+    window._dirty = False
 
     assert window._project is not None
     assert window._project.name == "G5RV"
@@ -277,16 +278,18 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
     assert window._design_stack.currentWidget() is window._custom_panel
     assert window._custom_sweep_start.value() == pytest.approx(3.5)
     assert window._custom_sweep_stop.value() == pytest.approx(30.0)
-    assert window._custom_sweep_points.value() == 41
+    assert window._custom_sweep_points.value() == 100
     assert window._custom_run_pattern_step_deg is None
     spec = window._custom_simulation_spec(design.parameters)
     dipole = design.antenna.wire_by_id("dipole")
     count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
     assert count % 2 == 1
-    assert spec.frequency_plan.count == 41
+    assert spec.frequency_plan.count == 100
     fitted = window._fit_spec_to_budget(design.antenna, spec)
     assert len(fitted.pattern_frequencies_hz) == 9
-    assert any(abs(frequency - 14_100_000.0) < 1.0 for frequency in fitted.pattern_frequencies_hz)
+    assert any(
+        13_900_000.0 < frequency < 14_400_000.0 for frequency in fitted.pattern_frequencies_hz
+    )
     assert fitted.far_field.theta_count == 91
     assert fitted.far_field.phi_count == 361
     assert "1°" in window._custom_pattern_status.text()
@@ -348,7 +351,7 @@ def test_new_zs6bkw_creates_the_custom_preset_with_a_line(
     assert window._design_stack.currentWidget() is window._custom_panel
     assert window._custom_sweep_start.value() == pytest.approx(7.0)
     assert window._custom_sweep_stop.value() == pytest.approx(29.7)
-    assert window._custom_sweep_points.value() == 61
+    assert window._custom_sweep_points.value() == 100
     spec = window._custom_simulation_spec(design.parameters)
     dipole = design.antenna.wire_by_id("zs6bkw-dipole")
     count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
@@ -391,8 +394,8 @@ def test_new_zepp_creates_the_refined_custom_preset(
     assert window._design_stack.currentWidget() is window._custom_panel
     assert window._custom_sweep_start.value() == pytest.approx(7.0)
     assert window._custom_sweep_stop.value() == pytest.approx(29.7)
-    assert window._custom_sweep_points.value() == 61
-    assert window._custom_simulation_spec(design.parameters).frequency_plan.count == 61
+    assert window._custom_sweep_points.value() == 100
+    assert window._custom_simulation_spec(design.parameters).frequency_plan.count == 100
     window._dirty = False
 
 

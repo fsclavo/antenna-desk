@@ -19,6 +19,7 @@ from antennadesk.persistence import json_repository
 from antennadesk.persistence.constants import (
     MAX_PROJECT_SIZE_BYTES,
     PROJECT_FORMAT,
+    PROJECT_SIZE_WARNING_BYTES,
     SCHEMA_VERSION,
 )
 from antennadesk.persistence.errors import (
@@ -537,6 +538,60 @@ def _rich_result() -> SimulationResult:
         started_at=datetime(2026, 10, 29, tzinfo=UTC),
         finished_at=datetime(2026, 10, 29, tzinfo=UTC),
     )
+
+
+def test_round_trip_with_a_100_point_sweep(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+    from antennadesk.domain.simulation.budget import estimate_compressed_project_bytes
+    from antennadesk.domain.simulation.frequency import FrequencyPlan
+
+    plan = FrequencyPlan.sweep(6_700_000.0, 7_500_000.0, 100)
+    base = _rich_result()
+    points = tuple(
+        replace(
+            base.frequencies[0],
+            frequency_hz=frequency_hz,
+            impedance_ohm=complex(60.0 + index * 0.1, -10.0 + index * 0.2),
+            swr=1.0 + index * 0.01,
+        )
+        for index, frequency_hz in enumerate(plan.frequencies_hz)
+    )
+    result = replace(
+        base,
+        spec=replace(base.spec, frequency_plan=plan),
+        frequencies=points,
+    )
+    project = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=sample_project,
+            design_id=sample_project.designs[0].id,
+            result=result,
+            created_at=sample_project.updated_at,
+        )
+    )
+    path = tmp_path / "with-100-points.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded == project
+    assert len(loaded.simulation_runs[0].result.frequencies) == 100
+    # About 4.4 MB compressed for 100 points at 725 segments, below the
+    # 32 MB warning threshold.
+    estimate = estimate_compressed_project_bytes(
+        frequency_count=100,
+        far_field_points_per_frequency=0,
+        segment_count=725,
+    )
+    assert estimate < PROJECT_SIZE_WARNING_BYTES
+    assert path.stat().st_size < PROJECT_SIZE_WARNING_BYTES
 
 
 def test_round_trip_with_a_simulation_run(

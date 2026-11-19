@@ -420,8 +420,8 @@ from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
-DEFAULT_GENERATED_SWEEP_POINTS = 31
-DEFAULT_TWO_BAND_SWEEP_POINTS = 61
+DEFAULT_GENERATED_SWEEP_POINTS = 100
+DEFAULT_TWO_BAND_SWEEP_POINTS = 100
 YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
 
 
@@ -2504,11 +2504,11 @@ class MainWindow(QMainWindow):
             if parameters.generator_id == "g5rv":
                 self._custom_sweep_start.setValue(3.5)
                 self._custom_sweep_stop.setValue(30.0)
-                self._custom_sweep_points.setValue(41)
+                self._custom_sweep_points.setValue(DEFAULT_GENERATED_SWEEP_POINTS)
             elif parameters.generator_id in {"zs6bkw", "zepp"}:
                 self._custom_sweep_start.setValue(7.0)
                 self._custom_sweep_stop.setValue(29.7)
-                self._custom_sweep_points.setValue(61)
+                self._custom_sweep_points.setValue(DEFAULT_GENERATED_SWEEP_POINTS)
             else:
                 center_mhz = design.parameters.frequency_hz / 1_000_000.0
                 self._custom_sweep_start.setValue(center_mhz * 0.95)

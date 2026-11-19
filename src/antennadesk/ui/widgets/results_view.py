@@ -11,7 +11,7 @@ from uuid import UUID
 
 import pyqtgraph as pg
 from PySide6.QtCore import QEvent, QPoint, Qt, Signal
-from PySide6.QtGui import QFont, QFontDatabase, QPixmap
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -68,6 +68,29 @@ from ..theme import theme_colors
 from .chart_cursor import ChartCursor, CursorSeries
 from .polar_pattern_view import PolarPatternView
 from .radiation_pattern_3d_view import RadiationPattern3DView
+
+DEFAULT_MARKER_LIMIT = 20
+
+
+def marker_indices(
+    count: int,
+    *,
+    limit: int = DEFAULT_MARKER_LIMIT,
+) -> tuple[int, ...]:
+    """Return bounded symbol indices spanning the full computed series.
+
+    The line, table, cursor, and exports keep every point. Only the visible
+    symbol layer is decimated; endpoints are always represented.
+    """
+
+    if count <= 0 or limit <= 0:
+        return ()
+    if count <= limit:
+        return tuple(range(count))
+    if limit == 1:
+        return (count // 2,)
+    return tuple(sorted({round(index * (count - 1) / (limit - 1)) for index in range(limit)}))
+
 
 CONFIDENCE_TOPICS: tuple[str, ...] = (
     "impedance",
@@ -138,6 +161,8 @@ class ResultsView(QWidget):
         self._impedance_plot = self._make_plot()
         self._impedance_plot.addLegend()
         self._swr_plot = self._make_plot()
+        self._impedance_markers: tuple[pg.ScatterPlotItem, ...] = ()
+        self._swr_markers: tuple[pg.ScatterPlotItem, ...] = ()
         self._resonance_label = QLabel(self._impedance_tab)
         self._resonance_label.setWordWrap(True)
 
@@ -1084,10 +1109,32 @@ class ResultsView(QWidget):
         menu = self._create_impedance_context_menu(index.row())
         menu.exec(self._table.viewport().mapToGlobal(position))
 
+    def _add_marker_layer(
+        self,
+        plot: pg.PlotWidget,
+        x: Sequence[float],
+        y: Sequence[float],
+        color: QColor,
+    ) -> pg.ScatterPlotItem | None:
+        indices = marker_indices(len(x))
+        if not indices:
+            return None
+        marker = pg.ScatterPlotItem(
+            x=[x[index] for index in indices],
+            y=[y[index] for index in indices],
+            size=5,
+            pen=pg.mkPen(color, width=1),
+            brush=pg.mkBrush(color),
+        )
+        plot.addItem(marker, ignoreBounds=True)
+        return marker
+
     def _render_impedance(self) -> None:
         self._table.setRowCount(0)
         self._impedance_plot.clear()
         self._swr_plot.clear()
+        self._impedance_markers = ()
+        self._swr_markers = ()
 
         if self._result is None or not self._result.frequencies:
             self._impedance_cursor.clear()
@@ -1131,17 +1178,31 @@ class ResultsView(QWidget):
             x,
             resistance,
             pen=pg.mkPen(self._colors.resistance, width=2),
-            symbol="o",
-            symbolSize=5,
             name=self._translator.t("table.resistance"),
         )
         self._impedance_plot.plot(
             x,
             reactance,
             pen=pg.mkPen(self._colors.reactance, width=2),
-            symbol="o",
-            symbolSize=5,
             name=self._translator.t("table.reactance"),
+        )
+        self._impedance_markers = tuple(
+            marker
+            for marker in (
+                self._add_marker_layer(
+                    self._impedance_plot,
+                    x,
+                    resistance,
+                    self._colors.resistance,
+                ),
+                self._add_marker_layer(
+                    self._impedance_plot,
+                    x,
+                    reactance,
+                    self._colors.reactance,
+                ),
+            )
+            if marker is not None
         )
 
         swr_x: list[float] = []
@@ -1160,9 +1221,15 @@ class ResultsView(QWidget):
                 swr_x,
                 swr_y,
                 pen=pg.mkPen(self._colors.swr, width=2),
-                symbol="o",
-                symbolSize=5,
             )
+            marker = self._add_marker_layer(
+                self._swr_plot,
+                swr_x,
+                swr_y,
+                self._colors.swr,
+            )
+            if marker is not None:
+                self._swr_markers = (marker,)
 
         if len(frequencies) < 2:
             resonances: tuple[ResonancePoint, ...] = ()

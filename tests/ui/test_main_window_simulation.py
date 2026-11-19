@@ -24,6 +24,117 @@ from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
+def _generated_spec_cases() -> list[tuple[object, str]]:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+    from antennadesk.domain.antennas.endfed import EndFedParameters
+    from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
+    from antennadesk.domain.antennas.t2fd import T2FDParameters
+    from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    return [
+        (
+            T2FDParameters(
+                frequency_hz=3_500_000.0,
+                highest_frequency_hz=30_000_000.0,
+                length_m=26.0,
+                spacing_m=0.9,
+            ),
+            "_t2fd_simulation_spec",
+        ),
+        (
+            VerticalParameters(
+                frequency_hz=14_100_000.0,
+                height_m=5.0,
+                base_height_m=0.25,
+                radial_count=4,
+                radial_length_m=2.5,
+            ),
+            "_vertical_simulation_spec",
+        ),
+        (nbs_five_element(frequency_hz=145_000_000.0, height_m=10.0), "_yagi_simulation_spec"),
+        (
+            EndFedParameters(
+                frequency_hz=7_100_000.0,
+                length_m=20.0,
+                feed_height_m=10.0,
+                end_height_m=10.0,
+            ),
+            "_endfed_simulation_spec",
+        ),
+        (beverage_parameters(), "_beverage_simulation_spec"),
+        (loaded_dipole_parameters(), "_loaded_dipole_simulation_spec"),
+        (
+            TrapDipoleParameters(
+                frequency_hz=7_100_000.0,
+                high_band_frequency_hz=14_100_000.0,
+                inner_length_m=10.0,
+                outer_length_m=5.0,
+                trap_frequency_hz=14_100_000.0,
+                trap_inductance_h=10e-6,
+                height_m=12.0,
+            ),
+            "_trap_dipole_simulation_spec",
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("parameters", "method"),
+    _generated_spec_cases(),
+    ids=[
+        "t2fd",
+        "vertical",
+        "yagi",
+        "endfed",
+        "beverage",
+        "loaded-dipole",
+        "trap-dipole-two-band",
+    ],
+)
+def test_generated_specs_default_to_at_least_100_points(
+    window: MainWindow,
+    parameters: object,
+    method: str,
+) -> None:
+    spec = getattr(window, method)(parameters)
+
+    assert spec.frequency_plan.count >= 100
+
+
+def test_generated_auto_sweep_shows_100_points_and_keeps_custom_override(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+
+    use_parameters(
+        window,
+        DipoleParameters(
+            frequency_hz=7_100_000.0,
+            total_length_m=20.0,
+            height_m=8.0,
+        ),
+    )
+    assert window._project is not None
+    assert window._design_id is not None
+    design = window._project.design_by_id(window._design_id)
+
+    window._refresh_auto_sweep_display(force=True)
+
+    assert window._sweep_mode.currentData() is None
+    assert window._sweep_points.value() == 100
+    assert window._base_simulation_spec(design).frequency_plan.count == 100
+
+    window._sweep_mode.setCurrentIndex(window._sweep_mode.findData("custom"))
+    window._sweep_start.setValue(7.0)
+    window._sweep_stop.setValue(7.3)
+    window._sweep_points.setValue(37)
+
+    spec = window._apply_sweep_override(design, window._base_simulation_spec(design))
+    assert spec.frequency_plan.count == 37
+
+
 def test_high_frequency_moxon_uses_quality_adjusted_tip_segments(
     window: MainWindow,
 ) -> None:
@@ -542,7 +653,7 @@ def test_vertical_spec_uses_performance_safe_defaults(window: MainWindow) -> Non
         spec.segmentation.segments_for(wire, parameters.frequency_hz * 1.05) for wire in model.wires
     )
 
-    assert spec.frequency_plan.count == 31
+    assert spec.frequency_plan.count == 100
     assert spec.segmentation.target_segment_length_wavelengths == pytest.approx(0.05)
     assert segments == 855
 

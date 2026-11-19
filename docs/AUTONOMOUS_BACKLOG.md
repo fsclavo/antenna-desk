@@ -142,7 +142,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX36~~ | ~~Quad beam frequency-first estimator~~ | M | UX32 | **Done 2026-11-17:** `quad_beam` is registered in the estimator registry; `DesignIntent` carries 2–3 elements; **Estimate Dimensions...** is enabled, preloads the current element count and height, and returns the documented quarter-wave-side/fifth-wave-spacing heuristic with confidence, source, assumptions, warnings, tolerance, and 144 MHz reference tests. Apply uses the dialog element count and height and preserves reflector/director scales, transformer, radius, material, ground, and azimuth. NEC smoke and UI/domain/registry tests pass; no schema change. |
 | ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
-| UX39 | Raise generated single-design impedance/SWR sweeps to at least 100 computed points | S–M | none | Generated templates default to 100 points (including the two-band shared plan); every computed point remains in the chart, table, and exports; marker density is bounded without dropping data; tests and docs updated; no schema or solver change. |
+| ~~UX39~~ | ~~Raise generated single-design impedance/SWR sweeps to at least 100 computed points~~ | S–M | none | **Done 2026-11-19:** generated templates, the two-band shared plan, and the G5RV/ZS6BKW/Zepp sweep presets default to 100 points. Every computed point remains in the line, table, cursor, CSV, and reports; the visible symbol layer is capped at 20 points. Custom sweep overrides and band-analysis defaults are unchanged. Tests cover generated builders, Auto/Custom points, dense charts, NEC2C completion, and a 100-point project round trip. |
 | UX40 | Add a static 3D far-field lobe figure to the HTML and PDF simulation reports | S–M | UX26, UX21 | **Queued 2026-11-18:** add one deterministic, Qt-free isometric SVG wireframe of the full far-field grid to the primary far-field section, with a dBi legend, maximum-gain marker, ground ring when applicable, bounded decimation, and explicit single-cut/unavailable states. Band sections and the two 2D cuts remain unchanged. EN/ES labels, HTML/PDF vector tests, determinism and size-bound tests, user guide, architecture, validation plan, and changelog; no schema, solver, or domain change. |
 | ~~UX41~~ | ~~Clarify the optimizer operating-mode scope and close the dead capability flags~~ | S–M | none; ADR-0026 | **Done 2026-11-19:** modes are **Single frequency**, **Band-edge sweep**, and **Robust (dimensional tolerance)**; the dialog shows the resolved plan source and size (current plan, manual, or design-frequency fallback) and explains that Analyze Bands is optional and Robust perturbs dimensions, not bands. The unused `supports_band_aware`/`supports_robust` fields were removed; both modes are generic. EN/ES labels and help, scope/plan-source tests, and docs updated. No scoring, schema, or solver change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
@@ -917,7 +917,8 @@ feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
 new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
 from impedance/SWR point-density feedback, UX40 was queued the same day from the
 3D-report request, and UX41 was queued from optimizer operating-mode feedback
-and completed on 2026-11-19. UX39–UX40 are the open UX items.
+and completed on 2026-11-19. UX39 was completed on 2026-11-19; UX40 is the open
+UX item.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -2977,8 +2978,8 @@ semantics.
 
 ## UX39 — At least 100 computed points in generated single-design impedance/SWR charts (queue note, 2026-11-18)
 
-**Status:** queued. The feasibility analysis is recorded here; no code or
-schema change has been made.
+**Status:** implemented 2026-11-19. The generated defaults are 100 points, the
+marker layer is bounded, and the tests and docs listed below are updated.
 
 ### Problem
 
@@ -3074,34 +3075,34 @@ case.
 
 ### Tests and acceptance
 
-- [ ] A table-driven UI test over the generated templates asserts
+- [x] A table-driven UI test over the generated templates asserts
       `frequency_plan.count >= 100` for every enabled sweep. Cover at least the
       T2FD, vertical, Yagi, end-fed, beverage, loaded-dipole, and two-band
       builders; exclude single-frequency custom mode by design.
-- [ ] The Auto (template) view and the Points spin box show 100 for generated
+- [x] The Auto (template) view and the Points spin box show 100 for generated
       templates; **Custom** still overrides, and a single-frequency custom plan
       remains count 1.
-- [ ] Impedance and SWR charts contain one plotted point per computed
+- [x] Impedance and SWR charts contain one plotted point per computed
       frequency, the table has one row per frequency, and no interpolation is
       introduced.
-- [ ] At 100 points the chart line uses all points; the marker layer is
+- [x] At 100 points the chart line uses all points; the marker layer is
       bounded and the plot is legible at the minimum supported window width.
       The cursor still snaps to each computed point.
-- [ ] A 100-point NEC2C smoke run of a representative generated design
+- [x] A 100-point NEC2C smoke run of a representative generated design
       completes within the 180 s default and returns 100 results; record the
       wall time and keep the test solver-marked.
-- [ ] Project save/load round-trips a 100-point result; record the estimated
+- [x] Project save/load round-trips a 100-point result; record the estimated
       compressed size and confirm it stays below the warning threshold for the
       tested models.
-- [ ] Update the tests that currently assert 31:
+- [x] Update the tests that currently assert 31:
       `tests/ui/test_main_window_presets.py` (T2FD) and
       `tests/ui/test_main_window_simulation.py` (vertical and generated-spec
       fixtures). Rename the "performance-safe defaults" test if the wording no
       longer describes the policy.
-- [ ] Update `docs/USER_GUIDE.md`, `docs/VALIDATION_PLAN.md`,
+- [x] Update `docs/USER_GUIDE.md`, `docs/VALIDATION_PLAN.md`,
       `docs/MULTIBAND_ANALYSIS_PLAN.md`, and `CHANGELOG.md`. Add a new
       changelog entry; do not rewrite historical release entries.
-- [ ] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
+- [x] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
       passes, and `NEC2C=... uv run pytest`.
 
 ### Out of scope
@@ -3130,6 +3131,25 @@ of selected bands.
   user guide, validation plan, and multiband plan; update them together.
 - The pattern budget may coarsen the pattern at high point counts. Keep the
   existing diagnostic visible; do not trade away the impedance sweep.
+
+### Implementation note
+
+`DEFAULT_GENERATED_SWEEP_POINTS` and `DEFAULT_TWO_BAND_SWEEP_POINTS` are 100.
+The G5RV, ZS6BKW, and Zepp custom sweep presets also use 100; explicit custom
+overrides and band-analysis defaults are unchanged. No spec builder uses a
+literal count below 100 except the magnetic loop's explicit 101.
+
+`results_view.marker_indices` returns at most 20 evenly spaced symbol indices,
+always including the endpoints. The impedance and SWR lines keep the full
+`x`/`y` arrays; separate marker layers are decimated, and the table, cursor,
+CSV, and reports keep every computed point. The pattern, current, and
+measurement charts are unchanged.
+
+Tests cover the generated spec builders, Auto/Custom point counts, dense chart
+data and marker bounds, a real NEC2C 100-point run, and a 100-point project
+round trip. The NEC2C smoke run was about 0.02 s for the 21-segment dipole on
+2026-11-19; the persistence estimate is about 4.4 MB compressed at 725
+segments, below the 32 MB warning.
 
 ## UX40 — Static 3D far-field lobe in the HTML/PDF reports (queue note, 2026-11-18)
 
@@ -3904,8 +3924,8 @@ model and solver contract must land first.
     `_create_project_from_parameters()` selects the Design tab. It covers
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
-    unchanged. No new translation or help keys. UX39–UX41 are the open UX
-    items.
+    unchanged. No new translation or help keys. UX40 is the open UX item;
+    UX39 and UX41 are complete.
 19. **U1–U5 are complete; U6 documentation is done.** The shared
     `DisplayUnits` formatter, Units preference, adaptive geometry scenes,
     unit-aware scale bar, all family editors and editable tables, the
@@ -3913,10 +3933,11 @@ model and solver contract must land first.
     are migrated. `QA_PASS_2026-11-18.md` records the automated gate; only the
     manual desktop light/dark and font-scaling checklist remains before the
     release decision.
-20. **UX39 is queued after U6.** Raise generated single-design sweeps to 100
-    computed points, keep every point in the chart/table/exports, and bound
-    marker density. It does not change band-analysis defaults, the solver, or
-    the schema; see the UX39 note above.
+20. **UX39 is complete (2026-11-19).** Generated single-design sweeps default
+    to 100 points, including the two-band and G5RV/ZS6BKW/Zepp presets. Every
+    computed point remains in the chart line, table, cursor, and exports; only
+    the visible marker layer is bounded. It did not change band-analysis
+    defaults, the solver, or the schema; see the UX39 note above.
 21. **UX40 is queued after UX39.** Add one static, deterministic 3D far-field
     lobe to the primary report section, keep it out of the band sections, and
     keep the HTML Qt-free and the PDF vector. It complements, and does not
@@ -3957,9 +3978,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,053 passed, 1 skipped** on 2026-11-19 after the UX41
-  optimizer evaluation-scope work, with `NEC2C` auto-detected by the test
-  configuration; the skip is the Windows-only console-hiding test on Linux.
+- Full gate: **4,065 passed, 1 skipped** on 2026-11-19 after the UX39
+  100-point sweep and marker-density work, with `NEC2C` auto-detected by the
+  test configuration; the skip is the Windows-only console-hiding test on
+  Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

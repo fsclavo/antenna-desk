@@ -37,6 +37,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Dense generated impedance/SWR sweeps.** Generated single-design templates
+  now default to 100 computed points, including the two-band shared plan and
+  the G5RV, ZS6BKW, and Zepp custom presets. The impedance and SWR charts keep
+  every computed point in the line, table, cursor, and exports; only the
+  visible symbol layer is thinned above 20 points. Custom sweeps still override
+  the template plan, and band-analysis defaults are unchanged.
 - **Optimizer evaluation-mode scope.** The optimizer dialog now labels the
   modes **Single frequency**, **Band-edge sweep**, and **Robust (dimensional
   tolerance)**. A new evaluation-scope line shows the resolved plan source and
