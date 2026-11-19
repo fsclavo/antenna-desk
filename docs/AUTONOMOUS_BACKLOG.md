@@ -183,7 +183,7 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 | TS1 | Convergence study for every wire family | M | `resolve_model_quality`, segmentation | **Wave 0.** A 3–5 density ladder reports R/X/Z magnitude/SWR and pattern/gain deltas, Δ/a, a self-consistency verdict, and cancellation. See §TS1. |
 | TS2 | Decision metrics, band-plan overlay, and CP/axial ratio | M | TS1 (soft), band plan, far-field data | **Wave 0.** Results show 2:1 SWR bandwidth, HPBW, F/B, takeoff, efficiency, band edges, and CP/axial ratio; CSV and tests. See §TS2. |
 | ~~TS3~~ | ~~NEC-2 deck export and copy~~ | S | none | **Done 2026-11-19:** **File → Export → NEC Deck...** and **Copy NEC Deck** use the current design/spec and a deterministic provenance header. A real NEC2C round-trip reproduces the simulated impedance; the deck omits raw solver output and local paths. Unit, UI, and solver tests pass. A third-party NEC GUI reader remains release QA. |
-| TS4 | Autosave and crash recovery | S–M | none | **Wave 0.** Atomic recovery file, restore prompt, opt-out, and tests; no silent overwrite. See §TS4. |
+| ~~TS4~~ | ~~Autosave and crash recovery~~ | S–M | none | **Done 2026-11-19:** atomic project-payload plus metadata recovery in the app-data folder, startup recover/discard, missing-path **Save As** fallback, normal save/close cleanup, and a Preferences opt-out. Tests cover restore, discard, corrupt data, moved/deleted originals, read-only directories, and cleanup. No schema change. Full gate 4,130 passed, 1 skipped; NEC2C 161 passed. |
 | TS5 | VNA import 2.0 | M | none | **Wave 0.** `.s2p`, analyzer presets, column mapping, decimal comma, drag-and-drop, and multiple sweeps. See §TS5. |
 | ~~TS6~~ | ~~Recent projects and start-page examples~~ | S | none | **Done 2026-11-19:** QSettings recent list (file name only, ten entries, missing-file removal), start-page dipole/Yagi/vertical examples, reference-library route, and optional restore-last-project preference. No schema change. Full gate 4,120 passed, 1 skipped. |
 | ~~TS7~~ | ~~Documentation truth pass and status review~~ | S | none | **Done 2026-11-19:** stale claims were corrected in README, USER_GUIDE, SOLVER_ADAPTER, ARCHITECTURE, DOMAIN_MODEL, and the evidence text; the pre-alpha label became pre-1.0; schema 56 and the template-limitation source are documented; `tests/unit/test_documentation_truth.py` guards the known strings. Full gate 4,098 passed, 1 skipped. |
@@ -397,6 +397,12 @@ guard.
 **Effort:** S (3–5 days). **Release:** 1.0.
 
 ### TS4 — Autosave and crash recovery
+
+**Status:** **Done 2026-11-19.** Autosave writes an atomic project recovery
+payload and metadata to the application-data folder, never overwriting the
+project. Startup offers recover or discard; a missing original path falls back
+to **Save As**; normal save/close removes the copy; Preferences can disable it.
+Full gate: 4,130 passed, 1 skipped; NEC2C 161 passed. Schema unchanged.
 
 **Goal:** never lose a design to a crash, power loss, or accidental close.
 

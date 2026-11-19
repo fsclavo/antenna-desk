@@ -984,6 +984,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Restore the last project on startup",
         Language.SPANISH: "Restaurar el último proyecto al iniciar",
     },
+    "preferences.recovery": {
+        Language.ENGLISH: "Recovery",
+        Language.SPANISH: "Recuperación",
+    },
+    "preferences.autosave": {
+        Language.ENGLISH: "Autosave a recovery file while editing",
+        Language.SPANISH: "Autoguardar un archivo de recuperación mientras editás",
+    },
     "preferences.hint": {
         Language.ENGLISH: (
             "Language, units, font size, theme, workflow mode, report 3D figures, "
@@ -5667,6 +5675,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Un archivo faltante se quita de la lista de recientes en vez de recrearse."
         ),
     },
+    "help.preferences.autosave": {
+        Language.ENGLISH: (
+            "While a project has unsaved changes, write an atomic recovery copy in the "
+            "application data folder. A normal save or close removes it. This never "
+            "overwrites the project file."
+        ),
+        Language.SPANISH: (
+            "Mientras un proyecto tiene cambios sin guardar, escribe una copia de "
+            "recuperación atómica en la carpeta de datos de la aplicación. Un guardado "
+            "o cierre normal la elimina. Nunca sobrescribe el archivo del proyecto."
+        ),
+    },
     "help.preferences.theme": {
         Language.ENGLISH: (
             "System follows the operating-system palette at startup. Light and Dark "
@@ -7075,6 +7095,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.recent_removed": {
         Language.ENGLISH: "Removed from recent projects.",
         Language.SPANISH: "Quitado de proyectos recientes.",
+    },
+    "status.recovered": {
+        Language.ENGLISH: "Recovered unsaved project.",
+        Language.SPANISH: "Proyecto sin guardar recuperado.",
     },
     "status.recent_missing": {
         Language.ENGLISH: "The last project was missing; removed from recent projects.",
@@ -16792,6 +16816,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "dialog.open_title": {
         Language.ENGLISH: "Open AntennaDesk project",
         Language.SPANISH: "Abrir proyecto AntennaDesk",
+    },
+    "dialog.recovery_title": {
+        Language.ENGLISH: "Recover unsaved project",
+        Language.SPANISH: "Recuperar proyecto sin guardar",
+    },
+    "dialog.recovery_message": {
+        Language.ENGLISH: (
+            "AntennaDesk found an autosave for {name}. Recover it? "
+            "Choose No to discard the recovery copy."
+        ),
+        Language.SPANISH: (
+            "AntennaDesk encontró un autoguardado de {name}. ¿Recuperarlo? "
+            "Elegí No para descartar la copia de recuperación."
+        ),
+    },
+    "dialog.recovery_corrupt": {
+        Language.ENGLISH: ("The autosave recovery file is corrupt or unreadable. It was removed."),
+        Language.SPANISH: (
+            "El archivo de recuperación está corrupto o no se puede leer. Se eliminó."
+        ),
+    },
+    "recovery.untitled": {
+        Language.ENGLISH: "an untitled project",
+        Language.SPANISH: "un proyecto sin título",
     },
     "dialog.save_title": {
         Language.ENGLISH: "Save AntennaDesk project",

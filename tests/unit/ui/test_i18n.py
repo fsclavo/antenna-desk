@@ -443,6 +443,7 @@ HELP_MANIFEST = frozenset(
         "help.preferences.report_3d",
         "help.preferences.report_band_3d",
         "help.preferences.restore_last_project",
+        "help.preferences.autosave",
         "help.start.recent",
         "help.start.remove_recent",
         "help.start.examples",

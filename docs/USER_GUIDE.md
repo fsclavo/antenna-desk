@@ -2497,9 +2497,15 @@ after its 2D cuts; it is off by default because it makes reports longer and
 larger, and it is available only while the main 3D figure is enabled.
 **Restore the last project on startup** reopens the most recent project if its
 file still exists; a missing file is removed from the recent list. It is off by
-default. **Restore Defaults** returns to System language, metric automatic
-units, System theme, Normal font size, the primary 3D report figure enabled, the
-per-band 3D figures disabled, and automatic restore disabled.
+default. **Autosave a recovery file while editing** is enabled by default: an
+atomic recovery copy is written to the application-data folder while a project
+has unsaved changes. A normal save or close removes it; a crash leaves it for
+the next launch, which offers to recover or discard it. The recovery file never
+overwrites the project. If the original project file moved or was deleted, the
+recovered project opens as untitled and **Save** falls back to **Save As**.
+**Restore Defaults** returns to System language, metric automatic units, System
+theme, Normal font size, the primary 3D report figure enabled, the per-band 3D
+figures disabled, automatic restore disabled, and autosave enabled.
 
 Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
 1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed

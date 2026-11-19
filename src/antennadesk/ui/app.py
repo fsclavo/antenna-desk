@@ -7,6 +7,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QStandardPaths
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
@@ -21,6 +22,7 @@ from .preferences import (
     resolve_language,
 )
 from .recent_projects import QSettingsRecentProjectsStore
+from .recovery import AutosaveRecovery
 from .solver_locator import find_nec2c
 from .theme import ThemeController
 
@@ -61,13 +63,19 @@ def main() -> int:
     translator = Translator(resolve_language(preferences.language))
     executable = find_nec2c()
     solver = Nec2cSolver(executable) if executable is not None else None
+    repository = JsonProjectRepository()
+    app_data = QStandardPaths.writableLocation(
+        QStandardPaths.StandardLocation.AppDataLocation
+    ) or str(Path.home() / ".antennadesk")
+    recovery_directory = Path(app_data) / "recovery"
     window = MainWindow(
-        JsonProjectRepository(),
+        repository,
         solver,
         translator,
         preferences.unit_system,
         preferences=preferences_store,
         recent_projects=QSettingsRecentProjectsStore(),
+        recovery=AutosaveRecovery(recovery_directory, repository),
         font_size_controller=font_size_controller,
         language_preference=preferences.language,
         theme_controller=theme_controller,

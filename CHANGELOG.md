@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Autosave and crash recovery.** While a project has unsaved changes,
+  AntennaDesk writes an atomic `.antennadesk` recovery copy plus metadata in
+  the application-data folder. Startup offers **Recover** or **Discard**; a
+  normal save or close removes the copy, and a crash leaves it intact. A missing
+  original path opens the recovered project as untitled so **Save** falls back
+  to **Save As**. Autosave is enabled by default and can be disabled in
+  Preferences. No project-schema change.
 - **Recent projects and start-page examples.** The start page now lists up to
   ten recent files from local QSettings, shows only their file names, opens a
   project on activation, removes missing or selected entries, and creates

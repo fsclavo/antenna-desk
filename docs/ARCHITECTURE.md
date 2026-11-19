@@ -325,7 +325,10 @@ untrusted files.
 
 Project files use the `antennadesk-project` format with a schema version.
 Saves are atomic: write a temporary file in the target directory, flush and
-`fsync`, then replace the destination with `os.replace`. Schema version 2 added
+`fsync`, then replace the destination with `os.replace`. Autosave uses the
+application-data recovery folder: it writes a valid project payload atomically,
+then a small JSON metadata sidecar, and never replaces the project file. A
+normal save or close removes both; startup offers recover or discard. Schema version 2 added
 dipole orientation, version 3 added persisted simulation runs, version 4 adds
 optional band/batch metadata, version 5 adds optional OCFD/custom feed
 transformer ratios, version 6 adds optional per-design analysis band plans,

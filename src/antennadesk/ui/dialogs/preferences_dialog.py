@@ -36,7 +36,7 @@ class PreferencesDialog(QDialog):
         self._initial = preferences
 
         self.setWindowTitle(translator.t("preferences.title"))
-        self.resize(*scaled_dialog_size(460, 470))
+        self.resize(*scaled_dialog_size(460, 500))
         self.setSizeGripEnabled(True)
 
         self._language = QComboBox(self)
@@ -103,6 +103,8 @@ class PreferencesDialog(QDialog):
             self,
         )
         self._restore_last_project.setChecked(preferences.restore_last_project)
+        self._autosave = QCheckBox(translator.t("preferences.autosave"), self)
+        self._autosave.setChecked(preferences.autosave_enabled)
 
         form = QFormLayout()
         form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
@@ -125,6 +127,10 @@ class PreferencesDialog(QDialog):
             QLabel(translator.t("preferences.startup"), self),
             self._restore_last_project,
         )
+        form.addRow(
+            QLabel(translator.t("preferences.recovery"), self),
+            self._autosave,
+        )
         for row, key in enumerate(
             (
                 "preferences.language",
@@ -135,6 +141,7 @@ class PreferencesDialog(QDialog):
                 "preferences.report_3d",
                 "preferences.report_band_3d",
                 "preferences.restore_last_project",
+                "preferences.autosave",
             )
         ):
             apply_row_help(form, row, translator, key)
@@ -186,6 +193,7 @@ class PreferencesDialog(QDialog):
         self._report_3d.setChecked(True)
         self._report_band_3d.setChecked(False)
         self._restore_last_project.setChecked(False)
+        self._autosave.setChecked(True)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
@@ -224,4 +232,5 @@ class PreferencesDialog(QDialog):
                 self._report_3d.isChecked() and self._report_band_3d.isChecked()
             ),
             restore_last_project=self._restore_last_project.isChecked(),
+            autosave_enabled=self._autosave.isChecked(),
         )

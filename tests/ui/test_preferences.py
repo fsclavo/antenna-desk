@@ -112,6 +112,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         report_include_3d=True,
         report_include_band_3d=True,
         restore_last_project=True,
+        autosave_enabled=False,
     )
 
     store.save(preferences)
@@ -406,6 +407,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     assert dialog._report_band_3d.isChecked() is True
     assert dialog._report_band_3d.isEnabled() is False
     assert dialog._restore_last_project.isChecked() is False
+    assert dialog._autosave.isChecked() is True
     assert "Automatic length units" in dialog._units.toolTip()
     assert "palette" in dialog._theme.toolTip().lower()
 
@@ -419,6 +421,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     dialog._report_3d.setChecked(True)
     dialog._report_band_3d.setChecked(True)
     dialog._restore_last_project.setChecked(True)
+    dialog._autosave.setChecked(False)
 
     assert dialog.preferences() == UiPreferences(
         font_size=FontSize.LARGE,
@@ -430,6 +433,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         report_include_3d=True,
         report_include_band_3d=True,
         restore_last_project=True,
+        autosave_enabled=False,
     )
 
 
@@ -453,6 +457,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
     assert dialog.preferences().report_include_3d is True
     assert dialog.preferences().report_include_band_3d is False
     assert dialog.preferences().restore_last_project is False
+    assert dialog.preferences().autosave_enabled is True
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(

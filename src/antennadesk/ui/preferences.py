@@ -27,6 +27,7 @@ THEME_KEY = "ui/theme"
 REPORT_3D_KEY = "ui/report_3d"
 REPORT_BAND_3D_KEY = "ui/report_band_3d"
 RESTORE_LAST_PROJECT_KEY = "ui/restore_last_project"
+AUTOSAVE_KEY = "ui/autosave"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
 
@@ -79,6 +80,7 @@ class UiPreferences:
     report_include_3d: bool = True
     report_include_band_3d: bool = False
     restore_last_project: bool = False
+    autosave_enabled: bool = True
 
 
 class PreferencesStore(Protocol):
@@ -141,6 +143,7 @@ class QSettingsPreferencesStore:
             report_include_3d=report_include_3d,
             report_include_band_3d=report_include_band_3d,
             restore_last_project=self._load_bool(RESTORE_LAST_PROJECT_KEY, False),
+            autosave_enabled=self._load_bool(AUTOSAVE_KEY, True),
         )
 
     def save(self, preferences: UiPreferences) -> None:
@@ -156,6 +159,7 @@ class QSettingsPreferencesStore:
             RESTORE_LAST_PROJECT_KEY,
             preferences.restore_last_project,
         )
+        self._settings.setValue(AUTOSAVE_KEY, preferences.autosave_enabled)
         self._settings.sync()
 
     def _load_bool(self, key: str, default: bool) -> bool:
