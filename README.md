@@ -116,6 +116,8 @@ truth for each topic, every ADR, and the archived plans.
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
 - Project-level Undo/Redo and hover cursors on the result charts.
+- A segmentation convergence study that reports self-consistency across four
+  segment densities, never a validated-accuracy claim.
 - Atomic autosave to a recovery file while editing, with startup
   recover/discard and an opt-out in Preferences; the project file is never
   overwritten by the recovery copy.

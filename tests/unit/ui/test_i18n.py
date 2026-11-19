@@ -363,6 +363,7 @@ HELP_MANIFEST = frozenset(
         "help.installation.duplicate",
         "help.installation.remove",
         "help.action.analyze_bands",
+        "help.action.convergence_study",
         "help.action.apply_design",
         "help.action.optimize",
         "help.action.scale_frequency",

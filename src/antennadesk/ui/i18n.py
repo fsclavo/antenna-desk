@@ -1122,6 +1122,120 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Reference design library",
         Language.SPANISH: "Biblioteca de diseños de referencia",
     },
+    "convergence.title": {
+        Language.ENGLISH: "Segmentation convergence study",
+        Language.SPANISH: "Estudio de convergencia de segmentación",
+    },
+    "convergence.description": {
+        Language.ENGLISH: (
+            "Runs the same canonical model at 0.10, 0.05, 0.025, and 0.0125 "
+            "wavelength per segment. The verdict is self-consistency, not accuracy."
+        ),
+        Language.SPANISH: (
+            "Ejecuta el mismo modelo canónico con 0,10, 0,05, 0,025 y 0,0125 "
+            "longitudes de onda por segmento. El veredicto es autocoherencia, no exactitud."
+        ),
+    },
+    "convergence.running": {
+        Language.ENGLISH: "Running segmentation densities...",
+        Language.SPANISH: "Ejecutando densidades de segmentación...",
+    },
+    "convergence.cancelling": {
+        Language.ENGLISH: "Cancelling; completed densities will be kept.",
+        Language.SPANISH: "Cancelando; se conservarán las densidades completadas.",
+    },
+    "convergence.failed": {
+        Language.ENGLISH: "Convergence study failed: {message}",
+        Language.SPANISH: "Falló el estudio de convergencia: {message}",
+    },
+    "convergence.summary": {
+        Language.ENGLISH: (
+            "Self-consistency: {verdict}. {points} valid densities. "
+            "R spread {resistance_spread:.2f}%, X spread {reactance_spread:.2f} Ω, "
+            "SWR spread {swr_spread:.3f}."
+        ),
+        Language.SPANISH: (
+            "Autocoherencia: {verdict}. {points} densidades válidas. "
+            "Dispersión de R {resistance_spread:.2f}%, de X {reactance_spread:.2f} Ω, "
+            "de ROE {swr_spread:.3f}."
+        ),
+    },
+    "convergence.partial": {
+        Language.ENGLISH: "Study cancelled; completed densities are kept.",
+        Language.SPANISH: "Estudio cancelado; se conservan las densidades completadas.",
+    },
+    "convergence.error": {
+        Language.ENGLISH: "Study error: {message}",
+        Language.SPANISH: "Error del estudio: {message}",
+    },
+    "convergence.export_csv": {
+        Language.ENGLISH: "Export CSV...",
+        Language.SPANISH: "Exportar CSV...",
+    },
+    "convergence.export_title": {
+        Language.ENGLISH: "Export convergence CSV",
+        Language.SPANISH: "Exportar CSV de convergencia",
+    },
+    "convergence.verdict.converged": {
+        Language.ENGLISH: "converged",
+        Language.SPANISH: "convergente",
+    },
+    "convergence.verdict.marginal": {
+        Language.ENGLISH: "marginal",
+        Language.SPANISH: "marginal",
+    },
+    "convergence.verdict.not_converged": {
+        Language.ENGLISH: "not converged",
+        Language.SPANISH: "no convergente",
+    },
+    "convergence.verdict.incomplete": {
+        Language.ENGLISH: "incomplete",
+        Language.SPANISH: "incompleto",
+    },
+    "convergence.column.density": {
+        Language.ENGLISH: "Density (λ)",
+        Language.SPANISH: "Densidad (λ)",
+    },
+    "convergence.column.segments": {
+        Language.ENGLISH: "Segments",
+        Language.SPANISH: "Segmentos",
+    },
+    "convergence.column.resistance": {
+        Language.ENGLISH: "R (Ω)",
+        Language.SPANISH: "R (Ω)",
+    },
+    "convergence.column.reactance": {
+        Language.ENGLISH: "X (Ω)",
+        Language.SPANISH: "X (Ω)",
+    },
+    "convergence.column.magnitude": {
+        Language.ENGLISH: "|Z| (Ω)",
+        Language.SPANISH: "|Z| (Ω)",
+    },
+    "convergence.column.swr": {
+        Language.ENGLISH: "SWR",
+        Language.SPANISH: "ROE",
+    },
+    "convergence.column.gain": {
+        Language.ENGLISH: "Gain (dBi)",
+        Language.SPANISH: "Ganancia (dBi)",
+    },
+    "convergence.column.takeoff": {
+        Language.ENGLISH: "Takeoff (°)",
+        Language.SPANISH: "Ángulo de salida (°)",
+    },
+    "convergence.column.status": {
+        Language.ENGLISH: "Status",
+        Language.SPANISH: "Estado",
+    },
+    "convergence.status.valid": {
+        Language.ENGLISH: "valid",
+        Language.SPANISH: "válida",
+    },
+    "convergence.status.invalid": {
+        Language.ENGLISH: "invalid",
+        Language.SPANISH: "inválida",
+    },
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
         Language.ENGLISH: "New Antenna",
@@ -2302,6 +2416,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         ),
     },
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
+    "action.convergence_study": {
+        Language.ENGLISH: "Convergence study...",
+        Language.SPANISH: "Estudio de convergencia...",
+    },
     "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},
     "action.apply": {Language.ENGLISH: "Apply design", Language.SPANISH: "Aplicar diseño"},
@@ -5746,6 +5864,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.analyze_bands": {
         Language.ENGLISH: "Run the current design over a selected set of amateur bands.",
         Language.SPANISH: "Ejecutá el diseño actual sobre un conjunto seleccionado de bandas.",
+    },
+    "help.action.convergence_study": {
+        Language.ENGLISH: (
+            "Run the same model at three to five segment densities and report "
+            "self-consistency, not validated accuracy."
+        ),
+        Language.SPANISH: (
+            "Ejecutá el mismo modelo con tres a cinco densidades de segmentos y "
+            "mostrá autocoherencia, no exactitud validada."
+        ),
     },
     "help.action.apply_design": {
         Language.ENGLISH: "Save the current form values without running the solver.",

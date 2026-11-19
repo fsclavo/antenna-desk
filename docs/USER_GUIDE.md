@@ -387,6 +387,23 @@ Defaults are evidence-labelled in the dialog. Transformer, tuner, counterpoise,
 ground, and installation effects are not modeled as ideal guarantees; verify
 the selected bands with a simulation and, when possible, a measurement.
 
+## Check segmentation convergence
+
+Use **Simulation → Convergence study...** to run the same model at four segment
+densities: `0.10 λ`, `0.05 λ`, `0.025 λ`, and `0.0125 λ`. The dialog reports
+resistance, reactance, impedance magnitude, SWR, maximum power gain, takeoff
+angle, total segments, and the segment/radius ratio for every wire. Gain and
+takeoff are evaluated only at the coarsest and finest densities.
+
+The verdict is **self-consistency: converged, marginal, or not converged**, not
+an accuracy guarantee. It compares the two finest valid densities using the
+thresholds documented in
+[`CONVERGENCE_STUDY.md`](CONVERGENCE_STUDY.md). A flat curve can still be wrong;
+use a measurement or a cross-engine check for stronger validation. Cancelling
+keeps completed densities and marks the study partial. **Export CSV...** writes
+one row per density with the verdict, error, and per-wire metrics. Invalid
+densities remain visible and prevent a converged verdict.
+
 ## Result confidence and explanations
 
 The **Diagnostics** tab now begins with a **Result confidence** card for the

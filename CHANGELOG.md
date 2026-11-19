@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Segmentation convergence study.** **Simulation → Convergence study...**
+  runs the canonical model at 0.10, 0.05, 0.025, and 0.0125 wavelength per
+  segment, reports R/X/|Z|/SWR and per-wire segment/radius metrics, and computes
+  a self-consistency verdict with documented converged/marginal thresholds.
+  Pattern gain and takeoff are evaluated at the coarsest and finest densities
+  only. Cancellation keeps completed densities, invalid points stay visible, and
+  the table exports to CSV. The UI and report explicitly say self-consistency,
+  not validated accuracy. No schema or solver change.
 - **Autosave and crash recovery.** While a project has unsaved changes,
   AntennaDesk writes an atomic `.antennadesk` recovery copy plus metadata in
   the application-data folder. Startup offers **Recover** or **Discard**; a

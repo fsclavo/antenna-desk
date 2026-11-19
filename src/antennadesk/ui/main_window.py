@@ -300,6 +300,7 @@ from .dialogs.component_calculator_dialog import (
 )
 from .dialogs.construction_dialog import ConstructionDialog
 from .dialogs.construction_record_dialog import ConstructionRecordDialog
+from .dialogs.convergence_dialog import ConvergenceDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
 from .dialogs.discone_dialog import DisconeDialog
@@ -737,6 +738,9 @@ class MainWindow(QMainWindow):
         self._analyze_bands_action = QAction(self)
         self._analyze_bands_action.setShortcut(QKeySequence("Ctrl+Shift+B"))
         self._analyze_bands_action.triggered.connect(lambda: self.analyze_bands())
+
+        self._convergence_action = QAction(self)
+        self._convergence_action.triggered.connect(lambda: self.run_convergence_study())
 
         self._cancel_action = QAction(self)
         self._cancel_action.setShortcut(QKeySequence("Ctrl+."))
@@ -1490,6 +1494,7 @@ class MainWindow(QMainWindow):
         self._simulation_menu = self.menuBar().addMenu("")
         self._simulation_menu.addAction(self._simulate_action)
         self._simulation_menu.addAction(self._analyze_bands_action)
+        self._simulation_menu.addAction(self._convergence_action)
         self._simulation_menu.addAction(self._cancel_action)
         self._simulation_feed_separator = self._simulation_menu.addSeparator()
         self._simulation_menu.addAction(self._feed_line_action)
@@ -1734,6 +1739,9 @@ class MainWindow(QMainWindow):
         apply_help(self._analyze_bands_button, self._translator, "action.analyze_bands")
         self._analyze_bands_action.setToolTip(self._translator.t("help.action.analyze_bands"))
         self._analyze_bands_action.setWhatsThis(self._translator.t("help.action.analyze_bands"))
+        self._convergence_action.setText(self._translator.t("action.convergence_study"))
+        self._convergence_action.setToolTip(self._translator.t("help.action.convergence_study"))
+        self._convergence_action.setWhatsThis(self._translator.t("help.action.convergence_study"))
         apply_help(self._apply_button, self._translator, "action.apply_design")
         apply_help(self._optimize_button, self._translator, "action.optimize")
         self._optimize_action.setToolTip(self._translator.t("help.action.optimize"))
@@ -2094,6 +2102,7 @@ class MainWindow(QMainWindow):
         band_enabled = idle and has_project and self._solver is not None
         self._analyze_bands_action.setEnabled(band_enabled)
         self._analyze_bands_button.setEnabled(band_enabled)
+        self._convergence_action.setEnabled(band_enabled)
         hexbeam_band = self._optimizer_hexbeam_band(parameters)
         optimizer = (
             optimizer_availability(parameters, hexbeam_band=hexbeam_band)
@@ -4112,6 +4121,35 @@ class MainWindow(QMainWindow):
         self._thread = thread
         self._worker = worker
         thread.start()
+
+    def run_convergence_study(self) -> None:
+        if self._simulating:
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        spec = self._with_project_chain(
+            design.parameters,
+            self._base_simulation_spec(design),
+        )
+        dialog = ConvergenceDialog(
+            self._translator,
+            self._solver,
+            design.antenna,
+            spec,
+            self,
+        )
+        dialog.exec()
 
     def analyze_bands(self) -> None:
         if self._simulating:

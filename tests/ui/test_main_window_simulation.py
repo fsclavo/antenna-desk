@@ -103,6 +103,27 @@ def test_generated_specs_default_to_at_least_100_points(
     assert spec.frequency_plan.count >= 100
 
 
+def test_convergence_action_opens_the_study_dialog(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[object] = []
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            calls.append((args, kwargs))
+
+        def exec(self) -> int:
+            return 0
+
+    monkeypatch.setattr(main_window_module, "ConvergenceDialog", FakeDialog)
+
+    assert window._convergence_action.isEnabled() is True
+    window.run_convergence_study()
+
+    assert calls
+
+
 def test_beverage_spec_applies_the_feed_transformer(window: MainWindow) -> None:
     from antennadesk.domain.antennas.beverage import beverage_parameters
 

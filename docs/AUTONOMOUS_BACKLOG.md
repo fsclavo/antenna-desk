@@ -180,7 +180,7 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 | ~~HF8~~ | ~~High-frequency optimizer diagnostics, defaults, and Apply Best guard~~ | M | HF4–HF6 | **Done 2026-11-18:** bound-hit diagnostics are enabled for every family; the variable table uses adaptive units and states that Current is the start with no silent clamp. Moxon dialogs show initial gap/λ and gap/radius, and **Apply Best**/*Apply Best SWR* confirm when the selected geometry is within 5% of an envelope edge or below two conductor diameters. The Moxon default objective is now **Target impedance** instead of maximum gain, matching the 50Ω reference and keeping the first run match-focused. EN/ES strings and dialog/domain tests added. |
 | ~~HF9~~ | ~~High-frequency regression matrix, evidence, and documentation~~ | M | HF2–HF8 | **Done 2026-11-18:** a 243-test frequency/family matrix (238 combinations plus five coverage/contract checks) covers all eleven required frequencies and every supported optimizer type, asserting bounds, non-degenerate spans, initial-vector rebuilds, and geometry validity. A 2.4 GHz Moxon regression rejects the old `0.67 λ` gap without a performance reference, including a full optimizer run with a fake solver. Real NEC2C runs complete for 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz quad/biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical. ADR-0046, the estimator guide, user guide, and changelog record the contract. No accuracy claim or evidence promotion. |
 | ~~HF10~~ | ~~Design-frequency/geometry consistency for Moxon and Yagi~~ | S–M | HF1, HF2; UX34/ADR-0043 | **Done 2026-11-18:** the Moxon and Yagi forms use the ADR-0043 pristine policy. A pristine frequency change regenerates the Moxon reference or scales the Yagi table; after an edit, add/remove, loaded project, or optimizer result, geometry is preserved with a stale warning. The Moxon reference button and Yagi NBS preset reset pristine. The Moxon form warns outside the gross `0.15–0.60 λ` width guard. `yagi_gross_frequency_mismatch` rejects a Yagi outside `0.20–0.80 λ` through `optimize.unavailable.frequency_mismatch` before the solver starts. Tests cover pristine/edited changes, preset reloads, loaded parameters, new templates, and optimizer availability. |
-| TS1 | Convergence study for every wire family | M | `resolve_model_quality`, segmentation | **Wave 0.** A 3–5 density ladder reports R/X/Z magnitude/SWR and pattern/gain deltas, Δ/a, a self-consistency verdict, and cancellation. See §TS1. |
+| ~~TS1~~ | ~~Convergence study for every wire family~~ | M | `resolve_model_quality`, segmentation | **Done 2026-11-19:** a four-density ladder reports R/X/|Z|/SWR, per-wire segment/radius metrics, pattern gain/takeoff at the ends, diagnostics, cancellation, a documented self-consistency verdict, dialog/table, and CSV export. Real NEC2C covers dipole, vertical with radials, Yagi, and custom wire. Full gate 4,147 passed, 1 skipped; NEC2C 165 passed. No schema or solver change. |
 | TS2 | Decision metrics, band-plan overlay, and CP/axial ratio | M | TS1 (soft), band plan, far-field data | **Wave 0.** Results show 2:1 SWR bandwidth, HPBW, F/B, takeoff, efficiency, band edges, and CP/axial ratio; CSV and tests. See §TS2. |
 | ~~TS3~~ | ~~NEC-2 deck export and copy~~ | S | none | **Done 2026-11-19:** **File → Export → NEC Deck...** and **Copy NEC Deck** use the current design/spec and a deterministic provenance header. A real NEC2C round-trip reproduces the simulated impedance; the deck omits raw solver output and local paths. Unit, UI, and solver tests pass. A third-party NEC GUI reader remains release QA. |
 | ~~TS4~~ | ~~Autosave and crash recovery~~ | S–M | none | **Done 2026-11-19:** atomic project-payload plus metadata recovery in the app-data folder, startup recover/discard, missing-path **Save As** fallback, normal save/close cleanup, and a Preferences opt-out. Tests cover restore, discard, corrupt data, moved/deleted originals, read-only directories, and cleanup. No schema change. Full gate 4,130 passed, 1 skipped; NEC2C 161 passed. |
@@ -260,6 +260,15 @@ better after DL5.
   detail and status stay here.
 
 ### TS1 — Convergence study for every wire family
+
+**Status:** **Done 2026-11-19.** The 0.10/0.05/0.025/0.0125 λ ladder is
+implemented for any canonical model with the existing segmentation policy,
+`resolve_model_quality`, and `validate_segmentation`. The dialog reports R, X,
+|Z|, SWR, per-wire Δ/a, gain/takeoff at the ends, invalid densities, and
+cancellation; CSV export and the self-consistency thresholds are documented in
+[`CONVERGENCE_STUDY.md`](CONVERGENCE_STUDY.md). Real NEC2C covers dipole,
+vertical with radials, Yagi, and custom wire. Full gate: 4,147 passed, 1
+skipped; NEC2C 165 passed. No schema or solver change.
 
 **Goal:** answer "does this model converge?" without pretending that
 self-consistency proves accuracy.
