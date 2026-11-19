@@ -225,7 +225,7 @@ The implementation is sliced in
 | HF7 | Thin-wire model-quality gate | Implemented 2026-11-18 |
 | HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Implemented 2026-11-18 |
 | HF9 | Regression matrix, evidence, and documentation | Implemented 2026-11-18 |
-| HF10 | Design-frequency/geometry consistency | Queued |
+| HF10 | Design-frequency/geometry consistency | Implemented 2026-11-18 |
 
 ### HF2 implementation note
 
@@ -382,6 +382,24 @@ quad beam and biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical.
 The test applies `resolve_model_quality`, requires no blocking code, and asserts
 completion plus finite positive resistance. These are completion and invariant
 checks, not accuracy references. No evidence level is promoted.
+
+### HF10 implementation note
+
+The Moxon and Yagi forms now follow ADR-0043's pristine policy. A pristine
+frequency change regenerates the Moxon 20 m reference or scales the Yagi table;
+after an edit, add, remove, or loaded design, the geometry is preserved and the
+form shows the stale message. The Moxon reference button and the Yagi NBS preset
+reset the pristine state. New designs and applied estimates are marked pristine;
+loaded projects and optimizer results are not.
+
+`moxon_frequency_mismatch` reports when the rectangle width is outside the
+gross `0.15–0.60 λ` guard, and the Moxon form shows a dedicated warning with the
+explicit rebuild action. `yagi_gross_frequency_mismatch` uses a wider `0.20–0.80
+λ` guard than the editor's `0.35–0.65 λ` warning. `optimizer_availability`
+returns `optimize.unavailable.frequency_mismatch` for a Yagi outside the gross
+guard after the ordinary bound invariant passes, so a 20 m Yagi left at 2.4 GHz
+is rejected before the solver starts. This is a consistency guard, not a
+performance or accuracy claim.
 
 ## Test contract
 

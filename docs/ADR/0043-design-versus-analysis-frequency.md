@@ -68,10 +68,13 @@ recorded as a follow-up item.
    guard for unsaved form changes applies; undoing an applied design restores
    the applied frequency and geometry.
 10. Families without a deterministic starting helper keep their current
-    behavior. Do not apply a generic "scale every length" operation.
-    The Yagi table's existing frequency scaling is an acknowledged exception;
-    do not copy it to other families. Reconcile it in a follow-up under the same
-    policy.
+    behavior. Do not apply a generic "scale every length" operation. The Yagi
+    table's frequency scaling is reconciled under this policy (HF10): it scales
+    the element positions and lengths only while the managed table is pristine.
+    A table edit, add, remove, or loaded design locks it, and a frequency change
+    preserves the geometry and shows the stale warning. The Moxon follows the
+    same pristine rule with its explicit 20 m reference action. Do not copy
+    either automatic path to families without a deterministic starting helper.
 11. The explicit **Scale geometry to frequency** action from UX37 is for
     non-pristine designs. It is never the automatic path.
 
@@ -163,5 +166,15 @@ Reconsider this policy if:
 - **UX37 — implemented 2026-11-17:** explicit scale-to-frequency action for
   non-pristine, allowlisted designs, with a target-frequency dialog and
   approximation warning.
+- **HF10 — implemented 2026-11-18:** the Moxon and Yagi forms now use the same
+  pristine-state tracker as the other frequency-first families. A pristine
+  frequency change regenerates the Moxon scaled reference or scales the Yagi
+  table; an edited/loaded design is preserved and shows the stale message.
+  Applying the Moxon reference or the Yagi NBS preset resets pristine.
+  Newly created templates and applied estimates mark pristine; loaded projects,
+  optimizer results, and manual edits mark non-pristine. A gross
+  design-frequency mismatch shows a warning, and a grossly mismatched Yagi is
+  rejected by the optimizer with
+  `optimize.unavailable.frequency_mismatch` before the solver starts.
 - The user guide and design-frequency help describe the delivered behavior.
   **Load starting dimensions** remains the explicit path for edited geometry.

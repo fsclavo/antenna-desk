@@ -43,6 +43,11 @@ MOXON_DRIVEN_TIP_MIN_DEPTH_RATIO = 0.20
 MOXON_DRIVEN_TIP_MAX_DEPTH_RATIO = 0.75
 MOXON_TIPS_SUM_MIN_DEPTH_RATIO = 0.50
 MOXON_TIPS_SUM_MAX_DEPTH_RATIO = 0.97
+# A rectangle whose width is far from a half wavelength is not a Moxon for the
+# stated design frequency. This is a gross-mismatch guard, not a performance
+# target; the construction envelope remains the validity contract.
+MOXON_GROSS_WIDTH_MIN_WAVELENGTH_RATIO = 0.15
+MOXON_GROSS_WIDTH_MAX_WAVELENGTH_RATIO = 0.60
 
 
 class MoxonGeometryIssueKind(StrEnum):
@@ -416,6 +421,20 @@ class MoxonParameters:
 
 FOOT_M = 0.3048
 MOXON_REFERENCE_FREQUENCY_HZ = 14_170_000.0
+
+
+def moxon_frequency_mismatch(parameters: MoxonParameters) -> float | None:
+    """Return width/lambda when the rectangle is grossly off the design frequency.
+
+    ``None`` means the rectangle width is plausible for the stated frequency.
+    The construction envelope still decides whether the tips and gap are valid.
+    """
+
+    wavelength = units.wavelength_m(parameters.frequency_hz)
+    ratio = parameters.width_m / wavelength
+    if MOXON_GROSS_WIDTH_MIN_WAVELENGTH_RATIO <= ratio <= MOXON_GROSS_WIDTH_MAX_WAVELENGTH_RATIO:
+        return None
+    return ratio
 
 
 def moxon_20m_wire(

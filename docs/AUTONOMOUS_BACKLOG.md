@@ -171,7 +171,7 @@ external service and must not be invented or simulated into existence.
 | ~~HF7~~ | ~~Thin-wire model-quality gate for high-frequency optimization~~ | M–L | HF1, HF2 | **Done 2026-11-18:** added `resolve_model_quality`. Short wires reduce their segment count to reach a segment/radius ratio of 8 when the resulting segment is still at most 0.1λ; otherwise the extended thin-wire kernel is selected automatically when the solver supports it. Ratio <2 always blocks, and over-segmented long wires (<1e-3λ on a wire ≥0.01λ) block the optimizer; short structural feed/load/return wires are exempt. The main simulation and optimizer specs use the policy, and the optimizer rejects blocked candidates with `optimize.constraint.model_quality`. NEC2C comparisons at 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi record deterministic impedance changes only. |
 | ~~HF8~~ | ~~High-frequency optimizer diagnostics, defaults, and Apply Best guard~~ | M | HF4–HF6 | **Done 2026-11-18:** bound-hit diagnostics are enabled for every family; the variable table uses adaptive units and states that Current is the start with no silent clamp. Moxon dialogs show initial gap/λ and gap/radius, and **Apply Best**/*Apply Best SWR* confirm when the selected geometry is within 5% of an envelope edge or below two conductor diameters. The Moxon default objective is now **Target impedance** instead of maximum gain, matching the 50Ω reference and keeping the first run match-focused. EN/ES strings and dialog/domain tests added. |
 | ~~HF9~~ | ~~High-frequency regression matrix, evidence, and documentation~~ | M | HF2–HF8 | **Done 2026-11-18:** a 243-test frequency/family matrix (238 combinations plus five coverage/contract checks) covers all eleven required frequencies and every supported optimizer type, asserting bounds, non-degenerate spans, initial-vector rebuilds, and geometry validity. A 2.4 GHz Moxon regression rejects the old `0.67 λ` gap without a performance reference, including a full optimizer run with a fake solver. Real NEC2C runs complete for 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz quad/biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical. ADR-0046, the estimator guide, user guide, and changelog record the contract. No accuracy claim or evidence promotion. |
-| HF10 | Design-frequency/geometry consistency for Moxon and Yagi | S–M | HF1, HF2; UX34/ADR-0043 | **Queued 2026-11-18:** reconcile the Moxon manual preset and the Yagi auto-scale exception with the pristine-geometry policy; warn or block optimization when geometry is grossly inconsistent with λ; test frequency changes, preset loads, and optimizer availability. |
+| ~~HF10~~ | ~~Design-frequency/geometry consistency for Moxon and Yagi~~ | S–M | HF1, HF2; UX34/ADR-0043 | **Done 2026-11-18:** the Moxon and Yagi forms use the ADR-0043 pristine policy. A pristine frequency change regenerates the Moxon reference or scales the Yagi table; after an edit, add/remove, loaded project, or optimizer result, geometry is preserved with a stale warning. The Moxon reference button and Yagi NBS preset reset pristine. The Moxon form warns outside the gross `0.15–0.60 λ` width guard. `yagi_gross_frequency_mismatch` rejects a Yagi outside `0.20–0.80 λ` through `optimize.unavailable.frequency_mismatch` before the solver starts. Tests cover pristine/edited changes, preset reloads, loaded parameters, new templates, and optimizer availability. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -179,10 +179,9 @@ external service and must not be invented or simulated into existence.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-**Status:** HF1–HF9 are implemented on 2026-11-18;
+**Status:** HF1–HF10 are implemented on 2026-11-18;
 [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) is the accepted
-contract. HF10 remains queued and covers design-frequency/geometry
-consistency.
+contract. The high-frequency bounds and Moxon-gap track is complete.
 
 **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
 [ADR-0043](ADR/0043-design-versus-analysis-frequency.md),
@@ -560,16 +559,25 @@ Documentation:
 
 ### HF10 — Design-frequency/geometry consistency
 
-- Reconcile the Moxon manual **Load 20 m reference scaled to current
-  frequency** action and the Yagi auto-scale exception with ADR-0043.
-- If a design is grossly inconsistent with its design frequency (for example,
-  a 20 m Moxon optimized at 2.4 GHz), show a warning and offer the explicit
-  starting-dimension action; do not silently rescale tuned geometry.
-- Consider an optimizer preflight check that compares the primary dimensions
-  with λ and reports a clear “geometry and design frequency disagree”
-  message.
-- Test frequency changes, preset loads, pristine/edited states, and optimizer
-  availability.
+**Implemented 2026-11-18.** The Moxon form now tracks its managed width, depth,
+and tip fields with the shared `StartingDimensionsState`. A pristine frequency
+change regenerates the scaled 20 m reference; after an edit, the geometry is
+preserved and the stale message names the reference button. The Yagi table
+tracks positions, lengths, radius, add, and remove. A pristine frequency change
+keeps the existing wavelength-ratio scaling; an edited table is preserved and
+shows the stale message. The NBS preset and Moxon reference reset pristine.
+`set_parameters` locks loaded projects and optimizer results; new templates and
+applied estimates mark pristine.
+
+The Moxon form warns when width/λ is outside the gross `0.15–0.60` guard.
+`yagi_gross_frequency_mismatch` uses a wider `0.20–0.80` guard than the
+editor's advisory `0.35–0.65` warning. `optimizer_availability` returns
+`optimize.unavailable.frequency_mismatch` after the ordinary bound invariant
+passes, so a 20 m Yagi left at 2.4 GHz is rejected before the solver starts.
+
+Tests cover pristine and edited frequency changes, preset reloads, loaded
+parameters, newly created templates, and the optimizer preflight. This is a
+geometry-consistency guard, not a performance or accuracy claim.
 
 ### File plan
 
@@ -3785,10 +3793,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,032 passed, 1 skipped** on 2026-11-18 after the HF9
-  frequency/family regression matrix and high-frequency NEC2C completion
-  checks, with `NEC2C` auto-detected by the test configuration; the skip is the
-  Windows-only console-hiding test on Linux.
+- Full gate: **4,045 passed, 1 skipped** on 2026-11-18 after the HF10
+  design-frequency consistency work, with `NEC2C` auto-detected by the test
+  configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

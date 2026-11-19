@@ -51,6 +51,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
+from .starting_dimensions import StartingDimensionsState
 from .table_headers import fit_header_sections
 
 # The editor starts on the 2 m band.  The geometry is the published NBS
@@ -156,7 +157,7 @@ class YagiForm(QWidget):
         header = self._table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         fit_header_sections(self._table)
-        self._table.itemChanged.connect(self._refresh_driven_values)
+        self._table.itemChanged.connect(self._table_edited)
 
         self._add = QPushButton(translator.t("yagi.add_element"), self)
         self._remove = QPushButton(translator.t("yagi.remove_element"), self)
@@ -246,6 +247,11 @@ class YagiForm(QWidget):
         self._match_warning.setWordWrap(True)
         self._match_warning.setVisible(False)
 
+        self._starting_note = QLabel(self)
+        self._starting_note.setWordWrap(True)
+        self._starting_note.setVisible(False)
+        self._starting_state = StartingDimensionsState(translator, self._starting_note)
+
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("field.height"), self._height)
@@ -280,6 +286,7 @@ class YagiForm(QWidget):
         layout.addWidget(self._table, 1)
         layout.addLayout(element_buttons)
         layout.addWidget(self._match_note)
+        layout.addWidget(self._starting_note)
         layout.addWidget(self._geometry)
         layout.addWidget(self._frequency_warning)
         layout.addWidget(self._clearance_warning)
@@ -322,9 +329,14 @@ class YagiForm(QWidget):
     def _frequency_changed(self, value: float) -> None:
         previous = self._last_frequency_mhz
         self._last_frequency_mhz = value
-        if self._updating or previous <= 0.0 or value <= 0.0:
-            if not self._updating:
-                self._emit_changed()
+        if self._updating:
+            return
+        if not self._starting_state.pristine:
+            self._starting_state.show_stale(value)
+            self._emit_changed()
+            return
+        if previous <= 0.0 or value <= 0.0:
+            self._emit_changed()
             return
         if math.isclose(previous, value, rel_tol=1e-12, abs_tol=1e-12):
             self._emit_changed()
@@ -351,6 +363,7 @@ class YagiForm(QWidget):
                     cell.setText(self._table_value(value_m))
         finally:
             self._updating = False
+        self._starting_state.mark_pristine(frequency_mhz=value)
         self._refresh_driven_values()
         self._update_geometry()
         self.changed.emit()
@@ -410,6 +423,7 @@ class YagiForm(QWidget):
         self._add.setText(self._translator.t("yagi.add_element"))
         self._remove.setText(self._translator.t("yagi.remove_element"))
         self._preset.setText(self._translator.t("yagi.nbs_preset"))
+        self._starting_state.retranslate()
         self._driven_folded.setText(self._translator.t("yagi.folded_driven"))
         self._driven_folded.setToolTip(self._translator.t("yagi.folded_hint"))
         self._match_type.setItemText(0, self._translator.t("yagi.match_none"))
@@ -516,6 +530,11 @@ class YagiForm(QWidget):
             self._updating = previous_updating
         self._refresh_driven_values()
 
+    def _table_edited(self, _item: object) -> None:
+        if not self._updating:
+            self._starting_state.mark_non_pristine()
+        self._refresh_driven_values()
+
     def _load_preset(self) -> None:
         try:
             yagi = nbs_five_element(
@@ -544,7 +563,13 @@ class YagiForm(QWidget):
         if index >= 0:
             self._driven.setCurrentIndex(index)
         self._transformer.setValue(yagi.transformer_ratio)
+        self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())
         self._update_geometry()
+
+    def mark_starting_dimensions_pristine(self) -> None:
+        """Mark the current element table as generated for its design frequency."""
+
+        self._starting_state.mark_pristine()
 
     def _refresh_driven_values(self, *_args: object) -> None:
         current = self._driven.currentData()
@@ -576,11 +601,13 @@ class YagiForm(QWidget):
                 radius_m=self._radius_m(),
             )
         )
+        self._starting_state.mark_non_pristine()
 
     def _remove_element(self) -> None:
         rows = sorted({index.row() for index in self._table.selectedIndexes()}, reverse=True)
         for row in rows:
             self._table.removeRow(row)
+        self._starting_state.mark_non_pristine()
         self._refresh_driven_values()
 
     def _element_from_row(self, row: int) -> YagiElement:
@@ -597,6 +624,7 @@ class YagiForm(QWidget):
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:
             return
+        was_pristine = self._starting_state.pristine
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -618,6 +646,8 @@ class YagiForm(QWidget):
             field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
+            if was_pristine:
+                self.mark_starting_dimensions_pristine()
 
     def set_parameters(self, parameters: YagiParameters) -> None:
         self._updating = True
@@ -664,6 +694,7 @@ class YagiForm(QWidget):
                 self._driven.setCurrentIndex(index)
         finally:
             self._updating = False
+        self._starting_state.mark_non_pristine()
         self._update_ground_controls()
         self._update_folded_controls()
         self._update_match_controls()

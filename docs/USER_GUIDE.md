@@ -107,12 +107,17 @@ The frequency field is the **design frequency**. It seeds the starting
 dimensions and defines the default simulation band; it is not an
 analysis-frequency override. To evaluate the same geometry at another
 frequency, use **Simulation sweep** or **Band analysis**. For the quad beam,
-hexbeam, discone, trapped Yagi, and phased vertical, changing the design
-frequency regenerates the starting dimensions only while the managed geometry
-is still the generated default. After a managed dimension is edited, the
-geometry is preserved and the editor shows a message; use **Load starting
-dimensions** to rebuild it. In a modal generator the update is local; in the
-project editor it is a normal unsaved form edit. See ADR-0043.
+hexbeam, discone, trapped Yagi, phased vertical, Moxon, and Yagi, changing the
+design frequency regenerates the starting dimensions only while the managed
+geometry is still the generated default. After a managed dimension is edited,
+the geometry is preserved and the editor shows a message; use the family's
+starting-dimension action to rebuild it. The Yagi table scales its element
+positions and lengths with the wavelength ratio only while the table is
+pristine; once an element or spacing is edited, the table is preserved and a
+warning asks for the NBS preset or **Estimate Dimensions...**. The Moxon uses
+**Load 20 m reference scaled to current frequency** for the same explicit
+rebuild. In a modal generator the update is local; in the project editor it is
+a normal unsaved form edit. See ADR-0043.
 
 To move an already tuned design to another frequency, use **Design → Scale
 Geometry to Frequency...**. It scales the primary electrical geometry by the
@@ -526,11 +531,16 @@ dialog for an equivalent. **Load NBS 5-element preset** fills
 the NBS TN-688 0.8λ starting geometry scaled to the selected frequency. A new
 Yagi editor starts at **145.000 MHz** with that preset scaled from its published
 **50.1 MHz** reference; the scaled default is a starting point, not the
-published 50.1 MHz design. Changing the frequency in the form rescales
-the current element positions and lengths by the wavelength ratio. If the
-element dimensions do not look consistent with the current frequency, the form
-shows a warning; use **Design → Estimate Dimensions...** to rebuild a
-2–32 element DL6WU starting design. **Optimize...** derives element, gap, and
+published 50.1 MHz design. Changing the frequency in the form rescales the
+current element positions and lengths by the wavelength ratio only while the
+table is still pristine. After you edit an element, position, or radius, or add
+or remove an element, a frequency change preserves the geometry and shows a
+message; use **Load NBS 5-element preset** or **Design → Estimate
+Dimensions...** to rebuild a starting design. If the element dimensions do not
+look consistent with the current frequency, the form shows a warning. A
+grossly inconsistent Yagi is rejected by the optimizer with
+`optimize.unavailable.frequency_mismatch` instead of starting a search on the
+wrong antenna. **Optimize...** derives element, gap, and
 height ranges from the current normalized geometry and the actual element
 radius; there is no fixed 0.05 m element floor, and the step scales with the
 search span. The DL6WU length and gap taper are preserved during the search.
@@ -579,6 +589,15 @@ must stay within the documented construction limits, and the gap must clear the
 conductor diameter. The same check runs in the domain model and the family
 optimizer. A scaled reference whose gap cannot clear a thick wire is reported
 as unsupported rather than silently changing the conductor.
+
+Changing the design frequency rescales the rectangle only while its width,
+depth, and tip fields are still the generated default. After a managed
+dimension is edited, the geometry is preserved and the form shows a message;
+use **Load 20 m reference scaled to current frequency** to rebuild the starting
+dimensions. If the rectangle width is grossly inconsistent with the design
+frequency, the form warns that geometry and frequency disagree. The optimizer
+uses the same construction envelope and will not start from a mismatched
+Moxon.
 
 **Design → Estimate Dimensions...** is reference-scaled only inside the 20 m
 band (14.0–14.35 MHz); the exact 14.17 MHz dimensions are preserved. Outside

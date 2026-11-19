@@ -23,6 +23,10 @@ YAGI_ELEMENT_ID_PREFIX = "element"
 ANTENNA_TYPE_YAGI = "yagi"
 YAGI_ELEMENT_LENGTH_MIN_FACTOR = 0.35
 YAGI_ELEMENT_LENGTH_MAX_FACTOR = 0.65
+# A design outside this much wider envelope is treated as a different antenna
+# accidentally paired with the current frequency, not as a deliberate design.
+YAGI_GROSS_LENGTH_MIN_FACTOR = 0.20
+YAGI_GROSS_LENGTH_MAX_FACTOR = 0.80
 YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
@@ -753,6 +757,25 @@ def yagi_element_length_mismatch(parameters: YagiParameters) -> bool:
     minimum = wavelength * YAGI_ELEMENT_LENGTH_MIN_FACTOR
     maximum = wavelength * YAGI_ELEMENT_LENGTH_MAX_FACTOR
     return any(not minimum <= element.length_m <= maximum for element in parameters.elements)
+
+
+def yagi_gross_frequency_mismatch(
+    parameters: YagiParameters,
+) -> tuple[int, float] | None:
+    """Return the first element whose length is grossly inconsistent with lambda.
+
+    The result is ``(element_index, length_over_wavelength)`` or ``None``. The
+    gross envelope is deliberately wider than the editor warning: an unusual
+    but deliberate element length may still be optimized, while a 20 m Yagi
+    left at 2.4 GHz is rejected before the solver starts.
+    """
+
+    wavelength = units.wavelength_m(parameters.frequency_hz)
+    for index, element in enumerate(parameters.elements):
+        ratio = element.length_m / wavelength
+        if not YAGI_GROSS_LENGTH_MIN_FACTOR <= ratio <= YAGI_GROSS_LENGTH_MAX_FACTOR:
+            return index, ratio
+    return None
 
 
 def nbs_five_element(

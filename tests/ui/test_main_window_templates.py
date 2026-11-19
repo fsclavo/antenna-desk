@@ -584,6 +584,68 @@ def test_new_vertical_moxon_creates_a_vertical_rectangle(
     window._dirty = False
 
 
+def test_new_moxon_marks_starting_dimensions_pristine(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.moxon import moxon_20m_wire
+
+    parameters = moxon_20m_wire(frequency_hz=14_100_000.0, height_m=10.0)
+
+    class FakeMoxonDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> object:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
+
+    window.new_moxon_antenna()
+
+    assert window._moxon_form._starting_state.pristine is True
+    window._moxon_form._frequency.setValue(28.5)
+    reference = moxon_20m_wire(frequency_hz=28_500_000.0, height_m=10.0)
+    assert window._moxon_form.parameters().width_m == pytest.approx(reference.width_m, abs=1e-3)
+    window._dirty = False
+
+
+def test_new_yagi_marks_starting_dimensions_pristine(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = nbs_five_element(frequency_hz=145_000_000.0, height_m=10.0)
+
+    class FakeYagiDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def result_parameters(self) -> object:
+            return parameters
+
+    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
+
+    window.new_yagi_antenna()
+
+    assert window._yagi_form._starting_state.pristine is True
+    cell = window._yagi_form._table.item(1, 2)
+    original_text = cell.text()
+    window._yagi_form._frequency.setValue(72.5)
+    cell = window._yagi_form._table.item(1, 2)
+    assert float(cell.text()) == pytest.approx(float(original_text) * 2.0, rel=0.02)
+    window._dirty = False
+
+
 def test_new_quad_beam_reuses_the_active_design_frequency(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

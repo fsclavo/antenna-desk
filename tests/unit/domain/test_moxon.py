@@ -10,6 +10,7 @@ from antennadesk.domain.antennas.family import AntennaFamily, antenna_family
 from antennadesk.domain.antennas.moxon import (
     MoxonParameters,
     moxon_20m_wire,
+    moxon_frequency_mismatch,
     moxon_geometry_near_limit,
     validate_moxon_geometry,
 )
@@ -178,6 +179,27 @@ def test_moxon_rejects_a_gap_below_the_conductor_clearance() -> None:
             height_m=10.0,
             wire_radius_m=0.2,
         )
+
+
+def test_moxon_frequency_mismatch_flags_a_tiny_rectangle_at_2_4_ghz() -> None:
+    tiny = MoxonParameters(
+        frequency_hz=2_400_000_000.0,
+        width_m=0.010,
+        depth_m=0.004,
+        reflector_tip_m=0.0015,
+        driven_tip_m=0.0015,
+        height_m=1.0,
+        wire_radius_m=0.0002,
+    )
+
+    ratio = moxon_frequency_mismatch(tiny)
+
+    assert ratio is not None
+    assert ratio < 0.15
+
+
+def test_moxon_frequency_mismatch_accepts_the_reference_geometry() -> None:
+    assert moxon_frequency_mismatch(moxon_20m_wire()) is None
 
 
 def test_moxon_reference_is_not_near_the_apply_guard_limit() -> None:

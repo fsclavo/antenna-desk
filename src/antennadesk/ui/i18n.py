@@ -12860,6 +12860,22 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Load 20 m reference scaled to current frequency",
         Language.SPANISH: "Cargar referencia de 20 m escalada a la frecuencia actual",
     },
+    "moxon.frequency_mismatch": {
+        Language.ENGLISH: (
+            "The rectangle width is {wavelength_ratio} lambda at the current "
+            "design frequency. The geometry and design frequency disagree. "
+            "Use Load 20 m reference scaled to current frequency to rebuild "
+            "the starting dimensions; edited geometry is never rescaled "
+            "automatically."
+        ),
+        Language.SPANISH: (
+            "El ancho del rectángulo es {wavelength_ratio} lambda en la "
+            "frecuencia de diseño actual. La geometría y la frecuencia de "
+            "diseño no coinciden. Usá Cargar referencia de 20 m escalada a la "
+            "frecuencia actual para reconstruir las dimensiones iniciales; la "
+            "geometría editada nunca se reescala automáticamente."
+        ),
+    },
     "moxon.polarization_hint": {
         Language.ENGLISH: (
             "Vertical polarization puts the whole rectangle in a vertical "
@@ -13349,8 +13365,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Elemento alimentado",
     },
     "yagi.frequency_mismatch": {
-        Language.ENGLISH: "Element dimensions do not match the current frequency. Change the frequency from a known design or use Estimate Dimensions to rebuild the Yagi.",
-        Language.SPANISH: "Las dimensiones de los elementos no coinciden con la frecuencia actual. Cambiá la frecuencia desde un diseño conocido o usá Estimar dimensiones para regenerar la Yagi.",
+        Language.ENGLISH: (
+            "Element dimensions do not match the current frequency. Use the "
+            "NBS 5-element preset or Estimate Dimensions to rebuild the Yagi; "
+            "edited geometry is never rescaled automatically."
+        ),
+        Language.SPANISH: (
+            "Las dimensiones de los elementos no coinciden con la frecuencia "
+            "actual. Usá el preset NBS de 5 elementos o Estimar dimensiones "
+            "para regenerar la Yagi; la geometría editada nunca se reescala "
+            "automáticamente."
+        ),
     },
     "yagi.geometry": {
         Language.ENGLISH: "{count} elements · boom {boom} {unit}",
@@ -15622,6 +15647,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Elegí una banda en el editor del HexBeam multibanda para optimizarla; "
             "la optimización de toda la pila no está disponible."
+        ),
+    },
+    "optimize.unavailable.frequency_mismatch": {
+        Language.ENGLISH: (
+            "Cannot optimize the {family} family: element {element} is "
+            "{wavelength_ratio} lambda long at the design frequency. The "
+            "geometry and design frequency disagree. Load starting dimensions "
+            "for the current frequency before optimizing."
+        ),
+        Language.SPANISH: (
+            "No se puede optimizar la familia {family}: el elemento {element} "
+            "mide {wavelength_ratio} lambda en la frecuencia de diseño. La "
+            "geometría y la frecuencia de diseño no coinciden. Cargá las "
+            "dimensiones iniciales para la frecuencia actual antes de optimizar."
         ),
     },
     "optimize.unavailable.bounds.outside": {

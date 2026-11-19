@@ -923,6 +923,24 @@ def test_descriptor_initial_values_rebuild_the_current_parameters() -> None:
         assert rebuilt == parameters
 
 
+def test_yagi_optimizer_blocks_a_gross_frequency_mismatch() -> None:
+    parameters = YagiParameters(
+        frequency_hz=2_400_000_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=1.0,
+    )
+
+    availability = optimizer_availability(parameters)
+
+    assert availability.available is False
+    assert availability.reason_key == "optimize.unavailable.frequency_mismatch"
+    assert availability.reason_values["family"] == "yagi"
+    assert availability.reason_values["element"] == 1
+
+
 def test_unavailable_families_have_explicit_reasons() -> None:
     magnetic = MagneticLoopParameters(
         frequency_hz=7_100_000.0,

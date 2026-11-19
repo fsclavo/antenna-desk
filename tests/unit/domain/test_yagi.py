@@ -13,10 +13,35 @@ from antennadesk.domain.antennas.yagi import (
     YagiMatchType,
     YagiParameters,
     nbs_five_element,
+    yagi_gross_frequency_mismatch,
 )
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.spec import SimulationSpec
+
+
+def test_yagi_frequency_mismatch_flags_a_twenty_metre_design_at_2_4_ghz() -> None:
+    yagi = YagiParameters(
+        frequency_hz=2_400_000_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=1.0,
+    )
+
+    mismatch = yagi_gross_frequency_mismatch(yagi)
+
+    assert mismatch is not None
+    index, ratio = mismatch
+    assert index == 0
+    assert ratio > 10.0
+
+
+def test_yagi_frequency_mismatch_accepts_the_nbs_design_at_its_frequency() -> None:
+    yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=1.0)
+
+    assert yagi_gross_frequency_mismatch(yagi) is None
 
 
 def test_nbs_preset_has_the_published_element_positions() -> None:

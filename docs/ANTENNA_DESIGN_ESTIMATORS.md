@@ -562,6 +562,18 @@ loading-coil sections, and return stubs keep their structural segmentation. The
 optimizer treats these as infeasible candidates with
 `optimize.constraint.model_quality`.
 
+A design-frequency change follows ADR-0043. While the managed geometry is
+pristine, the Moxon regenerates its scaled 20 m reference and the Yagi scales
+its element positions and lengths by the wavelength ratio. After a manual edit,
+add/remove, loaded project, or optimizer result, the geometry is preserved and
+the form shows a stale warning; the explicit Moxon reference button, Yagi NBS
+preset, or **Estimate Dimensions...** rebuilds it. The Moxon form warns when the
+rectangle width is outside the gross `0.15–0.60 λ` guard. A Yagi outside the
+gross `0.20–0.80 λ` element guard is rejected by the optimizer with
+`optimize.unavailable.frequency_mismatch`; the editor's narrower
+`0.35–0.65 λ` warning remains advisory. The guards compare the starting design
+with its frequency; they are not performance criteria.
+
 To rebuild a high-frequency Moxon or Yagi that is rejected or marked
 experimental, use the explicit starting-dimension action at the intended design
 frequency, reduce the wire radius until the gap clears two conductor diameters,

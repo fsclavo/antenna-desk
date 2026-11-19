@@ -40,7 +40,7 @@ from ..antennas.transmission_line_doublet import TransmissionLineDoubletParamete
 from ..antennas.trap_dipole import TrapDipoleParameters
 from ..antennas.trap_yagi import TrapYagiParameters
 from ..antennas.vertical import VerticalParameters
-from ..antennas.yagi import YagiParameters
+from ..antennas.yagi import YagiParameters, yagi_gross_frequency_mismatch
 from ..antennas.zepp import ZeppParameters
 from .descriptor import AntennaOptimizerDescriptor, OptimizerBoundsError
 from .families.dipole import dipole_descriptor
@@ -80,6 +80,7 @@ _REASON_RANDOM_WIRE = "optimize.unavailable.random_wire"
 _REASON_CUSTOM_GENERATOR = "optimize.unavailable.custom_generator"
 _REASON_CUSTOM_GEOMETRY = "optimize.unavailable.custom_geometry"
 _REASON_HEXBEAM_MULTIBAND = "optimize.unavailable.hexbeam_multiband"
+_REASON_FREQUENCY_MISMATCH = "optimize.unavailable.frequency_mismatch"
 _REASON_UNSUPPORTED = "optimize.unavailable.unsupported"
 
 
@@ -125,7 +126,19 @@ def _optimizer_availability(
     if isinstance(parameters, VerticalParameters):
         return OptimizerAvailability(descriptor=vertical_descriptor(parameters))
     if isinstance(parameters, YagiParameters):
-        return OptimizerAvailability(descriptor=yagi_descriptor(parameters))
+        descriptor = yagi_descriptor(parameters)
+        mismatch = yagi_gross_frequency_mismatch(parameters)
+        if mismatch is not None:
+            index, ratio = mismatch
+            return OptimizerAvailability(
+                reason_key=_REASON_FREQUENCY_MISMATCH,
+                reason_values={
+                    "family": "yagi",
+                    "element": index + 1,
+                    "wavelength_ratio": f"{ratio:.3g}",
+                },
+            )
+        return OptimizerAvailability(descriptor=descriptor)
     if isinstance(parameters, ScvParameters):
         return OptimizerAvailability(descriptor=scv_descriptor(parameters))
     if isinstance(parameters, BiquadParameters):
@@ -245,6 +258,7 @@ OPTIMIZER_REASON_KEYS = frozenset(
         _REASON_CUSTOM_GENERATOR,
         _REASON_CUSTOM_GEOMETRY,
         _REASON_HEXBEAM_MULTIBAND,
+        _REASON_FREQUENCY_MISMATCH,
         _REASON_UNSUPPORTED,
     }
 )

@@ -17,11 +17,15 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.materials import COPPER, ConductorMaterial
 from ...domain.antennas.moxon import (
+    MOXON_GROSS_WIDTH_MAX_WAVELENGTH_RATIO,
+    MOXON_GROSS_WIDTH_MIN_WAVELENGTH_RATIO,
     MoxonParameters,
     moxon_20m_wire,
+    moxon_frequency_mismatch,
     validate_moxon_geometry,
 )
 from ...domain.antennas.polarization import Polarization
+from ...domain.common import units
 from ...domain.environment.ground import GroundKind, GroundModel
 from ..i18n import Translator
 from ..material_combo import (
@@ -45,6 +49,7 @@ from .form_units import (
     apply_radius_units,
 )
 from .ground_presets import GroundPresetController
+from .starting_dimensions import StartingDimensionsState
 
 # The editor starts on the 10 m band.  The geometry is the published Cebik
 # 20 m wire reference scaled to this frequency; it is a heuristic starting
@@ -209,6 +214,15 @@ class MoxonForm(QWidget):
         self._clearance_warning.setWordWrap(True)
         self._clearance_warning.setVisible(False)
 
+        self._frequency_warning = QLabel(self)
+        self._frequency_warning.setWordWrap(True)
+        self._frequency_warning.setVisible(False)
+
+        self._starting_note = QLabel(self)
+        self._starting_note.setWordWrap(True)
+        self._starting_note.setVisible(False)
+        self._starting_state = StartingDimensionsState(translator, self._starting_note)
+
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("moxon.width"), self._width)
@@ -230,15 +244,20 @@ class MoxonForm(QWidget):
         self._labels.bind_form(form)
         layout.addLayout(form)
         layout.addWidget(self._reference)
+        layout.addWidget(self._starting_note)
         layout.addWidget(self._geometry)
         layout.addWidget(self._clearance_warning)
+        layout.addWidget(self._frequency_warning)
 
+        self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
-            self._frequency,
             self._width,
             self._depth,
             self._reflector_tip,
             self._driven_tip,
+        ):
+            widget.valueChanged.connect(self._managed_field_changed)
+        for widget in (
             self._height,
             self._azimuth,
             self._radius,
@@ -251,6 +270,8 @@ class MoxonForm(QWidget):
         self._ground.currentIndexChanged.connect(self._ground_changed)
         if parameters is not None:
             self.set_parameters(parameters)
+        else:
+            self.mark_starting_dimensions_pristine()
         self._update_ground_controls()
         self._update_geometry()
 
@@ -267,6 +288,7 @@ class MoxonForm(QWidget):
         )
         self._polarization.setToolTip(self._translator.t("moxon.polarization_hint"))
         self._reference.setText(self._translator.t("moxon.reference_preset"))
+        self._starting_state.retranslate()
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
@@ -279,6 +301,26 @@ class MoxonForm(QWidget):
         if not self._updating:
             self._update_geometry()
             self.changed.emit()
+
+    def _frequency_changed(self, value: float) -> None:
+        if self._updating:
+            return
+        if self._starting_state.pristine:
+            self._load_reference_preset()
+            return
+        self._starting_state.show_stale(value)
+        self._emit_changed()
+
+    def _managed_field_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._starting_state.mark_non_pristine()
+        self._emit_changed()
+
+    def mark_starting_dimensions_pristine(self) -> None:
+        """Mark the current geometry as generated for its design frequency."""
+
+        self._starting_state.mark_pristine()
 
     def _ground_changed(self, *_args: object) -> None:
         self._update_ground_controls()
@@ -343,6 +385,7 @@ class MoxonForm(QWidget):
     def set_unit_system(self, unit_system: UnitSystem) -> None:
         if unit_system is self._unit_system:
             return
+        was_pristine = self._starting_state.pristine
         try:
             parameters = self.parameters()
         except (ValueError, TypeError):
@@ -363,6 +406,8 @@ class MoxonForm(QWidget):
             field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
+            if was_pristine:
+                self.mark_starting_dimensions_pristine()
 
     def set_parameters(self, parameters: MoxonParameters) -> None:
         self._updating = True
@@ -390,6 +435,7 @@ class MoxonForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
         finally:
             self._updating = False
+        self._starting_state.mark_non_pristine()
         self._update_ground_controls()
         self._update_geometry()
 
@@ -412,8 +458,10 @@ class MoxonForm(QWidget):
             )
         except ValueError:
             self._update_clearance_warning()
+            self._emit_changed()
             return
         self.set_parameters(parameters)
+        self._starting_state.mark_pristine(frequency_mhz=self._frequency.value())
         self._emit_changed()
 
     def _update_geometry(self) -> None:
@@ -422,6 +470,7 @@ class MoxonForm(QWidget):
             parameters = self.parameters()
         except (ValueError, TypeError):
             self._geometry.setText("")
+            self._update_frequency_warning(None)
             return
         unit = self._translator.t(length_unit_key(self._unit_system))
         self._geometry.setText(
@@ -431,6 +480,37 @@ class MoxonForm(QWidget):
                 unit=unit,
             )
         )
+        self._update_frequency_warning(parameters)
+
+    def _update_frequency_warning(self, parameters: MoxonParameters | None) -> None:
+        ratio: float | None
+        if parameters is not None:
+            ratio = moxon_frequency_mismatch(parameters)
+        else:
+            width_m = self._width_field.value_m()
+            frequency_hz = self._frequency.value() * 1_000_000.0
+            ratio = (
+                width_m / units.wavelength_m(frequency_hz)
+                if width_m > 0.0 and frequency_hz > 0.0
+                else None
+            )
+            if ratio is not None and (
+                MOXON_GROSS_WIDTH_MIN_WAVELENGTH_RATIO
+                <= ratio
+                <= MOXON_GROSS_WIDTH_MAX_WAVELENGTH_RATIO
+            ):
+                ratio = None
+        if ratio is not None:
+            self._frequency_warning.setText(
+                self._translator.t(
+                    "moxon.frequency_mismatch",
+                    wavelength_ratio=f"{ratio:.3g}",
+                )
+            )
+            self._frequency_warning.setVisible(True)
+            return
+        self._frequency_warning.clear()
+        self._frequency_warning.setVisible(False)
 
     def parameters(self) -> MoxonParameters:
         return MoxonParameters(

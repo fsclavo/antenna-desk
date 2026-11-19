@@ -330,6 +330,56 @@ def test_yagi_dialog_scales_elements_when_frequency_changes(qtbot: QtBot) -> Non
     assert dialog.parameters().frequency_hz == pytest.approx(target_frequency_hz)
 
 
+def test_yagi_form_does_not_resize_edited_elements(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    cell = dialog._table.item(1, 2)
+    original = float(cell.text())
+    cell.setText(f"{original * 1.1:.3f}")
+    edited = cell.text()
+
+    form._frequency.setValue(72.5)
+
+    assert cell.text() == edited
+    assert "not resized" in form._starting_note.text().lower()
+
+
+def test_yagi_form_preset_restores_pristine_auto_scaling(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    cell = dialog._table.item(1, 2)
+    cell.setText("5.000")
+
+    form._load_preset()
+    cell = dialog._table.item(1, 2)
+    original = float(cell.text())
+    form._frequency.setValue(72.5)
+    cell = dialog._table.item(1, 2)
+
+    assert float(cell.text()) == pytest.approx(original * 2.0, rel=0.02)
+    assert "updated" in form._starting_note.text().lower()
+
+
+def test_yagi_loaded_parameters_are_not_pristine(qtbot: QtBot) -> None:
+    original = nbs_five_element(frequency_hz=50_100_000.0, height_m=10.0)
+    dialog = YagiDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+    form = dialog._form
+    cell = dialog._table.item(1, 2)
+    original_text = cell.text()
+
+    form._frequency.setValue(145.0)
+
+    assert cell.text() == original_text
+    assert "not resized" in form._starting_note.text().lower()
+
+
 def test_yagi_dialog_warns_about_a_frequency_mismatch(qtbot: QtBot) -> None:
     dialog = YagiDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
     qtbot.addWidget(dialog)

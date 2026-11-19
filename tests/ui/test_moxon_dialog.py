@@ -168,6 +168,74 @@ def test_moxon_form_allows_tall_installation_heights(qtbot: QtBot) -> None:
     assert dialog.parameters().height_m == pytest.approx(120.0)
 
 
+def test_moxon_form_auto_resizes_pristine_geometry(qtbot: QtBot) -> None:
+    dialog = MoxonDialog(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(21.0)
+
+    reference = moxon_20m_wire(frequency_hz=21_000_000.0, height_m=10.0)
+    assert form.parameters().width_m == pytest.approx(reference.width_m, abs=1e-3)
+    assert form._starting_note.isHidden() is False
+    assert "updated" in form._starting_note.text().lower()
+
+    form._width.setValue(5.0)
+    edited_width = form._width.value()
+    form._frequency.setValue(24.0)
+
+    assert form.parameters().width_m == pytest.approx(edited_width)
+    assert "not resized" in form._starting_note.text().lower()
+
+
+def test_moxon_loaded_parameters_are_not_pristine(qtbot: QtBot) -> None:
+    original = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+    )
+    dialog = MoxonDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(28.5)
+
+    assert form.parameters().width_m == pytest.approx(original.width_m)
+    assert "not resized" in form._starting_note.text().lower()
+
+
+def test_moxon_form_warns_when_geometry_and_frequency_disagree(
+    qtbot: QtBot,
+) -> None:
+    original = MoxonParameters(
+        frequency_hz=14_100_000.0,
+        width_m=10.6,
+        depth_m=2.5,
+        reflector_tip_m=1.0,
+        driven_tip_m=1.0,
+        height_m=10.0,
+    )
+    dialog = MoxonDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._frequency.setValue(2400.0)
+
+    assert form._frequency_warning.isHidden() is False
+    assert "design frequency" in form._frequency_warning.text().lower()
+
+
 def test_moxon_form_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
     from antennadesk.domain.antennas.moxon import moxon_20m_wire
     from antennadesk.ui.units import DisplayUnits, LengthPolicy

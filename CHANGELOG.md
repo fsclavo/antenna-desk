@@ -37,6 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Design-frequency consistency for Moxon and Yagi.** Both editors now track
+  whether their managed geometry is still the generated default. A pristine
+  frequency change regenerates the Moxon 20 m reference or scales the Yagi
+  table; after an edit, add/remove, loaded project, or optimizer result, the
+  geometry is preserved and a stale message names the explicit rebuild action.
+  The Moxon form warns when the rectangle width is grossly inconsistent with
+  the design frequency, and a grossly mismatched Yagi is rejected by the
+  optimizer with `optimize.unavailable.frequency_mismatch` before the solver
+  starts.
 - **Frequency/family optimizer regression matrix.** A 243-test matrix now
   covers 1.8, 3.5, 7, 14, 28, 50, 144, 435, 1296, 2400, and 5800 MHz across
   every supported optimizer family. It asserts initial bounds, non-degenerate

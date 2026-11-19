@@ -5188,6 +5188,10 @@ class MainWindow(QMainWindow):
             self._trap_yagi_form.mark_starting_dimensions_pristine()
         elif isinstance(parameters, PhasedVerticalParameters):
             self._phased_vertical_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, YagiParameters):
+            self._yagi_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, MoxonParameters):
+            self._moxon_form.mark_starting_dimensions_pristine()
 
     def new_custom_antenna(self) -> None:
         if not self._maybe_save_changes():
