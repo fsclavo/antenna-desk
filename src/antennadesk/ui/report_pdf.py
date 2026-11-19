@@ -17,6 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtSvg import QSvgRenderer
 
+from ..domain.environment.ground import GroundKind
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.band_summary import summarize_band
@@ -33,6 +34,7 @@ from ..reporting.design_summary import (
 )
 from ..reporting.localization import localize_diagnostic, localize_rows
 from ..reporting.pattern_cuts import pattern_cuts
+from ..reporting.pattern_lobe import pattern_lobe
 from ..reporting.result_summary import gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
@@ -113,6 +115,24 @@ def _pattern_charts(
             series=elevation.series,
         )
     return azimuth_svg, elevation_svg
+
+
+def _pattern_lobe_chart(
+    result: SimulationResult,
+    design: DesignVariant,
+    translator: Translator,
+    *,
+    target_hz: float | None = None,
+) -> tuple[str | None, str | None]:
+    frequency = _pattern_frequency(result, design, target_hz=target_hz)
+    if frequency is None:
+        return None, None
+    lobe = pattern_lobe(
+        frequency,
+        translator.report,
+        ground=design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE,
+    )
+    return lobe.svg, lobe.unavailable_reason
 
 
 def _band_summary_rows(
@@ -415,6 +435,11 @@ def write_report_pdf(
         chart(elevation_svg)
     else:
         paragraph(translator.report("No elevation cut available."))
+    lobe_svg, lobe_reason = _pattern_lobe_chart(result, design, translator)
+    if lobe_svg:
+        chart(lobe_svg)
+    elif lobe_reason:
+        paragraph(lobe_reason)
 
     if band_analysis is not None:
         section(translator.report("Band patterns"))

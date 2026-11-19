@@ -107,6 +107,8 @@ def test_html_report_includes_geometry_and_both_pattern_cuts(
     assert "Elevation cut at" in report
     assert "No azimuth cut available." not in report
     assert "No elevation cut available." not in report
+    assert report.count('class="chart pattern-lobe"') == 1
+    assert "3D far-field pattern" in report
 
 
 def test_html_report_explains_missing_geometry_and_patterns(
@@ -122,6 +124,28 @@ def test_html_report_explains_missing_geometry_and_patterns(
 
     assert "No geometry figure available." in report
     assert "No far-field pattern available." in report
+
+
+def test_html_report_explains_a_single_cut_3d_pattern(sample_project: Project) -> None:
+    result = make_result(sample_project)
+    single_cut = (
+        FarFieldPoint(0.0, 0.0, 2.14, None, 2.14, 0.0, 0.0, None, None, None, None, None),
+        FarFieldPoint(90.0, 0.0, -4.0, None, -4.0, 0.0, 0.0, None, None, None, None, None),
+    )
+    frequencies = tuple(
+        replace(frequency, far_field=single_cut) for frequency in result.frequencies
+    )
+
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        replace(result, frequencies=frequencies),
+    )
+
+    assert 'class="chart pattern-lobe"' not in report
+    assert (
+        "3D pattern unavailable: the far-field data does not contain a 2D angular grid." in report
+    )
 
 
 def test_html_report_lists_driven_sources(sample_project: Project) -> None:
@@ -269,6 +293,7 @@ def test_html_report_includes_a_band_summary(sample_project: Project) -> None:
     assert "40m" in report
     assert "Azimuth cut at" in report
     assert "Elevation cut at" in report
+    assert report.count('class="chart pattern-lobe"') == 1
 
 
 def test_spanish_report_uses_roe_not_swr(sample_project: Project) -> None:
@@ -301,3 +326,4 @@ def test_spanish_report_translates_geometry_and_pattern_headings(
     assert "Geometría" in report
     assert "Corte de azimut" in report
     assert "Corte de elevación" in report
+    assert "Patrón 3D de campo lejano" in report

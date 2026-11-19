@@ -8,6 +8,7 @@ import html
 import math
 from pathlib import Path
 
+from ..domain.environment.ground import GroundKind
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.band_result import BandAnalysisResult
 from ..domain.simulation.band_summary import summarize_band
@@ -31,6 +32,7 @@ from .localization import (
     localize_rows,
 )
 from .pattern_cuts import pattern_cuts
+from .pattern_lobe import pattern_lobe
 from .result_summary import gain_metric_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
@@ -134,6 +136,20 @@ def _pattern_cut_charts(frequency: FrequencyResult | None, tr: Labeler) -> str:
     else:
         charts.append(f'<p class="muted">{_escape(tr("No elevation cut available."))}</p>')
     return "".join(charts)
+
+
+def _pattern_lobe_figure(
+    frequency: FrequencyResult,
+    tr: Labeler,
+    *,
+    ground: bool,
+) -> str:
+    lobe = pattern_lobe(frequency, tr, ground=ground)
+    if lobe.svg is not None:
+        return f'<div class="chart pattern-lobe">{lobe.svg}</div>'
+    if lobe.unavailable_reason:
+        return f'<p class="muted">{_escape(lobe.unavailable_reason)}</p>'
+    return ""
 
 
 def _diagnostics_table(result: SimulationResult, tr: Labeler) -> str:
@@ -356,6 +372,12 @@ def render_html_report(
     )
     pattern_frequency = _pattern_frequency(result, design)
     pattern_section = _pattern_cut_charts(pattern_frequency, tr)
+    if pattern_frequency is not None:
+        pattern_section += _pattern_lobe_figure(
+            pattern_frequency,
+            tr,
+            ground=design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE,
+        )
 
     finished = (
         result.finished_at.isoformat(timespec="seconds")

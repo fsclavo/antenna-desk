@@ -149,10 +149,16 @@ Selected DesignVariant ──► RunSimulation ──► SimulationResult
 Reports are generated from the immutable result and the project snapshot. The
 HTML and native PDF reports include the fingerprint, solver version,
 specification, diagnostics, impedance table, resonance points, SVG charts, a
-canonical geometry figure, and azimuth/elevation pattern cuts. The geometry
-figure is rendered offscreen from the design snapshot with a fixed size and
-light theme; report rendering does not read live widgets. Band analysis adds a
-pattern section per band. See UX26 in `AUTONOMOUS_BACKLOG.md`.
+canonical geometry figure, azimuth/elevation pattern cuts, and one static 3D
+total-gain wireframe in the primary far-field section. The geometry figure is
+rendered offscreen from the design snapshot with a fixed size and light theme;
+report rendering does not read live widgets. The 3D wireframe is built by the
+Qt-free `reporting/pattern_lobe.py` with a fixed projection and palette, is
+decimated to at most 19×37 displayed vertices, and keeps the stored pattern and
+2D cuts at full resolution. Band analysis adds a pattern section per band and
+keeps the 2D cuts only. A single-cut or missing grid reports an explicit
+unavailable state instead of synthesizing a surface. See UX26 and UX40 in
+`AUTONOMOUS_BACKLOG.md`.
 
 ## Family optimizer flow
 

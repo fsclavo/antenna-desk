@@ -143,7 +143,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX37~~ | ~~Explicit scale-to-frequency action for tuned designs~~ | M–L | UX34, UX35 | **Done 2026-11-17:** **Design → Scale Geometry to Frequency...** scales the allowlisted wire dipole, folded dipole, loop, quad beam, biquad, discone, and hexbeam by the old/new frequency ratio, with a target-frequency dialog and approximation warning. Installation, conductor, ground, feed line, and matching values are preserved; loaded, trapped, multiband, Yagi/Moxon, and fan designs are disabled with a reason. It enters undo history and is covered by domain/UI tests. No schema or solver change. |
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
 | ~~UX39~~ | ~~Raise generated single-design impedance/SWR sweeps to at least 100 computed points~~ | S–M | none | **Done 2026-11-19:** generated templates, the two-band shared plan, and the G5RV/ZS6BKW/Zepp sweep presets default to 100 points. Every computed point remains in the line, table, cursor, CSV, and reports; the visible symbol layer is capped at 20 points. Custom sweep overrides and band-analysis defaults are unchanged. Tests cover generated builders, Auto/Custom points, dense charts, NEC2C completion, and a 100-point project round trip. |
-| UX40 | Add a static 3D far-field lobe figure to the HTML and PDF simulation reports | S–M | UX26, UX21 | **Queued 2026-11-18:** add one deterministic, Qt-free isometric SVG wireframe of the full far-field grid to the primary far-field section, with a dBi legend, maximum-gain marker, ground ring when applicable, bounded decimation, and explicit single-cut/unavailable states. Band sections and the two 2D cuts remain unchanged. EN/ES labels, HTML/PDF vector tests, determinism and size-bound tests, user guide, architecture, validation plan, and changelog; no schema, solver, or domain change. |
+| ~~UX40~~ | ~~Add a static 3D far-field lobe figure to the HTML and PDF simulation reports~~ | S–M | UX26, UX21 | **Done 2026-11-19:** one deterministic, Qt-free vector wireframe in the primary far-field section, with a dBi legend, maximum-gain marker and direction, X/Y/Z cues, ground ring, 19×37 display cap, and explicit single-cut/unavailable states. Band sections and the 2D cuts are unchanged. EN/ES labels, HTML/PDF vector tests, determinism and size-bound tests, user guide, architecture, validation plan, and changelog updated; no schema, solver, or domain change. |
 | ~~UX41~~ | ~~Clarify the optimizer operating-mode scope and close the dead capability flags~~ | S–M | none; ADR-0026 | **Done 2026-11-19:** modes are **Single frequency**, **Band-edge sweep**, and **Robust (dimensional tolerance)**; the dialog shows the resolved plan source and size (current plan, manual, or design-frequency fallback) and explains that Analyze Bands is optional and Robust perturbs dimensions, not bands. The unused `supports_band_aware`/`supports_robust` fields were removed; both modes are generic. EN/ES labels and help, scope/plan-source tests, and docs updated. No scoring, schema, or solver change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
@@ -917,8 +917,8 @@ feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
 new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
 from impedance/SWR point-density feedback, UX40 was queued the same day from the
 3D-report request, and UX41 was queued from optimizer operating-mode feedback
-and completed on 2026-11-19. UX39 was completed on 2026-11-19; UX40 is the open
-UX item.
+and completed on 2026-11-19. UX39 and UX40 were completed on 2026-11-19; the
+UX queue is clear.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -3153,8 +3153,8 @@ segments, below the 32 MB warning.
 
 ## UX40 — Static 3D far-field lobe in the HTML/PDF reports (queue note, 2026-11-18)
 
-**Status:** queued. The feasibility analysis is recorded here; no code or
-schema change has been made.
+**Status:** implemented 2026-11-19. The report builder, HTML/PDF integration,
+localized labels, tests, and documentation are in place.
 
 ### Request and problem
 
@@ -3258,30 +3258,30 @@ quantitative story, but one small figure is consistent and harmless.
 
 ### Tests and acceptance
 
-- [ ] A new `tests/unit/reporting/test_pattern_lobe.py` uses a regular synthetic
+- [x] A new `tests/unit/reporting/test_pattern_lobe.py` uses a regular synthetic
       grid and asserts that the SVG contains the wireframe paths, legend,
       maximum-gain marker, title/description, and ground ring as applicable.
-- [ ] Repeated rendering of the same snapshot and language is byte-identical.
-- [ ] Free-space and ground patterns both render; the ground ring is absent in
+- [x] Repeated rendering of the same snapshot and language is byte-identical.
+- [x] Free-space and ground patterns both render; the ground ring is absent in
       free space.
-- [ ] Missing or non-finite gains do not produce NaN coordinates; a single-cut
+- [x] Missing or non-finite gains do not produce NaN coordinates; a single-cut
       pattern returns the explicit unavailable reason and no SVG.
-- [ ] The displayed mesh respects the 19×37 vertex cap and a documented
+- [x] The displayed mesh respects the 19×37 vertex cap and a documented
       segment/path-size bound; stored points are not mutated.
-- [ ] HTML tests assert exactly one 3D figure in the primary section, none per
+- [x] HTML tests assert exactly one 3D figure in the primary section, none per
       band, and the localized reason for far-field-disabled and single-cut
       results.
-- [ ] The native PDF test confirms the figure is included and adds no new
+- [x] The native PDF test confirms the figure is included and adds no new
       `/Subtype /Image` object; the existing vector assertion still passes.
-- [ ] Every new static report label is in `REPORT_SPANISH`; the placeholder
+- [x] Every new static report label is in `REPORT_SPANISH`; the placeholder
       parity and static-label coverage tests pass.
-- [ ] A manual A4 light-theme/grayscale check confirms that the figure, legend,
+- [x] A manual A4 light-theme/grayscale check confirms that the figure, legend,
       caption, and marker remain legible and do not overwhelm the two cuts.
-- [ ] Update `docs/USER_GUIDE.md` (report contents), `docs/ARCHITECTURE.md`
+- [x] Update `docs/USER_GUIDE.md` (report contents), `docs/ARCHITECTURE.md`
       (report contents), `docs/VALIDATION_PLAN.md` (report checks), and
       `CHANGELOG.md`. Do not rewrite historical UX26 text; add the new
       decision and link this note.
-- [ ] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
+- [x] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
       passes, and `NEC2C=... uv run pytest`.
 
 ### Out of scope
@@ -3313,6 +3313,24 @@ quantitative story, but one small figure is consistent and harmless.
 - The color mapping can drift from the Pattern tab. Preserve the green/yellow/
   red gain order and test the semantic mapping; exact RGB parity is not
   required for print.
+
+### Implementation note
+
+`reporting/pattern_lobe.py` is a pure builder. It filters non-finite gains and
+the lower hemisphere for grounded models, requires a 2×2 angular grid with at
+least four valid points, and returns either an SVG or an explicit localized
+reason. The displayed mesh is decimated to at most 19×37 positions; the stored
+pattern is never mutated. The figure uses a fixed yaw/pitch, dark green/yellow/
+red gain bins, a six-step numeric legend, a maximum marker, X/Y/Z cues, and a
+ground ring. The SVG includes `role="img"`, `<title>`/`<desc>`, and a visible
+two-line caption.
+
+HTML adds the figure only to the primary far-field section; band sections keep
+their 2D cuts. The native PDF renders the same SVG through the existing vector
+chart helper, so no image object is added. EN/ES labels are in
+`REPORT_SPANISH`. Tests cover determinism, ground filtering, missing and
+non-finite gains, single-cut and all-missing unavailable states, the 19×37 cap,
+one HTML figure and none per band, and vector PDF output.
 
 ### Alternatives considered
 
@@ -3938,10 +3956,10 @@ model and solver contract must land first.
     computed point remains in the chart line, table, cursor, and exports; only
     the visible marker layer is bounded. It did not change band-analysis
     defaults, the solver, or the schema; see the UX39 note above.
-21. **UX40 is queued after UX39.** Add one static, deterministic 3D far-field
-    lobe to the primary report section, keep it out of the band sections, and
-    keep the HTML Qt-free and the PDF vector. It complements, and does not
-    replace, the two cuts; see the UX40 note above.
+21. **UX40 is complete (2026-11-19).** One static, deterministic 3D
+    far-field wireframe is in the primary report section only; the HTML stays
+    Qt-free and the PDF stays vector. It complements, and does not replace, the
+    two cuts; see the UX40 note above.
 22. **UX41 is complete (2026-11-19).** The optimizer names the modes
     **Single frequency**, **Band-edge sweep**, and **Robust (dimensional
     tolerance)**, shows the resolved band/frequency count and plan source, and
@@ -3978,10 +3996,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,065 passed, 1 skipped** on 2026-11-19 after the UX39
-  100-point sweep and marker-density work, with `NEC2C` auto-detected by the
-  test configuration; the skip is the Windows-only console-hiding test on
-  Linux.
+- Full gate: **4,074 passed, 1 skipped** on 2026-11-19 after the UX40 static
+  3D report figure, with `NEC2C` auto-detected by the test configuration; the
+  skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

@@ -165,6 +165,9 @@ Phase 4 adds tests for:
   pattern overlay.
 - CSV export, SVG chart generation, HTML report rendering, and HTML escaping
   of user-provided text.
+- Static 3D report wireframe: deterministic SVG, grid and ground filtering,
+  single-cut/all-missing unavailable states, the 19×37 display cap, one HTML
+  figure in the primary section only, and vector PDF output without images.
 - UI wiring for variant actions and CSV/HTML export.
 
 ## Phase 5 — optimization and construction

@@ -2396,10 +2396,16 @@ band when a band analysis is active. **File → Export → Geometry PNG...**,
 current geometry view, **File → Export → HTML Report...** for a self-contained
 HTML report, or **File → Export → PDF Report...** for a native PDF with design
 parameters, configuration, solver metadata, fingerprint, diagnostics,
-impedance, resonance, charts, one canonical geometry figure, and azimuth plus
-elevation pattern cuts. Band analysis adds one pattern section per band. When
-far-field data is disabled or unavailable, the report states that explicitly
-instead of leaving an empty chart.
+impedance, resonance, charts, one canonical geometry figure, azimuth plus
+elevation pattern cuts, and one static 3D total-gain wireframe in the primary
+far-field section. The wireframe uses the stored angular grid and adds a
+numeric dBi legend, maximum-gain marker and direction, X/Y/Z cues, and a ground
+ring for grounded models. It is a fixed vector figure, not an interactive view.
+Band analysis adds one pattern section per band and keeps the 2D cuts only; the
+report contains at most one 3D figure. When far-field data is disabled or
+unavailable, the report states that explicitly instead of leaving an empty
+chart. A single-cut result has no 2D grid, so the report says that the 3D
+figure is unavailable rather than inventing a surface.
 Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
 to the compressed file. Saving above 32 MB compressed shows a warning, and

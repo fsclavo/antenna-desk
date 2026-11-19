@@ -674,6 +674,29 @@ REPORT_SPANISH: dict[str, str] = {
     "No band patterns available.": "No hay patrones por banda disponibles.",
     "No diagnostics.": "Sin diagnósticos.",
     "No far-field pattern available.": "No hay patrón de campo lejano disponible.",
+    "3D pattern unavailable: the far-field data does not contain a 2D angular grid.": (
+        "Patrón 3D no disponible: los datos de campo lejano no contienen una grilla angular 2D."
+    ),
+    "3D far-field pattern": "Patrón 3D de campo lejano",
+    "Static total-gain wireframe at the report pattern frequency. "
+    "The separate geometry figure shows the antenna orientation.": (
+        "Tramado estático de ganancia total en la frecuencia del patrón del "
+        "informe. La figura de geometría separada muestra la orientación de la "
+        "antena."
+    ),
+    "Total-gain pattern at {frequency:.3f} MHz · stored sampling {theta_count}x{phi_count}": (
+        "Patrón de ganancia total a {frequency:.3f} MHz · muestreo almacenado "
+        "{theta_count}x{phi_count}"
+    ),
+    "Max {gain:.2f} dBi at θ={theta:.0f}°, φ={phi:.0f}°. The geometry figure shows orientation.": (
+        "Máximo {gain:.2f} dBi en θ={theta:.0f}°, φ={phi:.0f}°. La figura de "
+        "geometría muestra la orientación."
+    ),
+    "Max {gain:.2f} dBi at θ={theta:.0f}°, φ={phi:.0f}°": (
+        "Máximo {gain:.2f} dBi en θ={theta:.0f}°, φ={phi:.0f}°"
+    ),
+    "Gain": "Ganancia",
+    "dBi": "dBi",
     "No geometry figure available.": "No hay figura de geometría disponible.",
     "No azimuth cut available.": "No hay corte de azimut disponible.",
     "No elevation cut available.": "No hay corte de elevación disponible.",

@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Static 3D far-field wireframe in reports.** The HTML and native PDF reports
+  now include one deterministic vector 3D total-gain wireframe in the primary
+  far-field section. It uses the stored angular grid, a numeric dBi legend,
+  maximum-gain marker and direction, X/Y/Z cues, and a ground ring for grounded
+  models. The displayed mesh is capped at 19×37 vertices while the stored
+  pattern and 2D cuts stay at full resolution. Band sections keep the 2D cuts
+  only, and single-cut or missing-grid results show an explicit unavailable
+  message instead of a synthesized surface.
 - **Dense generated impedance/SWR sweeps.** Generated single-design templates
   now default to 100 computed points, including the two-band shared plan and
   the G5RV, ZS6BKW, and Zepp custom presets. The impedance and SWR charts keep

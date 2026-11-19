@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
@@ -16,6 +17,8 @@ from antennadesk.domain.simulation.result import (
 )
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.reporting.localization import Labeler
+from antennadesk.reporting.pattern_lobe import PatternLobe
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.report_pdf import write_report_pdf
 
@@ -83,6 +86,43 @@ def test_report_pdf_includes_geometry_and_pattern_cuts(
     )
 
     data = path.read_bytes()
+    assert data.startswith(b"%PDF")
+    assert b"/Subtype /Image" not in data
+
+
+def test_report_pdf_includes_the_3d_pattern_figure(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.ui import report_pdf
+
+    calls: list[bool] = []
+    real = report_pdf.pattern_lobe
+
+    def spy(
+        frequency: FrequencyResult,
+        tr: Labeler,
+        *,
+        ground: bool,
+    ) -> PatternLobe:
+        calls.append(ground)
+        return real(frequency, tr, ground=ground)
+
+    monkeypatch.setattr(report_pdf, "pattern_lobe", spy)
+    path = tmp_path / "pattern-3d-report.pdf"
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _pattern_result(),
+        path,
+    )
+
+    data = path.read_bytes()
+    assert calls
     assert data.startswith(b"%PDF")
     assert b"/Subtype /Image" not in data
 
