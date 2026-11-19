@@ -153,6 +153,7 @@ external service and must not be invented or simulated into existence.
 | ~~U5~~ | ~~Adaptive units in construction sheets and human-readable reports~~ | M–L | U1, U2, U3 | **Done 2026-11-18:** construction-sheet and HTML/PDF report design-summary rows, installation profiles, feed/matching rows, loads, transmission lines, BOM totals, feed height, family dimension tables, construction-prose notes, wire schedules, and the custom report title/footer use `DisplayUnits`. The wire schedule picks one coordinate/length unit per table and shows it in the HTML header; the native PDF schedule uses the same unit. Construction notes choose one unit per note from their largest length. CSV stays canonical meters/mm and DXF keeps meter coordinates with `$INSUNITS=6`. Acceptance met: HTML/PDF/package tests, table-header units, CSV/DXF canonical assertions, no schema. Manual visual QA remains under U6. |
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **In progress 2026-11-18:** user guide, roadmap, units spec, README, changelog, help tests, and the automated font-scaling/geometry checks are updated. [`QA_PASS_2026-11-18.md`](QA_PASS_2026-11-18.md) records the automated gate and the remaining desktop light/dark/font-scaling checklist. The track closes after that manual QA. |
 | ~~UX42~~ | ~~Raise the band-analysis default to 100 points per band and guard project size~~ | S | UX39 follow-up | **Done 2026-11-19:** family band plans, broadband plans, and two-band plans default to 100 points per band. The dialog uses the domain default. After pattern fitting, the estimated compressed result size is classified: above 32 MB asks for confirmation, above 64 MB blocks before any worker starts. Pattern coarsening/disabling remains explicit in the status text. Custom points and band selections are unchanged; no schema, solver, or scoring change. |
+| ~~UX43~~ | ~~Optional 3D report figure preference~~ | S | UX40 | **Done 2026-11-19:** added the persisted **Include static 3D far-field figure** preference, enabled by default. It is passed to the HTML and PDF report writers; disabling it omits only the primary 3D wireframe, keeping the 2D cuts, band sections, and Pattern tab unchanged. Preferences round-trip, dialog, HTML/PDF omission, EN/ES help, and manifest tests added. No schema, solver, or scoring change. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
@@ -3526,6 +3527,19 @@ disabled. Tests cover the domain defaults, dialog default, size thresholds,
 blocked run, warning cancellation, and the sweep-only size estimates for a
 compact dipole and a 725-segment model.
 
+## UX43 — Optional 3D report figure preference (2026-11-19)
+
+**Status:** implemented 2026-11-19.
+
+`UiPreferences.report_include_3d` defaults to true and is stored under
+`ui/report_3d`. The Preferences dialog exposes **Include static 3D far-field
+figure**; the MainWindow passes the value as `include_pattern_lobe` to
+`write_html_report` and `write_report_pdf`. Both writers default to including
+the figure for direct callers. Disabling it removes only the primary 3D
+wireframe; the 2D cuts, band sections, and Pattern tab are unchanged. Tests
+cover the QSettings round trip, the dialog, accepted preferences, both report
+writers with the option off, and the EN/ES help manifest.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -4016,10 +4030,9 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,081 passed, 1 skipped** on 2026-11-19 after the UX42
-  band-analysis 100-point default and storage guard, with `NEC2C` auto-detected
-  by the test configuration; the skip is the Windows-only console-hiding test
-  on Linux.
+- Full gate: **4,084 passed, 1 skipped** on 2026-11-19 after the UX43
+  optional 3D report figure preference, with `NEC2C` auto-detected by the test
+  configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

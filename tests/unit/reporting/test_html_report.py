@@ -126,6 +126,20 @@ def test_html_report_explains_missing_geometry_and_patterns(
     assert "No far-field pattern available." in report
 
 
+def test_html_report_can_omit_the_3d_pattern(sample_project: Project) -> None:
+    report = render_html_report(
+        sample_project,
+        sample_project.designs[0],
+        make_result(sample_project),
+        include_pattern_lobe=False,
+    )
+
+    assert 'class="chart pattern-lobe"' not in report
+    assert "3D far-field pattern" not in report
+    assert "Azimuth cut at" in report
+    assert "Elevation cut at" in report
+
+
 def test_html_report_explains_a_single_cut_3d_pattern(sample_project: Project) -> None:
     result = make_result(sample_project)
     single_cut = (

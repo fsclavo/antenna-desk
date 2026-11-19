@@ -231,6 +231,7 @@ def render_html_report(
     language: str = "en",
     geometry_svg: str | None = None,
     display_units: DisplayUnits | None = None,
+    include_pattern_lobe: bool = True,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -372,7 +373,7 @@ def render_html_report(
     )
     pattern_frequency = _pattern_frequency(result, design)
     pattern_section = _pattern_cut_charts(pattern_frequency, tr)
-    if pattern_frequency is not None:
+    if pattern_frequency is not None and include_pattern_lobe:
         pattern_section += _pattern_lobe_figure(
             pattern_frequency,
             tr,
@@ -491,6 +492,7 @@ def write_html_report(
     language: str = "en",
     geometry_svg: str | None = None,
     display_units: DisplayUnits | None = None,
+    include_pattern_lobe: bool = True,
 ) -> None:
     path.write_text(
         render_html_report(
@@ -502,6 +504,7 @@ def write_html_report(
             language=language,
             geometry_svg=geometry_svg,
             display_units=display_units,
+            include_pattern_lobe=include_pattern_lobe,
         ),
         encoding="utf-8",
         newline="\n",

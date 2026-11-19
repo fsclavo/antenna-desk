@@ -24,6 +24,7 @@ UNIT_SYSTEM_KEY = "ui/units"
 LENGTH_POLICY_KEY = "ui/length_policy"
 WORKFLOW_MODE_KEY = "ui/workflow_mode"
 THEME_KEY = "ui/theme"
+REPORT_3D_KEY = "ui/report_3d"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
 
@@ -73,6 +74,7 @@ class UiPreferences:
     length_policy: LengthPolicy = LengthPolicy.AUTO
     workflow_mode: WorkflowMode = WorkflowMode.STANDARD
     theme: ThemePreference = ThemePreference.SYSTEM
+    report_include_3d: bool = True
 
 
 class PreferencesStore(Protocol):
@@ -127,6 +129,7 @@ class QSettingsPreferencesStore:
                 ThemePreference,
                 ThemePreference.SYSTEM,
             ),
+            report_include_3d=self._load_bool(REPORT_3D_KEY, True),
         )
 
     def save(self, preferences: UiPreferences) -> None:
@@ -136,7 +139,20 @@ class QSettingsPreferencesStore:
         self._settings.setValue(LENGTH_POLICY_KEY, preferences.length_policy.value)
         self._settings.setValue(WORKFLOW_MODE_KEY, preferences.workflow_mode.value)
         self._settings.setValue(THEME_KEY, preferences.theme.value)
+        self._settings.setValue(REPORT_3D_KEY, preferences.report_include_3d)
         self._settings.sync()
+
+    def _load_bool(self, key: str, default: bool) -> bool:
+        raw = self._settings.value(key, default)
+        if isinstance(raw, bool):
+            return raw
+        if isinstance(raw, str):
+            normalized = raw.strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True
+            if normalized in {"0", "false", "no", "off"}:
+                return False
+        return default
 
     def _load_enum(
         self,

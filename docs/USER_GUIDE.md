@@ -2466,8 +2466,10 @@ Use **Edit → Preferences...** (`Ctrl+,`) to set the language (**System**,
 English, or Español), the display units (**Metric — Auto**, **Metric —
 Meters**, **Imperial — Auto**, or **Imperial — Feet**), the theme (**System**,
 **Light**, or **Dark**), and the font size (Small, Normal, or Large).
-**Restore Defaults** returns to System language, metric automatic units, System
-theme, and Normal font size.
+**Include static 3D far-field figure** controls the optional 3D wireframe in
+HTML and PDF reports; it is enabled by default and does not affect the Pattern
+tab. **Restore Defaults** returns to System language, metric automatic units,
+System theme, Normal font size, and the 3D report figure enabled.
 
 Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
 1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed

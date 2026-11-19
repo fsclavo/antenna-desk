@@ -960,19 +960,29 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Workflow mode",
         Language.SPANISH: "Modo de trabajo",
     },
+    "preferences.report_options": {
+        Language.ENGLISH: "Report options",
+        Language.SPANISH: "Opciones de informe",
+    },
+    "preferences.report_3d": {
+        Language.ENGLISH: "Include static 3D far-field figure",
+        Language.SPANISH: "Incluir figura 3D estática de campo lejano",
+    },
     "preferences.hint": {
         Language.ENGLISH: (
-            "Language, units, font size, theme, and workflow mode apply after you "
-            "accept. Automatic length units follow each value; fixed units use one "
-            "length unit everywhere. System follows the operating system language and "
-            "palette at startup. Project files always store metric SI units."
+            "Language, units, font size, theme, workflow mode, and the report 3D "
+            "figure apply after you accept. Automatic length units follow each "
+            "value; fixed units use one length unit everywhere. System follows the "
+            "operating system language and palette at startup. Project files always "
+            "store metric SI units."
         ),
         Language.SPANISH: (
-            "El idioma, las unidades, el tamaño de fuente, el tema y el modo de "
-            "trabajo se aplican al aceptar. Las unidades automáticas siguen cada "
-            "valor; las fijas usan una sola unidad de longitud en todas partes. "
-            "Sistema sigue el idioma y la paleta del sistema operativo al iniciar. "
-            "Los archivos de proyecto siempre guardan unidades SI métricas."
+            "El idioma, las unidades, el tamaño de fuente, el tema, el modo de "
+            "trabajo y la figura 3D del informe se aplican al aceptar. Las unidades "
+            "automáticas siguen cada valor; las fijas usan una sola unidad de "
+            "longitud en todas partes. Sistema sigue el idioma y la paleta del "
+            "sistema operativo al iniciar. Los archivos de proyecto siempre guardan "
+            "unidades SI métricas."
         ),
     },
     "action.preferences": {
@@ -5526,6 +5536,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.preferences.workflow_mode": {
         Language.ENGLISH: "Guided, Standard, or Advanced control how much of the editor is visible.",
         Language.SPANISH: "Guiado, Estándar o Avanzado controlan cuánto del editor se muestra.",
+    },
+    "help.preferences.report_3d": {
+        Language.ENGLISH: (
+            "Adds one deterministic vector 3D total-gain wireframe to the primary "
+            "far-field section of HTML and PDF reports. Band sections keep their "
+            "2D cuts. Single-cut results still report the unavailable state."
+        ),
+        Language.SPANISH: (
+            "Agrega una figura vectorial 3D determinista de ganancia total a la "
+            "sección principal de campo lejano de los informes HTML y PDF. Las "
+            "bandas conservan sus cortes 2D; un solo corte muestra el estado no "
+            "disponible."
+        ),
     },
     "help.preferences.theme": {
         Language.ENGLISH: (

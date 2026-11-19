@@ -127,6 +127,43 @@ def test_report_pdf_includes_the_3d_pattern_figure(
     assert b"/Subtype /Image" not in data
 
 
+def test_report_pdf_can_omit_the_3d_pattern_figure(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.ui import report_pdf
+
+    calls: list[bool] = []
+
+    def spy(
+        frequency: FrequencyResult,
+        tr: Labeler,
+        *,
+        ground: bool,
+    ) -> PatternLobe:
+        calls.append(ground)
+        return report_pdf.pattern_lobe(frequency, tr, ground=ground)
+
+    monkeypatch.setattr(report_pdf, "pattern_lobe", spy)
+    path = tmp_path / "pattern-3d-off.pdf"
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _pattern_result(),
+        path,
+        include_pattern_lobe=False,
+    )
+
+    data = path.read_bytes()
+    assert calls == []
+    assert data.startswith(b"%PDF")
+    assert b"/Subtype /Image" not in data
+
+
 def test_report_pdf_is_written(
     qtbot: QtBot,
     sample_project: Project,

@@ -109,6 +109,7 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
+        report_include_3d=False,
     )
 
     store.save(preferences)
@@ -336,6 +337,7 @@ def test_preferences_action_applies_accepted_values(
         length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
+        report_include_3d=False,
     )
     monkeypatch.setattr(
         PreferencesDialog,
@@ -352,6 +354,7 @@ def test_preferences_action_applies_accepted_values(
     assert window._unit_system is UnitSystem.IMPERIAL
     assert window._length_policy is LengthPolicy.FIXED
     assert window._workflow_mode is WorkflowMode.GUIDED
+    assert window._report_include_3d is False
     assert window._theme_controller.preference is ThemePreference.DARK
     assert is_dark_palette(_application().palette())
     assert window._ocfd_form._length.suffix().strip() == "ft"
@@ -371,6 +374,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
             length_policy=LengthPolicy.FIXED,
             workflow_mode=WorkflowMode.GUIDED,
             theme=ThemePreference.LIGHT,
+            report_include_3d=False,
         ),
     )
     qtbot.addWidget(dialog)
@@ -380,6 +384,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     assert dialog._font_size.currentData() == FontSize.SMALL.value
     assert dialog._theme.currentData() == ThemePreference.LIGHT.value
     assert dialog._workflow_mode.currentData() == WorkflowMode.GUIDED.value
+    assert dialog._report_3d.isChecked() is False
     assert "Automatic length units" in dialog._units.toolTip()
     assert "palette" in dialog._theme.toolTip().lower()
 
@@ -390,6 +395,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     dialog._workflow_mode.setCurrentIndex(
         dialog._workflow_mode.findData(WorkflowMode.ADVANCED.value)
     )
+    dialog._report_3d.setChecked(True)
 
     assert dialog.preferences() == UiPreferences(
         font_size=FontSize.LARGE,
@@ -398,6 +404,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.ADVANCED,
         theme=ThemePreference.DARK,
+        report_include_3d=True,
     )
 
 
@@ -418,6 +425,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
     assert dialog.preferences() == UiPreferences()
     assert dialog.preferences().workflow_mode is WorkflowMode.STANDARD
     assert dialog.preferences().theme is ThemePreference.SYSTEM
+    assert dialog.preferences().report_include_3d is True
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(

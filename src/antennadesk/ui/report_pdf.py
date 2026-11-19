@@ -165,6 +165,7 @@ def write_report_pdf(
     *,
     band_analysis: BandAnalysisResult | None = None,
     geometry_svg: str | None = None,
+    include_pattern_lobe: bool = True,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -435,11 +436,12 @@ def write_report_pdf(
         chart(elevation_svg)
     else:
         paragraph(translator.report("No elevation cut available."))
-    lobe_svg, lobe_reason = _pattern_lobe_chart(result, design, translator)
-    if lobe_svg:
-        chart(lobe_svg)
-    elif lobe_reason:
-        paragraph(lobe_reason)
+    if include_pattern_lobe:
+        lobe_svg, lobe_reason = _pattern_lobe_chart(result, design, translator)
+        if lobe_svg:
+            chart(lobe_svg)
+        elif lobe_reason:
+            paragraph(lobe_reason)
 
     if band_analysis is not None:
         section(translator.report("Band patterns"))

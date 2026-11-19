@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Optional 3D report figure.** Preferences now includes **Include static 3D
+  far-field figure**, enabled by default. Turning it off omits the 3D wireframe
+  from both HTML and PDF reports while keeping the 2D cuts and Pattern tab
+  unchanged. The setting is persisted with the other UI preferences.
 - **Band analysis defaults to 100 points per band.** Family band plans,
   including broadband families and explicit two-band plans, now start with 100
   points per band. Before a run, the pattern budget is fitted as before and the

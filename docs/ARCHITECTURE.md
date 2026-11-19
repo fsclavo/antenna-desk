@@ -155,7 +155,8 @@ rendered offscreen from the design snapshot with a fixed size and light theme;
 report rendering does not read live widgets. The 3D wireframe is built by the
 Qt-free `reporting/pattern_lobe.py` with a fixed projection and palette, is
 decimated to at most 19×37 displayed vertices, and keeps the stored pattern and
-2D cuts at full resolution. Band analysis adds a pattern section per band and
+2D cuts at full resolution. The `UiPreferences` report option can omit the
+figure; it is enabled by default and is passed to both report writers. Band analysis adds a pattern section per band and
 keeps the 2D cuts only. A single-cut or missing grid reports an explicit
 unavailable state instead of synthesizing a surface. See UX26 and UX40 in
 `AUTONOMOUS_BACKLOG.md`.

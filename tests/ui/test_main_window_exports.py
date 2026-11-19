@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QFileDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.importers.touchstone import parse_touchstone_s1p
+from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 
 DATA_EXPORTS = (
@@ -64,6 +65,34 @@ def test_data_exports_write_the_requested_file(
 
     assert target.is_file()
     assert target.stat().st_size > 0
+    window._dirty = False
+
+
+def test_html_export_passes_the_3d_figure_preference(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _simulate(window, qtbot)
+    target = tmp_path / "report.html"
+    monkeypatch.setattr(
+        QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(target), ""),
+    )
+    captured: dict[str, object] = {}
+
+    def fake_write(*args: object, **kwargs: object) -> None:
+        captured.update(kwargs)
+        target.write_text("ok", encoding="utf-8")
+
+    monkeypatch.setattr(main_window_module, "write_html_report", fake_write)
+    window._report_include_3d = False
+
+    window.export_html_report()
+
+    assert captured["include_pattern_lobe"] is False
     window._dirty = False
 
 

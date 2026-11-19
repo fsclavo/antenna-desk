@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
@@ -35,7 +36,7 @@ class PreferencesDialog(QDialog):
         self._initial = preferences
 
         self.setWindowTitle(translator.t("preferences.title"))
-        self.resize(*scaled_dialog_size(460, 380))
+        self.resize(*scaled_dialog_size(460, 420))
         self.setSizeGripEnabled(True)
 
         self._language = QComboBox(self)
@@ -89,6 +90,9 @@ class PreferencesDialog(QDialog):
             )
         self._select(self._workflow_mode, preferences.workflow_mode.value)
 
+        self._report_3d = QCheckBox(translator.t("preferences.report_3d"), self)
+        self._report_3d.setChecked(preferences.report_include_3d)
+
         form = QFormLayout()
         form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
         form.addRow(QLabel(translator.t("preferences.units"), self), self._units)
@@ -98,6 +102,10 @@ class PreferencesDialog(QDialog):
             QLabel(translator.t("preferences.workflow_mode"), self),
             self._workflow_mode,
         )
+        form.addRow(
+            QLabel(translator.t("preferences.report_options"), self),
+            self._report_3d,
+        )
         for row, key in enumerate(
             (
                 "preferences.language",
@@ -105,6 +113,7 @@ class PreferencesDialog(QDialog):
                 "preferences.font_size",
                 "preferences.theme",
                 "preferences.workflow_mode",
+                "preferences.report_3d",
             )
         ):
             apply_row_help(form, row, translator, key)
@@ -149,6 +158,7 @@ class PreferencesDialog(QDialog):
         self._select(self._font_size, FontSize.MEDIUM.value)
         self._select(self._theme, ThemePreference.SYSTEM.value)
         self._select(self._workflow_mode, WorkflowMode.STANDARD.value)
+        self._report_3d.setChecked(True)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
@@ -182,4 +192,5 @@ class PreferencesDialog(QDialog):
                 else self._initial.workflow_mode
             ),
             theme=(ThemePreference(theme) if isinstance(theme, str) else self._initial.theme),
+            report_include_3d=self._report_3d.isChecked(),
         )
