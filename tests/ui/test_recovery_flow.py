@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from helpers import wait_for_condition
 from main_window_support import FakeSolver
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 from pytestqt.qtbot import QtBot
@@ -45,6 +46,8 @@ def test_autosave_writes_a_recovery_and_restores_the_project(
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True
+    window._design_dirty = True
+    window._autosave_pending = True
 
     assert window._autosave_now() is True
     assert recovery.project_path.is_file()
@@ -65,6 +68,50 @@ def test_autosave_writes_a_recovery_and_restores_the_project(
     window._dirty = False
 
 
+def test_simulation_result_does_not_trigger_autosave(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    window._recovery = recovery
+    window._autosave_enabled = True
+    window._dirty = False
+    window._design_dirty = False
+    window._autosave_pending = False
+    window.simulate()
+    wait_for_condition(
+        lambda: not window._simulating and window._thread is None,
+        timeout_ms=15_000,
+    )
+
+    assert window._dirty is True
+    assert window._design_dirty is False
+    assert window._autosave_pending is False
+    assert window._autosave_now() is False
+    assert not recovery.project_path.exists()
+    window._dirty = False
+
+
+def test_design_edit_still_triggers_a_compact_autosave(
+    window: MainWindow,
+    tmp_path: Path,
+) -> None:
+    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    window._recovery = recovery
+    window._autosave_enabled = True
+    window._on_form_changed()
+
+    assert window._design_dirty is True
+    assert window._autosave_pending is True
+    assert window._autosave_now() is True
+    assert recovery.project_path.is_file()
+    assert recovery.project_path.stat().st_size < 2 * 1024 * 1024
+    window._dirty = False
+    window._design_dirty = False
+    window._autosave_pending = False
+
+
 def test_autosave_is_cleared_by_a_normal_save(
     window: MainWindow,
     tmp_path: Path,
@@ -74,6 +121,8 @@ def test_autosave_is_cleared_by_a_normal_save(
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True
+    window._design_dirty = True
+    window._autosave_pending = True
     assert window._autosave_now() is True
     target = tmp_path / "saved.antennadesk"
     monkeypatch.setattr(
@@ -180,6 +229,8 @@ def test_normal_close_clears_the_recovery(
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True
+    window._design_dirty = True
+    window._autosave_pending = True
     assert window._autosave_now() is True
 
     window._dirty = False

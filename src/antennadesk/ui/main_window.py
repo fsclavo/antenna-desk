@@ -386,7 +386,7 @@ from .preferences import (
     resolve_language,
 )
 from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
-from .recovery import AutosaveRecovery, RecoverySnapshot
+from .recovery import AutosaveRecovery, RecoverySnapshot, RecoveryTooLargeError
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
 from .theme import ThemeController
@@ -502,6 +502,8 @@ class MainWindow(QMainWindow):
         self._design_id: UUID | None = None
         self._current_path: Path | None = None
         self._dirty = False
+        self._design_dirty = False
+        self._autosave_pending = False
         self._form_dirty = False
         self._project_name_updating = False
         self._updating_variants = False
@@ -543,8 +545,12 @@ class MainWindow(QMainWindow):
         self._progress_timer.setInterval(1000)
         self._progress_timer.timeout.connect(self._update_progress_elapsed)
         self._autosave_timer = QTimer(self)
-        self._autosave_timer.setInterval(5_000)
+        self._autosave_timer.setInterval(30_000)
         self._autosave_timer.timeout.connect(self._autosave_now)
+        self._autosave_debounce = QTimer(self)
+        self._autosave_debounce.setSingleShot(True)
+        self._autosave_debounce.setInterval(2_000)
+        self._autosave_debounce.timeout.connect(self._autosave_now)
         self._undo_stack = QUndoStack(self)
         self._undo_stack.setUndoLimit(50)
         self._history_restoring = False
@@ -2796,6 +2802,8 @@ class MainWindow(QMainWindow):
         self._current_balun = False
         self._current_path = None
         self._dirty = False
+        self._design_dirty = False
+        self._autosave_pending = False
         self._form_dirty = False
         self._last_result = None
         self._simulation_results = {}
@@ -2851,6 +2859,8 @@ class MainWindow(QMainWindow):
             self._recent_projects.add(path, project.name)
             self._refresh_start_page_recents()
         self._dirty = dirty
+        self._design_dirty = dirty
+        self._autosave_pending = dirty
         self._form_dirty = False
         self._last_result = None
         self._simulation_results = {}
@@ -2890,6 +2900,10 @@ class MainWindow(QMainWindow):
             self._clean_signature = self._current_project_signature()
             self._clean_run_ids = self._current_run_ids()
         self._dirty = dirty
+        self._design_dirty = dirty
+        self._autosave_pending = dirty
+        if dirty and self._autosave_enabled and self._recovery is not None:
+            self._autosave_debounce.start()
         self._refresh_installation_summary()
         self._update_title()
         self._update_actions()
@@ -2936,7 +2950,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -2967,7 +2981,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -2998,7 +3012,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3029,7 +3043,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3060,7 +3074,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3091,7 +3105,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3122,7 +3136,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3153,7 +3167,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3184,7 +3198,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3215,7 +3229,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3246,7 +3260,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3277,7 +3291,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3308,7 +3322,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3339,7 +3353,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3409,7 +3423,7 @@ class MainWindow(QMainWindow):
             self._project_name.setText(project_name)
             self._project_name_updating = False
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3432,7 +3446,7 @@ class MainWindow(QMainWindow):
             self._set_geometry_model(design)
             self._auto_select_view(design)
             self._form_dirty = False
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
             self._update_actions()
             self._update_height_control()
@@ -3461,7 +3475,7 @@ class MainWindow(QMainWindow):
             self._last_result = None
             self._results.set_result(None)
         self._form_dirty = False
-        self._dirty = True
+        self._mark_project_dirty()
         self._update_title()
         self._update_actions()
         self._update_height_control()
@@ -3493,7 +3507,7 @@ class MainWindow(QMainWindow):
                 self._feed_line,
                 updated_at=utc_now(),
             )
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
         self._refresh_feed_matching_summary()
 
@@ -3695,7 +3709,7 @@ class MainWindow(QMainWindow):
                 self._matching_network_design,
                 updated_at=timestamp,
             )
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
         self._refresh_feed_matching_summary()
 
@@ -3714,7 +3728,7 @@ class MainWindow(QMainWindow):
                 self._balun_loss,
                 updated_at=utc_now(),
             )
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
         self._refresh_feed_matching_summary()
 
@@ -3729,7 +3743,7 @@ class MainWindow(QMainWindow):
                 installed,
                 updated_at=utc_now(),
             )
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
         self._refresh_feed_matching_summary()
 
@@ -3773,7 +3787,7 @@ class MainWindow(QMainWindow):
                 feed_line,
                 updated_at=utc_now(),
             )
-            self._dirty = True
+            self._mark_project_dirty()
             self._update_title()
         self._refresh_feed_matching_summary()
 
@@ -3853,7 +3867,7 @@ class MainWindow(QMainWindow):
             dialog.active_profile_id(),
             updated_at=utc_now(),
         )
-        self._dirty = True
+        self._mark_project_dirty()
         self._refresh_installation_summary()
         self._update_title()
         self._update_actions()
@@ -4068,8 +4082,14 @@ class MainWindow(QMainWindow):
         if self._solver is None:
             self._show_error(self._translator.t("error.solver"))
             return
+        design_dirty_before = self._design_dirty
+        autosave_pending_before = self._autosave_pending
         try:
             project = self._apply_fields()
+            self._design_dirty = design_dirty_before
+            self._autosave_pending = autosave_pending_before
+            if not design_dirty_before:
+                self._autosave_debounce.stop()
             if self._design_id is None:
                 raise ValueError(self._translator.t("error.no_project"))
             design = project.design_by_id(self._design_id)
@@ -4207,7 +4227,7 @@ class MainWindow(QMainWindow):
                     current.with_band_plan(plan),
                     updated_at=utc_now(),
                 )
-                self._dirty = True
+                self._mark_project_dirty()
                 self._update_title()
         self._update_band_plan_label()
 
@@ -4369,7 +4389,7 @@ class MainWindow(QMainWindow):
                 )
                 recorded = True
             if recorded:
-                self._dirty = True
+                self._mark_project_dirty(design=False)
                 self._update_title()
         self._results.set_band_analysis(analysis)
         if analysis.bands:
@@ -4422,7 +4442,7 @@ class MainWindow(QMainWindow):
                         result=result,
                     )
                 )
-                self._dirty = True
+                self._mark_project_dirty(design=False)
                 self._update_title()
         self._simulation_design_id = None
         self._last_result = result
@@ -5730,7 +5750,7 @@ class MainWindow(QMainWindow):
         if updated == self._project:
             return
         self._project = updated
-        self._dirty = True
+        self._mark_project_dirty()
         self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_sessions"
@@ -5755,7 +5775,7 @@ class MainWindow(QMainWindow):
         if updated == self._project:
             return
         self._project = updated
-        self._dirty = True
+        self._mark_project_dirty()
         self._last_status_key = "status.project_journal"
         self._update_title()
         self._update_actions()
@@ -6023,7 +6043,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.measurement", message=str(exc)))
             return
-        self._dirty = True
+        self._mark_project_dirty()
         self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_updated"
@@ -6053,7 +6073,7 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.measurement", message=str(exc)))
             return
-        self._dirty = True
+        self._mark_project_dirty()
         self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.measurement_deleted"
@@ -6145,7 +6165,7 @@ class MainWindow(QMainWindow):
             return
         if self._design_id is not None:
             self._workflow_measurement_compared.discard(self._design_id)
-        self._dirty = True
+        self._mark_project_dirty()
         self._refresh_measurements()
         self._tabs_select_measurements()
         self._last_status_key = "status.vna_imported"
@@ -6376,7 +6396,7 @@ class MainWindow(QMainWindow):
             return
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
-        self._dirty = True
+        self._mark_project_dirty()
         self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
@@ -6458,7 +6478,7 @@ class MainWindow(QMainWindow):
             return
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
-        self._dirty = True
+        self._mark_project_dirty()
         self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
@@ -6498,7 +6518,7 @@ class MainWindow(QMainWindow):
             return
         self._loads = updated_design.antenna.loads
         self._form_dirty = False
-        self._dirty = True
+        self._mark_project_dirty()
         self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated_design)
@@ -6956,7 +6976,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._invalidate_design_result(self._design_id)
-        self._dirty = True
+        self._mark_project_dirty()
         self._select_design(self._design_id)
         self._mark_starting_dimensions_pristine(parameters)
         self._last_status_key = "status.design_changed"
@@ -7238,7 +7258,8 @@ class MainWindow(QMainWindow):
             not self._autosave_enabled
             or self._recovery is None
             or self._project is None
-            or not self._dirty
+            or not self._design_dirty
+            or not self._autosave_pending
             or self._simulating
         ):
             return False
@@ -7253,8 +7274,12 @@ class MainWindow(QMainWindow):
                 original_path=self._current_path,
                 dirty=True,
             )
+        except RecoveryTooLargeError:
+            self._autosave_pending = False
+            return False
         except Exception:
             return False
+        self._autosave_pending = False
         return True
 
     def _startup_recovery(self) -> None:
@@ -7706,7 +7731,10 @@ class MainWindow(QMainWindow):
             self._refresh_start_page_recents()
         self._clear_recovery()
         self._dirty = False
+        self._design_dirty = False
+        self._autosave_pending = False
         self._form_dirty = False
+        self._autosave_debounce.stop()
         self._clean_signature = self._current_project_signature()
         self._clean_run_ids = self._current_run_ids()
         self._undo_stack.setClean()
@@ -7768,7 +7796,7 @@ class MainWindow(QMainWindow):
             return
         new_id = updated.designs[-1].id
         self._project = updated
-        self._dirty = True
+        self._mark_project_dirty()
         self._populate_variants(new_id)
         self._select_design(new_id)
         self._update_title()
@@ -7800,7 +7828,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._project = updated
-        self._dirty = True
+        self._mark_project_dirty()
         self._populate_variants(self._design_id)
         self._update_title()
         self._update_actions()
@@ -7835,7 +7863,7 @@ class MainWindow(QMainWindow):
             return
         self._invalidate_design_result(design.id)
         self._project = updated
-        self._dirty = True
+        self._mark_project_dirty()
         new_id = updated.designs[0].id
         self._populate_variants(new_id)
         self._select_design(new_id)
@@ -7887,7 +7915,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._invalidate_design_result(self._design_id)
-        self._dirty = True
+        self._mark_project_dirty()
         self._select_design(self._design_id)
         self._mark_starting_dimensions_pristine(parameters)
         self._last_status_key = "status.design_estimated"
@@ -7931,7 +7959,7 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
         self._invalidate_design_result(self._design_id)
-        self._dirty = True
+        self._mark_project_dirty()
         self._select_design(self._design_id)
         self._last_status_key = "status.frequency_scaled"
         self._update_title()
@@ -8909,7 +8937,7 @@ class MainWindow(QMainWindow):
         self._project = self._project.with_design(updated, updated_at=utc_now())
         self._loads = updated.antenna.loads
         self._form_dirty = False
-        self._dirty = True
+        self._mark_project_dirty()
         self._invalidate_design_result(self._design_id)
         self._results.set_result(None)
         self._results.set_design(updated)
@@ -8945,7 +8973,7 @@ class MainWindow(QMainWindow):
             return
         self._loads = dialog.loads()
         self._form_dirty = True
-        self._dirty = True
+        self._mark_project_dirty()
         self.apply_design()
         self._last_status_key = "status.design_changed"
         self._update_status_text()
@@ -8973,7 +9001,7 @@ class MainWindow(QMainWindow):
             return
         self._transmission_lines = dialog.transmission_lines()
         self._form_dirty = True
-        self._dirty = True
+        self._mark_project_dirty()
         self.apply_design()
         self._last_status_key = "status.design_changed"
         self._update_status_text()
@@ -9062,7 +9090,7 @@ class MainWindow(QMainWindow):
             dialog.record(),
             updated_at=utc_now(),
         )
-        self._dirty = True
+        self._mark_project_dirty()
         self._last_status_key = "status.construction_record"
         self._update_title()
         self._update_actions()
@@ -9095,7 +9123,7 @@ class MainWindow(QMainWindow):
             record,
             updated_at=utc_now(),
         )
-        self._dirty = True
+        self._mark_project_dirty()
         self._last_status_key = "status.bom_costs_saved"
         self._update_title()
         self._update_actions()
@@ -9881,7 +9909,7 @@ class MainWindow(QMainWindow):
         if answer != QMessageBox.StandardButton.Yes:
             return
         self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
-        self._dirty = True
+        self._mark_project_dirty(design=False)
         self._last_status_key = "status.compacted"
         self._update_title()
         self._update_actions()
@@ -10015,8 +10043,13 @@ class MainWindow(QMainWindow):
         self._autosave_enabled = preferences.autosave_enabled
         if self._autosave_enabled and self._recovery is not None:
             self._autosave_timer.start()
+            if self._design_dirty:
+                self._autosave_pending = True
+                self._autosave_debounce.start()
         else:
             self._autosave_timer.stop()
+            self._autosave_debounce.stop()
+            self._autosave_pending = False
             self._clear_recovery()
         self._sync_workflow_controls()
         self._apply_workflow_mode()
@@ -10154,11 +10187,19 @@ class MainWindow(QMainWindow):
         self._zoom_combo.setCurrentIndex(index)
         self._zoom_combo.blockSignals(False)
 
+    def _mark_project_dirty(self, *, design: bool = True) -> None:
+        self._dirty = True
+        if design:
+            self._design_dirty = True
+            self._autosave_pending = True
+            if self._autosave_enabled and self._recovery is not None:
+                self._autosave_debounce.start()
+
     def _on_form_changed(self) -> None:
         if self._project is None or self._simulating:
             return
         self._form_dirty = True
-        self._dirty = True
+        self._mark_project_dirty()
         self._update_title()
         self._update_actions()
         self._refresh_auto_sweep_display()
@@ -10166,7 +10207,7 @@ class MainWindow(QMainWindow):
     def _project_name_changed(self, _text: str) -> None:
         if self._project_name_updating or self._project is None:
             return
-        self._dirty = True
+        self._mark_project_dirty()
         self._update_title()
         self._update_actions()
 
@@ -10231,6 +10272,8 @@ class MainWindow(QMainWindow):
             self._thread = None
             self._worker = None
         if self._maybe_save_changes():
+            self._autosave_timer.stop()
+            self._autosave_debounce.stop()
             self._clear_recovery()
             self._undo_stack.clear()
             event.accept()

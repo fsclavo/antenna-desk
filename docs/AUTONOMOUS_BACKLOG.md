@@ -419,7 +419,10 @@ guard.
 payload and metadata to the application-data folder, never overwriting the
 project. Startup offers recover or discard; a missing original path falls back
 to **Save As**; normal save/close removes the copy; Preferences can disable it.
-Full gate: 4,130 passed, 1 skipped; NEC2C 161 passed. Schema unchanged.
+A follow-up removed the post-simulation CPU regression: recovery snapshots now
+exclude completed runs/raw solver output, are debounced after design edits and
+capped at 2 MB, and result-only changes do not trigger autosave. Full gate:
+4,170 passed, 1 skipped; NEC2C 165 passed. Schema unchanged.
 
 **Goal:** never lose a design to a crash, power loss, or accidental close.
 

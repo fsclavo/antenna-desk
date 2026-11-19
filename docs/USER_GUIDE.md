@@ -2550,12 +2550,16 @@ after its 2D cuts; it is off by default because it makes reports longer and
 larger, and it is available only while the main 3D figure is enabled.
 **Restore the last project on startup** reopens the most recent project if its
 file still exists; a missing file is removed from the recent list. It is off by
-default. **Autosave a recovery file while editing** is enabled by default: an
-atomic recovery copy is written to the application-data folder while a project
-has unsaved changes. A normal save or close removes it; a crash leaves it for
-the next launch, which offers to recover or discard it. The recovery file never
-overwrites the project. If the original project file moved or was deleted, the
-recovered project opens as untitled and **Save** falls back to **Save As**.
+default. **Autosave a recovery file while editing** is enabled by default: a
+design-only atomic recovery copy is written to the application-data folder after
+a short edit debounce. Completed simulation runs and raw solver output are not
+part of the recovery copy, so Simulate does not keep rewriting a large file. A
+normal save or close removes it; a crash leaves it for the next launch, which
+offers to recover or discard it. Recovery restores the design, measurements,
+and journal, not completed results. The recovery file never overwrites the
+project and is skipped above 2 MB. If the original project file moved or was
+deleted, the recovered project opens as untitled and **Save** falls back to
+**Save As**.
 **Restore Defaults** returns to System language, metric automatic units, System
 theme, Normal font size, the primary 3D report figure enabled, the per-band 3D
 figures disabled, automatic restore disabled, and autosave enabled.

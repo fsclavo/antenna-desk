@@ -258,6 +258,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Autosave CPU regression after simulations.** Recovery snapshots now exclude
+  completed simulation runs and their raw NEC input/output, update on a
+  debounced design-change trigger instead of every five seconds, and are capped
+  at 2 MB. Recording a simulation result no longer starts an autosave when the
+  design was already saved. A normal save still clears the recovery copy. This
+  removes the sustained compression/write load after Simulate while preserving
+  crash recovery for design, measurement, and journal edits.
 - **Documentation truth pass.** README status is now pre-1.0 instead of
   pre-alpha. The architecture, domain, solver-adapter, and user-guide text no
   longer claims that directivity/realized gain are unseparated, that simulation

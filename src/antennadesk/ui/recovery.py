@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -18,6 +18,11 @@ RECOVERY_FORMAT = "antennadesk-recovery"
 RECOVERY_VERSION = 1
 RECOVERY_PROJECT_NAME = "autosave.antennadesk"
 RECOVERY_METADATA_NAME = "autosave.json"
+MAX_RECOVERY_PAYLOAD_BYTES = 2 * 1024 * 1024
+
+
+class RecoveryTooLargeError(ValueError):
+    """The design-only recovery payload exceeds the autosave size guard."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,10 +59,21 @@ class AutosaveRecovery:
         original_path: Path | None,
         dirty: bool,
     ) -> None:
-        """Write the project payload first, then its recovery metadata."""
+        """Write a design-only project payload, then recovery metadata.
 
+        Simulation runs carry raw solver input/output and can be several
+        megabytes. They are deliberately excluded: recovery restores the
+        design, measurements, and user data, not completed results.
+        """
+
+        compact = replace(project, simulation_runs=())
+        payload = self._repository.prepare_payload(compact)
+        if len(payload) > MAX_RECOVERY_PAYLOAD_BYTES:
+            raise RecoveryTooLargeError(
+                "the design-only recovery snapshot is too large "
+                f"({len(payload)} bytes; limit is {MAX_RECOVERY_PAYLOAD_BYTES})"
+            )
         self._directory.mkdir(parents=True, exist_ok=True)
-        payload = self._repository.prepare_payload(project)
         self._repository.write_payload(self.project_path, payload)
         metadata = {
             "format": RECOVERY_FORMAT,
