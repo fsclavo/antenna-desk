@@ -442,6 +442,11 @@ HELP_MANIFEST = frozenset(
         "help.optimize.scope",
         "help.preferences.report_3d",
         "help.preferences.report_band_3d",
+        "help.preferences.restore_last_project",
+        "help.start.recent",
+        "help.start.remove_recent",
+        "help.start.examples",
+        "help.start.reference_library",
     }
 )
 

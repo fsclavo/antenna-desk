@@ -63,9 +63,18 @@ bands. VHF/UHF family templates remain available through the catalog.
 ## First simulation
 
 The application starts with no project. The start page offers **New Antenna...**
-to create a project from a template and **Open Project...** to load an existing
-`.antennadesk` file. The edit toolbar and the design actions appear only after a
-project is open.
+to create a project from a template, **Open Project...** to load an existing
+`.antennadesk` file, **Help me choose...** for the antenna advisor, and **Open
+example** for a 40 m wire dipole, a 20 m five-element Yagi, or a 20 m
+ground-plane vertical. Examples create normal editable projects through the
+same creation path; they do not open a locked preset. The
+**Reference design library** button opens the source-backed reference catalog.
+The **Recent projects** list stores up to ten files and shows only each file
+name, never the full path. Double-click an entry to open it; **Remove from
+list** forgets it. A missing file is shown as `(missing)`, and trying to open
+it reports the error and removes it from the list. Recent projects are stored
+in the local application settings and do not change the project schema. The
+edit toolbar and the design actions appear only after a project is open.
 
 Create a design from the catalog, review the generated template, and press
 **Simulate** (or F5). After a successful creation, AntennaDesk selects the
@@ -2486,9 +2495,11 @@ HTML and PDF reports; it is enabled by default and does not affect the Pattern
 tab. **Include 3D figure in each analyzed band** adds one 3D wireframe per band
 after its 2D cuts; it is off by default because it makes reports longer and
 larger, and it is available only while the main 3D figure is enabled.
-**Restore Defaults** returns to System language, metric automatic units, System
-theme, Normal font size, the primary 3D report figure enabled, and the per-band
-3D figures disabled.
+**Restore the last project on startup** reopens the most recent project if its
+file still exists; a missing file is removed from the recent list. It is off by
+default. **Restore Defaults** returns to System language, metric automatic
+units, System theme, Normal font size, the primary 3D report figure enabled, the
+per-band 3D figures disabled, and automatic restore disabled.
 
 Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
 1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed

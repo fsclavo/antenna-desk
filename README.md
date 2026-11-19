@@ -57,11 +57,14 @@ The application looks for `nec2c` in `NEC2C`, on `PATH`, and in
 select the executable.
 
 AntennaDesk opens on the **Start an antenna project** page. Choose
-**New Antenna...** to open the antenna catalog, search by family, and create the
-first design, or **Open Project...** to load an existing `.antennadesk` file.
-After a project exists, the template is shown read-only in the design panel;
-use **Change...** next to it or **Design → Change Template...** to replace the
-current design with another catalog template.
+**New Antenna...** to open the antenna catalog, **Open Project...** to load an
+existing `.antennadesk` file, **Open example** for a dipole, Yagi, or vertical
+starting project, or **Reference design library** for the source-backed
+catalog. The recent-projects list shows file names only and remembers up to ten
+files in the local settings. After a project exists, the template is shown
+read-only in the design panel; use **Change...** next to it or **Design →
+Change Template...** to replace the current design with another catalog
+template.
 
 ## Installation and release
 

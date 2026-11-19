@@ -20,6 +20,7 @@ from .preferences import (
     QSettingsPreferencesStore,
     resolve_language,
 )
+from .recent_projects import QSettingsRecentProjectsStore
 from .solver_locator import find_nec2c
 from .theme import ThemeController
 
@@ -66,6 +67,7 @@ def main() -> int:
         translator,
         preferences.unit_system,
         preferences=preferences_store,
+        recent_projects=QSettingsRecentProjectsStore(),
         font_size_controller=font_size_controller,
         language_preference=preferences.language,
         theme_controller=theme_controller,

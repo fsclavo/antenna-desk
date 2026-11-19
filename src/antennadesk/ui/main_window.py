@@ -159,7 +159,11 @@ from ..domain.antennas.transmission_line_doublet import (
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
-from ..domain.antennas.yagi import YagiParameters, yagi_element_length_mismatch
+from ..domain.antennas.yagi import (
+    YagiParameters,
+    nbs_five_element,
+    yagi_element_length_mismatch,
+)
 from ..domain.antennas.zepp import ZEPP_BASE_ID, ZeppParameters
 from ..domain.antennas.zs6bkw import (
     ZS6BKW_DIPOLE_ID,
@@ -374,6 +378,7 @@ from .preferences import (
     UiPreferences,
     resolve_language,
 )
+from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
 from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
 from .theme import ThemeController
@@ -446,6 +451,7 @@ class MainWindow(QMainWindow):
         parent: QWidget | None = None,
         *,
         preferences: PreferencesStore | None = None,
+        recent_projects: RecentProjectsStore | None = None,
         font_size_controller: FontSizeController | None = None,
         language_preference: LanguagePreference | None = None,
         theme_controller: ThemeController | None = None,
@@ -459,6 +465,9 @@ class MainWindow(QMainWindow):
             language_preference if language_preference is not None else LanguagePreference.SYSTEM
         )
         self._preferences = preferences if preferences is not None else InMemoryPreferencesStore()
+        self._recent_projects = (
+            recent_projects if recent_projects is not None else InMemoryRecentProjectsStore()
+        )
         self._theme_controller = (
             theme_controller if theme_controller is not None else ThemeController()
         )
@@ -468,6 +477,7 @@ class MainWindow(QMainWindow):
         self._workflow_mode = loaded_preferences.workflow_mode
         self._report_include_3d = loaded_preferences.report_include_3d
         self._report_include_band_3d = loaded_preferences.report_include_band_3d
+        self._restore_last_project_preference = loaded_preferences.restore_last_project
         self._last_applied_workflow_mode: WorkflowMode | None = None
         if font_size_controller is None:
             app = QApplication.instance()
@@ -531,6 +541,9 @@ class MainWindow(QMainWindow):
         self._apply_workflow_mode()
         self._show_empty_state()
         self.retranslate()
+        self._refresh_start_page_recents()
+        if loaded_preferences.restore_last_project:
+            QTimer.singleShot(0, self._restore_last_project)
 
     def _build_actions(self) -> None:
         self._undo_action = QAction(self)
@@ -1347,6 +1360,12 @@ class MainWindow(QMainWindow):
         self._start_page.new_requested.connect(lambda: self.new_antenna())
         self._start_page.advise_requested.connect(lambda: self.show_antenna_advisor())
         self._start_page.open_requested.connect(lambda: self.open_project())
+        self._start_page.example_requested.connect(lambda kind: self.open_example(kind))
+        self._start_page.reference_requested.connect(lambda: self.show_reference_library())
+        self._start_page.recent_requested.connect(lambda path: self.open_recent_project(path))
+        self._start_page.recent_remove_requested.connect(
+            lambda path: self.remove_recent_project(path)
+        )
         self._editor_panel = main_splitter
         self._main_stack = QStackedWidget(self)
         self._main_stack.addWidget(self._start_page)
@@ -2800,6 +2819,9 @@ class MainWindow(QMainWindow):
         self._balun_loss = project.balun_loss
         self._current_balun = project.current_balun
         self._current_path = path
+        if path is not None:
+            self._recent_projects.add(path, project.name)
+            self._refresh_start_page_recents()
         self._dirty = dirty
         self._form_dirty = False
         self._last_result = None
@@ -5205,10 +5227,15 @@ class MainWindow(QMainWindow):
         feed_line: FeedLine | None = None,
         band_plan: BandPlan | None = None,
         description: str = "",
+        ask_name: bool = True,
     ) -> bool:
-        name = self._ask_project_name(self._suggested_project_name(parameters, default_name))
-        if name is None:
-            return False
+        suggested = self._suggested_project_name(parameters, default_name)
+        if ask_name:
+            name = self._ask_project_name(suggested)
+            if name is None:
+                return False
+        else:
+            name = suggested
         try:
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
@@ -6944,6 +6971,31 @@ class MainWindow(QMainWindow):
     def new_dipole(self) -> None:
         self.new_antenna()
 
+    def _refresh_start_page_recents(self) -> None:
+        self._start_page.set_recent_projects(self._recent_projects.load())
+
+    def _open_project_path(self, path: Path, *, show_error: bool = True) -> bool:
+        progress = self._open_progress_dialog()
+        try:
+            project = self._load_project(path)
+            if not project.designs:
+                raise ValueError("project has no designs")
+        except Exception as exc:
+            if show_error:
+                self._show_error(self._translator.t("error.open", message=str(exc)))
+            return False
+        finally:
+            progress.close()
+        self._set_project(
+            project,
+            project.designs[0].id,
+            path=path,
+            dirty=False,
+        )
+        self._last_status_key = "status.opened"
+        self._update_status_text()
+        return True
+
     def open_project(self) -> None:
         if not self._maybe_save_changes():
             return
@@ -6958,24 +7010,81 @@ class MainWindow(QMainWindow):
         )
         if not filename:
             return
-        progress = self._open_progress_dialog()
-        try:
-            project = self._load_project(Path(filename))
-            if not project.designs:
-                raise ValueError("project has no designs")
-        except Exception as exc:
-            self._show_error(self._translator.t("error.open", message=str(exc)))
+        self._open_project_path(Path(filename))
+
+    def open_recent_project(self, path: str) -> None:
+        if not self._maybe_save_changes():
             return
-        finally:
-            progress.close()
-        self._set_project(
-            project,
-            project.designs[0].id,
-            path=Path(filename),
-            dirty=False,
-        )
-        self._last_status_key = "status.opened"
+        target = Path(path)
+        if not target.is_file():
+            self._show_error(
+                self._translator.t(
+                    "error.open",
+                    message=self._translator.t("error.file_missing", name=target.name),
+                )
+            )
+            self._recent_projects.remove(target)
+            self._refresh_start_page_recents()
+            return
+        self._open_project_path(target)
+
+    def remove_recent_project(self, path: str) -> None:
+        self._recent_projects.remove(Path(path))
+        self._refresh_start_page_recents()
+        self._last_status_key = "status.recent_removed"
         self._update_status_text()
+
+    def _restore_last_project(self) -> None:
+        if self._project is not None:
+            return
+        entries = self._recent_projects.load()
+        if not entries:
+            return
+        path = entries[0].path
+        if not path.is_file():
+            self._recent_projects.remove(path)
+            self._refresh_start_page_recents()
+            self._last_status_key = "status.recent_missing"
+            self._update_status_text()
+            return
+        if not self._open_project_path(path, show_error=False):
+            self._recent_projects.remove(path)
+            self._refresh_start_page_recents()
+            self._last_status_key = "status.recent_missing"
+            self._update_status_text()
+
+    def open_example(self, kind: str) -> None:
+        if not self._maybe_save_changes():
+            return
+        if kind == "dipole":
+            parameters: AntennaDesignParameters = DipoleParameters(
+                frequency_hz=7_100_000.0,
+                total_length_m=20.0,
+                height_m=8.0,
+            )
+            default_name = "Wire dipole"
+        elif kind == "yagi":
+            parameters = nbs_five_element(
+                frequency_hz=14_100_000.0,
+                height_m=10.0,
+            )
+            default_name = "Yagi"
+        elif kind == "vertical":
+            parameters = VerticalParameters(
+                frequency_hz=14_100_000.0,
+                height_m=5.0,
+                base_height_m=0.25,
+                radial_count=4,
+                radial_length_m=2.5,
+            )
+            default_name = "Vertical"
+        else:
+            raise ValueError(f"unknown example: {kind}")
+        self._create_project_from_parameters(
+            parameters,
+            default_name=default_name,
+            ask_name=False,
+        )
 
     def save_project(self) -> bool:
         if self._project is None:
@@ -7341,6 +7450,9 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False
         self._current_path = path
+        if self._project is not None:
+            self._recent_projects.add(path, self._project.name)
+            self._refresh_start_page_recents()
         self._dirty = False
         self._form_dirty = False
         self._clean_signature = self._current_project_signature()
@@ -9596,6 +9708,7 @@ class MainWindow(QMainWindow):
             theme=self._theme_controller.preference,
             report_include_3d=self._report_include_3d,
             report_include_band_3d=self._report_include_band_3d,
+            restore_last_project=self._restore_last_project_preference,
         )
 
     def _save_preferences(self) -> None:
@@ -9645,6 +9758,7 @@ class MainWindow(QMainWindow):
         self._workflow_mode = preferences.workflow_mode
         self._report_include_3d = preferences.report_include_3d
         self._report_include_band_3d = preferences.report_include_band_3d
+        self._restore_last_project_preference = preferences.restore_last_project
         self._sync_workflow_controls()
         self._apply_workflow_mode()
         self._apply_unit_system_to_forms(preferences.unit_system)

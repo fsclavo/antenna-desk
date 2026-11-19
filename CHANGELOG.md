@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Recent projects and start-page examples.** The start page now lists up to
+  ten recent files from local QSettings, shows only their file names, opens a
+  project on activation, removes missing or selected entries, and creates
+  normal editable 40 m dipole, 20 m Yagi, and 20 m vertical examples. The
+  reference-library button opens the existing catalog. An optional **Restore
+  the last project on startup** preference reopens the newest recent project
+  when its file still exists. No project-schema change.
 - **Portable NEC-2 deck export and copy.** **File → Export → NEC Deck...**
   writes the current model and simulation spec as a deterministic `.nec` file,
   and **Copy NEC Deck** puts the same text on the clipboard. The provenance

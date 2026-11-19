@@ -36,7 +36,7 @@ class PreferencesDialog(QDialog):
         self._initial = preferences
 
         self.setWindowTitle(translator.t("preferences.title"))
-        self.resize(*scaled_dialog_size(460, 420))
+        self.resize(*scaled_dialog_size(460, 470))
         self.setSizeGripEnabled(True)
 
         self._language = QComboBox(self)
@@ -98,6 +98,11 @@ class PreferencesDialog(QDialog):
         )
         self._report_band_3d.setChecked(preferences.report_include_band_3d)
         self._report_3d.toggled.connect(self._update_report_3d_controls)
+        self._restore_last_project = QCheckBox(
+            translator.t("preferences.restore_last_project"),
+            self,
+        )
+        self._restore_last_project.setChecked(preferences.restore_last_project)
 
         form = QFormLayout()
         form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
@@ -116,6 +121,10 @@ class PreferencesDialog(QDialog):
             QLabel(translator.t("preferences.report_band_sections"), self),
             self._report_band_3d,
         )
+        form.addRow(
+            QLabel(translator.t("preferences.startup"), self),
+            self._restore_last_project,
+        )
         for row, key in enumerate(
             (
                 "preferences.language",
@@ -125,6 +134,7 @@ class PreferencesDialog(QDialog):
                 "preferences.workflow_mode",
                 "preferences.report_3d",
                 "preferences.report_band_3d",
+                "preferences.restore_last_project",
             )
         ):
             apply_row_help(form, row, translator, key)
@@ -175,6 +185,7 @@ class PreferencesDialog(QDialog):
         self._select(self._workflow_mode, WorkflowMode.STANDARD.value)
         self._report_3d.setChecked(True)
         self._report_band_3d.setChecked(False)
+        self._restore_last_project.setChecked(False)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
@@ -212,4 +223,5 @@ class PreferencesDialog(QDialog):
             report_include_band_3d=(
                 self._report_3d.isChecked() and self._report_band_3d.isChecked()
             ),
+            restore_last_project=self._restore_last_project.isChecked(),
         )

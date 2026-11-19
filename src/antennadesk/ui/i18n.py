@@ -976,21 +976,29 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Include 3D figure in each analyzed band (larger report)",
         Language.SPANISH: "Incluir figura 3D en cada banda analizada (informe más grande)",
     },
+    "preferences.startup": {
+        Language.ENGLISH: "Startup",
+        Language.SPANISH: "Inicio",
+    },
+    "preferences.restore_last_project": {
+        Language.ENGLISH: "Restore the last project on startup",
+        Language.SPANISH: "Restaurar el último proyecto al iniciar",
+    },
     "preferences.hint": {
         Language.ENGLISH: (
-            "Language, units, font size, theme, workflow mode, and the report 3D "
-            "figures apply after you accept. Automatic length units follow each "
-            "value; fixed units use one length unit everywhere. System follows the "
-            "operating system language and palette at startup. Project files always "
-            "store metric SI units."
+            "Language, units, font size, theme, workflow mode, report 3D figures, "
+            "and startup restore apply after you accept. Automatic length units "
+            "follow each value; fixed units use one length unit everywhere. System "
+            "follows the operating system language and palette at startup. Project "
+            "files always store metric SI units."
         ),
         Language.SPANISH: (
             "El idioma, las unidades, el tamaño de fuente, el tema, el modo de "
-            "trabajo y las figuras 3D del informe se aplican al aceptar. Las unidades "
-            "automáticas siguen cada valor; las fijas usan una sola unidad de "
-            "longitud en todas partes. Sistema sigue el idioma y la paleta del "
-            "sistema operativo al iniciar. Los archivos de proyecto siempre guardan "
-            "unidades SI métricas."
+            "trabajo, las figuras 3D del informe y la restauración al iniciar se "
+            "aplican al aceptar. Las unidades automáticas siguen cada valor; las "
+            "fijas usan una sola unidad de longitud en todas partes. Sistema sigue el "
+            "idioma y la paleta del sistema operativo al iniciar. Los archivos de "
+            "proyecto siempre guardan unidades SI métricas."
         ),
     },
     "action.preferences": {
@@ -1069,6 +1077,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "start.advise": {
         Language.ENGLISH: "Help me choose...",
         Language.SPANISH: "Ayúdame a elegir...",
+    },
+    "start.recent": {
+        Language.ENGLISH: "Recent projects",
+        Language.SPANISH: "Proyectos recientes",
+    },
+    "start.no_recent": {
+        Language.ENGLISH: "No recent projects yet.",
+        Language.SPANISH: "Todavía no hay proyectos recientes.",
+    },
+    "start.recent_missing": {
+        Language.ENGLISH: "{name} (missing)",
+        Language.SPANISH: "{name} (faltante)",
+    },
+    "start.remove_recent": {
+        Language.ENGLISH: "Remove from list",
+        Language.SPANISH: "Quitar de la lista",
+    },
+    "start.examples": {
+        Language.ENGLISH: "Open example",
+        Language.SPANISH: "Abrir ejemplo",
+    },
+    "start.example.dipole": {
+        Language.ENGLISH: "40 m wire dipole",
+        Language.SPANISH: "Dipolo de hilo de 40 m",
+    },
+    "start.example.yagi": {
+        Language.ENGLISH: "20 m five-element Yagi",
+        Language.SPANISH: "Yagi de cinco elementos de 20 m",
+    },
+    "start.example.vertical": {
+        Language.ENGLISH: "20 m ground-plane vertical",
+        Language.SPANISH: "Vertical plano de tierra de 20 m",
+    },
+    "start.reference_library": {
+        Language.ENGLISH: "Reference design library",
+        Language.SPANISH: "Biblioteca de diseños de referencia",
     },
     "action.new": {Language.ENGLISH: "New Antenna...", Language.SPANISH: "Nueva antena..."},
     "catalog.title": {
@@ -5377,6 +5421,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open an existing .antennadesk project.",
         Language.SPANISH: "Abrí un proyecto .antennadesk existente.",
     },
+    "help.start.recent": {
+        Language.ENGLISH: (
+            "Double-click a recent project to open it. Only the file name is shown; "
+            "the full path stays in the local settings."
+        ),
+        Language.SPANISH: (
+            "Hacé doble clic en un proyecto reciente para abrirlo. Solo se muestra "
+            "el nombre del archivo; la ruta completa queda en la configuración local."
+        ),
+    },
+    "help.start.remove_recent": {
+        Language.ENGLISH: "Remove the selected project from the recent list.",
+        Language.SPANISH: "Quitá el proyecto seleccionado de la lista de recientes.",
+    },
+    "help.start.examples": {
+        Language.ENGLISH: "Create a normal editable project from a catalog example.",
+        Language.SPANISH: "Creá un proyecto editable normal a partir de un ejemplo del catálogo.",
+    },
+    "help.start.reference_library": {
+        Language.ENGLISH: "Open the source-backed reference design library.",
+        Language.SPANISH: "Abrí la biblioteca de diseños de referencia con fuentes.",
+    },
     "help.action.export_project_bundle": {
         Language.ENGLISH: (
             "Save the project and its referenced images as one portable ZIP bundle."
@@ -5589,6 +5655,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Agrega una figura 3D por banda analizada después de sus cortes 2D. "
             "Hace los informes más largos y pesados; dejala apagada para "
             "exportaciones habituales."
+        ),
+    },
+    "help.preferences.restore_last_project": {
+        Language.ENGLISH: (
+            "On startup, reopen the most recent project if its file still exists. "
+            "A missing file is removed from the recent list instead of being recreated."
+        ),
+        Language.SPANISH: (
+            "Al iniciar, reabre el proyecto más reciente si el archivo todavía existe. "
+            "Un archivo faltante se quita de la lista de recientes en vez de recrearse."
         ),
     },
     "help.preferences.theme": {
@@ -6996,6 +7072,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
     "status.opened": {Language.ENGLISH: "Project opened.", Language.SPANISH: "Proyecto abierto."},
+    "status.recent_removed": {
+        Language.ENGLISH: "Removed from recent projects.",
+        Language.SPANISH: "Quitado de proyectos recientes.",
+    },
+    "status.recent_missing": {
+        Language.ENGLISH: "The last project was missing; removed from recent projects.",
+        Language.SPANISH: "El último proyecto faltaba; se quitó de recientes.",
+    },
     "status.exporting_bundle": {
         Language.ENGLISH: "Preparing project bundle...",
         Language.SPANISH: "Preparando bundle del proyecto...",
@@ -16768,6 +16852,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.open": {
         Language.ENGLISH: "Could not open project: {message}",
         Language.SPANISH: "No se pudo abrir el proyecto: {message}",
+    },
+    "error.file_missing": {
+        Language.ENGLISH: "file not found: {name}",
+        Language.SPANISH: "archivo no encontrado: {name}",
     },
     "error.save": {
         Language.ENGLISH: "Could not save project: {message}",
