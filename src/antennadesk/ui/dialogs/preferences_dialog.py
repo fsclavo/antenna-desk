@@ -92,6 +92,12 @@ class PreferencesDialog(QDialog):
 
         self._report_3d = QCheckBox(translator.t("preferences.report_3d"), self)
         self._report_3d.setChecked(preferences.report_include_3d)
+        self._report_band_3d = QCheckBox(
+            translator.t("preferences.report_band_3d"),
+            self,
+        )
+        self._report_band_3d.setChecked(preferences.report_include_band_3d)
+        self._report_3d.toggled.connect(self._update_report_3d_controls)
 
         form = QFormLayout()
         form.addRow(QLabel(translator.t("preferences.language"), self), self._language)
@@ -106,6 +112,10 @@ class PreferencesDialog(QDialog):
             QLabel(translator.t("preferences.report_options"), self),
             self._report_3d,
         )
+        form.addRow(
+            QLabel(translator.t("preferences.report_band_sections"), self),
+            self._report_band_3d,
+        )
         for row, key in enumerate(
             (
                 "preferences.language",
@@ -114,9 +124,11 @@ class PreferencesDialog(QDialog):
                 "preferences.theme",
                 "preferences.workflow_mode",
                 "preferences.report_3d",
+                "preferences.report_band_3d",
             )
         ):
             apply_row_help(form, row, translator, key)
+        self._update_report_3d_controls()
 
         hint = QLabel(translator.t("preferences.hint"), self)
         hint.setWordWrap(True)
@@ -143,6 +155,9 @@ class PreferencesDialog(QDialog):
         layout.addStretch(1)
         layout.addWidget(buttons)
 
+    def _update_report_3d_controls(self, *_args: object) -> None:
+        self._report_band_3d.setEnabled(self._report_3d.isChecked())
+
     @staticmethod
     def _select(combo: QComboBox, value: str) -> None:
         index = combo.findData(value)
@@ -159,6 +174,7 @@ class PreferencesDialog(QDialog):
         self._select(self._theme, ThemePreference.SYSTEM.value)
         self._select(self._workflow_mode, WorkflowMode.STANDARD.value)
         self._report_3d.setChecked(True)
+        self._report_band_3d.setChecked(False)
 
     def preferences(self) -> UiPreferences:
         language = self._language.currentData()
@@ -193,4 +209,7 @@ class PreferencesDialog(QDialog):
             ),
             theme=(ThemePreference(theme) if isinstance(theme, str) else self._initial.theme),
             report_include_3d=self._report_3d.isChecked(),
+            report_include_band_3d=(
+                self._report_3d.isChecked() and self._report_band_3d.isChecked()
+            ),
         )

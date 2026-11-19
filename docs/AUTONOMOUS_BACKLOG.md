@@ -154,6 +154,7 @@ external service and must not be invented or simulated into existence.
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **In progress 2026-11-18:** user guide, roadmap, units spec, README, changelog, help tests, and the automated font-scaling/geometry checks are updated. [`QA_PASS_2026-11-18.md`](QA_PASS_2026-11-18.md) records the automated gate and the remaining desktop light/dark/font-scaling checklist. The track closes after that manual QA. |
 | ~~UX42~~ | ~~Raise the band-analysis default to 100 points per band and guard project size~~ | S | UX39 follow-up | **Done 2026-11-19:** family band plans, broadband plans, and two-band plans default to 100 points per band. The dialog uses the domain default. After pattern fitting, the estimated compressed result size is classified: above 32 MB asks for confirmation, above 64 MB blocks before any worker starts. Pattern coarsening/disabling remains explicit in the status text. Custom points and band selections are unchanged; no schema, solver, or scoring change. |
 | ~~UX43~~ | ~~Optional 3D report figure preference~~ | S | UX40 | **Done 2026-11-19:** added the persisted **Include static 3D far-field figure** preference, enabled by default. It is passed to the HTML and PDF report writers; disabling it omits only the primary 3D wireframe, keeping the 2D cuts, band sections, and Pattern tab unchanged. Preferences round-trip, dialog, HTML/PDF omission, EN/ES help, and manifest tests added. No schema, solver, or scoring change. |
+| ~~UX44~~ | ~~Opt-in 3D far-field figure per analyzed band~~ | S | UX43 | **Done 2026-11-19:** added the persisted **Include 3D figure in each analyzed band** preference, disabled by default. Band sections in HTML and PDF reports add one 3D wireframe after their 2D cuts only when this option and the primary 3D option are enabled. The control is disabled while the primary figure is off. Tests cover preferences, HTML/PDF counts, vector output, and the help manifest. No schema, solver, or scoring change. |
 | ~~EF1~~ | ~~Preserve shortened-EFHW structural segmentation in optimizer candidates~~ | S–M | none | **Done 2026-11-13:** the optimizer descriptor can declare model-defined wire partitions. Only the shortened EFHW presets opt in, preserving the fixed three-segment feed and loading-coil sections while the radiator counts are recalculated. Unit tests cover 80-10 and 40-10; other families keep a `None` hook and the previous segmentation path. No solver, schema, or UI change. |
 | ~~EF2~~ | ~~Diagnose input-shunt matching-network topology limits~~ | S | EF1 optional | **Done 2026-11-13:** added `MatchingNetworkOrigin` as runtime-only simulation context, a domain `input_shunt_l_network_swr_floor()` predicate, a `LinkBudget` floor field, and a `matching_network.topology_limit` warning. The warning appears only when the effective network is the internal EFHW input-shunt unit; project networks and other families stay unchanged. The origin is excluded from the model fingerprint and is not persisted. EN/ES diagnostic text, domain, link, fingerprint, resolution, and real NEC2C tests cover the path. |
 | ~~EF3~~ | ~~Warn about the installation-return proxy and SWR confidence~~ | S | none | **Done 2026-11-13:** shortened EFHW editors now add an `endfed.warning.return_proxy` warning when the 0.1 m installation-return proxy is active. The results confidence card and exported reports add a **Model confidence** row that marks absolute SWR as informational and states that the installation return is a proxy, not a physical counterpoise. Standard end-fed, sloper, random wire, and every other family are unchanged. No solver or numerical change. |
@@ -3540,6 +3541,20 @@ wireframe; the 2D cuts, band sections, and Pattern tab are unchanged. Tests
 cover the QSettings round trip, the dialog, accepted preferences, both report
 writers with the option off, and the EN/ES help manifest.
 
+## UX44 — Opt-in 3D far-field figure per analyzed band (2026-11-19)
+
+**Status:** implemented 2026-11-19.
+
+`UiPreferences.report_include_band_3d` defaults to false and is stored under
+`ui/report_band_3d`. The Preferences dialog adds **Include 3D figure in each
+analyzed band**, enabled only while the primary 3D option is checked. Both
+report writers accept `include_band_pattern_lobes`; band figures are emitted
+only when it and `include_pattern_lobe` are true. HTML adds one figure to each
+band section after its 2D cuts; the PDF does the same in its band loop. The
+standard report stays at one primary figure unless the user opts in. Tests
+cover the preference round trip, the dialog dependency, HTML and PDF figure
+counts, and the vector PDF path.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -4030,8 +4045,8 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,084 passed, 1 skipped** on 2026-11-19 after the UX43
-  optional 3D report figure preference, with `NEC2C` auto-detected by the test
+- Full gate: **4,087 passed, 1 skipped** on 2026-11-19 after the UX44
+  opt-in per-band 3D report figures, with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults

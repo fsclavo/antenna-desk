@@ -167,8 +167,9 @@ Phase 4 adds tests for:
   of user-provided text.
 - Static 3D report wireframe: deterministic SVG, grid and ground filtering,
   single-cut/all-missing unavailable states, the 19×37 display cap, one HTML
-  figure in the primary section only, vector PDF output without images, and the
-  persisted preference that omits the figure from both report writers.
+  figure in the primary section only, vector PDF output without images, the
+  persisted preference that omits the primary figure, and the opt-in per-band
+  3D figures.
 - UI wiring for variant actions and CSV/HTML export.
 
 ## Phase 5 — optimization and construction

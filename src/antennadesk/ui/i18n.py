@@ -968,17 +968,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Include static 3D far-field figure",
         Language.SPANISH: "Incluir figura 3D estática de campo lejano",
     },
+    "preferences.report_band_sections": {
+        Language.ENGLISH: "Band sections",
+        Language.SPANISH: "Secciones por banda",
+    },
+    "preferences.report_band_3d": {
+        Language.ENGLISH: "Include 3D figure in each analyzed band (larger report)",
+        Language.SPANISH: "Incluir figura 3D en cada banda analizada (informe más grande)",
+    },
     "preferences.hint": {
         Language.ENGLISH: (
             "Language, units, font size, theme, workflow mode, and the report 3D "
-            "figure apply after you accept. Automatic length units follow each "
+            "figures apply after you accept. Automatic length units follow each "
             "value; fixed units use one length unit everywhere. System follows the "
             "operating system language and palette at startup. Project files always "
             "store metric SI units."
         ),
         Language.SPANISH: (
             "El idioma, las unidades, el tamaño de fuente, el tema, el modo de "
-            "trabajo y la figura 3D del informe se aplican al aceptar. Las unidades "
+            "trabajo y las figuras 3D del informe se aplican al aceptar. Las unidades "
             "automáticas siguen cada valor; las fijas usan una sola unidad de "
             "longitud en todas partes. Sistema sigue el idioma y la paleta del "
             "sistema operativo al iniciar. Los archivos de proyecto siempre guardan "
@@ -5548,6 +5556,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "sección principal de campo lejano de los informes HTML y PDF. Las "
             "bandas conservan sus cortes 2D; un solo corte muestra el estado no "
             "disponible."
+        ),
+    },
+    "help.preferences.report_band_3d": {
+        Language.ENGLISH: (
+            "Adds one 3D wireframe per analyzed band after its 2D cuts. This "
+            "makes reports longer and larger; leave it off for routine exports."
+        ),
+        Language.SPANISH: (
+            "Agrega una figura 3D por banda analizada después de sus cortes 2D. "
+            "Hace los informes más largos y pesados; dejala apagada para "
+            "exportaciones habituales."
         ),
     },
     "help.preferences.theme": {

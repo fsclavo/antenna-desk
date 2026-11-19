@@ -164,6 +164,62 @@ def test_report_pdf_can_omit_the_3d_pattern_figure(
     assert b"/Subtype /Image" not in data
 
 
+def test_report_pdf_band_3d_option_controls_one_figure_per_band(
+    qtbot: QtBot,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import UTC, datetime
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+    from antennadesk.ui import report_pdf
+
+    band_analysis = BandAnalysisResult(
+        design_id=sample_project.designs[0].id,
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=tuple(
+            BandResult(band=band, result=_pattern_result())
+            for band in (
+                amateur_band_by_id("40m"),
+                amateur_band_by_id("20m"),
+            )
+            if band is not None
+        ),
+    )
+    calls: list[float] = []
+    real = report_pdf.pattern_lobe
+
+    def spy(
+        frequency: FrequencyResult,
+        tr: Labeler,
+        *,
+        ground: bool,
+    ) -> PatternLobe:
+        calls.append(frequency.frequency_hz)
+        return real(frequency, tr, ground=ground)
+
+    monkeypatch.setattr(report_pdf, "pattern_lobe", spy)
+    path = tmp_path / "band-3d-report.pdf"
+
+    write_report_pdf(
+        Translator(Language.ENGLISH),
+        sample_project,
+        sample_project.designs[0],
+        _pattern_result(),
+        path,
+        band_analysis=band_analysis,
+        include_band_pattern_lobes=True,
+    )
+
+    assert len(calls) == 3
+    assert path.read_bytes().startswith(b"%PDF")
+    assert b"/Subtype /Image" not in path.read_bytes()
+
+
 def test_report_pdf_is_written(
     qtbot: QtBot,
     sample_project: Project,

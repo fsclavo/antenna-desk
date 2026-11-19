@@ -2411,8 +2411,9 @@ elevation pattern cuts, and one static 3D total-gain wireframe in the primary
 far-field section. The wireframe uses the stored angular grid and adds a
 numeric dBi legend, maximum-gain marker and direction, X/Y/Z cues, and a ground
 ring for grounded models. It is a fixed vector figure, not an interactive view.
-Band analysis adds one pattern section per band and keeps the 2D cuts only; the
-report contains at most one 3D figure. When far-field data is disabled or
+Band analysis adds one pattern section per band with its 2D cuts; if the
+per-band 3D preference is enabled, each section also gets one 3D wireframe.
+Otherwise the report contains at most one 3D figure. When far-field data is disabled or
 unavailable, the report states that explicitly instead of leaving an empty
 chart. A single-cut result has no 2D grid, so the report says that the 3D
 figure is unavailable rather than inventing a surface.
@@ -2468,8 +2469,12 @@ Meters**, **Imperial — Auto**, or **Imperial — Feet**), the theme (**System*
 **Light**, or **Dark**), and the font size (Small, Normal, or Large).
 **Include static 3D far-field figure** controls the optional 3D wireframe in
 HTML and PDF reports; it is enabled by default and does not affect the Pattern
-tab. **Restore Defaults** returns to System language, metric automatic units,
-System theme, Normal font size, and the 3D report figure enabled.
+tab. **Include 3D figure in each analyzed band** adds one 3D wireframe per band
+after its 2D cuts; it is off by default because it makes reports longer and
+larger, and it is available only while the main 3D figure is enabled.
+**Restore Defaults** returns to System language, metric automatic units, System
+theme, Normal font size, the primary 3D report figure enabled, and the per-band
+3D figures disabled.
 
 Automatic length units follow each value: mm below 1 cm, cm below 1 m, and m at
 1 m or above in metric; inches below 1 ft and feet above in imperial. Fixed

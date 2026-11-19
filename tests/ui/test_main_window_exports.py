@@ -89,10 +89,12 @@ def test_html_export_passes_the_3d_figure_preference(
 
     monkeypatch.setattr(main_window_module, "write_html_report", fake_write)
     window._report_include_3d = False
+    window._report_include_band_3d = True
 
     window.export_html_report()
 
     assert captured["include_pattern_lobe"] is False
+    assert captured["include_band_pattern_lobes"] is True
     window._dirty = False
 
 

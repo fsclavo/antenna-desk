@@ -466,6 +466,7 @@ class MainWindow(QMainWindow):
         self._length_policy = loaded_preferences.length_policy
         self._workflow_mode = loaded_preferences.workflow_mode
         self._report_include_3d = loaded_preferences.report_include_3d
+        self._report_include_band_3d = loaded_preferences.report_include_band_3d
         self._last_applied_workflow_mode: WorkflowMode | None = None
         if font_size_controller is None:
             app = QApplication.instance()
@@ -9395,6 +9396,7 @@ class MainWindow(QMainWindow):
                 geometry_svg=self._report_geometry_svg(design),
                 display_units=DisplayUnits(self._unit_system, self._length_policy),
                 include_pattern_lobe=self._report_include_3d,
+                include_band_pattern_lobes=self._report_include_band_3d,
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
@@ -9471,6 +9473,7 @@ class MainWindow(QMainWindow):
                 band_analysis=analysis,
                 geometry_svg=self._report_geometry_svg(design),
                 include_pattern_lobe=self._report_include_3d,
+                include_band_pattern_lobes=self._report_include_band_3d,
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
@@ -9510,6 +9513,7 @@ class MainWindow(QMainWindow):
             workflow_mode=self._workflow_mode,
             theme=self._theme_controller.preference,
             report_include_3d=self._report_include_3d,
+            report_include_band_3d=self._report_include_band_3d,
         )
 
     def _save_preferences(self) -> None:
@@ -9558,6 +9562,7 @@ class MainWindow(QMainWindow):
         self._length_policy = preferences.length_policy
         self._workflow_mode = preferences.workflow_mode
         self._report_include_3d = preferences.report_include_3d
+        self._report_include_band_3d = preferences.report_include_band_3d
         self._sync_workflow_controls()
         self._apply_workflow_mode()
         self._apply_unit_system_to_forms(preferences.unit_system)

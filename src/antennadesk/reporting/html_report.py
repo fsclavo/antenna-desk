@@ -204,6 +204,8 @@ def _band_patterns(
     analysis: BandAnalysisResult,
     design: DesignVariant,
     tr: Labeler,
+    *,
+    include_pattern_lobe: bool = False,
 ) -> str:
     sections = []
     for band_result in analysis.bands:
@@ -213,7 +215,14 @@ def _band_patterns(
             target_hz=band_result.band.center_hz,
         )
         title = f"<h3>{_escape(tr('{band} pattern', band=band_result.band.name))}</h3>"
-        sections.append(title + _pattern_cut_charts(frequency, tr))
+        section = title + _pattern_cut_charts(frequency, tr)
+        if frequency is not None and include_pattern_lobe:
+            section += _pattern_lobe_figure(
+                frequency,
+                tr,
+                ground=design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE,
+            )
+        sections.append(section)
     return (
         "".join(sections)
         if sections
@@ -232,6 +241,7 @@ def render_html_report(
     geometry_svg: str | None = None,
     display_units: DisplayUnits | None = None,
     include_pattern_lobe: bool = True,
+    include_band_pattern_lobes: bool = False,
 ) -> str:
     tr = labeler or identity_labeler
     parameters = design.parameters
@@ -388,11 +398,17 @@ def render_html_report(
     diagnostics = _diagnostics_table(result, tr)
     band_section = ""
     if band_analysis is not None:
+        band_patterns = _band_patterns(
+            band_analysis,
+            design,
+            tr,
+            include_pattern_lobe=include_band_pattern_lobes and include_pattern_lobe,
+        )
         band_section = (
             "<h2>Band summary</h2>"
             f"{_band_summary_table(band_analysis, tr)}"
             "<h2>Band patterns</h2>"
-            f"{_band_patterns(band_analysis, design, tr)}"
+            f"{band_patterns}"
         )
     geometry_section = (
         f'<div class="geometry">{geometry_svg}</div>'
@@ -493,6 +509,7 @@ def write_html_report(
     geometry_svg: str | None = None,
     display_units: DisplayUnits | None = None,
     include_pattern_lobe: bool = True,
+    include_band_pattern_lobes: bool = False,
 ) -> None:
     path.write_text(
         render_html_report(
@@ -505,6 +522,7 @@ def write_html_report(
             geometry_svg=geometry_svg,
             display_units=display_units,
             include_pattern_lobe=include_pattern_lobe,
+            include_band_pattern_lobes=include_band_pattern_lobes,
         ),
         encoding="utf-8",
         newline="\n",

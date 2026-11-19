@@ -109,13 +109,27 @@ def test_qsettings_store_round_trips_all_preferences(tmp_path: Path) -> None:
         length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
-        report_include_3d=False,
+        report_include_3d=True,
+        report_include_band_3d=True,
     )
 
     store.save(preferences)
 
     reopened = QSettingsPreferencesStore(QSettings(str(path), QSettings.Format.IniFormat))
     assert reopened.load() == preferences
+
+
+def test_band_3d_preference_requires_the_primary_3d_figure(tmp_path: Path) -> None:
+    path = tmp_path / "preferences.ini"
+    settings = QSettings(str(path), QSettings.Format.IniFormat)
+    settings.setValue("ui/report_3d", False)
+    settings.setValue("ui/report_band_3d", True)
+    settings.sync()
+
+    preferences = QSettingsPreferencesStore(QSettings(str(path), QSettings.Format.IniFormat)).load()
+
+    assert preferences.report_include_3d is False
+    assert preferences.report_include_band_3d is False
 
 
 def test_missing_preferences_use_the_startup_defaults(tmp_path: Path) -> None:
@@ -337,7 +351,8 @@ def test_preferences_action_applies_accepted_values(
         length_policy=LengthPolicy.FIXED,
         workflow_mode=WorkflowMode.GUIDED,
         theme=ThemePreference.DARK,
-        report_include_3d=False,
+        report_include_3d=True,
+        report_include_band_3d=True,
     )
     monkeypatch.setattr(
         PreferencesDialog,
@@ -354,7 +369,8 @@ def test_preferences_action_applies_accepted_values(
     assert window._unit_system is UnitSystem.IMPERIAL
     assert window._length_policy is LengthPolicy.FIXED
     assert window._workflow_mode is WorkflowMode.GUIDED
-    assert window._report_include_3d is False
+    assert window._report_include_3d is True
+    assert window._report_include_band_3d is True
     assert window._theme_controller.preference is ThemePreference.DARK
     assert is_dark_palette(_application().palette())
     assert window._ocfd_form._length.suffix().strip() == "ft"
@@ -375,6 +391,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
             workflow_mode=WorkflowMode.GUIDED,
             theme=ThemePreference.LIGHT,
             report_include_3d=False,
+            report_include_band_3d=True,
         ),
     )
     qtbot.addWidget(dialog)
@@ -385,6 +402,8 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
     assert dialog._theme.currentData() == ThemePreference.LIGHT.value
     assert dialog._workflow_mode.currentData() == WorkflowMode.GUIDED.value
     assert dialog._report_3d.isChecked() is False
+    assert dialog._report_band_3d.isChecked() is True
+    assert dialog._report_band_3d.isEnabled() is False
     assert "Automatic length units" in dialog._units.toolTip()
     assert "palette" in dialog._theme.toolTip().lower()
 
@@ -396,6 +415,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         dialog._workflow_mode.findData(WorkflowMode.ADVANCED.value)
     )
     dialog._report_3d.setChecked(True)
+    dialog._report_band_3d.setChecked(True)
 
     assert dialog.preferences() == UiPreferences(
         font_size=FontSize.LARGE,
@@ -405,6 +425,7 @@ def test_preferences_dialog_returns_selected_values(qtbot: QtBot) -> None:
         workflow_mode=WorkflowMode.ADVANCED,
         theme=ThemePreference.DARK,
         report_include_3d=True,
+        report_include_band_3d=True,
     )
 
 
@@ -426,6 +447,7 @@ def test_preferences_dialog_restores_defaults(qtbot: QtBot) -> None:
     assert dialog.preferences().workflow_mode is WorkflowMode.STANDARD
     assert dialog.preferences().theme is ThemePreference.SYSTEM
     assert dialog.preferences().report_include_3d is True
+    assert dialog.preferences().report_include_band_3d is False
 
 
 def test_preferences_action_retranslates_and_replaces_quick_menus(

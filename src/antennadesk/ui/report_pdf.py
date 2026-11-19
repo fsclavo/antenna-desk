@@ -166,6 +166,7 @@ def write_report_pdf(
     band_analysis: BandAnalysisResult | None = None,
     geometry_svg: str | None = None,
     include_pattern_lobe: bool = True,
+    include_band_pattern_lobes: bool = False,
 ) -> None:
     writer = QPdfWriter(str(path))
     writer.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
@@ -462,6 +463,17 @@ def write_report_pdf(
                 chart(azimuth_svg)
             if elevation_svg:
                 chart(elevation_svg)
+            if include_band_pattern_lobes and include_pattern_lobe:
+                lobe_svg, lobe_reason = _pattern_lobe_chart(
+                    band_result.result,
+                    design,
+                    translator,
+                    target_hz=band_result.band.center_hz,
+                )
+                if lobe_svg:
+                    chart(lobe_svg)
+                elif lobe_reason:
+                    paragraph(lobe_reason)
 
     section(translator.t("tab.diagnostics"))
     if result.diagnostics:

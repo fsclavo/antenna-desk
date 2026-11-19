@@ -25,6 +25,7 @@ LENGTH_POLICY_KEY = "ui/length_policy"
 WORKFLOW_MODE_KEY = "ui/workflow_mode"
 THEME_KEY = "ui/theme"
 REPORT_3D_KEY = "ui/report_3d"
+REPORT_BAND_3D_KEY = "ui/report_band_3d"
 _MIN_POINT_SIZE = 6.0
 _MIN_PIXEL_SIZE = 8
 
@@ -75,6 +76,7 @@ class UiPreferences:
     workflow_mode: WorkflowMode = WorkflowMode.STANDARD
     theme: ThemePreference = ThemePreference.SYSTEM
     report_include_3d: bool = True
+    report_include_band_3d: bool = False
 
 
 class PreferencesStore(Protocol):
@@ -102,6 +104,11 @@ class QSettingsPreferencesStore:
         default_language: LanguagePreference = LanguagePreference.SYSTEM,
         default_unit_system: UnitSystem = UnitSystem.METRIC,
     ) -> UiPreferences:
+        report_include_3d = self._load_bool(REPORT_3D_KEY, True)
+        report_include_band_3d = report_include_3d and self._load_bool(
+            REPORT_BAND_3D_KEY,
+            False,
+        )
         return UiPreferences(
             font_size=self._load_enum(FONT_SIZE_KEY, FontSize, FontSize.MEDIUM),
             language=self._load_enum(
@@ -129,7 +136,8 @@ class QSettingsPreferencesStore:
                 ThemePreference,
                 ThemePreference.SYSTEM,
             ),
-            report_include_3d=self._load_bool(REPORT_3D_KEY, True),
+            report_include_3d=report_include_3d,
+            report_include_band_3d=report_include_band_3d,
         )
 
     def save(self, preferences: UiPreferences) -> None:
@@ -140,6 +148,7 @@ class QSettingsPreferencesStore:
         self._settings.setValue(WORKFLOW_MODE_KEY, preferences.workflow_mode.value)
         self._settings.setValue(THEME_KEY, preferences.theme.value)
         self._settings.setValue(REPORT_3D_KEY, preferences.report_include_3d)
+        self._settings.setValue(REPORT_BAND_3D_KEY, preferences.report_include_band_3d)
         self._settings.sync()
 
     def _load_bool(self, key: str, default: bool) -> bool:

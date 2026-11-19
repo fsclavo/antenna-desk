@@ -439,6 +439,7 @@ HELP_MANIFEST = frozenset(
         "help.optimize.robust_tolerance",
         "help.optimize.scope",
         "help.preferences.report_3d",
+        "help.preferences.report_band_3d",
     }
 )
 

@@ -310,6 +310,57 @@ def test_html_report_includes_a_band_summary(sample_project: Project) -> None:
     assert report.count('class="chart pattern-lobe"') == 1
 
 
+def test_html_report_band_sections_include_3d_only_when_enabled(
+    sample_project: Project,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.simulation.band_result import BandAnalysisResult, BandResult
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    design = sample_project.designs[0]
+    analysis = BandAnalysisResult(
+        design_id=design.id,
+        batch_id=uuid4(),
+        created_at=datetime(2026, 11, 3, tzinfo=UTC),
+        bands=tuple(
+            BandResult(band=band, result=make_result(sample_project))
+            for band in (
+                amateur_band_by_id("40m"),
+                amateur_band_by_id("20m"),
+            )
+            if band is not None
+        ),
+    )
+    result = make_result(sample_project)
+
+    default = render_html_report(
+        sample_project,
+        design,
+        result,
+        band_analysis=analysis,
+    )
+    with_bands = render_html_report(
+        sample_project,
+        design,
+        result,
+        band_analysis=analysis,
+        include_band_pattern_lobes=True,
+    )
+    with_primary_off = render_html_report(
+        sample_project,
+        design,
+        result,
+        band_analysis=analysis,
+        include_pattern_lobe=False,
+        include_band_pattern_lobes=True,
+    )
+
+    assert default.count('class="chart pattern-lobe"') == 1
+    assert with_bands.count('class="chart pattern-lobe"') == 3
+    assert with_primary_off.count('class="chart pattern-lobe"') == 0
+
+
 def test_spanish_report_uses_roe_not_swr(sample_project: Project) -> None:
     report = render_html_report(
         sample_project,
