@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Optimizer evaluation-mode scope.** The optimizer dialog now labels the
+  modes **Single frequency**, **Band-edge sweep**, and **Robust (dimensional
+  tolerance)**. A new evaluation-scope line shows the resolved plan source and
+  size, distinguishes the current band plan from manual edges and the
+  design-frequency fallback, and explains that a monoband design can use a
+  three-point band-edge sweep without running Analyze Bands. Robust remains a
+  dimensional-tolerance mode independent of the band plan. The unused
+  descriptor capability flags were removed; both modes are generic.
 - **Design-frequency consistency for Moxon and Yagi.** Both editors now track
   whether their managed geometry is still the generated default. A pristine
   frequency change regenerates the Moxon 20 m reference or scales the Yagi

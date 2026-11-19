@@ -65,7 +65,6 @@ AntennaOptimizerDescriptor
   default_objective
   start_points(current_parameters)
   budget_profile
-  supports_band_aware
   unavailable_reason
   structural_segmentation(parameters)   # optional; model-defined partitions
 ```
@@ -73,6 +72,14 @@ AntennaOptimizerDescriptor
 The descriptor owns the family-specific design space, constraints, parameter
 builder, supported objectives, and default starting points. The search engine
 is shared.
+
+Band-edge sweep and robust tolerance are generic evaluation modes, not
+per-family capabilities: any descriptor with a positive evaluation frequency
+and at least two distinct scoring frequencies can use them. Do not add unused
+capability flags to the descriptor; a future family-specific opt-out requires a
+translated unavailable reason and its own ADR. The optimizer dialog shows the
+resolved plan source and scoring size so a monoband design is not mistaken for
+a multiband model.
 
 A family either has a descriptor or an explicit unavailable reason. There is
 no implicit fallback, no "use the dipole form", and no generic primary-dimension

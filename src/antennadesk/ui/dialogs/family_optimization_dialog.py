@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 import time
+from enum import StrEnum
 
 from PySide6.QtCore import Qt, QThread
 from PySide6.QtGui import QCloseEvent
@@ -85,6 +86,14 @@ _OBJECTIVE_KEYS = {
 THOROUGH_DEFAULT_SEED_RUNS = 3
 
 
+class BandPlanSource(StrEnum):
+    """Where the band-aware scoring frequencies came from."""
+
+    CURRENT_PLAN = "current_plan"
+    MANUAL = "manual"
+    FALLBACK = "fallback"
+
+
 class FamilyOptimizationDialog(QDialog):
     """One dialog for every registered family optimizer."""
 
@@ -100,6 +109,8 @@ class FamilyOptimizationDialog(QDialog):
         topology_label: str | None = None,
         target_band_label: str | None = None,
         band_edges_hz: tuple[float, ...] = (),
+        band_plan_source: BandPlanSource | None = None,
+        band_plan_bands: int = 0,
         operating_frequencies_hz: tuple[float, ...] = (),
         last_summary: OptimizationSummary | None = None,
         display_units: DisplayUnits | None = None,
@@ -115,6 +126,10 @@ class FamilyOptimizationDialog(QDialog):
         self._descriptor = descriptor
         self._base_spec = base_spec
         self._band_edges_hz = tuple(band_edges_hz)
+        self._band_plan_source = band_plan_source or (
+            BandPlanSource.CURRENT_PLAN if self._band_edges_hz else BandPlanSource.FALLBACK
+        )
+        self._band_plan_bands = max(1, band_plan_bands)
         self._operating_frequencies_hz = tuple(operating_frequencies_hz)
         self._last_summary = last_summary
         self._thread: QThread | None = None
@@ -156,6 +171,11 @@ class FamilyOptimizationDialog(QDialog):
         self._band_edges.setText(
             ", ".join(f"{frequency_hz / 1e6:.6f}" for frequency_hz in self._initial_band_edges())
         )
+        self._band_edges.textChanged.connect(self._band_edges_changed)
+
+        self._scope_label = QLabel(translator.t("optimize.scope"), self)
+        self._scope = QLabel(self)
+        self._scope.setWordWrap(True)
 
         self._robust_tolerance = QDoubleSpinBox(self)
         self._robust_tolerance.setRange(0.1, 10.0)
@@ -163,6 +183,10 @@ class FamilyOptimizationDialog(QDialog):
         self._robust_tolerance.setSingleStep(0.1)
         self._robust_tolerance.setValue(1.0)
         self._robust_tolerance.setSuffix(" %")
+        apply_help(self._mode, translator, "optimize.mode")
+        apply_help(self._band_edges, translator, "optimize.band_edges")
+        apply_help(self._robust_tolerance, translator, "optimize.robust_tolerance")
+        apply_help(self._scope, translator, "optimize.scope")
 
         self._target_r = QDoubleSpinBox(self)
         self._target_r.setRange(1.0, 10_000.0)
@@ -358,6 +382,7 @@ class FamilyOptimizationDialog(QDialog):
             form.addRow(QLabel(translator.t("optimize.target_band"), self), self._target_band_value)
         form.addRow(self._objective_label, self._objective)
         form.addRow(self._mode_label, self._mode)
+        form.addRow(self._scope_label, self._scope)
         form.addRow(self._band_edges_label, self._band_edges)
         form.addRow(self._operating_frequencies_label)
         form.addRow(self._robust_tolerance_label, self._robust_tolerance)
@@ -476,6 +501,63 @@ class FamilyOptimizationDialog(QDialog):
 
     def _mode_value(self) -> OptimizationMode:
         return OptimizationMode(str(self._mode.currentData()))
+
+    def _band_edges_changed(self, *_args: object) -> None:
+        if not self._ready:
+            return
+        self._band_plan_source = BandPlanSource.MANUAL
+        self._budget_changed()
+
+    def _scope_text(self) -> str:
+        mode = self._mode_value()
+        if mode is OptimizationMode.SINGLE:
+            return self._translator.t("optimize.scope.single")
+        if (
+            self._objective_value() is FamilyOptimizationObjective.MIN_SWR_OPERATING
+            and self._operating_frequencies_hz
+        ):
+            base = self._translator.t(
+                "optimize.scope.operating",
+                frequencies=len(self._operating_frequencies_hz),
+            )
+        else:
+            try:
+                frequencies = len(self._parse_band_edges())
+            except ValueError:
+                return self._translator.t("optimize.scope.invalid")
+            if self._band_plan_source is BandPlanSource.CURRENT_PLAN:
+                if self._band_plan_bands == 1:
+                    base = self._translator.t(
+                        "optimize.scope.current_plan_one",
+                        frequencies=frequencies,
+                    )
+                else:
+                    base = self._translator.t(
+                        "optimize.scope.current_plan_many",
+                        bands=self._band_plan_bands,
+                        frequencies=frequencies,
+                    )
+            elif self._band_plan_source is BandPlanSource.MANUAL:
+                base = self._translator.t(
+                    "optimize.scope.manual",
+                    frequencies=frequencies,
+                )
+            else:
+                base = self._translator.t(
+                    "optimize.scope.fallback",
+                    frequencies=frequencies,
+                )
+        if mode is OptimizationMode.ROBUST:
+            return base + " " + self._translator.t("optimize.scope.robust")
+        if (
+            self._objective_value() is FamilyOptimizationObjective.MIN_SWR_OPERATING
+            and self._operating_frequencies_hz
+        ):
+            return base
+        return base + " " + self._translator.t("optimize.scope.band_aware")
+
+    def _update_scope(self) -> None:
+        self._scope.setText(self._scope_text())
 
     def _mode_changed(self, *_args: object) -> None:
         if not self._ready:
@@ -813,6 +895,7 @@ class FamilyOptimizationDialog(QDialog):
                 seeds=seed_runs,
             )
         )
+        self._update_scope()
         self._update_controls()
 
     def _update_controls(self) -> None:
@@ -840,6 +923,8 @@ class FamilyOptimizationDialog(QDialog):
             self._max_turning,
             self._table,
             self._max_swr_enabled,
+            self._scope,
+            self._scope_label,
         ):
             widget.setEnabled(not running)
         mode = self._mode_value()

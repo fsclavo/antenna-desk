@@ -72,7 +72,6 @@ AntennaOptimizerDescriptor
   key, variable tuple, builder, validator
   supported objectives, default objective
   start_points, budget profile
-  supports_band_aware
   unavailable_reason
 
 OptimizeAntennaCommand

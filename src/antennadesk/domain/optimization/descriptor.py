@@ -91,8 +91,6 @@ class AntennaOptimizerDescriptor:
     objectives: frozenset[FamilyOptimizationObjective]
     default_objective: FamilyOptimizationObjective = FamilyOptimizationObjective.TARGET_IMPEDANCE
     start_points: tuple[Mapping[str, float], ...] = field(default_factory=tuple)
-    supports_band_aware: bool = False
-    supports_robust: bool = False
     supports_boom_constraint: bool = False
     context_note_key: str | None = None
     structural_segmentation: StructuralSegmentation | None = None

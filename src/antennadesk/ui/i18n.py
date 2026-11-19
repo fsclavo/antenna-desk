@@ -4373,6 +4373,51 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "|Z - Z0|, no la ROE; elegí ROE mínima para optimizar la ROE."
         ),
     },
+    "help.optimize.mode": {
+        Language.ENGLISH: (
+            "Single frequency solves one point. Band-edge sweep solves the start, "
+            "center, and stop of each selected band. Robust adds dimensional "
+            "tolerance corners at the same frequencies; it does not create bands."
+        ),
+        Language.SPANISH: (
+            "Frecuencia única resuelve un punto. El barrido de bordes resuelve el "
+            "inicio, el centro y el fin de cada banda seleccionada. Robusto agrega "
+            "esquinas de tolerancia dimensional en las mismas frecuencias; no crea "
+            "bandas."
+        ),
+    },
+    "help.optimize.band_edges": {
+        Language.ENGLISH: (
+            "Scoring frequencies resolved from the current band plan. Editing them "
+            "switches the scope to manual edges. Analyze Bands is not required."
+        ),
+        Language.SPANISH: (
+            "Frecuencias de evaluación resueltas del plan de bandas actual. Editarlas "
+            "cambia el alcance a bordes manuales. No se requiere Analizar bandas."
+        ),
+    },
+    "help.optimize.robust_tolerance": {
+        Language.ENGLISH: (
+            "Perturbs each active length and radius by this percentage at every "
+            "scoring frequency. It does not add or change bands."
+        ),
+        Language.SPANISH: (
+            "Perturba cada longitud y radio activos en este porcentaje en cada "
+            "frecuencia de evaluación. No agrega ni cambia bandas."
+        ),
+    },
+    "help.optimize.scope": {
+        Language.ENGLISH: (
+            "Shows the scoring-plan source and size. A monoband design can still "
+            "use a three-point band-edge sweep; the band plan is not a multiband "
+            "declaration."
+        ),
+        Language.SPANISH: (
+            "Muestra el origen y el tamaño del plan de evaluación. Un diseño "
+            "monobanda puede usar un barrido de tres puntos; el plan de bandas no "
+            "declara un modelo multibanda."
+        ),
+    },
     "help.optimize.min_length": {
         Language.ENGLISH: "Lower bound for the optimized dimension.",
         Language.SPANISH: "Límite inferior de la dimensión optimizada.",
@@ -15031,24 +15076,80 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Sensibilidad",
     },
     "optimize.mode": {
-        Language.ENGLISH: "Operating mode",
-        Language.SPANISH: "Modo de operación",
+        Language.ENGLISH: "Evaluation mode",
+        Language.SPANISH: "Modo de evaluación",
     },
     "optimize.mode.single": {
         Language.ENGLISH: "Single frequency",
         Language.SPANISH: "Frecuencia única",
     },
     "optimize.mode.band_aware": {
-        Language.ENGLISH: "Band-aware",
-        Language.SPANISH: "Consciente de banda",
+        Language.ENGLISH: "Band-edge sweep",
+        Language.SPANISH: "Barrido de bordes de banda",
     },
     "optimize.mode.robust": {
-        Language.ENGLISH: "Robust (tolerance)",
-        Language.SPANISH: "Robusto (tolerancia)",
+        Language.ENGLISH: "Robust (dimensional tolerance)",
+        Language.SPANISH: "Robusto (tolerancia dimensional)",
+    },
+    "optimize.scope": {
+        Language.ENGLISH: "Evaluation scope",
+        Language.SPANISH: "Alcance de la evaluación",
+    },
+    "optimize.scope.single": {
+        Language.ENGLISH: "Single frequency · 1 scoring frequency",
+        Language.SPANISH: "Frecuencia única · 1 frecuencia de evaluación",
+    },
+    "optimize.scope.current_plan_one": {
+        Language.ENGLISH: ("Current band plan · 1 band · {frequencies} scoring frequencies"),
+        Language.SPANISH: (
+            "Plan de bandas actual · 1 banda · {frequencies} frecuencias de evaluación"
+        ),
+    },
+    "optimize.scope.current_plan_many": {
+        Language.ENGLISH: ("Current band plan · {bands} bands · {frequencies} scoring frequencies"),
+        Language.SPANISH: (
+            "Plan de bandas actual · {bands} bandas · {frequencies} frecuencias de evaluación"
+        ),
+    },
+    "optimize.scope.manual": {
+        Language.ENGLISH: "Manual edges · {frequencies} scoring frequencies",
+        Language.SPANISH: "Bordes manuales · {frequencies} frecuencias de evaluación",
+    },
+    "optimize.scope.fallback": {
+        Language.ENGLISH: ("Design-frequency fallback · {frequencies} scoring frequencies"),
+        Language.SPANISH: (
+            "Respaldo por frecuencia de diseño · {frequencies} frecuencias de evaluación"
+        ),
+    },
+    "optimize.scope.operating": {
+        Language.ENGLISH: "Operating frequencies · {frequencies} scoring frequencies",
+        Language.SPANISH: "Frecuencias de operación · {frequencies} frecuencias de evaluación",
+    },
+    "optimize.scope.invalid": {
+        Language.ENGLISH: "Manual edges · invalid frequencies",
+        Language.SPANISH: "Bordes manuales · frecuencias inválidas",
+    },
+    "optimize.scope.band_aware": {
+        Language.ENGLISH: (
+            "The band-edge sweep uses the start, center, and stop of each selected "
+            "band; Analyze Bands is not required."
+        ),
+        Language.SPANISH: (
+            "El barrido de bordes usa el inicio, el centro y el fin de cada banda "
+            "seleccionada; no se requiere Analizar bandas."
+        ),
+    },
+    "optimize.scope.robust": {
+        Language.ENGLISH: (
+            "Robust perturbs dimensions at each frequency; the band plan is unchanged."
+        ),
+        Language.SPANISH: (
+            "Robusto perturba las dimensiones en cada frecuencia; el plan de bandas no cambia."
+        ),
     },
     "optimize.band_edges": {
-        Language.ENGLISH: "Band edges (MHz)",
-        Language.SPANISH: "Bordes de banda (MHz)",
+        Language.ENGLISH: "Band-edge frequencies (MHz)",
+        Language.SPANISH: "Frecuencias de borde de banda (MHz)",
     },
     "optimize.band_edges_hint": {
         Language.ENGLISH: "Comma-separated frequencies in MHz; at least two.",

@@ -14,7 +14,10 @@ from antennadesk.domain.optimization.engine import BudgetProfile
 from antennadesk.domain.optimization.registry import optimizer_availability
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.ui.dialogs.family_optimization_dialog import FamilyOptimizationDialog
+from antennadesk.ui.dialogs.family_optimization_dialog import (
+    BandPlanSource,
+    FamilyOptimizationDialog,
+)
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.pattern_resolution import far_field_request
 from antennadesk.ui.units import UnitSystem
@@ -27,6 +30,8 @@ def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
         total_length_m=20.0,
         height_m=8.0,
     )
+    language = kwargs.pop("language", Language.ENGLISH)
+    assert isinstance(language, Language)
     availability = optimizer_availability(parameters)
     assert availability.descriptor is not None
     base_spec = kwargs.pop("base_spec", None)
@@ -36,7 +41,7 @@ def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
             far_field=far_field_request(5.0, parameters.ground),
         )
     return FamilyOptimizationDialog(
-        Translator(Language.ENGLISH),
+        Translator(language),
         UnitSystem.METRIC,
         FakeSolver(),
         availability.descriptor,
@@ -439,6 +444,118 @@ def test_family_dialog_exposes_quality_modes(qtbot: QtBot) -> None:
     assert "scenario" in dialog._budget_hint.text()
 
 
+def test_family_dialog_scope_reports_the_current_plan_and_mode(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.optimization.summary import OptimizationMode
+
+    dialog = _dialog(
+        band_edges_hz=(6.7e6, 7.1e6, 7.5e6),
+        band_plan_source=BandPlanSource.CURRENT_PLAN,
+        band_plan_bands=1,
+    )
+    qtbot.addWidget(dialog)
+
+    assert dialog._mode.itemText(0) == "Single frequency"
+    assert dialog._mode.itemText(1) == "Band-edge sweep"
+    assert dialog._mode.itemText(2) == "Robust (dimensional tolerance)"
+    assert dialog._scope.text() == "Single frequency · 1 scoring frequency"
+
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
+
+    assert "Current band plan" in dialog._scope.text()
+    assert "1 band" in dialog._scope.text()
+    assert "3 scoring frequencies" in dialog._scope.text()
+    assert "Analyze Bands is not required" in dialog._scope.text()
+
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.ROBUST.value))
+
+    assert "Current band plan" in dialog._scope.text()
+    assert "Robust perturbs dimensions" in dialog._scope.text()
+    assert "band plan is unchanged" in dialog._scope.text()
+    assert "scenario" in dialog._budget_hint.text()
+
+
+def test_family_dialog_scope_tracks_manual_and_invalid_edges(qtbot: QtBot) -> None:
+    from antennadesk.domain.optimization.summary import OptimizationMode
+
+    dialog = _dialog(
+        band_edges_hz=(6.7e6, 7.1e6, 7.5e6),
+        band_plan_source=BandPlanSource.CURRENT_PLAN,
+        band_plan_bands=1,
+    )
+    qtbot.addWidget(dialog)
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
+
+    dialog._band_edges.setText("6.8, 7.1, 7.4")
+
+    assert "Manual edges" in dialog._scope.text()
+    assert "3 scoring frequencies" in dialog._scope.text()
+
+    dialog._band_edges.setText("not a frequency")
+
+    assert "invalid frequencies" in dialog._scope.text()
+    assert "Current band plan" not in dialog._scope.text()
+
+
+def test_family_dialog_scope_reports_multiple_bands(qtbot: QtBot) -> None:
+    from antennadesk.domain.optimization.summary import OptimizationMode
+
+    edges = tuple(
+        frequency
+        for base in (3.5e6, 7.1e6, 14.1e6)
+        for frequency in (base * 0.98, base, base * 1.02)
+    )
+    dialog = _dialog(
+        band_edges_hz=edges,
+        band_plan_source=BandPlanSource.CURRENT_PLAN,
+        band_plan_bands=3,
+    )
+    qtbot.addWidget(dialog)
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
+
+    assert "3 bands" in dialog._scope.text()
+    assert "9 scoring frequencies" in dialog._scope.text()
+
+
+def test_family_dialog_scope_uses_operating_frequencies(qtbot: QtBot) -> None:
+    from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
+    from antennadesk.domain.optimization.summary import OptimizationMode
+
+    dialog = _dialog(
+        band_edges_hz=(6.7e6, 7.1e6, 7.5e6),
+        band_plan_source=BandPlanSource.CURRENT_PLAN,
+        band_plan_bands=1,
+        operating_frequencies_hz=(7.1e6, 14.2e6, 28.4e6),
+    )
+    qtbot.addWidget(dialog)
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
+    dialog._objective.setCurrentIndex(
+        dialog._objective.findData(FamilyOptimizationObjective.MIN_SWR_OPERATING.value)
+    )
+
+    assert "Operating frequencies" in dialog._scope.text()
+    assert "3 scoring frequencies" in dialog._scope.text()
+
+
+def test_family_dialog_scope_and_modes_are_localized(qtbot: QtBot) -> None:
+    from antennadesk.domain.optimization.summary import OptimizationMode
+
+    dialog = _dialog(
+        language=Language.SPANISH,
+        band_edges_hz=(6.7e6, 7.1e6, 7.5e6),
+        band_plan_source=BandPlanSource.CURRENT_PLAN,
+        band_plan_bands=1,
+    )
+    qtbot.addWidget(dialog)
+    dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
+
+    assert dialog._mode.itemText(1) == "Barrido de bordes de banda"
+    assert "Plan de bandas actual" in dialog._scope.text()
+    assert "1 banda" in dialog._scope.text()
+    assert "frecuencias de evaluación" in dialog._scope.text()
+
+
 def test_family_dialog_shows_the_last_persisted_summary(qtbot: QtBot) -> None:
     from datetime import UTC, datetime
 
@@ -464,7 +581,7 @@ def test_family_dialog_shows_the_last_persisted_summary(qtbot: QtBot) -> None:
     qtbot.addWidget(dialog)
 
     assert "2026-11-07" in dialog._last_summary_label.text()
-    assert "Band-aware" in dialog._last_summary_label.text()
+    assert "Band-edge sweep" in dialog._last_summary_label.text()
     assert "1.2" in dialog._last_summary_label.text()
 
 

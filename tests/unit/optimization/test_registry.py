@@ -405,6 +405,15 @@ def _typed_samples() -> list[AntennaDesignParameters]:
     ]
 
 
+def test_descriptors_do_not_expose_dead_mode_capability_flags() -> None:
+    for parameters in _typed_samples():
+        availability = optimizer_availability(parameters)
+        assert availability.descriptor is not None
+        descriptor = availability.descriptor
+        assert not hasattr(descriptor, "supports_band_aware")
+        assert not hasattr(descriptor, "supports_robust")
+
+
 def test_every_supported_typed_family_has_a_buildable_descriptor() -> None:
     for parameters in _typed_samples():
         availability = optimizer_availability(parameters)

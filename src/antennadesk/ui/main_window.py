@@ -305,7 +305,10 @@ from .dialogs.element_optimization_dialog import (
     ElementOptimizationVariable,
 )
 from .dialogs.endfed_dialog import EndFedDialog
-from .dialogs.family_optimization_dialog import FamilyOptimizationDialog
+from .dialogs.family_optimization_dialog import (
+    BandPlanSource,
+    FamilyOptimizationDialog,
+)
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_chain_dialog import FeedChainDialog
 from .dialogs.feed_connection_dialog import FeedConnectionDialog
@@ -7624,6 +7627,8 @@ class MainWindow(QMainWindow):
             return
         target_band_label: str | None = None
         band_edges_hz = self._optimizer_band_edges(design)
+        band_plan_source = BandPlanSource.CURRENT_PLAN if band_edges_hz else BandPlanSource.FALLBACK
+        band_plan_bands = len(band_plan.selections)
         target_model = design.antenna
         if isinstance(design.parameters, HexbeamParameters) and hexbeam_band is not None:
             target = next(
@@ -7642,6 +7647,8 @@ class MainWindow(QMainWindow):
                 target_model = design.parameters.to_antenna(active_band=hexbeam_band)
                 operating_frequencies = (target.frequency_hz,)
                 band_edges_hz = ()
+                band_plan_source = BandPlanSource.FALLBACK
+                band_plan_bands = 0
                 target_band_label = self._translator.t(f"hexbeam.band.{hexbeam_band}")
             else:
                 base_spec = adapter.simulation_spec(self, design.parameters)
@@ -7663,6 +7670,8 @@ class MainWindow(QMainWindow):
             topology_label=self._translator.t(label_key_for(design.parameters)),
             target_band_label=target_band_label,
             band_edges_hz=band_edges_hz,
+            band_plan_source=band_plan_source,
+            band_plan_bands=band_plan_bands,
             operating_frequencies_hz=operating_frequencies,
             last_summary=design.optimization_summary,
         )

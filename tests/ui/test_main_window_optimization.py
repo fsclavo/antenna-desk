@@ -12,6 +12,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui import main_window as main_window_module
+from antennadesk.ui.dialogs.family_optimization_dialog import BandPlanSource
 from antennadesk.ui.main_window import MainWindow
 
 
@@ -183,6 +184,95 @@ def test_optimize_tooltip_explains_a_physical_bound_violation(
     window._dirty = False
 
 
+def test_optimize_monoband_uses_the_current_plan_without_analyze_bands(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+
+    parameters = InvertedVParameters(
+        frequency_hz=7_100_000.0,
+        leg_length_m=10.0,
+        apex_height_m=12.0,
+    )
+    use_parameters(window, parameters)
+    captured: dict[str, object] = {}
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured["band_edges_hz"] = kwargs.get("band_edges_hz")
+            captured["band_plan_source"] = kwargs.get("band_plan_source")
+            captured["band_plan_bands"] = kwargs.get("band_plan_bands")
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+
+    window.optimize_current_design()
+    window._dirty = False
+
+    assert captured["band_plan_source"] == BandPlanSource.CURRENT_PLAN
+    assert captured["band_plan_bands"] == 1
+    edges = captured["band_edges_hz"]
+    assert isinstance(edges, tuple)
+    assert len(edges) == 3
+
+
+def test_optimize_multiband_plan_reports_all_bands(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.dipole import DipoleParameters
+    from antennadesk.domain.design.band_plan import BandPlan, BandSelection
+    from antennadesk.domain.simulation.bands import amateur_band_by_id
+
+    parameters = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._design_id is not None
+    window._band_plans[window._design_id] = BandPlan(
+        (
+            BandSelection(amateur_band_by_id("40m")),
+            BandSelection(amateur_band_by_id("20m")),
+            BandSelection(amateur_band_by_id("10m")),
+        )
+    )
+    captured: dict[str, object] = {}
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured["band_edges_hz"] = kwargs.get("band_edges_hz")
+            captured["band_plan_source"] = kwargs.get("band_plan_source")
+            captured["band_plan_bands"] = kwargs.get("band_plan_bands")
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(
+        main_window_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+
+    window.optimize_current_design()
+    window._dirty = False
+
+    assert captured["band_plan_source"] == BandPlanSource.CURRENT_PLAN
+    assert captured["band_plan_bands"] == 3
+    edges = captured["band_edges_hz"]
+    assert isinstance(edges, tuple)
+    assert len(edges) == 9
+
+
 def test_optimize_multiband_hexbeam_targets_the_active_band(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,
@@ -210,6 +300,8 @@ def test_optimize_multiband_hexbeam_targets_the_active_band(
             captured["base_spec"] = args[4]
             captured["target_band_label"] = kwargs.get("target_band_label")
             captured["band_edges_hz"] = kwargs.get("band_edges_hz")
+            captured["band_plan_source"] = kwargs.get("band_plan_source")
+            captured["band_plan_bands"] = kwargs.get("band_plan_bands")
             captured["operating_frequencies_hz"] = kwargs.get("operating_frequencies_hz")
 
         def exec(self) -> QDialog.DialogCode:
@@ -238,6 +330,8 @@ def test_optimize_multiband_hexbeam_targets_the_active_band(
     assert descriptor.key == "hexbeam_band"
     assert captured["target_band_label"] == "15 m"
     assert captured["band_edges_hz"] == ()
+    assert captured["band_plan_source"] == BandPlanSource.FALLBACK
+    assert captured["band_plan_bands"] == 0
     operating = captured["operating_frequencies_hz"]
     assert isinstance(operating, tuple)
     assert operating == (pytest.approx(parameters.bands[1].frequency_hz),)

@@ -29,8 +29,22 @@ summary.
 | `robust` | 3 per edge | Nominal and ± dimensional-tolerance corners |
 
 Band edges are supplied explicitly by the dialog. They default to the current
-project band plan (start, center, and stop of each selected band). If no plan is
-available, the application falls back to the design frequency and ±5 %.
+project band plan (start, center, and stop of each selected band). A per-family
+default plan exists, so the normal UI path does not require **Analyze Bands**;
+the analysis action only replaces the stored plan. If the dialog receives no
+edges (for example, a selected HexBeam band, where only the operating frequency
+is supplied), the application falls back to the design frequency and ±5 %.
+
+The user-facing mode names are **Single frequency**, **Band-edge sweep**, and
+**Robust (dimensional tolerance)**. The internal `OptimizationMode` values and
+persisted strings (`single`, `band_aware`, `robust`) are unchanged. The dialog
+shows an evaluation-scope line with the resolved plan source and size, such as
+`Current band plan · 1 band · 3 scoring frequencies`, `Manual edges · 3 scoring
+frequencies`, or `Design-frequency fallback · 3 scoring frequencies`. Editing
+the frequency list switches the source to manual; invalid text reports an
+invalid manual scope without claiming a plan source. Robust uses the same
+frequencies as the band-edge sweep and perturbs dimensions, so it is available
+for a monoband design and is never gated behind band analysis.
 
 Robust tolerance applies to every continuous variable whose presentation unit
 is a length (`m`) or conductor radius (`radius`). The three scenarios are

@@ -434,6 +434,10 @@ HELP_MANIFEST = frozenset(
         "help.journal.comparison.left",
         "help.journal.comparison.right",
         "help.journal.comparison.table",
+        "help.optimize.mode",
+        "help.optimize.band_edges",
+        "help.optimize.robust_tolerance",
+        "help.optimize.scope",
     }
 )
 

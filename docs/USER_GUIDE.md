@@ -2130,32 +2130,44 @@ another feasible candidate has a lower SWR and offers **Apply Best SWR**. Target
 impedance minimizes `|Z−Z0|`, not SWR, so use the SWR objective when return loss
 is the goal.
 
-### Operating modes
+### Evaluation modes
 
-The **Operating mode** selector controls how many operating points each
+The **Evaluation mode** selector controls how many operating points each
 candidate is evaluated at:
 
 - **Single frequency** is the default and uses the design frequency once.
-- **Band-aware** evaluates the scoring frequencies and reports the worst SWR,
-  impedance error, gain, front-to-back ratio, and efficiency. With the
+- **Band-edge sweep** evaluates the scoring frequencies and reports the worst
+  SWR, impedance error, gain, front-to-back ratio, and efficiency. With the
   **Minimum SWR at operating frequencies** objective, the scoring points are
   the family operating frequencies (OCFD harmonics or band centers); otherwise
-  they are the listed band edges. The band-edge list defaults to the current
+  they are the listed band-edge frequencies. The list defaults to the current
   band plan (start, center, and stop of each selected band) and can be edited as
-  comma-separated MHz values.
-- **Robust (tolerance)** evaluates the scoring frequencies at the nominal
-  geometry and at two deterministic dimensional-tolerance corners (± the
-  selected percentage of every active length and radius). Variables left
-  unchecked are not perturbed. The score adds a variance penalty, so a design
+  comma-separated MHz values. **Analyze Bands** is not a prerequisite: the
+  default plan already provides three points for a monoband design. Analyze
+  Bands only replaces the stored plan with the bands you select for a later
+  simulation or report.
+- **Robust (dimensional tolerance)** evaluates the same scoring frequencies at
+  the nominal geometry and at two deterministic dimensional-tolerance corners
+  (± the selected percentage of every active length and radius). Variables left
+  unchecked are not perturbed. It is independent of the number of bands and is
+  useful for a monoband design. The score adds a variance penalty, so a design
   that only performs well at the nominal dimensions ranks lower.
 
-Band-aware and robust modes multiply the solver runs by the number of scoring
+The **Evaluation scope** line shows the resolved source and size, for example
+`Current band plan · 1 band · 3 scoring frequencies`, `Manual edges · 3 scoring
+frequencies`, or `Design-frequency fallback · 3 scoring frequencies`. Editing
+the frequency list switches the source to manual; invalid text reports an
+invalid manual scope without pretending to come from the plan. The line and
+the budget hint use the same resolved frequencies.
+
+Band-edge and robust modes multiply the solver runs by the number of scoring
 frequencies and tolerance scenarios. The budget hint shows the resulting
-estimate. Bandwidth optimization is only available in single-frequency mode
-because it already requires a frequency sweep. The maximum-SWR soft constraint
-uses the worst evaluated scoring point in these modes. The band analysis after
-Apply Best still shows every band edge, including the ones that were not part
-of the score.
+estimate. A monoband design is not a multiband model merely because the
+band-edge sweep is selected. Bandwidth optimization is only available in
+single-frequency mode because it already requires a frequency sweep. The
+maximum-SWR soft constraint uses the worst evaluated scoring point in these
+modes. The band analysis after Apply Best still shows every band edge, including
+the ones that were not part of the score.
 
 ### Budget and results
 
@@ -2191,9 +2203,9 @@ verification metrics are added.
 
 **Apply Best** applies the best nominal parameters and keeps the optimization
 summary with the design. In **Single frequency** mode it then runs the normal
-single simulation. In **Band-aware** and **Robust** modes it runs a full band
-analysis with the current band plan, so the **Bands** tab, impedance/SWR charts,
-and patterns show every analyzed band for the applied geometry. Robust mode
+single simulation. In **Band-edge sweep** and **Robust** modes it runs a full
+band analysis with the current band plan, so the **Bands** tab, impedance/SWR
+charts, and patterns show every analyzed band for the applied geometry. Robust mode
 analyzes the nominal geometry; the ± tolerance corners are used only for
 scoring. The optimizer result table remains an aggregate summary (for example,
 the worst SWR across the scoring frequencies); per-band values are in the band
@@ -2480,7 +2492,7 @@ always store canonical meters and hertz.
 - Optimization covers every geometry, feed, and family-load variable of the
   supported typed families with a joint hybrid search, including G5RV, ZS6BKW,
   and Zepp. Custom/imported designs, magnetic loops, and random wires are
-  excluded. There are no boom-length or turning-radius constraints. Band-aware,
+  excluded. There are no boom-length or turning-radius constraints. Band-edge,
   robust, Pareto, persisted-summary, and recommendation support is implemented;
   the Pareto front is descriptive and is not itself optimized.
 - Project files store normalized results and raw solver text; many long runs

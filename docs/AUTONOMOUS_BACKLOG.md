@@ -144,6 +144,7 @@ external service and must not be invented or simulated into existence.
 | ~~UX38~~ | ~~Select the Design tab after creating a new antenna~~ | S | none | **Done 2026-11-17:** after a successful New Antenna creation, `_create_project_from_parameters()` selects `_design_tab`; this covers catalog templates, Antenna Advisor, and Reference Design Library. Cancelled or failed creation leaves the current tab unchanged. Advanced mode still opens Simulation when the mode is selected; Change Template, Open Project, NEC/MMANA import, and New Variant are unchanged. Advanced-mode success, cancellation, and failure tests pass; user guide and changelog updated. No schema, solver, or i18n change. |
 | UX39 | Raise generated single-design impedance/SWR sweeps to at least 100 computed points | S–M | none | Generated templates default to 100 points (including the two-band shared plan); every computed point remains in the chart, table, and exports; marker density is bounded without dropping data; tests and docs updated; no schema or solver change. |
 | UX40 | Add a static 3D far-field lobe figure to the HTML and PDF simulation reports | S–M | UX26, UX21 | **Queued 2026-11-18:** add one deterministic, Qt-free isometric SVG wireframe of the full far-field grid to the primary far-field section, with a dBi legend, maximum-gain marker, ground ring when applicable, bounded decimation, and explicit single-cut/unavailable states. Band sections and the two 2D cuts remain unchanged. EN/ES labels, HTML/PDF vector tests, determinism and size-bound tests, user guide, architecture, validation plan, and changelog; no schema, solver, or domain change. |
+| ~~UX41~~ | ~~Clarify the optimizer operating-mode scope and close the dead capability flags~~ | S–M | none; ADR-0026 | **Done 2026-11-19:** modes are **Single frequency**, **Band-edge sweep**, and **Robust (dimensional tolerance)**; the dialog shows the resolved plan source and size (current plan, manual, or design-frequency fallback) and explains that Analyze Bands is optional and Robust perturbs dimensions, not bands. The unused `supports_band_aware`/`supports_robust` fields were removed; both modes are generic. EN/ES labels and help, scope/plan-source tests, and docs updated. No scoring, schema, or solver change. |
 | ~~U0~~ | ~~Close the adaptive length display-units spec~~ | S | none | **Done 2026-11-17:** [ADR-0044](ADR/0044-adaptive-length-display-units.md) and [`DISPLAY_UNITS_SPEC.md`](DISPLAY_UNITS_SPEC.md) accepted; backlog, roadmap, docs index, architecture, geometry contract, and project decisions linked. No code change. |
 | ~~U1~~ | ~~Shared adaptive length formatter and Units preference~~ | S–M | U0 | **Done 2026-11-17:** added the Qt-free `DisplayUnits`/`LengthPolicy` formatter with metric auto (mm/cm/m), imperial auto (in/ft), fixed meters/feet, fixed per-unit precision, label trimming, zero/negative handling, scale hints, and table-unit selection. The four-option Units preference now stores the system and policy in QSettings, maps legacy metric/imperial values to automatic, and has EN/ES help. Boundary, negative, table, legacy-setting, and dialog tests pass. Scenes, forms, and reports remain unchanged until U2–U5; no schema change. |
 | ~~U2~~ | ~~Adaptive units in geometry scenes~~ | M | U1 | **Done 2026-11-17:** `build_scene`/`_Factory`, dimension labels, summaries, detail insets, and the scale bar accept `DisplayUnits`. Auto scenes cover 28.5/435 MHz Moxon, 20 m dipole, and 435 MHz hexbeam; scale-bar steps are unit-aware; the small-dimension anchor tolerance is `max(0.5 mm, 1%)`. Legacy `unit_system=` callers keep fixed geometry strings and goldens. No form or report changes. |
@@ -914,8 +915,9 @@ feedback and was completed the same day.
 UX32–UX37 were queued on 2026-11-17 from frequency-first starting-dimension
 feedback. UX32–UX37 are complete. UX38 was queued on 2026-11-17 from
 new-antenna tab feedback and is also complete. UX39 was queued on 2026-11-18
-from impedance/SWR point-density feedback, and UX40 was queued the same day
-from the 3D-report request. Both are open UX items.
+from impedance/SWR point-density feedback, UX40 was queued the same day from the
+3D-report request, and UX41 was queued from optimizer operating-mode feedback
+and completed on 2026-11-19. UX39–UX40 are the open UX items.
 EF1–EF9 were queued on 2026-11-13 from the shortened-EFHW optimizer review;
 EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
 L/Pi/T matching are implemented, including automatic L/Pi/T synthesis with a
@@ -3310,6 +3312,162 @@ This item reverses it for one static vector figure. No new ADR is required
 unless the renderer is promoted to a shared 3D visualization strategy; in that
 case, write the ADR before sharing it beyond reports.
 
+## UX41 — Optimizer operating-mode scope and capability flags (queue note, 2026-11-18)
+
+**Status:** implemented 2026-11-19. The mode names, scope line, plan-source
+reporting, help, and generic-mode policy are in place. The unused
+`supports_band_aware`/`supports_robust` descriptor fields were removed.
+
+### Problem
+
+The family optimizer dialog always offers **Single frequency**, **Band-aware**,
+and **Robust (tolerance)**; the widget adds all three unconditionally in
+`src/antennadesk/ui/dialogs/family_optimization_dialog.py`. For a monoband
+antenna such as an Inverted-V, this reads as if the user had declared a
+multiband model. The actual behavior is narrower:
+
+- **Band-aware** evaluates every scoring frequency in the current band plan.
+  `MainWindow._optimizer_band_edges()` turns each selected band into its start,
+  center, and stop frequency. For an Inverted-V the default plan is one band, so
+  the mode evaluates three points inside that band. It is a worst-case
+  band-edge sweep, not multiband optimization.
+- **Robust** perturbs dimensional variables by ± tolerance at the same scoring
+  frequencies. It is independent of the number of bands and is useful for a
+  monoband design.
+- **Analyze Bands** is not a declaration step. It is a simulation/report action
+  that also stores a `BandPlan`. The plan already has a per-family default; the
+  analysis only replaces it with the user's selected set.
+- `AntennaOptimizerDescriptor` exposes `supports_band_aware` and
+  `supports_robust`, but no descriptor sets them and no code reads them. They are
+  a dead contract left from Phase A.
+- The English label **Band-aware** and the Spanish **Consciente de banda** are
+  ambiguous, and the dialog shows an editable MHz field without saying how many
+  bands or frequencies it resolved.
+- The Phase C plan says that with no plan the fallback is the design frequency
+  ±5 %. In the normal UI path, the plan fallback is the current band's
+  start/center/stop; the ±5 % fallback appears only when the dialog receives no
+  band edges. The documentation and implementation should agree.
+
+### Decision
+
+1. **Do not require Analyze Bands.** Band-aware remains available for a
+   monoband design because evaluating the band edges is a legitimate worst-case
+   objective. Analyze Bands is optional and only changes the plan source.
+2. **Do not gate Robust behind band analysis.** It is a tolerance mode, not a
+   multiband mode.
+3. **Make the scope visible.** Add a read-only scope line in the dialog that
+   states the resolved plan source and the evaluation size, for example
+   `Current band plan · 1 band · 3 frequencies` or
+   `Current band plan · 3 bands · 9 frequencies`. Update it when the mode
+   changes, the plan changes, or the editable edges become invalid. A manual
+   edit must show `Manual edges · N frequencies`, not pretend to come from the
+   plan.
+4. **Rename the user-facing strings, not the domain.** Use an explicit
+   band-edge label in English and Spanish (for example **Band-edge sweep** /
+   **Barrido de bordes de banda**) and keep `OptimizationMode.BAND_AWARE` and the
+   persisted `"band_aware"` value unchanged. Keep single-frequency and robust
+   labels explicit about their scope.
+5. **Close the capability flags.** Prefer removing the unused
+   `supports_band_aware`/`supports_robust` fields and documenting that both
+   modes are generic over any descriptor with a positive evaluation frequency
+   and at least two distinct scoring frequencies. If a future family cannot
+   support one mode, add a capability flag with a translated unavailable reason
+   in that family's ADR; do not leave unused fields as an implied policy.
+6. **Reconcile the fallback contract.** Centralize the resolved-edge logic so
+   the dialog, the budget estimate, and the summary use the same frequencies.
+   Document the plan default, the manual override, and the ±5 % fallback in one
+   place. Do not silently substitute the design frequency when a usable plan
+   exists.
+
+### Implementation contract
+
+- `src/antennadesk/ui/dialogs/family_optimization_dialog.py`: add the scope
+  label near the mode/band-edge controls; compute the band count and frequency
+  count from the resolved plan, not from the raw text; disable or hide the
+  label consistently while a run is active; keep the existing editable field
+  and validation.
+- `src/antennadesk/ui/main_window.py`: keep `_optimizer_band_edges()` as the
+  plan-to-edge source; expose the plan source (current plan, manual, fallback)
+  to the dialog instead of only the raw tuple. Do not change when Apply Best
+  starts a band analysis.
+- `src/antennadesk/domain/optimization/descriptor.py`: remove the two unused
+  fields, or add one explicit capability policy with tests. If removed, update
+  ADR-0026's descriptor sketch and any coverage tests that mention them.
+- `src/antennadesk/ui/i18n.py`: rename the mode strings and add EN/ES help for
+  the scope line, the plan source, the manual-edge state, and the fact that
+  Robust perturbs dimensions rather than bands. Update the help coverage
+  manifest.
+- Keep `OptimizationMode`, `OptimizationSummary.mode`, the persisted
+  `"band_aware"`/`"robust"` strings, scoring, aggregation, band-edge
+  validation, and Apply Best behavior unchanged.
+- Update `docs/USER_GUIDE.md`, `docs/OPTIMIZER_PHASE_C_PLAN.md` (or add an
+  implementation note), `docs/ADR/0026-family-optimizer-architecture.md` if the
+  flags are removed, and `CHANGELOG.md`. Do not rewrite historical release
+  notes.
+
+### Tests and acceptance
+
+- [x] A monoband Inverted-V opens the optimizer with Band-aware available and
+      the scope line showing one band and three frequencies, without any prior
+      Analyze Bands run.
+- [x] After a multiband Analyze Bands plan, the same dialog shows the band
+      count and `3 × bands` scoring frequencies, and the edges match the stored
+      plan.
+- [x] Manual edge edits change the frequency count and label the source as
+      manual; invalid text keeps the previous valid scope or shows the existing
+      validation error without claiming a plan source.
+- [x] Robust remains selectable for the monoband design, shows its tolerance
+      control, and the scope line explains that the frequency plan is unchanged
+      and the geometry is perturbed.
+- [x] Switching modes updates the budget hint and scope line consistently; the
+      estimate still counts frequencies × scenarios × candidates × seeds.
+- [x] Descriptor coverage fails if a family is optimizable but its capability
+      state is undefined; if the flags are removed, no test or doc references a
+      dead field.
+- [x] EN/ES tests cover the new mode labels, scope line, plan-source states, and
+      retranslation; the help manifest passes. Persisted summaries still parse
+      and render their mode values under the new labels.
+- [x] No schema, migration, solver, scoring, or default-band-plan change.
+- [x] Run the full gate: `ruff check`, `ruff format --check`, both `mypy`
+      passes, and `NEC2C=... uv run pytest`.
+
+### Out of scope
+
+- Making Analyze Bands a prerequisite for any optimizer mode.
+- A new multiband optimizer or changing the per-band edge policy.
+- Changing `OptimizationMode`, the persisted summary schema, scoring, or the
+  number of frequencies per band.
+- Changing the default band plan for any family.
+- Adding per-band amplitude/phase weighting or inter-band coupling.
+- Solver, segmentation, or numerical changes.
+
+### Risks
+
+- The scope line can become a second source of truth. Derive both the label and
+  the command from one resolved-edge function.
+- A rename can break tests and docs that use the old display string; keep the
+  internal enum stable and update every EN/ES surface together.
+- Removing the unused flags may look like a loss of future flexibility. Document
+  the generic-mode policy and require a new ADR for a family-specific opt-out.
+- A monoband user may still read **Band-edge sweep** as multiband. Keep the
+  explicit `1 band · 3 frequencies` text and the current-plan source visible.
+
+### Implementation note
+
+`FamilyOptimizationDialog` accepts `BandPlanSource` (`current_plan`, `manual`,
+`fallback`) and the current plan's band count from `MainWindow`. The new
+**Evaluation scope** line derives its frequency count from the same parsed
+edges as the budget hint. Editing the edge field switches the source to
+`manual`; invalid text reports an invalid manual scope without claiming a plan
+source. The design-frequency ±5 % path remains the fallback when the dialog
+receives no edges, including the selected-HexBeam-band optimizer. The internal
+`OptimizationMode` values and persisted strings are unchanged. The descriptor
+capability flags were removed; ADR-0026 documents both modes as generic.
+
+Tests cover a monoband current plan, a three-band plan, manual and invalid
+edges, operating-frequency scoring, both languages, mode switching, budget
+hints, descriptor flag removal, and the main-window plan-source handoff.
+
 ## EF1–EF9 — Shortened-EFHW optimizer and model-confidence queue (2026-11-13)
 
 **EF1–EF6, EF7a, EF7b, EF8a, the bounded EF8 feedpoint choke model, and EF9
@@ -3746,7 +3904,7 @@ model and solver contract must land first.
     `_create_project_from_parameters()` selects the Design tab. It covers
     catalog templates, Advisor, and Reference Design Library; Advanced-mode
     semantics, Change Template, imports, variants, schema, and solver are
-    unchanged. No new translation or help keys. UX39 and UX40 are the open UX
+    unchanged. No new translation or help keys. UX39–UX41 are the open UX
     items.
 19. **U1–U5 are complete; U6 documentation is done.** The shared
     `DisplayUnits` formatter, Units preference, adaptive geometry scenes,
@@ -3763,6 +3921,12 @@ model and solver contract must land first.
     lobe to the primary report section, keep it out of the band sections, and
     keep the HTML Qt-free and the PDF vector. It complements, and does not
     replace, the two cuts; see the UX40 note above.
+22. **UX41 is complete (2026-11-19).** The optimizer names the modes
+    **Single frequency**, **Band-edge sweep**, and **Robust (dimensional
+    tolerance)**, shows the resolved band/frequency count and plan source, and
+    documents that Analyze Bands is optional and Robust does not change the
+    band plan. The unused descriptor capability flags were removed; see the
+    UX41 note above.
 
 ## Technical debt pass (2026-11-08)
 
@@ -3793,8 +3957,8 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **4,045 passed, 1 skipped** on 2026-11-18 after the HF10
-  design-frequency consistency work, with `NEC2C` auto-detected by the test
+- Full gate: **4,053 passed, 1 skipped** on 2026-11-19 after the UX41
+  optimizer evaluation-scope work, with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
