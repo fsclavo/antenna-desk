@@ -224,7 +224,7 @@ The implementation is sliced in
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Implemented 2026-11-18 |
 | HF7 | Thin-wire model-quality gate | Implemented 2026-11-18 |
 | HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Implemented 2026-11-18 |
-| HF9 | Regression matrix, evidence, and documentation | Queued |
+| HF9 | Regression matrix, evidence, and documentation | Implemented 2026-11-18 |
 | HF10 | Design-frequency/geometry consistency | Queued |
 
 ### HF2 implementation note
@@ -352,6 +352,36 @@ diameters asks for confirmation. The default Moxon objective is now
 **Target impedance**, not maximum gain: the Cebik reference is a 50Ω beam and a
 match-focused first run is less likely to drift toward an envelope edge. Gain
 and front-to-back remain selectable objectives.
+
+### HF9 implementation note
+
+The frequency/family matrix lives in
+`tests/unit/optimization/test_frequency_family_matrix.py`. It builds 238
+family/frequency combinations (243 tests including the coverage and contract
+checks) covering all eleven required frequencies and every
+`SUPPORTED_OPTIMIZER_TYPES` entry. Families with band-specific geometry
+(hexbeam, Beverage, trap dipole, trap Yagi, SCV, T2FD, G5RV doublet) are
+exercised only at frequencies where the preset is meaningful; every frequency
+is still covered by the frequency-scalable families. Each combination asserts
+the descriptor bound invariant, a non-degenerate span, an exact initial-vector
+rebuild (with floating-point tolerance for the derived Moxon driven tip), and
+an empty geometry validation.
+
+The 2.4 GHz Moxon regression encodes the old failure mode without a performance
+reference: the initial width and depth are inside their frequency-relative
+bounds, the gap is at most `0.10 λ`, and a `0.67 λ` gap is rejected by both the
+descriptor validator and `validate_moxon_geometry`. A full optimizer run with a
+fixed fake solver also asserts that the returned gap stays inside the envelope.
+The matrix checks the Moxon gap/wavelength, gap/radius, and geometry envelope,
+and the Yagi element lengths and inter-element gaps against the documented
+conductor clearance.
+
+`tests/integration/simulation/test_nec2c_hf_matrix.py` runs eight high-frequency
+priority designs through real NEC2C: 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz
+quad beam and biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical.
+The test applies `resolve_model_quality`, requires no blocking code, and asserts
+completion plus finite positive resistance. These are completion and invariant
+checks, not accuracy references. No evidence level is promoted.
 
 ## Test contract
 

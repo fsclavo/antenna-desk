@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Frequency/family optimizer regression matrix.** A 243-test matrix now
+  covers 1.8, 3.5, 7, 14, 28, 50, 144, 435, 1296, 2400, and 5800 MHz across
+  every supported optimizer family. It asserts initial bounds, non-degenerate
+  spans, exact rebuilds, and valid starting geometry. A 2.4 GHz Moxon
+  regression rejects the old `0.67 λ` gap, and real NEC2C runs cover
+  high-frequency Moxon, Yagi, quad beam, biquad, discone, dipole, and vertical
+  designs. These are invariant and completion checks; no accuracy claim is
+  added.
 - **Optimizer diagnostics and Moxon Apply Best guard.** Bound-hit
   recommendations now apply to every family. The optimizer variable table uses
   adaptive units and states that Current is the start with no silent clamp.

@@ -170,7 +170,7 @@ external service and must not be invented or simulated into existence.
 | ~~HF6~~ | ~~Moxon high-frequency estimator, radius, and confidence policy~~ | M | HF1, HF4 | **Done 2026-11-18:** the Cebik 20 m Moxon is reference-scaled only inside the 20 m band (14.0–14.35 MHz); outside it is explicitly heuristic with a high-frequency warning, an extrapolation assumption, and tolerance `max(5% width, gap)`. The starting gap must clear two conductor diameters or the estimate is unsupported. The 14.17 MHz reference stays exact; the 28.5 MHz default is heuristic; no 2.4 GHz published reference was invented. EN/ES warning and estimator-guide policy added. |
 | ~~HF7~~ | ~~Thin-wire model-quality gate for high-frequency optimization~~ | M–L | HF1, HF2 | **Done 2026-11-18:** added `resolve_model_quality`. Short wires reduce their segment count to reach a segment/radius ratio of 8 when the resulting segment is still at most 0.1λ; otherwise the extended thin-wire kernel is selected automatically when the solver supports it. Ratio <2 always blocks, and over-segmented long wires (<1e-3λ on a wire ≥0.01λ) block the optimizer; short structural feed/load/return wires are exempt. The main simulation and optimizer specs use the policy, and the optimizer rejects blocked candidates with `optimize.constraint.model_quality`. NEC2C comparisons at 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi record deterministic impedance changes only. |
 | ~~HF8~~ | ~~High-frequency optimizer diagnostics, defaults, and Apply Best guard~~ | M | HF4–HF6 | **Done 2026-11-18:** bound-hit diagnostics are enabled for every family; the variable table uses adaptive units and states that Current is the start with no silent clamp. Moxon dialogs show initial gap/λ and gap/radius, and **Apply Best**/*Apply Best SWR* confirm when the selected geometry is within 5% of an envelope edge or below two conductor diameters. The Moxon default objective is now **Target impedance** instead of maximum gain, matching the 50Ω reference and keeping the first run match-focused. EN/ES strings and dialog/domain tests added. |
-| HF9 | High-frequency regression matrix, evidence, and documentation | M | HF2–HF8 | **Queued 2026-11-18:** add the frequency/family matrix, an old-behavior regression for the 2.4 GHz Moxon gap, invariant and solver-completion assertions, and a no-silent-clamp check; update the ADR, estimator guide, user guide, and `CHANGELOG.md`; make no accuracy claim without a traceable source. |
+| ~~HF9~~ | ~~High-frequency regression matrix, evidence, and documentation~~ | M | HF2–HF8 | **Done 2026-11-18:** a 243-test frequency/family matrix (238 combinations plus five coverage/contract checks) covers all eleven required frequencies and every supported optimizer type, asserting bounds, non-degenerate spans, initial-vector rebuilds, and geometry validity. A 2.4 GHz Moxon regression rejects the old `0.67 λ` gap without a performance reference, including a full optimizer run with a fake solver. Real NEC2C runs complete for 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz quad/biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical. ADR-0046, the estimator guide, user guide, and changelog record the contract. No accuracy claim or evidence promotion. |
 | HF10 | Design-frequency/geometry consistency for Moxon and Yagi | S–M | HF1, HF2; UX34/ADR-0043 | **Queued 2026-11-18:** reconcile the Moxon manual preset and the Yagi auto-scale exception with the pristine-geometry policy; warn or block optimization when geometry is grossly inconsistent with λ; test frequency changes, preset loads, and optimizer availability. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -179,10 +179,10 @@ external service and must not be invented or simulated into existence.
 
 ## High-frequency optimizer bounds and Moxon gap (design note, 2026-11-18)
 
-**Status:** HF1–HF8 are implemented on 2026-11-18;
+**Status:** HF1–HF9 are implemented on 2026-11-18;
 [ADR-0046](ADR/0046-frequency-aware-optimizer-bounds.md) is the accepted
-contract. HF9 and HF10 are queued; HF9 closes the regression/documentation
-track and HF10 covers design-frequency/geometry consistency.
+contract. HF10 remains queued and covers design-frequency/geometry
+consistency.
 
 **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md),
 [ADR-0043](ADR/0043-design-versus-analysis-frequency.md),
@@ -504,6 +504,28 @@ Requirements:
   adaptive units.
 
 ### HF9 — Regression matrix, evidence, and documentation
+
+**Implemented 2026-11-18.** `tests/unit/optimization/test_frequency_family_matrix.py`
+holds 238 family/frequency combinations (243 tests including coverage and
+contract checks). Every required frequency and every
+`SUPPORTED_OPTIMIZER_TYPES` entry is covered. Families whose published geometry
+is band-specific are exercised at meaningful frequencies rather than scaled
+into an invalid band; the frequency-scalable families cover the full range.
+
+Each combination asserts the descriptor bound invariant, a non-degenerate
+span, a rebuilt initial vector (with floating-point tolerance for the derived
+Moxon driven tip), and an empty geometry validation. The 2.4 GHz Moxon
+regression checks the frequency-relative width/depth bounds, caps the gap at
+`0.10 λ`, rejects a `0.67 λ` candidate in both validators, and runs the
+optimizer with a fixed fake solver to confirm the returned gap stays inside
+the envelope.
+
+`tests/integration/simulation/test_nec2c_hf_matrix.py` runs eight priority
+designs through NEC2C after `resolve_model_quality`: 2.4 GHz Moxon, 2.4/5.8 GHz
+Yagi, 2.4 GHz quad beam and biquad, 1.296 GHz discone, 144 MHz dipole, and
+435 MHz vertical. It asserts no blocking quality code, completion, and finite
+positive resistance. These are invariants and completion evidence, not
+accuracy references.
 
 Required matrix:
 
@@ -3763,10 +3785,10 @@ model and solver contract must land first.
 ## Current baseline
 
 - Schema: **55**.
-- Full gate: **3,780 passed, 1 skipped** on 2026-11-18 after the HF8 optimizer
-  diagnostics, Moxon default, and Apply Best guard, with `NEC2C` auto-detected
-  by the test configuration; the skip is the Windows-only console-hiding test
-  on Linux.
+- Full gate: **4,032 passed, 1 skipped** on 2026-11-18 after the HF9
+  frequency/family regression matrix and high-frequency NEC2C completion
+  checks, with `NEC2C` auto-detected by the test configuration; the skip is the
+  Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

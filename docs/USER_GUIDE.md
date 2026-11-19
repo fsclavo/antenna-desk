@@ -588,6 +588,19 @@ diameters; if it does not, the estimate is rejected. Reduce the wire radius or
 use a higher frequency, and verify the high-frequency Moxon with simulation or
 measurement.
 
+At VHF/UHF the family may be marked **experimental** or the optimizer may be
+unavailable: the published reference is a 20 m design, and a scaled gap can be
+comparable to the conductor. To rebuild a valid starting design, open the
+intended frequency, use **Load 20 m reference scaled to current frequency**,
+and reduce the wire radius until the dialog no longer reports a conductor
+conflict. A frequency change never silently resizes tuned geometry. The
+optimizer uses bounds relative to the current dimensions; before solving, the
+app may reduce segments on a short wire or select the extended thin-wire
+kernel when the solver supports it. A segment/radius ratio below 2, or a long
+wire over-segmented below `1e-3 λ`, blocks the run with
+`optimize.constraint.model_quality`. These checks establish a resolvable
+model, not measured accuracy.
+
 ## Create a log-periodic array
 
 Choose **File → New Antenna... → Log-periodic (LPDA)** to generate a

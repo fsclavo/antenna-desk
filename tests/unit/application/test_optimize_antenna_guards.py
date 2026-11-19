@@ -19,6 +19,8 @@ from antennadesk.application.use_cases.optimize_antenna import (
     _score,
 )
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.moxon import MoxonParameters
+from antennadesk.domain.common import units
 from antennadesk.domain.optimization.constraints import OptimizationMetric, SoftConstraint
 from antennadesk.domain.optimization.descriptor import (
     AntennaOptimizerDescriptor,
@@ -40,6 +42,10 @@ from antennadesk.domain.simulation.result import (
     PowerBudget,
     SimulationResult,
     SimulationStatus,
+)
+from antennadesk.domain.simulation.segmentation import (
+    SegmentationPolicy,
+    aligned_policy_for_model,
 )
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
@@ -352,6 +358,87 @@ def _result(points: tuple[FrequencyResult, ...]) -> SimulationResult:
         frequencies=points,
         duration_s=0.01,
     )
+
+
+class _FixedSolver:
+    """Return a completed, matched point without running an engine."""
+
+    def capabilities(self) -> SolverCapabilities:
+        return SolverCapabilities(
+            name="fake",
+            supports_frequency_sweep=True,
+            supports_currents=False,
+            supports_far_field=True,
+            supports_perfect_ground=True,
+            supports_finite_ground=True,
+            supports_extended_thin_wire_kernel=True,
+        )
+
+    def validate(self, model: object, spec: object) -> tuple[()]:
+        del model, spec
+        return ()
+
+    def version(self) -> SolverMetadata:
+        return SolverMetadata(name="fake", version="1.0")
+
+    def run(
+        self,
+        model: object,
+        spec: SimulationSpec,
+        **kwargs: object,
+    ) -> SimulationResult:
+        del model, kwargs
+        return _result((_point(spec.frequency_plan.start_hz, 1.0),))
+
+
+def _moxon_2_4ghz() -> MoxonParameters:
+    scale = 14_170_000.0 / 2_400_000_000.0
+    depth = 9.57 * 0.3048 * scale
+    reflector_tip = 4.85 * 0.3048 * scale
+    driven_tip = 4.00 * 0.3048 * scale
+    gap = depth - reflector_tip - driven_tip
+    return MoxonParameters(
+        frequency_hz=2_400_000_000.0,
+        width_m=25.00 * 0.3048 * scale,
+        depth_m=depth,
+        reflector_tip_m=reflector_tip,
+        driven_tip_m=driven_tip,
+        height_m=1.0,
+        wire_radius_m=gap / 5.0,
+    )
+
+
+def test_2_4ghz_moxon_optimizer_never_returns_the_067_lambda_gap() -> None:
+    parameters = _moxon_2_4ghz()
+    wavelength = units.wavelength_m(parameters.frequency_hz)
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    result = OptimizeAntenna(_FixedSolver()).execute(
+        OptimizeAntennaCommand(
+            descriptor=descriptor,
+            base_spec=SimulationSpec(
+                frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+                segmentation=aligned_policy_for_model(
+                    parameters.to_antenna(),
+                    parameters.frequency_hz,
+                    SegmentationPolicy(min_segments_per_wire=3),
+                ),
+                far_field=FarFieldRequest(enabled=False),
+            ),
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=budget_for(BudgetProfile.FAST, len(descriptor.variables)),
+        )
+    )
+
+    assert result.evaluations
+    assert result.best_parameters is not None
+    best = result.best_parameters
+    assert isinstance(best, MoxonParameters)
+    assert best.driven_tip_m > 0.0
+    assert best.gap_m / wavelength <= 0.10
+    assert best.gap_m / wavelength != pytest.approx(0.67)
 
 
 def test_metrics_include_gain_front_to_back_and_efficiency() -> None:

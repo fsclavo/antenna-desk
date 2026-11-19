@@ -527,6 +527,48 @@ conductor diameters; otherwise the estimate is explicitly unsupported rather
 than returning an unbuildable tip gap. No high-frequency published reference is
 implied.
 
+### High-frequency optimizer contract
+
+Estimator outputs feed the family optimizers, so the starting dimensions must
+also anchor a bounded search. Search bounds are derived from the current
+geometry and frequency; there are no fixed metre floors that can exclude a
+valid VHF/UHF design. The regression matrix covers 1.8, 3.5, 7, 14, 28, 50,
+144, 435, 1296, 2400, and 5800 MHz across every supported optimizer family. It
+asserts that every initial value is inside its bounds, every span is
+non-degenerate, rebuilding the initial vector reproduces the design, and the
+geometry validator accepts the starting parameters.
+
+The Moxon construction envelope is:
+
+- `0.004 λ ≤ gap ≤ 0.10 λ`;
+- `0.03 ≤ gap/depth ≤ 0.40`;
+- `0.01 ≤ gap/width ≤ 0.15`;
+- `1.5 ≤ width/depth ≤ 4.5`;
+- tip/depth and tip-sum/depth inside the documented limits;
+- gap greater than four conductor radii (two conductor diameters).
+
+A 2.4 GHz scaled reference is a construction-valid starting point only with a
+thin enough conductor. The old `0.67 λ` gap failure mode is rejected by the
+descriptor and by the geometry validator. The optimizer's default Moxon
+objective is target impedance, not maximum gain.
+
+Before a solver run, a shared model-quality policy checks segment length against
+the wire radius. A short wire may use fewer segments when the resulting segment
+is still at most `0.1 λ`. If that is not possible and the solver supports the
+extended thin-wire kernel, the kernel is selected automatically. A
+segment/radius ratio below 2 is always blocking; a wire at least `0.01 λ` long
+with segments shorter than `1e-3 λ` is also blocking. Tiny feed gaps,
+loading-coil sections, and return stubs keep their structural segmentation. The
+optimizer treats these as infeasible candidates with
+`optimize.constraint.model_quality`.
+
+To rebuild a high-frequency Moxon or Yagi that is rejected or marked
+experimental, use the explicit starting-dimension action at the intended design
+frequency, reduce the wire radius until the gap clears two conductor diameters,
+and verify the result with simulation or measurement. A frequency change never
+silently rescales tuned geometry. These are model-quality and invariant checks;
+they do not promote the estimate's confidence or establish measured accuracy.
+
 ## Source policy
 
 Each estimator declares source identifiers. Add a source only when the formula
@@ -566,6 +608,12 @@ Reference sources currently used:
 - Explicit unsupported result for custom geometry and non-reference Yagi
   element counts.
 - Reference-scaling tests for Yagi and Moxon.
+- A frequency/family matrix from 1.8 to 5800 MHz covering every supported
+  optimizer family, with bound, rebuild, and geometry invariants.
+- A 2.4 GHz Moxon regression that rejects the old `0.67 λ` gap without a
+  performance reference.
+- NEC2C completion checks for high-frequency Moxon, Yagi, quad beam, biquad,
+  discone, dipole, and vertical designs.
 - Quad beam element-count preload, heuristic geometry, and apply-preservation
   tests.
 - UI tests for estimate, invalidation, and apply.
