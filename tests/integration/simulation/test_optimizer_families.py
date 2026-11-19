@@ -205,6 +205,43 @@ def test_family_optimizer_runs_against_nec2c(
     assert result.evaluations
 
 
+def test_beverage_optimizer_reaches_a_transformed_match(
+    solver: Nec2cSolver,
+) -> None:
+    frequency_hz = 7_100_000.0
+    parameters = beverage_parameters(
+        frequency_hz=frequency_hz,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    result = OptimizeAntenna(solver).execute(
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=spec,
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=OptimizationBudget(60, 40, 8),
+            seed=9,
+        )
+    )
+
+    assert result.status is not OptimizationStatus.ERROR
+    assert result.best_parameters is not None
+    assert result.best_values is not None
+    assert result.best_values["transformer_ratio"] in {1.0, 4.0, 9.0, 16.0}
+    assert result.best_metrics["swr"] < 2.5
+
+
 @pytest.mark.parametrize(
     ("frequency_hz", "element_count"),
     [

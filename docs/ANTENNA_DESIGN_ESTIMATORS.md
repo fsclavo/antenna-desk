@@ -71,13 +71,15 @@ warnings, and a dimension tolerance.
 | Moxon | Cebik 20 m wire reference scaled by frequency | reference scaled only in the 20 m band; heuristic outside | The 14.17 MHz dimensions are exact and the 14.0–14.35 MHz band is reference-scaled. Outside it the estimate is heuristic with tolerance `max(5% width, gap)` and a high-frequency warning; the wire radius is not scaled. A scaled gap below two conductor diameters is unsupported. The 28.5 MHz editor default is heuristic; horizontal or vertical polarization is kept. |
 | Quad beam | quarter-wave side, fifth-wave spacing; 4:1 ideal transformer for 2 elements and 2:1 for 3 | heuristic | Starting geometry; tune the loop side to resonance; feedpoint impedance is not independently validated |
 | Biquad / double biquad | loop side `0.25λ × 0.95`; reflector `0.5 × side` | heuristic | No independent numerical reference; the wire reflector and shared-rail current distribution are experimental |
-| Beverage | length `1.0λ`; height and termination from the editor | heuristic | Receiving antenna; the termination and low gain are not independently validated |
+| Beverage | length `1.0λ`; height, termination, and 9:1 feed transformer from the editor | heuristic | Receiving antenna; the termination, matching transformer, and low gain are not independently validated |
 | T2FD | span `300/F(MHz)` ft, spacing `10/F(MHz)` ft | heuristic | Broadband starting geometry; highest design frequency is required; not a resonance calculation |
 
 Ground-mounted radials are placed 1 cm above the ground plane in the NEC deck.
 The estimator and project keep the requested base height; the clearance is a
 solver constraint, not a design dimension. NEC-2 rejects horizontal radials
-lying exactly on a ground plane.
+lying exactly on a ground plane. A vertical wire that intentionally ends on
+the ground plane, such as a Beverage feed or termination stub, keeps its
+endpoint at `z = 0` and is not raised.
 
 ### Folded dipole feed transformer
 
@@ -313,13 +315,21 @@ not a calculated resonance value.
 
 The Beverage editor's **Load one-wavelength starting length** action sets the
 horizontal wire to `λ = c / f` at the current frequency. The height, azimuth,
-radius, and termination resistance are preserved from the current editor
-values; the default termination is 500 Ω.
+radius, termination resistance, and feed transformer ratio are preserved from
+the current editor values; the default termination is 500 Ω and the default
+transformer is 9:1.
 
-Confidence is **heuristic**. A Beverage is a receiving antenna; its gain is low
-and its pattern, termination efficiency, ground, and feed line are not
-independently validated. The starting action is a convenience, not a design
-claim.
+A Beverage is a traveling-wave receiving antenna. Its feedpoint impedance is
+typically a few hundred ohms, so the 500 Ω termination is a far-end load, not a
+50 Ω feedpoint match. The model applies an ideal feed transformer and reports
+SWR on the transformed side. A 9:1 ratio is a practical starting assumption for
+a 50 Ω system; it is not an independently published value. Tune the ratio with
+the optimizer or a measurement. The feed and termination are short vertical
+stubs to ground, not a complete ground system.
+
+Confidence is **heuristic**. The gain is low and the pattern, termination
+efficiency, ground, transformer loss, and feed line are not independently
+validated. The starting action is a convenience, not a design claim.
 
 ## Biquad starting dimensions
 

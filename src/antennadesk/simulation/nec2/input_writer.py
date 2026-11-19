@@ -11,7 +11,7 @@ from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
 from ...domain.simulation.spec import SimulationSpec
-from ..assumptions import GROUND_CLEARANCE_M
+from ..assumptions import ground_clearance_offset_m
 from ..discretization import (
     FeedSegment,
     SegmentLayout,
@@ -87,11 +87,7 @@ def _local_segment_for_offset(segmentation: WireSegmentation, offset_m: float) -
 def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     layout = build_segment_layout(model, spec)
     ground = model.environment.ground
-    z_offset = 0.0
-    if ground.kind is not GroundKind.FREE_SPACE:
-        min_z = min(point.z_m for wire in model.wires for point in (wire.start, wire.end))
-        if 0.0 <= min_z < GROUND_CLEARANCE_M:
-            z_offset = GROUND_CLEARANCE_M - min_z
+    z_offset = ground_clearance_offset_m(model)
     lines: list[str] = [
         "CM AntennaDesk generated NEC-2 input",
         f"CM Model: {_comment(model.name)}",

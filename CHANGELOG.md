@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Beverage feed matching and ground-referenced stubs.** Beverage designs now
+  include a short vertical feed stub at the near end, a grounded termination
+  stub, and an ideal feed transformer (default 9:1) that is applied to the
+  reported impedance and SWR. The editor exposes the transformer ratio, the
+  family optimizer searches it with 1:1, 4:1, 9:1, and 16:1 choices, and the
+  construction sheet and summary report it. Schema 56 adds the transformer
+  field without rewriting existing geometry. The transformer is an ideal
+  matching assumption, not a validated loss model.
 - **Multi-band HexBeam domain and schema.** `HexbeamParameters` now accepts an
   optional tuple of `HexbeamBand` records for one to five nested bands on the
   shared six-spreader frame. The largest band defines the turning radius; each
@@ -203,6 +211,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Grounded vertical connections are no longer lifted by the NEC clearance.**
+  The 1 cm ground clearance is now applied only when a wire lies in or near the
+  ground plane. A vertical wire that ends on the ground plane keeps its
+  endpoint at `z = 0`, so Beverage feed and termination stubs are actually
+  connected to ground and the termination resistor absorbs the traveling wave.
+  Ground-mounted radials and horizontal wires at ground level retain the
+  clearance approximation and its warning.
 - **Multi-band HexBeam analysis and estimator.** **Analyze Bands** now
   defaults to the bands selected in the design and excites one band at a time,
   leaving the other bands as passive conductors. This removes the negative

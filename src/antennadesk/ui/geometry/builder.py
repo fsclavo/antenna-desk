@@ -10,6 +10,7 @@ from dataclasses import dataclass, replace
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.beverage import (
     ANTENNA_TYPE_BEVERAGE,
+    BEVERAGE_WIRE_ID,
     BeverageParameters,
 )
 from ...domain.antennas.biquad import (
@@ -1291,10 +1292,20 @@ def _add_beverage_dimensions(
     notes: list[str],
     translator: Translator,
 ) -> None:
-    wire = model.feed_wire
-    near = wire.point_at(model.feed.offset_m)
-    far = wire.end if near.distance_to(wire.end) >= near.distance_to(wire.start) else wire.start
-    length = wire.length_m
+    horizontal = next(
+        (wire for wire in model.wires if wire.id == BEVERAGE_WIRE_ID),
+        None,
+    )
+    if horizontal is None:
+        horizontal = max(model.wires, key=lambda item: item.length_m)
+    feed_point = model.feed_wire.point_at(model.feed.offset_m)
+    near = (
+        horizontal.start
+        if horizontal.start.distance_to(feed_point) <= horizontal.end.distance_to(feed_point)
+        else horizontal.end
+    )
+    far = horizontal.end if near == horizontal.start else horizontal.start
+    length = horizontal.length_m
     height = near.z_m
     dimensions.append(factory.dimension(near, far, length, side="above", priority=90))
     if factory.projection.vertical:
@@ -1309,13 +1320,20 @@ def _add_beverage_dimensions(
                 priority=80,
             )
         )
-    if parameters is not None and parameters.termination_enabled:
+    if parameters is not None:
         notes.append(
             translator.t(
-                "beverage.termination_note",
-                resistance=f"{parameters.termination_resistance_ohm:.1f} Ω",
+                "beverage.transformer_note",
+                ratio=f"{parameters.transformer_ratio:.1f}:1",
             )
         )
+        if parameters.termination_enabled:
+            notes.append(
+                translator.t(
+                    "beverage.termination_note",
+                    resistance=f"{parameters.termination_resistance_ohm:.1f} Ω",
+                )
+            )
 
 
 def _add_loaded_dipole_dimensions(
@@ -3428,6 +3446,7 @@ def _summary(
             ]
         )
     elif isinstance(parameters, BeverageParameters) or antenna_type == ANTENNA_TYPE_BEVERAGE:
+        transformer: str | None = None
         if isinstance(parameters, BeverageParameters):
             length = parameters.length_m
             height = parameters.height_m
@@ -3436,6 +3455,7 @@ def _summary(
                 if parameters.termination_enabled
                 else translator.t("beverage.termination_off")
             )
+            transformer = f"{parameters.transformer_ratio:.1f}:1"
         else:
             length = max(
                 math.hypot(
@@ -3455,6 +3475,8 @@ def _summary(
                 f"{translator.t('beverage.termination').lower()} {termination}",
             ]
         )
+        if transformer is not None:
+            parts.append(f"{translator.t('beverage.transformer').lower()} {transformer}")
     elif (
         isinstance(parameters, LoadedDipoleParameters) or antenna_type == ANTENNA_TYPE_LOADED_DIPOLE
     ):

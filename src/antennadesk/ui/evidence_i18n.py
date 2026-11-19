@@ -398,11 +398,12 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
         ),
         "limitation": (
             "Solo la longitud inicial, la terminación y la regla de altura "
-            "tienen referencia. La terminación es un hilo vertical corto con "
-            "una resistencia serie, no un sistema de tierra completo. La "
-            "ganancia, el patrón, la eficiencia de terminación, la "
-            "conductividad del suelo y la línea de alimentación no están "
-            "validadas independientemente."
+            "tienen referencia. La alimentación y la terminación son tramos "
+            "verticales cortos a tierra, no un sistema de tierra completo. El "
+            "transformador de alimentación ideal 9:1 es un supuesto práctico de "
+            "adaptación, no un valor publicado. La ganancia, el patrón, la "
+            "eficiencia de terminación, la conductividad del suelo y la línea de "
+            "alimentación no están validadas independientemente."
         ),
     },
     "loaded_dipole": {

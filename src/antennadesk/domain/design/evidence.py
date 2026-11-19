@@ -493,10 +493,11 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         tolerance="1% on the one-wavelength starting length; 500 ohm nominal termination",
         limitation=(
             "Only the starting length, termination, and height rule are "
-            "reference-backed. The termination is a short vertical wire with a "
-            "series resistor, not a complete ground system. Gain, pattern, "
-            "termination efficiency, ground conductivity, and feed line are not "
-            "independently validated."
+            "reference-backed. The feed and termination are short vertical stubs "
+            "to ground, not a complete ground system. The ideal 9:1 feed "
+            "transformer is a practical matching assumption, not a published "
+            "value. Gain, pattern, termination efficiency, ground conductivity, "
+            "and feed line are not independently validated."
         ),
     ),
     "loaded_dipole": EvidenceEntry(

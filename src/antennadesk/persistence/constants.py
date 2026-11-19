@@ -7,6 +7,6 @@ from __future__ import annotations
 from typing import Final
 
 PROJECT_FORMAT: Final = "antennadesk-project"
-SCHEMA_VERSION: Final = 55
+SCHEMA_VERSION: Final = 56
 MAX_PROJECT_SIZE_BYTES: Final = 64 * 1024 * 1024
 PROJECT_SIZE_WARNING_BYTES: Final = 32 * 1024 * 1024

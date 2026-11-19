@@ -7,6 +7,7 @@ from __future__ import annotations
 import math
 
 from ..domain.antennas.antenna import AntennaModel
+from ..domain.antennas.wire import Wire
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.environment.ground import GroundKind
 from ..domain.simulation.spec import SimulationSpec
@@ -15,6 +16,31 @@ from ..domain.simulation.spec import SimulationSpec
 # radials and dipoles are raised by this small physical clearance when the
 # canonical model sits exactly on the ground.
 GROUND_CLEARANCE_M = 0.01
+
+
+def _wire_lies_near_ground(wire: Wire) -> bool:
+    low = min(wire.start.z_m, wire.end.z_m)
+    high = max(wire.start.z_m, wire.end.z_m)
+    return 0.0 <= low < GROUND_CLEARANCE_M and high < GROUND_CLEARANCE_M
+
+
+def ground_clearance_offset_m(model: AntennaModel) -> float:
+    """Return the NEC ground clearance applied to the whole model.
+
+    Only models that contain a wire lying in or near the ground plane are
+    raised. A vertical wire that ends on the ground plane is an intentional
+    wire-to-ground connection (for example, a Beverage feed or termination
+    stub), not a buried radial, so it must keep its endpoint at z = 0.
+    """
+
+    if model.environment.ground.kind is GroundKind.FREE_SPACE:
+        return 0.0
+    min_z = min(point.z_m for wire in model.wires for point in (wire.start, wire.end))
+    if not 0.0 <= min_z < GROUND_CLEARANCE_M:
+        return 0.0
+    if not any(_wire_lies_near_ground(wire) for wire in model.wires):
+        return 0.0
+    return GROUND_CLEARANCE_M - min_z
 
 
 def validate_nec2_assumptions(
@@ -59,35 +85,37 @@ def validate_nec2_assumptions(
                     field="geometry",
                 )
             )
-        elif min_z < GROUND_CLEARANCE_M:
-            diagnostics.append(
-                Diagnostic(
-                    code="geometry.ground_clearance",
-                    severity=Severity.INFO,
-                    message=(
-                        f"the model is raised by {GROUND_CLEARANCE_M - min_z:.3f} m "
-                        "above the ground plane for NEC"
-                    ),
-                    field="geometry",
-                )
-            )
-            if ground.kind is GroundKind.FINITE:
+        else:
+            offset_m = ground_clearance_offset_m(model)
+            if offset_m > 0.0:
                 diagnostics.append(
                     Diagnostic(
-                        code="geometry.ground_mounted_wires",
-                        severity=Severity.WARNING,
+                        code="geometry.ground_clearance",
+                        severity=Severity.INFO,
                         message=(
-                            "conductors at or near ground level (for example, "
-                            "ground-mounted radials) are approximated by a "
-                            f"{GROUND_CLEARANCE_M:.3f} m NEC clearance. NEC-2 does "
-                            "not model buried or soil-contact wires, so impedance "
-                            "and gain may be numerically unreliable. Use a "
-                            "sensitivity study and measurement, or raise the "
-                            "radial plane."
+                            f"the model is raised by {offset_m:.3f} m "
+                            "above the ground plane for NEC"
                         ),
                         field="geometry",
                     )
                 )
+                if ground.kind is GroundKind.FINITE:
+                    diagnostics.append(
+                        Diagnostic(
+                            code="geometry.ground_mounted_wires",
+                            severity=Severity.WARNING,
+                            message=(
+                                "conductors lying at or near ground level (for example, "
+                                "ground-mounted radials) are approximated by a "
+                                f"{offset_m:.3f} m NEC clearance. NEC-2 does not "
+                                "model buried or soil-contact wires, so impedance "
+                                "and gain may be numerically unreliable. Use a "
+                                "sensitivity study and measurement, or raise the "
+                                "radial plane."
+                            ),
+                            field="geometry",
+                        )
+                    )
 
     if (
         model.environment.ground.kind is not GroundKind.FREE_SPACE

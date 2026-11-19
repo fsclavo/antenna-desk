@@ -2,12 +2,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Beverage traveling-wave receiving antenna.
 
-The model is a long horizontal wire fed at one end and terminated by a
-resistor to ground at the far end.  It is a receiving antenna: gain is low and
-the pattern is a broad end-fire lobe toward the termination.  The termination
-is represented by a short vertical wire and a series resistor.  The starting
-length is one wavelength and the termination resistance is a heuristic; neither
-is an independently validated construction value.
+The model is a long horizontal wire with a short vertical feed stub at the
+near end and an optional resistor to ground at the far end.  It is a receiving
+antenna: gain is low and the pattern is a broad end-fire lobe toward the
+termination.  The feed stub gives the source a wire-to-ground port and the
+termination is represented by a short vertical wire with a series resistor.
+An ideal feed transformer is applied by the simulation to refer the
+transformed impedance to the 50 ohm system.  The starting length is one
+wavelength, the termination resistance is a heuristic, and the transformer
+ratio is a practical matching assumption; none is an independently validated
+construction value.
 """
 
 from __future__ import annotations
@@ -28,12 +32,14 @@ from .wire import Wire
 
 ANTENNA_TYPE_BEVERAGE = "beverage"
 BEVERAGE_WIRE_ID = "beverage-wire"
+BEVERAGE_FEED_WIRE_ID = "beverage-feed"
 BEVERAGE_TERMINATION_WIRE_ID = "beverage-termination"
 BEVERAGE_TERMINATION_LOAD_ID = "beverage-termination-load"
 
 BEVERAGE_REFERENCE_FREQUENCY_HZ = 7_100_000.0
 BEVERAGE_DEFAULT_HEIGHT_M = 3.0
 BEVERAGE_DEFAULT_TERMINATION_OHM = 500.0
+BEVERAGE_DEFAULT_TRANSFORMER_RATIO = 9.0
 
 
 def beverage_starting_length_m(frequency_hz: float) -> float:
@@ -53,6 +59,7 @@ def beverage_parameters(
     azimuth_deg: float = 0.0,
     termination_enabled: bool = True,
     termination_resistance_ohm: float = BEVERAGE_DEFAULT_TERMINATION_OHM,
+    transformer_ratio: float = BEVERAGE_DEFAULT_TRANSFORMER_RATIO,
     wire_radius_m: float = 0.001,
     material: ConductorMaterial = COPPER,
     ground: GroundModel = FREE_SPACE,
@@ -66,6 +73,7 @@ def beverage_parameters(
         azimuth_deg=azimuth_deg,
         termination_enabled=termination_enabled,
         termination_resistance_ohm=termination_resistance_ohm,
+        transformer_ratio=transformer_ratio,
         wire_radius_m=wire_radius_m,
         material=material,
         ground=ground,
@@ -74,14 +82,15 @@ def beverage_parameters(
 
 @dataclass(frozen=True, slots=True)
 class BeverageParameters:
-    """A long horizontal wire with an optional resistive termination.
+    """A long horizontal wire with a feed stub and optional termination.
 
-    ``length_m`` runs from the feed at the near end to the termination at the
-    far end. ``height_m`` is the uniform wire height. When the termination is
-    enabled, a short vertical wire drops from the far end to the ground plane
-    and carries a series resistor. The feedpoint is the near end of the main
-    wire, so the transmitter/feed line connects directly to the traveling-wave
-    wire.
+    ``length_m`` runs from the near end to the termination at the far end.
+    ``height_m`` is the uniform horizontal-wire height and the length of the
+    vertical feed and termination stubs. The near-end stub gives the source a
+    wire-to-ground port; the transmitter/feed line connects through an ideal
+    transformer of ``transformer_ratio`` to ``1``. When the termination is
+    enabled, a second vertical stub drops from the far end to the ground plane
+    and carries a series resistor.
     """
 
     frequency_hz: float
@@ -90,6 +99,7 @@ class BeverageParameters:
     azimuth_deg: float = 0.0
     termination_enabled: bool = True
     termination_resistance_ohm: float = BEVERAGE_DEFAULT_TERMINATION_OHM
+    transformer_ratio: float = BEVERAGE_DEFAULT_TRANSFORMER_RATIO
     wire_radius_m: float = 0.001
     material: ConductorMaterial = COPPER
     ground: GroundModel = FREE_SPACE
@@ -102,6 +112,7 @@ class BeverageParameters:
             self.termination_resistance_ohm,
             name="termination_resistance_ohm",
         )
+        ensure_positive(self.transformer_ratio, name="transformer_ratio")
         ensure_positive(self.wire_radius_m, name="wire_radius_m")
         object.__setattr__(
             self,
@@ -115,10 +126,13 @@ class BeverageParameters:
 
     @property
     def total_conductor_length_m(self) -> float:
-        return self.length_m + self.height_m if self.termination_enabled else self.length_m
+        stubs = 2.0 if self.termination_enabled else 1.0
+        return self.length_m + stubs * self.height_m
 
     @property
     def feed_height_m(self) -> float:
+        """Return the height of the horizontal wire and feed-stub top."""
+
         return self.height_m
 
     @property
@@ -151,7 +165,14 @@ class BeverageParameters:
                 end=far,
                 radius_m=self.wire_radius_m,
                 material=self.material,
-            )
+            ),
+            Wire(
+                id=BEVERAGE_FEED_WIRE_ID,
+                start=point(0.0, 0.0),
+                end=near,
+                radius_m=self.wire_radius_m,
+                material=self.material,
+            ),
         ]
         loads: list[SeriesLoad] = []
         if self.termination_enabled:
@@ -175,9 +196,10 @@ class BeverageParameters:
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint(BEVERAGE_WIRE_ID, 0.0),
+            feed=FeedPoint(BEVERAGE_FEED_WIRE_ID, 0.0),
             ground=self.ground,
             loads=tuple(loads),
             generator_id=ANTENNA_TYPE_BEVERAGE,
             generator_name=self.template_name,
+            feed_transformer_ratio=self.transformer_ratio,
         )

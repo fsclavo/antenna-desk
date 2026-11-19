@@ -672,6 +672,40 @@ def test_v20_migration_introduces_the_loaded_dipole_design_type() -> None:
     assert migrated["project"]["designs"][0] == document["project"]["designs"][0]
 
 
+def test_v55_migration_adds_the_beverage_feed_transformer() -> None:
+    document = {
+        "format": "antennadesk-project",
+        "schema_version": 55,
+        "project": {
+            "designs": [
+                {
+                    "antenna_type": "beverage",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "length_m": 42.2,
+                        "height_m": 3.0,
+                    },
+                },
+                {
+                    "antenna_type": "wire_dipole",
+                    "parameters": {
+                        "frequency_hz": 7_100_000.0,
+                        "total_length_m": 20.0,
+                    },
+                },
+            ]
+        },
+    }
+
+    migrated = migrate_document(document)
+
+    assert migrated["schema_version"] == SCHEMA_VERSION
+    beverage = migrated["project"]["designs"][0]["parameters"]
+    assert beverage["transformer_ratio"] == 9.0
+    dipole = migrated["project"]["designs"][1]["parameters"]
+    assert "transformer_ratio" not in dipole
+
+
 def test_v19_migration_introduces_the_beverage_design_type() -> None:
     document = {
         "format": "antennadesk-project",

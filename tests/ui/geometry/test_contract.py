@@ -607,9 +607,9 @@ def _cases() -> tuple[FamilyCase, ...]:
             "beverage",
             beverage_parameters(frequency_hz=7_100_000.0, length_m=42.0),
             "beverage",
-            2,
+            3,
             GeometryViewMode.ELEVATION,
-            ("Beverage", "length", "height", "termination"),
+            ("Beverage", "length", "height", "termination", "transformer"),
         ),
         FamilyCase(
             "biquad",

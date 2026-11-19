@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from antennadesk.domain.antennas.beverage import (
+    BEVERAGE_FEED_WIRE_ID,
     BEVERAGE_TERMINATION_LOAD_ID,
     BEVERAGE_TERMINATION_WIRE_ID,
     BEVERAGE_WIRE_ID,
@@ -34,16 +35,23 @@ def test_beverage_builds_a_terminated_long_wire() -> None:
     model = parameters.to_antenna()
 
     assert parameters.template_name == "Beverage"
-    assert len(model.wires) == 2
-    assert model.feed.wire_id == BEVERAGE_WIRE_ID
+    assert len(model.wires) == 3
+    assert model.feed.wire_id == BEVERAGE_FEED_WIRE_ID
     assert model.feed.offset_m == 0.0
+    assert model.feed_wire.start.z_m == pytest.approx(0.0)
+    assert model.feed_wire.end.z_m == pytest.approx(parameters.height_m)
+    horizontal = model.wire_by_id(BEVERAGE_WIRE_ID)
+    assert horizontal.start.z_m == pytest.approx(parameters.height_m)
+    assert horizontal.end.z_m == pytest.approx(parameters.height_m)
     assert len(model.loads) == 1
     load = model.loads[0]
     assert load.id == BEVERAGE_TERMINATION_LOAD_ID
     assert load.wire_id == BEVERAGE_TERMINATION_WIRE_ID
     assert load.resistance_ohm == pytest.approx(470.0)
     assert load.offset_m == pytest.approx(parameters.height_m / 2.0)
-    assert parameters.total_conductor_length_m == pytest.approx(45.0)
+    assert parameters.total_conductor_length_m == pytest.approx(48.0)
+    assert parameters.transformer_ratio == pytest.approx(9.0)
+    assert parameters.to_custom_parameters().feed_transformer_ratio == pytest.approx(9.0)
     assert parameters.managed_load_ids == frozenset({BEVERAGE_TERMINATION_LOAD_ID})
     assert template_load_ids(parameters) == parameters.managed_load_ids
     assert antenna_type_for(parameters) == "beverage"
@@ -51,14 +59,17 @@ def test_beverage_builds_a_terminated_long_wire() -> None:
     assert antenna_family(parameters) is AntennaFamily.WIRE
 
 
-def test_beverage_without_termination_has_one_wire_and_no_load() -> None:
+def test_beverage_without_termination_has_a_feed_stub_and_no_load() -> None:
     parameters = beverage_parameters(termination_enabled=False)
     model = parameters.to_antenna()
 
-    assert len(model.wires) == 1
+    assert len(model.wires) == 2
     assert model.loads == ()
+    assert model.feed.wire_id == BEVERAGE_FEED_WIRE_ID
     assert parameters.managed_load_ids == frozenset()
-    assert parameters.total_conductor_length_m == pytest.approx(parameters.length_m)
+    assert parameters.total_conductor_length_m == pytest.approx(
+        parameters.length_m + parameters.height_m
+    )
 
 
 def test_beverage_starting_length_is_one_wavelength() -> None:
@@ -92,6 +103,12 @@ def test_beverage_rejects_invalid_values() -> None:
             frequency_hz=7_100_000.0,
             length_m=40.0,
             termination_resistance_ohm=0.0,
+        )
+    with pytest.raises(ValueError, match="transformer_ratio"):
+        BeverageParameters(
+            frequency_hz=7_100_000.0,
+            length_m=40.0,
+            transformer_ratio=0.0,
         )
 
 

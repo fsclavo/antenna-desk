@@ -1034,18 +1034,21 @@ def render_construction_sheet(
 <tr><th>Length</th><td>{_length(parameters.length_m, display_units)}</td></tr>
 <tr><th>Height</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 <tr><th>Termination</th><td>{termination_row}</td></tr>
+<tr><th>{_escape(tr("Feed transformer"))}</th><td>{parameters.transformer_ratio:.1f}:1</td></tr>
 <tr><th>Total conductor</th><td>{_length(parameters.total_conductor_length_m, display_units)}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
             "Run one horizontal wire of {length} m at {height} m above ground. "
-            "Feed the near end directly and keep the wire straight. "
-            "{termination_note} The one-wavelength starting length and termination "
-            "value are heuristics; the pattern and receiving performance are not "
-            "independently validated.",
+            "Connect a short vertical feed stub from the near end to ground and "
+            "feed it through a {ratio:.1f}:1 transformer. Keep the wire straight. "
+            "{termination_note} The one-wavelength starting length, termination "
+            "value, and transformer ratio are assumptions; the pattern and "
+            "receiving performance are not independently validated.",
             length=f"{parameters.length_m:.4f}",
             height=f"{parameters.height_m:.4f}",
+            ratio=parameters.transformer_ratio,
             termination_note=termination_note,
         )
     elif isinstance(parameters, BiquadParameters):

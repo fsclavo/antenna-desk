@@ -973,7 +973,8 @@ def design_summary_rows(
                         else "disabled"
                     ),
                 ),
-                ("Feed", "near end"),
+                ("Feed", "near end, ground-referenced stub"),
+                ("Feed transformer", f"{parameters.transformer_ratio:.1f}:1"),
                 ("Total conductor", _length(parameters.total_conductor_length_m, display_units)),
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),

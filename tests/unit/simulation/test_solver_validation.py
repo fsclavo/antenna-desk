@@ -159,6 +159,26 @@ def test_wire_above_the_clearance_does_not_warn_about_ground_mounted_wires() -> 
     assert not any(diagnostic.code == "geometry.ground_mounted_wires" for diagnostic in diagnostics)
 
 
+def test_grounded_vertical_stubs_do_not_report_a_clearance_approximation() -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    ground = GroundModel.finite(
+        relative_permittivity=13.0,
+        conductivity_s_per_m=0.005,
+    )
+    parameters = beverage_parameters(frequency_hz=7_100_000.0, ground=ground)
+
+    diagnostics = _solver().validate(
+        parameters.to_antenna(),
+        _spec(include_conductor_losses=False, ground=ground),
+    )
+
+    assert not any(
+        diagnostic.code in {"geometry.ground_clearance", "geometry.ground_mounted_wires"}
+        for diagnostic in diagnostics
+    )
+
+
 def test_below_ground_wire_is_an_error() -> None:
     model = _model()
     grounded = AntennaModel(

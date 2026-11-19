@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.beverage import (
+    BEVERAGE_DEFAULT_TRANSFORMER_RATIO,
     BeverageParameters,
     beverage_parameters,
 )
@@ -112,6 +113,12 @@ class BeverageForm(QWidget):
         self._radius = QDoubleSpinBox(self)
         apply_radius_units(translator, unit_system, self._radius)
 
+        self._transformer = QDoubleSpinBox(self)
+        self._transformer.setRange(1.0, 100_000.0)
+        self._transformer.setDecimals(1)
+        self._transformer.setSuffix(":1")
+        self._transformer.setValue(BEVERAGE_DEFAULT_TRANSFORMER_RATIO)
+
         self._material = QComboBox(self)
         populate_material_combo(self._material, translator)
 
@@ -146,6 +153,8 @@ class BeverageForm(QWidget):
 
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
+        self._transformer_hint = QLabel(translator.t("beverage.transformer_hint"), self)
+        self._transformer_hint.setWordWrap(True)
 
         form = QFormLayout()
         form.addRow(self._labels.label("field.frequency"), self._frequency)
@@ -157,6 +166,7 @@ class BeverageForm(QWidget):
         )
         form.addRow(self._labels.label("field.azimuth"), self._azimuth)
         form.addRow(self._labels.label("field.wire_radius"), self._radius)
+        form.addRow(self._labels.label("beverage.transformer_ratio"), self._transformer)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
@@ -167,6 +177,7 @@ class BeverageForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self._labels.bind_form(form)
         layout.addLayout(form)
+        layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
 
         for widget in (
@@ -176,6 +187,7 @@ class BeverageForm(QWidget):
             self._termination_resistance,
             self._azimuth,
             self._radius,
+            self._transformer,
             self._permittivity,
             self._conductivity,
         ):
@@ -199,6 +211,7 @@ class BeverageForm(QWidget):
         self._ground_presets.retranslate()
         self._labels.retranslate()
         self._termination_enabled.setText(self._translator.t("beverage.termination_enabled"))
+        self._transformer_hint.setText(self._translator.t("beverage.transformer_hint"))
         retranslate_material_combo(self._material, self._translator)
         retranslate_combo(
             self._ground,
@@ -258,6 +271,7 @@ class BeverageForm(QWidget):
             azimuth_deg=current.azimuth_deg,
             termination_enabled=current.termination_enabled,
             termination_resistance_ohm=current.termination_resistance_ohm,
+            transformer_ratio=current.transformer_ratio,
             wire_radius_m=current.wire_radius_m,
             material=current.material,
             ground=current.ground,
@@ -298,6 +312,7 @@ class BeverageForm(QWidget):
             self._termination_resistance.setValue(parameters.termination_resistance_ohm)
             self._azimuth.setValue(parameters.azimuth_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
+            self._transformer.setValue(parameters.transformer_ratio)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -335,6 +350,7 @@ class BeverageForm(QWidget):
                 length=f"{length_from_m(parameters.length_m, self._unit_system):.3f}",
                 height=f"{length_from_m(parameters.height_m, self._unit_system):.3f}",
                 termination=termination,
+                transformer=f"{parameters.transformer_ratio:.1f}:1",
                 unit=unit,
             )
         )
@@ -347,6 +363,7 @@ class BeverageForm(QWidget):
             azimuth_deg=self._azimuth.value(),
             termination_enabled=self._termination_enabled.isChecked(),
             termination_resistance_ohm=self._termination_resistance.value(),
+            transformer_ratio=self._transformer.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),

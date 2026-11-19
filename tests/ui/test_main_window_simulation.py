@@ -103,6 +103,16 @@ def test_generated_specs_default_to_at_least_100_points(
     assert spec.frequency_plan.count >= 100
 
 
+def test_beverage_spec_applies_the_feed_transformer(window: MainWindow) -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+
+    parameters = beverage_parameters(transformer_ratio=16.0)
+
+    spec = window._beverage_simulation_spec(parameters)
+
+    assert spec.feed_transformer_ratio == pytest.approx(16.0)
+
+
 def test_generated_auto_sweep_shows_100_points_and_keeps_custom_override(
     window: MainWindow,
 ) -> None:

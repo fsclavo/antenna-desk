@@ -148,6 +148,7 @@ of truth before adding another planning document.
 - [ADR-0044 — Adaptive length display units](ADR/0044-adaptive-length-display-units.md)
 - [ADR-0045 — Multi-band HexBeam model](ADR/0045-multiband-hexbeam.md)
 - [ADR-0046 — Frequency-aware optimizer bounds and high-frequency family validity](ADR/0046-frequency-aware-optimizer-bounds.md)
+- [ADR-0047 — Beverage feed transformer and grounded stubs](ADR/0047-beverage-feed-transformer-and-grounded-stubs.md)
 
 ## Archive
 

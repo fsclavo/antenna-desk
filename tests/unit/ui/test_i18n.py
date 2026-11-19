@@ -157,6 +157,7 @@ HELP_MANIFEST = frozenset(
         "help.preferences.units",
         "help.preferences.theme",
         "help.dipole.field.transformer_ratio",
+        "help.beverage.transformer_ratio",
         "help.biquad.transformer_ratio",
         "help.quad_beam.transformer_ratio",
         "help.quad_beam.load_starting",

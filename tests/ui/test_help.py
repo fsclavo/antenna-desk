@@ -54,6 +54,7 @@ def test_family_specific_labels_resolve_help() -> None:
     assert "Termination resistor" in (
         help_text(translator, "beverage.termination_resistance") or ""
     )
+    assert "9:1" in (help_text(translator, "beverage.transformer_ratio") or "")
     assert "Trap resonant" in (help_text(translator, "trap_dipole.trap_frequency") or "")
     assert "Progressive phase" in (help_text(translator, "phased_vertical.phase_step") or "")
     assert "loading-coil" in (help_text(translator, "endfed.loading_coil_inductance") or "")

@@ -790,6 +790,7 @@ def test_beverage_round_trips_through_the_schema() -> None:
         length_m=80.0,
         height_m=3.5,
         termination_resistance_ohm=470.0,
+        transformer_ratio=16.0,
     )
     original = _project(parameters, "Beverage")
 

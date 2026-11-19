@@ -428,6 +428,7 @@ class BeverageParametersPayload(StrictModel):
     azimuth_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
     termination_enabled: bool = True
     termination_resistance_ohm: float = Field(default=500.0, gt=0.0)
+    transformer_ratio: float = Field(default=9.0, gt=0.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -1770,6 +1771,7 @@ def _beverage_parameters_from_domain(
         azimuth_deg=value.azimuth_deg,
         termination_enabled=value.termination_enabled,
         termination_resistance_ohm=value.termination_resistance_ohm,
+        transformer_ratio=value.transformer_ratio,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -3104,6 +3106,7 @@ def _beverage_parameters_to_domain(
         azimuth_deg=value.azimuth_deg,
         termination_enabled=value.termination_enabled,
         termination_resistance_ohm=value.termination_resistance_ohm,
+        transformer_ratio=value.transformer_ratio,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

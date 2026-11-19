@@ -1677,10 +1677,26 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
                 step=1.0,
             )
         )
+    ratio_choices = tuple(
+        sorted({parameters.transformer_ratio, 1.0, 4.0, 9.0, 16.0}),
+    )
+    variables.append(
+        OptimizationVariable(
+            "transformer_ratio",
+            "field.transformer_ratio",
+            "optimize.group.feed",
+            ratio_choices[0],
+            ratio_choices[-1],
+            kind=VariableKind.CHOICE,
+            unit="ratio",
+            choices=ratio_choices,
+        )
+    )
     variables.append(_radius(parameters.wire_radius_m))
     initial = {
         "length_m": parameters.length_m,
         "height_m": parameters.height_m,
+        "transformer_ratio": parameters.transformer_ratio,
         "wire_radius_m": parameters.wire_radius_m,
     }
     if parameters.termination_enabled:
@@ -1695,6 +1711,7 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
                 "termination_resistance_ohm",
                 parameters.termination_resistance_ohm,
             ),
+            transformer_ratio=values["transformer_ratio"],
             wire_radius_m=values["wire_radius_m"],
         )
 
@@ -1707,6 +1724,7 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
             positive_violation("length_m", values["length_m"]),
             positive_violation("height_m", values["height_m"]),
             positive_violation("termination_resistance_ohm", resistance),
+            positive_violation("transformer_ratio", values["transformer_ratio"]),
             positive_violation("wire_radius_m", values["wire_radius_m"]),
         )
 
@@ -1716,6 +1734,7 @@ def beverage_descriptor(parameters: BeverageParameters) -> AntennaOptimizerDescr
         initial,
         build,
         validate,
+        context_note_key="optimize.feed_transformer.transformer_context",
     )
 
 

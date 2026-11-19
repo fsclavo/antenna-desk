@@ -176,7 +176,8 @@ def test_beverage_summary_reports_length_and_termination() -> None:
     assert rows["Type"] == "Beverage"
     assert rows["Length"] == "80.0000 m"
     assert rows["Termination"] == "470.0 Ω to ground"
-    assert rows["Feed"] == "near end"
+    assert rows["Feed"] == "near end, ground-referenced stub"
+    assert rows["Feed transformer"] == "9.0:1"
 
 
 def test_sagged_dipole_summary_reports_sag_and_conductor_length() -> None:

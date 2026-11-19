@@ -1200,19 +1200,25 @@ wire fed at the near end. The editor sets the design frequency, length, height,
 azimuth, radius, material, and ground, plus an optional resistive termination
 to ground at the far end.
 
-The model adds a short vertical wire at the far end and a series resistor.
-**Load one-wavelength starting length** sets the wire length to one wavelength
-at the current frequency; the default termination is 500 Ω. Both are starting
-heuristics. **Optimize...** searches length, height, termination resistance when
-enabled, and conductor radius jointly. Disabling the termination removes the
-resistor and produces a bidirectional receiving pattern.
+The model adds a short vertical feed stub at the near end, a short vertical
+termination wire at the far end, and a series resistor. **Load one-wavelength
+starting length** sets the wire length to one wavelength at the current
+frequency; the default termination is 500 Ω. Both are starting heuristics. The
+feed transformer field applies an ideal ratio to the reported SWR; the default
+is 9:1 because a Beverage presents a few hundred ohms at the feedpoint, not
+50 Ω. Set 1.0 to inspect the raw antenna impedance. **Optimize...** searches
+length, height, termination resistance when enabled, transformer ratio, and
+conductor radius jointly. Disabling the termination removes the resistor and
+produces a bidirectional receiving pattern.
 
 The one-wavelength starting length, 500 Ω nominal termination, and 6–10 ft
-height guidance are **published starting dimensions** (level B). The Beverage
-is a low-gain receiving antenna; the termination is not a complete ground
-system, and the gain, pattern, received signal, and termination efficiency are
-not independently validated. Use relative simulations for direction and
-termination studies, then verify with a measurement.
+height guidance are **published starting dimensions** (level B). The 9:1
+transformer is a practical matching assumption, not a published value; the
+ideal transformer has no loss, and the feed and termination stubs are not a
+complete ground system. The Beverage is a low-gain receiving antenna, and the
+gain, pattern, received signal, and termination efficiency are not
+independently validated. Use relative simulations for direction and termination
+studies, then verify with a measurement.
 
 ## Create a doublet
 

@@ -729,6 +729,8 @@ def test_beverage_construction_sheet_lists_the_termination(
 
     assert "Beverage" in sheet
     assert "Termination" in sheet
+    assert "Feed transformer" in sheet
+    assert "9.0:1" in sheet
     assert "ground rod" in sheet
     assert "80.0000 m" in sheet
 

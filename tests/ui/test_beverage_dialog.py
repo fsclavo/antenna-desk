@@ -23,9 +23,11 @@ def test_beverage_dialog_builds_a_terminated_receiving_wire(qtbot: QtBot) -> Non
     assert dialog.windowTitle() == "Beverage Generator"
     assert parameters.termination_enabled is True
     assert parameters.termination_resistance_ohm == pytest.approx(500.0)
-    assert len(parameters.to_antenna().wires) == 2
+    assert parameters.transformer_ratio == pytest.approx(9.0)
+    assert len(parameters.to_antenna().wires) == 3
     assert len(parameters.to_antenna().loads) == 1
     assert "termination" in dialog._form._geometry.text()
+    assert "9.0:1" in dialog._form._geometry.text()
 
 
 def test_beverage_dialog_can_disable_the_termination(qtbot: QtBot) -> None:
@@ -36,9 +38,21 @@ def test_beverage_dialog_can_disable_the_termination(qtbot: QtBot) -> None:
     parameters = dialog.parameters()
 
     assert parameters.termination_enabled is False
-    assert len(parameters.to_antenna().wires) == 1
+    assert len(parameters.to_antenna().wires) == 2
     assert parameters.to_antenna().loads == ()
     assert "off" in dialog._form._geometry.text()
+
+
+def test_beverage_dialog_sets_the_feed_transformer(qtbot: QtBot) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+
+    dialog._form._transformer.setValue(16.0)
+
+    parameters = dialog.parameters()
+
+    assert parameters.transformer_ratio == pytest.approx(16.0)
+    assert "16.0:1" in dialog._form._geometry.text()
 
 
 def test_beverage_dialog_loads_the_one_wavelength_starting_length(

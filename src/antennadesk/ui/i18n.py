@@ -3329,6 +3329,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "reduce el lóbulo trasero."
         ),
     },
+    "help.beverage.transformer_ratio": {
+        Language.ENGLISH: (
+            "Ideal feed transformer ratio applied to the reported SWR; it does not "
+            "change the wire geometry. 9:1 is a practical start for a 50 ohm system; "
+            "1.0 shows the raw antenna impedance."
+        ),
+        Language.SPANISH: (
+            "Relación ideal del transformador aplicada a la ROE informada; no cambia "
+            "la geometría. 9:1 es un inicio práctico para 50 ohm; 1.0 muestra la "
+            "impedancia cruda."
+        ),
+    },
     "help.biquad.kind": {
         Language.ENGLISH: (
             "Biquad variant; single and double biquads use different loop and reflector geometry."
@@ -10799,6 +10811,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Termination resistance",
         Language.SPANISH: "Resistencia de terminación",
     },
+    "beverage.transformer_ratio": {
+        Language.ENGLISH: "Feed transformer",
+        Language.SPANISH: "Transformador de alimentación",
+    },
+    "beverage.transformer_hint": {
+        Language.ENGLISH: (
+            "Ideal feed transformer. A Beverage is a few hundred ohms at the feedpoint; "
+            "9:1 is a practical starting point for a 50 ohm system. Set 1.0 to see the "
+            "raw antenna impedance."
+        ),
+        Language.SPANISH: (
+            "Transformador de alimentación ideal. Una Beverage presenta unos cientos de "
+            "ohm en el punto de alimentación; 9:1 es un punto de partida práctico para un "
+            "sistema de 50 ohm. Poné 1.0 para ver la impedancia cruda de la antena."
+        ),
+    },
+    "beverage.transformer": {
+        Language.ENGLISH: "Feed transformer",
+        Language.SPANISH: "Transformador de alimentación",
+    },
+    "beverage.transformer_note": {
+        Language.ENGLISH: "Ideal feed transformer: {ratio}.",
+        Language.SPANISH: "Transformador de alimentación ideal: {ratio}.",
+    },
     "beverage.termination": {
         Language.ENGLISH: "Termination",
         Language.SPANISH: "Terminación",
@@ -10813,10 +10849,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "beverage.geometry": {
         Language.ENGLISH: (
-            "length {length} {unit} · height {height} {unit} · termination {termination}"
+            "length {length} {unit} · height {height} {unit} · "
+            "termination {termination} · transformer {transformer}"
         ),
         Language.SPANISH: (
-            "longitud {length} {unit} · altura {height} {unit} · terminación {termination}"
+            "longitud {length} {unit} · altura {height} {unit} · "
+            "terminación {termination} · transformador {transformer}"
         ),
     },
     "beverage.load_starting": {
@@ -10829,34 +10867,38 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "beverage.hint": {
         Language.ENGLISH: (
-            "A Beverage is a long horizontal receiving wire fed at the near end "
-            "and terminated by a resistor to ground at the far end. The model "
-            "uses a short vertical termination wire and a series resistor; the "
-            "one-wavelength length and 500 ohm termination are starting "
-            "heuristics, not validated low-band receiving performance."
+            "A Beverage is a long horizontal receiving wire with a short vertical "
+            "feed stub at the near end and a resistor to ground at the far end. "
+            "The simulation applies an ideal feed transformer; a 9:1 ratio is a "
+            "practical starting point for a 50 ohm system. The one-wavelength "
+            "length, 500 ohm termination, and transformer ratio are starting "
+            "assumptions, not validated low-band receiving performance."
         ),
         Language.SPANISH: (
-            "Una Beverage es un hilo receptor horizontal largo alimentado en el "
-            "extremo cercano y terminado con una resistencia a tierra en el "
-            "extremo lejano. El modelo usa un tramo vertical corto de terminación "
-            "y una resistencia serie; la longitud de una onda y la terminación de "
-            "500 ohm son heurísticas iniciales, no un rendimiento de recepción "
-            "validado en bandas bajas."
+            "Una Beverage es un hilo receptor horizontal largo con un tramo "
+            "vertical corto de alimentación en el extremo cercano y una resistencia "
+            "a tierra en el extremo lejano. La simulación aplica un transformador "
+            "de alimentación ideal; 9:1 es un punto de partida práctico para un "
+            "sistema de 50 ohm. La longitud de una onda, la terminación de 500 ohm "
+            "y la relación del transformador son supuestos iniciales, no un "
+            "rendimiento de recepción validado en bandas bajas."
         ),
     },
     "beverage.evidence": {
         Language.ENGLISH: (
-            "Experimental receiving model. The termination is a wire stub with a "
-            "series resistor, not a full ground system. Gain is low and is not "
-            "independently validated; use the model for relative pattern and "
+            "Experimental receiving model. The feed and termination are short "
+            "vertical stubs to ground, not a complete ground system. The feed "
+            "transformer is ideal and its loss is not modeled. Gain is low and is "
+            "not independently validated; use the model for relative pattern and "
             "termination studies, then verify with a measurement."
         ),
         Language.SPANISH: (
-            "Modelo de recepción experimental. La terminación es un tramo de hilo "
-            "con una resistencia serie, no un sistema de tierra completo. La "
-            "ganancia es baja y no está validada independientemente; usá el modelo "
-            "para estudios relativos de patrón y terminación, y verificá con una "
-            "medición."
+            "Modelo de recepción experimental. La alimentación y la terminación son "
+            "tramos verticales cortos a tierra, no un sistema de tierra completo. "
+            "El transformador de alimentación es ideal y su pérdida no está "
+            "modelada. La ganancia es baja y no está validada independientemente; "
+            "usá el modelo para estudios relativos de patrón y terminación, y "
+            "verificá con una medición."
         ),
     },
     "loaded_dipole.title": {

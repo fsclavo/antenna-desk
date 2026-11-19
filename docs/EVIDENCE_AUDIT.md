@@ -132,9 +132,12 @@ keeps:
   impedance; those remain experimental.
 - **Beverage → B (starting dimensions only).** The QST article gives a 1 λ
   starting length, 500 Ω termination, and 6–10 ft typical height; the template
-  defaults to exactly 1 λ and 500 Ω. Gain and pattern are not promoted because
-  the termination is a wire stub and the article's gain figure depends on a
-  ground model the template does not reproduce.
+  defaults to exactly 1 λ and 500 Ω. The 9:1 ideal feed transformer is a
+  practical matching assumption for the few-hundred-ohm feedpoint, not a
+  published value, and its loss is not modeled. Gain and pattern are not
+  promoted because the feed and termination are ground-referenced wire stubs
+  and the article's gain figure depends on a ground model the template does not
+  reproduce.
 - **double_biquad remains C.** The published double biquad is a side-by-side
   pair on a 110 × 220 mm solid reflector; the template is a four-loop vertical
   stack on a wire reflector. The topology, current distribution, and feed

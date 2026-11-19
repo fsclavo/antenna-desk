@@ -992,11 +992,13 @@ REPORT_SPANISH: dict[str, str] = {
         "Dejá los enlaces abiertos y usá solo la sección central."
     ),
     "No loading coils are fitted.": "No se instalan bobinas de carga.",
-    "Run one horizontal wire of {length} m at {height} m above ground. Feed the near end directly and keep the wire straight. {termination_note} The one-wavelength starting length and termination value are heuristics; the pattern and receiving performance are not independently validated.": (  # noqa: E501
+    "Run one horizontal wire of {length} m at {height} m above ground. Connect a short vertical feed stub from the near end to ground and feed it through a {ratio:.1f}:1 transformer. Keep the wire straight. {termination_note} The one-wavelength starting length, termination value, and transformer ratio are assumptions; the pattern and receiving performance are not independently validated.": (  # noqa: E501
         "Tendé un hilo horizontal de {length} m a {height} m sobre el suelo. "
-        "Alimentá el extremo cercano directamente y mantené el hilo recto. "
-        "{termination_note} La longitud inicial de una longitud de onda y el "
-        "valor de terminación son heurísticas; el patrón y el rendimiento de "
+        "Conectá un tramo vertical corto de alimentación desde el extremo "
+        "cercano a tierra y alimentalo a través de un transformador "
+        "{ratio:.1f}:1. Mantené el hilo recto. {termination_note} La longitud "
+        "inicial de una longitud de onda, el valor de terminación y la relación "
+        "del transformador son supuestos; el patrón y el rendimiento de "
         "recepción no están validados independientemente."
     ),
     "SWR ({impedance:g} Ω)": "ROE ({impedance:g} Ω)",
@@ -1016,6 +1018,7 @@ REPORT_SPANISH: dict[str, str] = {
     "driven loop side midpoint": "punto medio del lado del lazo alimentado",
     "first vertical (primary)": "primera vertical (principal)",
     "near end": "extremo cercano",
+    "near end, ground-referenced stub": "extremo cercano, tramo referido a tierra",
     "construction sheet": "hoja de construcción",
     "midpoint of the first side": "punto medio del primer lado",
     "none": "ninguno",

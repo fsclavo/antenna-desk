@@ -591,7 +591,24 @@ def test_beverage_without_termination_does_not_optimize_its_resistance() -> None
 
     assert "length_m" in names
     assert "height_m" in names
+    assert "transformer_ratio" in names
     assert "termination_resistance_ohm" not in names
+
+
+def test_beverage_optimizer_includes_the_feed_transformer() -> None:
+    parameters = beverage_parameters()
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+
+    transformer = next(
+        variable
+        for variable in availability.descriptor.variables
+        if variable.name == "transformer_ratio"
+    )
+
+    assert transformer.choices == (1.0, 4.0, 9.0, 16.0)
+    assert availability.descriptor.initial_values["transformer_ratio"] == 9.0
+    assert availability.descriptor.context_note_key is not None
 
 
 def test_linked_dipole_optimizes_the_center_section_only() -> None:

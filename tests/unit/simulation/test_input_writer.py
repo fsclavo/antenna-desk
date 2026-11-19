@@ -276,6 +276,31 @@ def test_ground_mounted_radials_are_raised_for_nec() -> None:
     ) in deck.text
 
 
+def test_grounded_vertical_connection_is_not_raised_for_nec() -> None:
+    from antennadesk.domain.antennas.beverage import beverage_parameters
+    from antennadesk.domain.environment.ground import GroundModel
+
+    parameters = beverage_parameters(
+        frequency_hz=7_100_000.0,
+        length_m=42.0,
+        height_m=3.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+
+    deck = write_nec2_input(parameters.to_antenna(name="Beverage"), _spec(segments=3))
+
+    assert deck.z_offset_m == 0.0
+    assert "GW 2 3 0.000000000 0.000000000 0.000000000 0.000000000 0.000000000 3.000000000" in (
+        deck.text
+    )
+    assert "GW 3 3 42.000000000 0.000000000 3.000000000 42.000000000 0.000000000 0.000000000" in (
+        deck.text
+    )
+
+
 def test_free_space_vertical_is_not_raised() -> None:
     from antennadesk.domain.antennas.vertical import VerticalParameters
 
