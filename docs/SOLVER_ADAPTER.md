@@ -109,6 +109,16 @@ It also checks the half-wave dipole maximum power gain against the standard
 `2.15 dBi` value with a tolerance of `0.2 dB`, and the SWR of the Example 1
 impedance against the computed value `2.351965` at 50 Ω.
 
+## Deck export
+
+`antennadesk.simulation.nec2.export.render_nec_deck` wraps the same
+`write_nec2_input` body used by the solver with a deterministic provenance
+header. The header records the project, design, antenna type, application and
+solver versions, frequency plan, reference impedance, ground, segmentation,
+and any feed transformer. A project feed line or matching network is listed as
+post-processed because it is not part of the NEC geometry. The export never
+includes raw solver output or executable paths.
+
 ## Current limitations
 
 - Conductor conductivity is emitted through `LD 5` when
@@ -125,14 +135,18 @@ impedance against the computed value `2.351965` at 50 Ω.
   the theoretical SWR floor as `matching_network.topology_limit`; this is a
   topology warning, not a solver correction.
 - Only free-space, perfect, and finite ground models are emitted.
-- Far-field values are NEC power gains; realized gain and directivity are not
-  separated by the adapter.
+- Far-field samples are NEC power gains. Normalization derives directivity and
+  realized gain per frequency and stores the mismatch, feed-line, network, and
+  transformer loss components.
 - The segmentation policy is a documented heuristic with optional per-wire
   overrides; explicit segment counts are used for reference cases. The default
   target is 0.05 wavelength per segment, chosen as an accuracy/performance
   compromise.
-- Results are not persisted in the project file yet.
-- No progress reporting, because nec2c does not provide real progress data.
+- Normalized results and raw solver text are persisted as immutable runs in the
+  project file (schema 30 and later).
+- `nec2c` does not provide real progress data, so the adapter does not call
+  `progress_callback`. The UI shows an indeterminate simulation state and
+  determinate optimization, band, and pattern budgets.
 - The parser is version-sensitive; the engine commit is pinned and the parser
   has unit tests with fixed output.
 

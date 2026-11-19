@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Portable NEC-2 deck export and copy.** **File → Export → NEC Deck...**
+  writes the current model and simulation spec as a deterministic `.nec` file,
+  and **Copy NEC Deck** puts the same text on the clipboard. The provenance
+  header records project, design, antenna type, application/solver versions,
+  frequency plan, reference impedance, ground, segmentation, transformer, and
+  post-processed feed-line/matching context. It never includes raw solver
+  output or local paths. A real NEC2C round-trip reproduces the simulated
+  feedpoint impedance.
 - **Beverage feed matching and ground-referenced stubs.** Beverage designs now
   include a short vertical feed stub at the near end, a grounded termination
   stub, and an ideal feed transformer (default 9:1) that is applied to the
@@ -211,6 +219,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Documentation truth pass.** README status is now pre-1.0 instead of
+  pre-alpha. The architecture, domain, solver-adapter, and user-guide text no
+  longer claims that directivity/realized gain are unseparated, that simulation
+  results are not persisted, that progress is unavailable, that only power gain
+  is shown, that feed-line loss is absent from realized gain, or that the
+  optimizer has no mechanical constraints. The current schema is documented as
+  56, and a documentation test guards the corrected claims.
 - **Grounded vertical connections are no longer lifted by the NEC clearance.**
   The 1 cm ground clearance is now applied only when a wire lies in or near the
   ground plane. A vertical wire that ends on the ground plane keeps its

@@ -182,11 +182,11 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 | ~~HF10~~ | ~~Design-frequency/geometry consistency for Moxon and Yagi~~ | S–M | HF1, HF2; UX34/ADR-0043 | **Done 2026-11-18:** the Moxon and Yagi forms use the ADR-0043 pristine policy. A pristine frequency change regenerates the Moxon reference or scales the Yagi table; after an edit, add/remove, loaded project, or optimizer result, geometry is preserved with a stale warning. The Moxon reference button and Yagi NBS preset reset pristine. The Moxon form warns outside the gross `0.15–0.60 λ` width guard. `yagi_gross_frequency_mismatch` rejects a Yagi outside `0.20–0.80 λ` through `optimize.unavailable.frequency_mismatch` before the solver starts. Tests cover pristine/edited changes, preset reloads, loaded parameters, new templates, and optimizer availability. |
 | TS1 | Convergence study for every wire family | M | `resolve_model_quality`, segmentation | **Wave 0.** A 3–5 density ladder reports R/X/Z magnitude/SWR and pattern/gain deltas, Δ/a, a self-consistency verdict, and cancellation. See §TS1. |
 | TS2 | Decision metrics, band-plan overlay, and CP/axial ratio | M | TS1 (soft), band plan, far-field data | **Wave 0.** Results show 2:1 SWR bandwidth, HPBW, F/B, takeoff, efficiency, band edges, and CP/axial ratio; CSV and tests. See §TS2. |
-| TS3 | NEC-2 deck export and copy | S | none | **Wave 0.** The current design/spec exports as a NEC deck with a provenance header; a NEC2C round-trip reproduces the simulation. See §TS3. |
+| ~~TS3~~ | ~~NEC-2 deck export and copy~~ | S | none | **Done 2026-11-19:** **File → Export → NEC Deck...** and **Copy NEC Deck** use the current design/spec and a deterministic provenance header. A real NEC2C round-trip reproduces the simulated impedance; the deck omits raw solver output and local paths. Unit, UI, and solver tests pass. A third-party NEC GUI reader remains release QA. |
 | TS4 | Autosave and crash recovery | S–M | none | **Wave 0.** Atomic recovery file, restore prompt, opt-out, and tests; no silent overwrite. See §TS4. |
 | TS5 | VNA import 2.0 | M | none | **Wave 0.** `.s2p`, analyzer presets, column mapping, decimal comma, drag-and-drop, and multiple sweeps. See §TS5. |
 | TS6 | Recent projects and start-page examples | S | none | **Wave 0.** Recent list with missing-file handling; start page opens examples and the reference library. See §TS6. |
-| TS7 | Documentation truth pass and status review | S | none | **Wave 0.** Remove stale limitations, single-source the limitation list, and review the pre-alpha label. See §TS7. |
+| ~~TS7~~ | ~~Documentation truth pass and status review~~ | S | none | **Done 2026-11-19:** stale claims were corrected in README, USER_GUIDE, SOLVER_ADAPTER, ARCHITECTURE, DOMAIN_MODEL, and the evidence text; the pre-alpha label became pre-1.0; schema 56 and the template-limitation source are documented; `tests/unit/test_documentation_truth.py` guards the known strings. Full gate 4,098 passed, 1 skipped. |
 | DL1 | Smith chart and matching workbench | M–L | matching network, feed line | **Wave 1.** Interactive impedance locus, measured/simulated overlay, line transformation, L/Pi/T preview, cursor, export. See §DL1. |
 | DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Wave 1.** Tuner C/L ranges, best effort/bypass, loss, voltage/current, E-series values, and per-band table. See §DL2. |
 | DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
@@ -360,6 +360,12 @@ weeks). **Release:** 1.0 with TS2.
 
 ### TS3 — NEC-2 deck export and copy
 
+**Status:** **Implemented 2026-11-19.** The export and copy actions use the
+current design/spec, the header records provenance without paths or raw output,
+and a real NEC2C round-trip reproduces the simulated impedance. Full gate:
+4,107 passed, 1 skipped; NEC2C integration: 161 passed. A third-party NEC GUI
+reader is the remaining manual release check.
+
 **Goal:** make the canonical model portable and auditable.
 
 **Scope (MVP):**
@@ -489,6 +495,11 @@ display is the mitigation.
 **Effort:** S (3–5 days). **Release:** 1.0.
 
 ### TS7 — Documentation truth pass and status review
+
+**Status:** **Done 2026-11-19.** The known stale claims are corrected, the
+pre-alpha label is now pre-1.0, template limitations point to their single
+source, schema 56 is documented, and a documentation test guards the corrected
+strings. Full gate: 4,098 passed, 1 skipped; ruff and both mypy passes green.
 
 **Goal:** make the documentation match the shipped behavior before 1.0.
 

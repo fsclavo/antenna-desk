@@ -235,6 +235,7 @@ from ..reporting.html_report import write_html_report
 from ..reporting.touchstone import format_touchstone_s1p
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.discretization import resolve_model_quality
+from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
 from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
@@ -658,6 +659,10 @@ class MainWindow(QMainWindow):
         self._export_csv_action.triggered.connect(lambda: self.export_csv())
         self._export_touchstone_action = QAction(self)
         self._export_touchstone_action.triggered.connect(lambda: self.export_touchstone())
+        self._export_nec_action = QAction(self)
+        self._export_nec_action.triggered.connect(lambda: self.export_nec_deck())
+        self._copy_nec_action = QAction(self)
+        self._copy_nec_action.triggered.connect(lambda: self.copy_nec_deck())
         self._export_sources_csv_action = QAction(self)
         self._export_sources_csv_action.triggered.connect(lambda: self.export_sources_csv())
         self._export_wire_schedule_csv_action = QAction(self)
@@ -1400,6 +1405,8 @@ class MainWindow(QMainWindow):
         self._export_menu = self._file_menu.addMenu("")
         self._export_menu.addAction(self._export_csv_action)
         self._export_menu.addAction(self._export_touchstone_action)
+        self._export_menu.addAction(self._export_nec_action)
+        self._export_menu.addAction(self._copy_nec_action)
         self._export_menu.addAction(self._export_sources_csv_action)
         self._export_menu.addAction(self._export_wire_schedule_csv_action)
         self._export_menu.addAction(self._export_bom_csv_action)
@@ -1732,6 +1739,8 @@ class MainWindow(QMainWindow):
         self._update_custom_pattern_status()
         self._export_csv_action.setText(self._translator.t("action.export_csv"))
         self._export_touchstone_action.setText(self._translator.t("action.export_touchstone"))
+        self._export_nec_action.setText(self._translator.t("action.export_nec"))
+        self._copy_nec_action.setText(self._translator.t("action.copy_nec"))
         self._export_sources_csv_action.setText(self._translator.t("action.export_sources_csv"))
         self._export_wire_schedule_csv_action.setText(
             self._translator.t("action.export_wire_schedule_csv")
@@ -1765,6 +1774,10 @@ class MainWindow(QMainWindow):
         touchstone_help = self._translator.t("help.action.export_touchstone")
         self._export_touchstone_action.setToolTip(touchstone_help)
         self._export_touchstone_action.setWhatsThis(touchstone_help)
+        nec_help = self._translator.t("help.action.export_nec")
+        for action in (self._export_nec_action, self._copy_nec_action):
+            action.setToolTip(nec_help)
+            action.setWhatsThis(nec_help)
         self._compact_history_action.setText(self._translator.t("action.compact_history"))
         self._simulate_action.setText(self._translator.t("action.simulate"))
         self._simulate_action.setToolTip(self._translator.t("action.simulate.tooltip"))
@@ -2104,6 +2117,8 @@ class MainWindow(QMainWindow):
         self._import_vna_action.setEnabled(idle and has_project)
         self._export_csv_action.setEnabled(idle and has_result)
         self._export_touchstone_action.setEnabled(idle and has_result)
+        self._export_nec_action.setEnabled(idle and has_project)
+        self._copy_nec_action.setEnabled(idle and has_project)
         self._export_sources_csv_action.setEnabled(idle and has_sources)
         self._export_wire_schedule_csv_action.setEnabled(idle and has_project)
         self._export_bom_csv_action.setEnabled(idle and has_project)
@@ -9048,6 +9063,72 @@ class MainWindow(QMainWindow):
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
         self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def _current_nec_deck(self) -> tuple[Project, DesignVariant, str] | None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return None
+        try:
+            project = self._apply_fields() if self._form_dirty else self._project
+            design = project.design_by_id(self._design_id)
+            spec = self._apply_sweep_override(design, self._base_simulation_spec(design))
+            spec = self._with_project_chain(design.parameters, spec)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return None
+        solver_name: str | None = None
+        solver_version: str | None = None
+        if self._solver is not None:
+            try:
+                solver_metadata = self._solver.version()
+            except Exception:
+                solver_metadata = None
+            if solver_metadata is not None:
+                solver_name = solver_metadata.name
+                solver_version = solver_metadata.version
+        metadata = NecDeckExportMetadata(
+            project_name=project.name,
+            design_name=design.name,
+            antenna_type=design.antenna_type,
+            app_version=__version__,
+            solver_name=solver_name,
+            solver_version=solver_version,
+        )
+        return project, design, render_nec_deck(design.antenna, spec, metadata)
+
+    def export_nec_deck(self) -> None:
+        data = self._current_nec_deck()
+        if data is None:
+            return
+        project, design, text = data
+        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.nec"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            self._translator.t("dialog.export_nec_title"),
+            str(Path.home() / suggested),
+            self._translator.t("dialog.export_nec_filter"),
+        )
+        if not filename:
+            return
+        path = Path(filename)
+        if path.suffix.lower() != ".nec":
+            path = path.with_suffix(".nec")
+        try:
+            path.write_text(text, encoding="utf-8")
+        except Exception as exc:
+            self._show_error(self._translator.t("error.export", message=str(exc)))
+            return
+        self._last_status_key = "status.exported"
+        self._update_status_text()
+
+    def copy_nec_deck(self) -> None:
+        data = self._current_nec_deck()
+        if data is None:
+            return
+        _project, _design, text = data
+        QApplication.clipboard().setText(text)
+        self._last_status_key = "status.copied"
         self._update_status_text()
 
     def export_sources_csv(self) -> None:

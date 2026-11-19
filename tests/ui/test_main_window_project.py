@@ -568,6 +568,8 @@ def test_variant_switch_restores_the_cached_result(
     )
     assert window._results._table.rowCount() == 1
     assert window._export_csv_action.isEnabled() is True
+    assert window._export_nec_action.isEnabled() is True
+    assert window._copy_nec_action.isEnabled() is True
 
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Second", True))
     window.new_variant()

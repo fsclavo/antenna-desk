@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from helpers import wait_for_condition
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.importers.touchstone import parse_touchstone_s1p
@@ -18,6 +18,7 @@ from antennadesk.ui.main_window import MainWindow
 DATA_EXPORTS = (
     ("export_csv", ".csv"),
     ("export_touchstone", ".s1p"),
+    ("export_nec_deck", ".nec"),
     ("export_sources_csv", ".csv"),
     ("export_wire_schedule_csv", ".csv"),
     ("export_bom_csv", ".csv"),
@@ -123,6 +124,42 @@ def test_export_touchstone_writes_a_parseable_one_port_file(
     window._dirty = False
 
 
+def test_export_nec_deck_writes_a_deterministic_provenance_deck(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "antenna.nec"
+    monkeypatch.setattr(
+        QFileDialog,
+        "getSaveFileName",
+        lambda *args, **kwargs: (str(target), ""),
+    )
+
+    window.export_nec_deck()
+
+    text = target.read_text(encoding="utf-8")
+    assert text.startswith("CM AntennaDesk NEC-2 export\n")
+    assert "CM Project:" in text
+    assert "CM Design:" in text
+    assert "CM Frequency plan:" in text
+    assert "CM Ground:" in text
+    assert "CM Segmentation:" in text
+    assert "GW " in text
+    assert text.rstrip().endswith("EN")
+    window._dirty = False
+
+
+def test_copy_nec_deck_puts_the_same_deck_on_the_clipboard(window: MainWindow) -> None:
+    window.copy_nec_deck()
+
+    text = QApplication.clipboard().text()
+    assert text.startswith("CM AntennaDesk NEC-2 export\n")
+    assert "GW " in text
+    assert text.rstrip().endswith("EN")
+    window._dirty = False
+
+
 @pytest.mark.parametrize(("method_name", "suffix"), GEOMETRY_EXPORTS)
 def test_geometry_exports_write_the_requested_file(
     window: MainWindow,
@@ -143,6 +180,34 @@ def test_geometry_exports_write_the_requested_file(
 
     assert target.is_file()
     assert target.stat().st_size > 0
+
+
+@pytest.mark.parametrize("method_name", ["export_nec_deck", "copy_nec_deck"])
+def test_nec_deck_actions_require_a_project(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    method_name: str,
+) -> None:
+    from main_window_support import FakeSolver
+
+    from antennadesk.persistence.json_repository import JsonProjectRepository
+    from antennadesk.ui.i18n import Language, Translator
+    from antennadesk.ui.units import UnitSystem
+
+    window = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(window)
+    errors: list[str] = []
+    monkeypatch.setattr(window, "_show_error", errors.append)
+
+    getattr(window, method_name)()
+
+    assert errors == [Translator(Language.ENGLISH).t("error.no_project")]
+    window.close()
 
 
 @pytest.mark.parametrize("method_name", [case[0] for case in GEOMETRY_EXPORTS])

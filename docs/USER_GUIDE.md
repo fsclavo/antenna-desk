@@ -2423,6 +2423,14 @@ Otherwise the report contains at most one 3D figure. When far-field data is disa
 unavailable, the report states that explicitly instead of leaving an empty
 chart. A single-cut result has no 2D grid, so the report says that the 3D
 figure is unavailable rather than inventing a surface.
+Use **File → Export → NEC Deck...** to save the current model as a portable
+NEC-2 deck, or **Copy NEC Deck** to put the same text on the clipboard. The
+deck is deterministic and uses the current frequency plan, ground,
+segmentation, reference impedance, and feed/transformer context. Its provenance
+header contains project, design, antenna type, application, and solver
+versions; it never contains raw solver output or local executable paths. A
+project-level feed line or matching network is listed as post-processed and is
+not inserted into the NEC deck.
 Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
 to the compressed file. Saving above 32 MB compressed shows a warning, and
@@ -2507,6 +2515,11 @@ always store canonical meters and hertz.
 
 ## Current limitations
 
+Per-template limitations and evidence levels are single-sourced in
+`domain/design/evidence.py` and published in
+[EVIDENCE_AUDIT.md](EVIDENCE_AUDIT.md). Modeling decisions behind the remaining
+limitations are recorded in [ADR](ADR/).
+
 - Native packages include `nec2c` but are unsigned by default; verify the
   published SHA-256 checksums before installing them.
 - All catalog families are implemented, but some remain experimental or
@@ -2524,14 +2537,16 @@ always store canonical meters and hertz.
 - Optimization covers every geometry, feed, and family-load variable of the
   supported typed families with a joint hybrid search, including G5RV, ZS6BKW,
   and Zepp. Custom/imported designs, magnetic loops, and random wires are
-  excluded. There are no boom-length or turning-radius constraints. Band-edge,
-  robust, Pareto, persisted-summary, and recommendation support is implemented;
-  the Pareto front is descriptive and is not itself optimized.
+  excluded. Optional maximum turning-radius constraints apply to every family;
+  maximum boom length applies to Yagi and Moxon arrays. Band-edge, robust,
+  Pareto, persisted-summary, and recommendation support is implemented; the
+  Pareto front is descriptive and is not itself optimized.
 - Project files store normalized results and raw solver text; many long runs
   can reach the 64 MB project limit.
 - The feed line is a uniform-line post-processing model. It reports impedance
-  and SWR at the transmitter but does not add line loss to the pattern gain or
-  realized-gain calculation.
+  and SWR at the transmitter and its loss is included in the transmitter-side
+  realized gain and mismatch budget. It does not change the antenna pattern or
+  NEC power gain.
 - Far-field samples are NEC power gains. The pattern view can shift them to
   directivity or realized gain at the maximum direction, but the pattern CSV
   keeps the original power-gain columns. Relative permeability is not emitted to

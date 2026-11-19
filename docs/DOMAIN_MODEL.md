@@ -869,11 +869,11 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 45.
+the application writes version 56.
 
 ## Schema policy
 
-- Current version: `45`.
+- Current version: `56`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -968,6 +968,15 @@ the application writes version 45.
   transmission-line `phase_reversal` flag. The migration writes
   `phase_reversal: false` to existing lines, so old designs keep their previous
   behavior.
+- Version 53 adds the biquad feed-transformer ratio. The migration writes 1.0
+  so existing biquads keep their raw feed.
+- Version 54 adds the quad-beam feed-transformer ratio. The migration writes
+  1.0 so existing quad beams keep their raw feed.
+- Version 55 adds the optional multi-band HexBeam band list. Existing
+  single-band designs load unchanged.
+- Version 56 adds the Beverage feed-transformer ratio. The migration writes
+  9.0 and leaves the stored geometry unchanged; the feed and termination stubs
+  are derived from the existing height and length.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -1004,8 +1013,8 @@ the application writes version 45.
 - No numerical discretization in the domain; the segmentation policy is a
   configuration value, including optional per-wire overrides, and the solver
   adapter builds the actual layout.
-- Simulation results are persisted as immutable runs in schema version 30. Each
-  frequency also stores the ideal input result of every driven source; the
+- Simulation results are persisted as immutable runs (introduced in schema 30).
+  Each frequency also stores the ideal input result of every driven source; the
   primary feed remains the impedance/SWR reference.
   Band analyses store one run per band with a shared `batch_id`; the selected
   analysis band plan is a per-design intention and does not change geometry.
@@ -1085,8 +1094,9 @@ The far-field values are NEC power gains in dB. For a frequency with a power
 budget, directivity is derived from the gain and the structure efficiency. For
 a frequency with a far-field pattern, realized gain is the power gain plus the
 transducer gain of the feed-line, matching-network, and transformer cascade.
-The pattern charts still show NEC power gain; the summary and reports show all
-three metrics. See [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
+The pattern charts can display NEC power gain, directivity, or realized gain;
+the summary and reports show all three metrics. See
+[ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 
 Simulation results are immutable and carry a deterministic fingerprint of the
 model and spec. Completed and partial runs are stored in the project as

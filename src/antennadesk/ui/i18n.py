@@ -2239,6 +2239,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Exportá el barrido de impedancia simulado como Touchstone de un puerto."
         ),
     },
+    "help.action.export_nec": {
+        Language.ENGLISH: (
+            "Export or copy the current model as a portable NEC-2 deck with a "
+            "provenance header. The deck is deterministic and contains no solver output."
+        ),
+        Language.SPANISH: (
+            "Exportá o copiá el modelo actual como un deck NEC-2 portable con una "
+            "cabecera de procedencia. Es determinista y no incluye la salida del solver."
+        ),
+    },
     "action.simulate": {Language.ENGLISH: "Simulate", Language.SPANISH: "Simular"},
     "action.ok": {Language.ENGLISH: "OK", Language.SPANISH: "Aceptar"},
     "action.cancel": {Language.ENGLISH: "Cancel", Language.SPANISH: "Cancelar"},
@@ -9454,6 +9464,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export Touchstone (.s1p)...",
         Language.SPANISH: "Exportar Touchstone (.s1p)...",
     },
+    "action.export_nec": {
+        Language.ENGLISH: "Export NEC Deck (.nec)...",
+        Language.SPANISH: "Exportar deck NEC (.nec)...",
+    },
+    "action.copy_nec": {
+        Language.ENGLISH: "Copy NEC Deck",
+        Language.SPANISH: "Copiar deck NEC",
+    },
     "action.export_sources_csv": {
         Language.ENGLISH: "Export source results CSV...",
         Language.SPANISH: "Exportar resultados de fuentes CSV...",
@@ -9616,6 +9634,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Touchstone files (*.s1p);;All files (*)",
         Language.SPANISH: "Archivos Touchstone (*.s1p);;Todos los archivos (*)",
     },
+    "dialog.export_nec_title": {
+        Language.ENGLISH: "Export NEC-2 deck",
+        Language.SPANISH: "Exportar deck NEC-2",
+    },
+    "dialog.export_nec_filter": {
+        Language.ENGLISH: "NEC-2 files (*.nec);;All files (*)",
+        Language.SPANISH: "Archivos NEC-2 (*.nec);;Todos los archivos (*)",
+    },
     "dialog.sources_csv_title": {
         Language.ENGLISH: "Export source results CSV",
         Language.SPANISH: "Exportar CSV de resultados de fuentes",
@@ -9655,6 +9681,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "status.exported": {
         Language.ENGLISH: "Export complete.",
         Language.SPANISH: "Exportación completada.",
+    },
+    "status.copied": {
+        Language.ENGLISH: "Copied to clipboard.",
+        Language.SPANISH: "Copiado al portapapeles.",
     },
     "status.compacted": {
         Language.ENGLISH: "Simulation history compacted.",

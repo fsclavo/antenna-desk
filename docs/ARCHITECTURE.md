@@ -217,7 +217,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 55 is
+solver adapter does not need geometry-specific branches. Schema version 56 is
 current: parameter payloads are additive, and old `wire_dipole` documents are
 unchanged. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
@@ -352,10 +352,12 @@ record, version 45 adds optional manual BOM costs, version 52 adds the
 log-periodic design type and the generic transmission-line phase-reversal flag,
 version 53 adds the biquad feed-transformer ratio, version 54 adds the
 quad-beam feed-transformer ratio, version 55 adds the optional multi-band
-HexBeam list, and older documents are migrated explicitly.
+HexBeam list, version 56 adds the Beverage feed-transformer ratio and
+ground-referenced feed/termination stubs, and older documents are migrated
+explicitly.
 
-Simulation runs are persisted in schema version 30. Raw solver text is stored
-with the normalized result. Project files are compact JSON compressed with
+Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
+solver text is stored with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
 simulation-history compaction.
@@ -393,8 +395,9 @@ optimization, not a prerequisite for the user workflow.
   correction is not modeled. General transmission-line geometry is modeled as
   NEC `TL` two-ports between wire points; physical parallel-line coupling is not
   modeled.
-- Far-field results are NEC power gains. Directivity and realized gain are
-  derived per frequency; the pattern charts still show power gain. See
+- Far-field samples are NEC power gains. Directivity and realized gain are
+  derived per frequency and stored with the result; the pattern charts can
+  display power gain, directivity, or realized gain. See
   [ADR-0015](ADR/0015-realized-gain-and-directivity.md).
 - The UI estimates the persisted project size before a run and may coarsen the
   far-field pattern to the finest step that fits. For sweeps longer than five

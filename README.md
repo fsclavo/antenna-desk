@@ -9,7 +9,7 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** pre-alpha. The antenna catalog, estimators, simulation,
+**Status:** pre-1.0 (0.9.0 prepared). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
 is prepared; signing is optional and deferred for later releases. Center-fed
@@ -268,6 +268,11 @@ uv run python scripts/run_reference_simulation.py \
 
 ## Known limitations
 
+Per-template limitations and evidence levels are single-sourced in
+`domain/design/evidence.py` and published in
+[EVIDENCE_AUDIT.md](docs/EVIDENCE_AUDIT.md). Modeling decisions are recorded in
+[docs/ADR](docs/ADR/).
+
 - All catalog families are implemented, but some remain experimental or
   heuristic. Folded dipoles still lack an independent impedance reference;
   loops have the ARRL quad-loop resistance check. VNA CSV import and
@@ -277,8 +282,9 @@ uv run python scripts/run_reference_simulation.py \
   generator supports a radial screen. Transmission-line two-ports are supported,
   including the log-periodic transposed phase line and generic phase reversal;
   physical feed-line geometry and arbitrary radial screens are not modeled. The
-  feed line is a uniform post-processing model; it does not change the antenna
-  pattern or power gain.
+  feed line is a uniform post-processing model; its loss is included in the
+  transmitter-side realized gain and mismatch budget, but it does not change the
+  antenna pattern or power gain.
 - Optimization covers every first-class typed family through explicit
   descriptors and a joint hybrid search over geometry, feed, and family-load
   variables, including typed G5RV, ZS6BKW, Zepp, biquad, Beverage, and
@@ -288,10 +294,12 @@ uv run python scripts/run_reference_simulation.py \
   modes evaluate several operating points, the Pareto front is descriptive, and
   run summaries persist with the design. Synthesis remains a bounded starting
   point, not a global inverse solver.
-- Far-field values are NEC power gains. Realized gain and directivity are not
-  separated. Relative permeability is not emitted to NEC. Conductor
-  conductivity is emitted when `SimulationSpec.include_conductor_losses` is
-  true.
+- Far-field samples are NEC power gains. Directivity and realized gain are
+  derived per frequency and stored with each result; the pattern charts can
+  display power gain, directivity, or realized gain. See
+  [ADR-0015](docs/ADR/0015-realized-gain-and-directivity.md). Relative
+  permeability is not emitted to NEC. Conductor conductivity is emitted when
+  `SimulationSpec.include_conductor_losses` is true.
 - The end-fed feed transformer is an ideal impedance ratio, not a physical
   unun model. Its counterpoise is geometry, not an ideal ground plane.
 - Native packages include `nec2c`. The initial release is unsigned; verify the
