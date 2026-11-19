@@ -10,6 +10,7 @@ from antennadesk.importers.touchstone import (
     TouchstoneError,
     looks_like_touchstone,
     parse_touchstone_s1p,
+    parse_touchstone_s2p,
 )
 from antennadesk.importers.vna import parse_vna_data
 from antennadesk.importers.vna_csv import ParsedVnaCsv
@@ -106,3 +107,27 @@ def test_parse_vna_data_uses_suffix_and_content() -> None:
     assert csv.points[0].impedance_ohm == pytest.approx(50.0 + 0.0j)
     with pytest.raises(TouchstoneError):
         parse_vna_data("# MHz S RI R 50\n", suffix=".s1p")
+
+
+def test_s2p_uses_only_the_selected_port() -> None:
+    text = "# MHz S RI R 50\n7.1 0 0 0.5 0 0.5 0 0.3 0\n"
+
+    port1 = parse_touchstone_s2p(text, port=1)
+    port2 = parse_touchstone_s2p(text, port=2)
+
+    assert port1.points[0].impedance_ohm == pytest.approx(50.0 + 0.0j)
+    assert port2.points[0].impedance_ohm == pytest.approx(92.857142857 + 0.0j)
+    assert port1.profile == "Touchstone S2P port 1"
+    assert port2.mapping == "frequency, S22"
+
+
+def test_s2p_port2_requires_full_rows_and_dispatch_uses_suffix() -> None:
+    with pytest.raises(TouchstoneError, match="S22"):
+        parse_touchstone_s2p("# MHz S RI R 50\n7.1 0 0 0.5 0\n", port=2)
+
+    parsed = parse_vna_data(
+        "# MHz S RI R 50\n7.1 0 0 0.5 0 0.5 0 0.3 0\n",
+        suffix=".s2p",
+        s2p_port=1,
+    )
+    assert parsed.points[0].impedance_ohm == pytest.approx(50.0 + 0.0j)

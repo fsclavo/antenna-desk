@@ -1890,6 +1890,8 @@ class ResultsView(QWidget):
         )
         if session:
             details.append(self._translator.t("measurement.session_value", value=session))
+        if measurement.source:
+            details.append(self._translator.t("measurement.source_value", value=measurement.source))
         if measurement.calibration:
             details.append(
                 self._translator.t("measurement.calibration_value", value=measurement.calibration)

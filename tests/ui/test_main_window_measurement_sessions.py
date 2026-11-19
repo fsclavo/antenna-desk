@@ -178,8 +178,8 @@ def test_import_vna_csv_assigns_the_selected_session(
 
     monkeypatch.setattr(
         QFileDialog,
-        "getOpenFileName",
-        lambda *args, **kwargs: (str(csv_path), ""),
+        "getOpenFileNames",
+        lambda *args, **kwargs: ([str(csv_path)], ""),
     )
     monkeypatch.setattr(
         main_window_module,

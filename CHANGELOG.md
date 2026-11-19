@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **VNA import 2.0.** Import multiple CSV, `.s1p`, or `.s2p` files or drop
+  them onto the main window. CSV parsing handles decimal commas, semicolon
+  delimiters, thousands separators, per-row Hz–GHz units, and NanoVNA
+  Saver/RigExpert/miniVNA/DG8SAQ detection, with a manual column-mapping fallback
+  remembered for the session. `.s2p` uses only the explicitly selected port
+  (S11 or S22), never S21. Duplicate names ask to replace or create a numbered
+  copy, malformed rows report row context, and oversized files are rejected.
+  No solver or project-schema change.
 - **Decision metrics, band-edge overlay, and circular polarization.** The
   Diagnostics tab now shows 2:1 SWR bandwidth (bracketed or sweep-edge
   unbracketed), HPBW in both planes, front-to-back, sidelobe level, takeoff,

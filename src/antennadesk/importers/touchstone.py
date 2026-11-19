@@ -30,6 +30,8 @@ class ParsedTouchstone:
     points: tuple[MeasurementPoint, ...]
     reference_impedance_ohm: float
     warnings: tuple[str, ...] = ()
+    profile: str = "Touchstone"
+    mapping: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +108,76 @@ def _reflection_from_values(
     return magnitude * complex(math.cos(angle), math.sin(angle))
 
 
+def parse_touchstone_s2p(text: str, *, port: int = 1) -> ParsedTouchstone:
+    """Parse a two-port Touchstone file and use only the selected port.
+
+    ``port=1`` reads S11; ``port=2`` reads S22 and requires full 9-value rows.
+    S21 and S12 are never used as the measurement, even when S11 is absent.
+    """
+
+    if port not in {1, 2}:
+        raise TouchstoneError("port must be 1 or 2")
+    if not text.strip():
+        raise TouchstoneError("the Touchstone file is empty")
+
+    text = text.lstrip("\ufeff")
+    options = _Options()
+    options_seen = False
+    points: list[MeasurementPoint] = []
+    warnings: list[str] = []
+
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.split("!", 1)[0].strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            if options_seen:
+                raise TouchstoneError(f"line {line_number}: multiple option lines")
+            options = _parse_options(line, line_number)
+            options_seen = True
+            continue
+        values = [value for value in _NUMBER_PATTERN.split(line) if value]
+        if len(values) not in (3, 5, 9):
+            raise TouchstoneError(
+                f"line {line_number}: expected 3, 5, or 9 numeric values for a 2-port file"
+            )
+        if port == 2 and len(values) != 9:
+            raise TouchstoneError(f"line {line_number}: S22 requires full 9-value 2-port rows")
+        try:
+            numbers = [float(value) for value in values]
+        except ValueError as exc:
+            raise TouchstoneError(f"line {line_number}: invalid numeric value") from exc
+        if not all(math.isfinite(number) for number in numbers):
+            raise TouchstoneError(f"line {line_number}: non-finite numeric value")
+        frequency_hz = numbers[0] * options.frequency_scale
+        if frequency_hz <= 0.0:
+            raise TouchstoneError(f"line {line_number}: frequency must be positive")
+        first = numbers[1] if port == 1 else numbers[7]
+        second = numbers[2] if port == 1 else numbers[8]
+        reflection = _reflection_from_values(first, second, options.data_format)
+        if abs(reflection) >= 1.0:
+            warnings.append(f"line {line_number}: reflection coefficient magnitude >= 1 skipped")
+            continue
+        points.append(
+            MeasurementPoint(
+                frequency_hz=frequency_hz,
+                impedance_ohm=impedance_from_reflection(
+                    reflection,
+                    options.reference_impedance_ohm,
+                ),
+            )
+        )
+    if not points:
+        raise TouchstoneError("no valid two-port measurement points found")
+    return ParsedTouchstone(
+        points=tuple(points),
+        reference_impedance_ohm=options.reference_impedance_ohm,
+        warnings=tuple(warnings),
+        profile="Touchstone S2P port 1" if port == 1 else "Touchstone S2P port 2",
+        mapping="frequency, S11" if port == 1 else "frequency, S22",
+    )
+
+
 def parse_touchstone_s1p(text: str) -> ParsedTouchstone:
     """Parse a one-port Touchstone file and convert S11 to impedance.
 
@@ -171,4 +243,6 @@ def parse_touchstone_s1p(text: str) -> ParsedTouchstone:
         points=tuple(points),
         reference_impedance_ohm=options.reference_impedance_ohm,
         warnings=tuple(warnings),
+        profile="Touchstone S1P",
+        mapping="frequency, S11",
     )

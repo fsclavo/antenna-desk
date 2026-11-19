@@ -257,8 +257,8 @@ def test_import_vna_data_adds_a_measurement(
 
     monkeypatch.setattr(
         QFileDialog,
-        "getOpenFileName",
-        lambda *args, **kwargs: (str(vna_path), ""),
+        "getOpenFileNames",
+        lambda *args, **kwargs: ([str(vna_path)], ""),
     )
     monkeypatch.setattr(
         main_window_module,
@@ -281,6 +281,196 @@ def test_import_vna_data_adds_a_measurement(
     assert len(window._project.measurements) == 0
     window._undo_stack.redo()
     assert len(window._project.measurements) == 1
+    window._dirty = False
+
+
+def test_import_s2p_uses_the_explicitly_selected_port(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = tmp_path / "two-port.s2p"
+    path.write_text("# MHz S RI R 75\n7.1 0.2 0 0.5 0 0.5 0 0 0\n", encoding="utf-8")
+
+    class FakeDetailsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def name(self) -> str:
+            return "Port two"
+
+        def calibration(self) -> str:
+            return ""
+
+        def reference_plane(self) -> str:
+            return ""
+
+        def feed_line(self) -> str:
+            return ""
+
+        def notes(self) -> str:
+            return ""
+
+        def session_id(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileNames",
+        lambda *args, **kwargs: ([str(path)], ""),
+    )
+    monkeypatch.setattr(
+        QInputDialog,
+        "getItem",
+        lambda *args, **kwargs: ("Port 2 (S22)", True),
+    )
+    monkeypatch.setattr(
+        main_window_module,
+        "MeasurementDetailsDialog",
+        FakeDetailsDialog,
+    )
+
+    window.import_vna_data()
+
+    assert window._project is not None
+    measurement = window._project.measurements[0]
+    assert measurement.reference_impedance_ohm == pytest.approx(75.0)
+    assert measurement.points[0].impedance_ohm == pytest.approx(complex(75.0, 0.0))
+    assert "S2P port 2" in measurement.source
+    window._dirty = False
+
+
+def test_import_vna_multiple_files_and_duplicate_names(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.csv"
+    second = tmp_path / "second.csv"
+    first.write_text("frequency_hz,r_ohm,x_ohm\n7100000,50,0\n", encoding="utf-8")
+    second.write_text("frequency_hz,r_ohm,x_ohm\n14200000,75,0\n", encoding="utf-8")
+
+    class FakeDetailsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def name(self) -> str:
+            return "Shared"
+
+        def calibration(self) -> str:
+            return ""
+
+        def reference_plane(self) -> str:
+            return ""
+
+        def feed_line(self) -> str:
+            return ""
+
+        def notes(self) -> str:
+            return ""
+
+        def session_id(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileNames",
+        lambda *args, **kwargs: ([str(first), str(second)], ""),
+    )
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.No,
+    )
+    monkeypatch.setattr(
+        main_window_module,
+        "MeasurementDetailsDialog",
+        FakeDetailsDialog,
+    )
+
+    window.import_vna_data()
+
+    assert window._project is not None
+    names = [measurement.name for measurement in window._project.measurements]
+    assert names == ["Shared", "Shared (2)"]
+    window._dirty = False
+
+
+def test_vna_manual_mapping_is_remembered_and_shown(
+    window: MainWindow,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.importers.vna_csv import VnaColumnMapping
+
+    path = tmp_path / "manual.csv"
+    path.write_text("frequency_hz,foo,bar\n7100000,50,0\n", encoding="utf-8")
+
+    class FakeMappingDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def mapping(self) -> VnaColumnMapping:
+            return VnaColumnMapping(
+                frequency="frequency_hz",
+                mode="rx",
+                first="foo",
+                second="bar",
+            )
+
+    class FakeDetailsDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def name(self) -> str:
+            return "Manual"
+
+        def calibration(self) -> str:
+            return ""
+
+        def reference_plane(self) -> str:
+            return ""
+
+        def feed_line(self) -> str:
+            return ""
+
+        def notes(self) -> str:
+            return ""
+
+        def session_id(self) -> None:
+            return None
+
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileNames",
+        lambda *args, **kwargs: ([str(path)], ""),
+    )
+    monkeypatch.setattr(main_window_module, "VnaMappingDialog", FakeMappingDialog)
+    monkeypatch.setattr(
+        main_window_module,
+        "MeasurementDetailsDialog",
+        FakeDetailsDialog,
+    )
+
+    window.import_vna_data()
+
+    assert window._project is not None
+    measurement = window._project.measurements[0]
+    assert "mode=rx" in measurement.source
+    assert "foo" in measurement.source
+    assert len(window._vna_column_mappings) == 1
     window._dirty = False
 
 

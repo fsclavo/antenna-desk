@@ -1577,20 +1577,34 @@ accuracy at each frequency; it only resolves the curve more finely.
 
 ## Import VNA measurements
 
-Use **File → Import → VNA Data...** to add a measured sweep. The importer
-accepts CSV files with frequency/R/X columns, S11 real/imaginary columns, or
-magnitude/phase columns, and one-port Touchstone `.s1p` files with RI, MA, or DB
-data. Touchstone frequency units from Hz to GHz and the file's reference
-impedance are honored. Before importing, a details dialog asks for the
-measurement name, calibration, reference plane, feed line/accessories, and
-optional notes. The measurement is stored in the project and appears in the
-**Measurements** tab. Use the **Plot** selector to compare measured and
-simulated SWR, R, X, or |Z|. The tab also reports the measured and simulated
-series resonances and their frequency difference. **Edit...** changes the
-measurement name, calibration, reference plane, feed line, and notes without
-touching the imported points. **Delete** removes the measurement after
-confirmation. Imported data is treated as untrusted input; invalid rows are
-rejected or skipped with warnings.
+Use **File → Import → VNA Data...** to add measured sweeps. The file dialog
+accepts multiple CSV, `.s1p`, and `.s2p` files; you can also drop them onto the
+main window. CSV data may contain frequency/R/X columns, S11 real/imaginary
+columns, or magnitude/phase columns. Decimal commas, semicolon delimiters,
+thousands separators, and per-row Hz/kHz/MHz/GHz frequency units are accepted;
+NanoVNA Saver, RigExpert, miniVNA, and DG8SAQ exports are recognized
+automatically. If the columns are ambiguous, a mapping dialog lets you choose
+the frequency column, R/X or S11/magnitude mode, value columns, and reference
+impedance. The mapping is remembered for the session and shown in the
+measurement source metadata.
+
+Touchstone `.s1p` supports RI, MA, and DB data. `.s2p` uses only the port you
+explicitly select: **Port 1 (S11)** or **Port 2 (S22)**; S21 is never silently
+substituted. Touchstone frequency units from Hz to GHz and the file's reference
+impedance are honored. Duplicate measurement names ask whether to replace the
+existing measurement or create a numbered copy.
+
+Before importing each file, a details dialog asks for the measurement name,
+calibration, reference plane, feed line/accessories, and optional notes. The
+measurements are stored in the project and appear in the **Measurements** tab.
+Use the **Plot** selector to compare measured and simulated SWR, R, X, or |Z|.
+The tab also reports the measured and simulated series resonances and their
+frequency difference. **Edit...** changes the measurement name, calibration,
+reference plane, feed line, and notes without touching the imported points.
+**Delete** removes the measurement after confirmation. Imported data is treated
+as untrusted input; malformed rows are rejected with row context, oversized
+files are rejected, and reflection coefficients at or above one are skipped
+with warnings.
 
 Use **File → Export → Export Touchstone (.s1p)...** to write the current
 simulated sweep as a one-port RI file. The exported S11 is derived from the
@@ -2580,9 +2594,11 @@ limitations are recorded in [ADR](ADR/).
   published SHA-256 checksums before installing them.
 - All catalog families are implemented, but some remain experimental or
   heuristic. Folded dipoles still lack an independent impedance reference;
-  loops have the ARRL quad-loop resistance check. VNA CSV and one-port
-  Touchstone import, simulated Touchstone export, and measurement comparison
-  are implemented; live instrument control is not.
+  loops have the ARRL quad-loop resistance check. Multi-file VNA CSV, `.s1p`,
+  and port-selected `.s2p` import, simulated Touchstone export, and measurement
+  comparison are implemented; S21/S12 are not used, calibration math beyond the
+  file's reference plane is not modeled, and live instrument control is not
+  included.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
   generator supports a radial screen. General transmission-line geometry and

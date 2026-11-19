@@ -2390,9 +2390,37 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Detené la simulación o el análisis en curso.",
     },
     "help.action.import_vna": {
-        Language.ENGLISH: ("Import a VNA CSV or one-port Touchstone file as a measured sweep."),
+        Language.ENGLISH: (
+            "Import one or more VNA CSV, S1P, or S2P files as measured sweeps. "
+            "S2P asks which port to use and never substitutes S21 for S11."
+        ),
         Language.SPANISH: (
-            "Importá un CSV de VNA o un Touchstone de un puerto como barrido medido."
+            "Importá uno o más archivos CSV, S1P o S2P de VNA como barridos medidos. "
+            "S2P pregunta qué puerto usar y nunca sustituye S11 por S21."
+        ),
+    },
+    "help.vna.mapping_frequency": {
+        Language.ENGLISH: "Column that contains the measurement frequency.",
+        Language.SPANISH: "Columna que contiene la frecuencia de medición.",
+    },
+    "help.vna.mapping_mode": {
+        Language.ENGLISH: "How the two value columns encode the impedance or S11.",
+        Language.SPANISH: "Cómo codifican las dos columnas de valores la impedancia o S11.",
+    },
+    "help.vna.mapping_first": {
+        Language.ENGLISH: "First value column: R, S11 real, or magnitude.",
+        Language.SPANISH: "Primera columna: R, S11 real o magnitud.",
+    },
+    "help.vna.mapping_second": {
+        Language.ENGLISH: "Second value column: X, S11 imaginary, or phase.",
+        Language.SPANISH: "Segunda columna: X, S11 imaginaria o fase.",
+    },
+    "help.vna.mapping_reference": {
+        Language.ENGLISH: (
+            "Reference impedance used to convert S11 to impedance; R/X mode does not use it."
+        ),
+        Language.SPANISH: (
+            "Impedancia de referencia usada para convertir S11 a impedancia; el modo R/X no la usa."
         ),
     },
     "help.action.export": {
@@ -7138,6 +7166,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Design changed. Simulate again.",
         Language.SPANISH: "Diseño modificado. Simulá de nuevo.",
     },
+    "status.vna_imported": {
+        Language.ENGLISH: "VNA measurements imported.",
+        Language.SPANISH: "Mediciones de VNA importadas.",
+    },
     "status.measurement_updated": {
         Language.ENGLISH: "Measurement details updated.",
         Language.SPANISH: "Detalles de la medición actualizados.",
@@ -7614,6 +7646,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "measurement.notes_value": {
         Language.ENGLISH: "Notes: {value}",
         Language.SPANISH: "Notas: {value}",
+    },
+    "measurement.source_value": {
+        Language.ENGLISH: "Source: {value}",
+        Language.SPANISH: "Origen: {value}",
     },
     "measurement.select": {
         Language.ENGLISH: "Measurement",
@@ -14420,21 +14456,91 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "dialog.vna_filter": {
         Language.ENGLISH: (
-            "VNA files (*.csv *.txt *.s1p);;"
-            "CSV files (*.csv *.txt);;Touchstone files (*.s1p);;All files (*)"
+            "VNA files (*.csv *.txt *.s1p *.s2p);;"
+            "CSV files (*.csv *.txt);;Touchstone files (*.s1p *.s2p);;All files (*)"
         ),
         Language.SPANISH: (
-            "Archivos de VNA (*.csv *.txt *.s1p);;"
-            "Archivos CSV (*.csv *.txt);;Archivos Touchstone (*.s1p);;Todos los archivos (*)"
+            "Archivos de VNA (*.csv *.txt *.s1p *.s2p);;"
+            "Archivos CSV (*.csv *.txt);;Archivos Touchstone (*.s1p *.s2p);;Todos los archivos (*)"
+        ),
+    },
+    "dialog.vna_s2p_port": {
+        Language.ENGLISH: "Select the measurement port for {name}:",
+        Language.SPANISH: "Elegí el puerto de medición para {name}:",
+    },
+    "dialog.vna_duplicate": {
+        Language.ENGLISH: (
+            "A measurement named {name} already exists. Replace it? No creates a numbered copy."
+        ),
+        Language.SPANISH: (
+            "Ya existe una medición llamada {name}. ¿Reemplazarla? No crea una copia numerada."
         ),
     },
     "dialog.vna_warnings": {
         Language.ENGLISH: "Imported with {count} warning(s):\n{details}",
         Language.SPANISH: "Importado con {count} advertencia(s):\n{details}",
     },
+    "vna.s2p_port1": {
+        Language.ENGLISH: "Port 1 (S11)",
+        Language.SPANISH: "Puerto 1 (S11)",
+    },
+    "vna.s2p_port2": {
+        Language.ENGLISH: "Port 2 (S22)",
+        Language.SPANISH: "Puerto 2 (S22)",
+    },
+    "vna.mapping_title": {
+        Language.ENGLISH: "Map VNA columns",
+        Language.SPANISH: "Mapear columnas de VNA",
+    },
+    "vna.mapping_frequency": {
+        Language.ENGLISH: "Frequency column",
+        Language.SPANISH: "Columna de frecuencia",
+    },
+    "vna.mapping_mode": {
+        Language.ENGLISH: "Data mode",
+        Language.SPANISH: "Modo de datos",
+    },
+    "vna.mapping_rx": {
+        Language.ENGLISH: "R and X ohms",
+        Language.SPANISH: "R y X en ohm",
+    },
+    "vna.mapping_complex": {
+        Language.ENGLISH: "S11 real and imaginary",
+        Language.SPANISH: "S11 real e imaginaria",
+    },
+    "vna.mapping_polar": {
+        Language.ENGLISH: "Magnitude and phase",
+        Language.SPANISH: "Magnitud y fase",
+    },
+    "vna.mapping_first": {
+        Language.ENGLISH: "First value column",
+        Language.SPANISH: "Primera columna de valor",
+    },
+    "vna.mapping_second": {
+        Language.ENGLISH: "Second value column",
+        Language.SPANISH: "Segunda columna de valor",
+    },
+    "vna.mapping_reference": {
+        Language.ENGLISH: "Reference impedance",
+        Language.SPANISH: "Impedancia de referencia",
+    },
+    "vna.mapping_hint": {
+        Language.ENGLISH: (
+            "Use R/X for impedance columns, S11 real/imaginary for complex "
+            "reflection data, or magnitude/phase for polar data."
+        ),
+        Language.SPANISH: (
+            "Usá R/X para columnas de impedancia, S11 real/imaginaria para datos "
+            "complejos de reflexión, o magnitud/fase para datos polares."
+        ),
+    },
     "error.import_vna": {
         Language.ENGLISH: "Could not import VNA data: {message}",
         Language.SPANISH: "No se pudieron importar los datos de VNA: {message}",
+    },
+    "error.import_vna_file": {
+        Language.ENGLISH: "Could not import {name}: {message}",
+        Language.SPANISH: "No se pudo importar {name}: {message}",
     },
     "error.measurement": {
         Language.ENGLISH: "Could not update the measurement: {message}",

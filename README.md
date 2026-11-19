@@ -116,6 +116,9 @@ truth for each topic, every ADR, and the archived plans.
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
 - Project-level Undo/Redo and hover cursors on the result charts.
+- Multi-file VNA CSV, `.s1p`, and port-selected `.s2p` import with locale-aware
+  numbers, analyzer detection, drag-and-drop, and a manual column-mapping
+  fallback.
 - A segmentation convergence study that reports self-consistency across four
   segment densities, never a validated-accuracy claim.
 - Decision metrics for 2:1 bandwidth, HPBW, front-to-back, sidelobes, takeoff,

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -15,6 +16,9 @@ from PySide6.QtGui import (
     QAction,
     QActionGroup,
     QCloseEvent,
+    QDragEnterEvent,
+    QDragMoveEvent,
+    QDropEvent,
     QFont,
     QKeySequence,
     QUndoStack,
@@ -224,7 +228,8 @@ from ..domain.simulation.segmentation import (
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
 from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
-from ..importers.vna import parse_vna_data
+from ..importers.vna import ParsedVnaData, parse_vna_data
+from ..importers.vna_csv import VnaColumnMapping, VnaCsvError, vna_csv_headers
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.csv_export import (
     write_band_analysis_csv,
@@ -356,6 +361,7 @@ from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.trap_yagi_dialog import TrapYagiDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
+from .dialogs.vna_mapping_dialog import VnaMappingDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .dialogs.zepp_dialog import ZeppDialog
 from .dialogs.zs6bkw_dialog import ZS6BKWDialog
@@ -429,6 +435,7 @@ from .workers.simulation_worker import SimulationWorker
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
 DEFAULT_GENERATED_SWEEP_POINTS = 100
+VNA_SUFFIXES = frozenset({".csv", ".txt", ".s1p", ".s2p"})
 DEFAULT_TWO_BAND_SWEEP_POINTS = 100
 YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
 
@@ -460,6 +467,7 @@ class MainWindow(QMainWindow):
         theme_controller: ThemeController | None = None,
     ) -> None:
         super().__init__(parent)
+        self.setAcceptDrops(True)
         self._repository = repository
         self._solver = solver
         self._translator = translator
@@ -508,6 +516,7 @@ class MainWindow(QMainWindow):
         self._workflow_reviewed_swr: set[UUID] = set()
         self._workflow_construction_viewed: set[UUID] = set()
         self._workflow_measurement_compared: set[UUID] = set()
+        self._vna_column_mappings: dict[tuple[str, ...], VnaColumnMapping] = {}
         self._loads: tuple[LumpedLoad, ...] = ()
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
@@ -6057,64 +6066,179 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
-        filename, _ = QFileDialog.getOpenFileName(
+        filenames, _ = QFileDialog.getOpenFileNames(
             self,
             self._translator.t("dialog.vna_title"),
             str(Path.home()),
             self._translator.t("dialog.vna_filter"),
         )
-        if not filename:
+        if filenames:
+            self.import_vna_paths([Path(filename) for filename in filenames])
+
+    def import_vna_paths(self, paths: Sequence[Path]) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
             return
-        path = Path(filename)
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-            parsed = parse_vna_data(text, suffix=path.suffix)
-            details = MeasurementDetailsDialog(
-                self._translator,
-                path.stem,
-                self,
-                sessions=self._project.measurement_sessions,
-            )
-            if details.exec() != QDialog.DialogCode.Accepted:
-                return
-            measurement = Measurement(
-                id=uuid4(),
-                name=details.name() or path.stem,
-                created_at=utc_now(),
-                reference_impedance_ohm=parsed.reference_impedance_ohm,
-                points=parsed.points,
-                source=str(path),
-                calibration=details.calibration(),
-                reference_plane=details.reference_plane(),
-                feed_line=details.feed_line(),
-                notes=details.notes(),
-                session_id=details.session_id(),
-            )
-            self._project = self._project.with_measurement(
-                measurement,
-                updated_at=utc_now(),
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.import_vna", message=str(exc)))
+        if not paths:
+            return
+        imported = 0
+        warnings: list[str] = []
+        for path in paths:
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+                s2p_port = 1
+                if path.suffix.lower() == ".s2p":
+                    selected = self._choose_s2p_port(path.name)
+                    if selected is None:
+                        continue
+                    s2p_port = selected
+                parsed = self._parse_vna_with_mapping(text, path, s2p_port)
+                details = MeasurementDetailsDialog(
+                    self._translator,
+                    path.stem,
+                    self,
+                    sessions=self._project.measurement_sessions,
+                )
+                if details.exec() != QDialog.DialogCode.Accepted:
+                    continue
+                name, existing_id = self._vna_measurement_target(details.name() or path.stem)
+                if name is None:
+                    continue
+                measurement = Measurement(
+                    id=existing_id or uuid4(),
+                    name=name,
+                    created_at=utc_now(),
+                    reference_impedance_ohm=parsed.reference_impedance_ohm,
+                    points=parsed.points,
+                    source=(
+                        f"{path} · {parsed.profile}"
+                        + (f" · {parsed.mapping}" if parsed.mapping else "")
+                    ),
+                    calibration=details.calibration(),
+                    reference_plane=details.reference_plane(),
+                    feed_line=details.feed_line(),
+                    notes=details.notes(),
+                    session_id=details.session_id(),
+                )
+                if existing_id is None:
+                    self._project = self._project.with_measurement(
+                        measurement,
+                        updated_at=utc_now(),
+                    )
+                else:
+                    self._project = self._project.with_updated_measurement(
+                        measurement,
+                        updated_at=utc_now(),
+                    )
+                imported += 1
+                warnings.extend(parsed.warnings)
+            except Exception as exc:
+                self._show_error(
+                    self._translator.t(
+                        "error.import_vna_file",
+                        name=path.name,
+                        message=str(exc),
+                    )
+                )
+                continue
+        if imported == 0:
             return
         if self._design_id is not None:
             self._workflow_measurement_compared.discard(self._design_id)
         self._dirty = True
         self._refresh_measurements()
         self._tabs_select_measurements()
+        self._last_status_key = "status.vna_imported"
         self._update_title()
         self._update_actions()
         self._update_status_text()
-        if parsed.warnings:
+        if warnings:
             QMessageBox.warning(
                 self,
                 self._translator.t("dialog.vna_title"),
                 self._translator.t(
                     "dialog.vna_warnings",
-                    count=len(parsed.warnings),
-                    details="\n".join(parsed.warnings[:12]),
+                    count=len(warnings),
+                    details="\n".join(warnings[:12]),
                 ),
             )
+
+    def _parse_vna_with_mapping(
+        self,
+        text: str,
+        path: Path,
+        s2p_port: int,
+    ) -> ParsedVnaData:
+        headers = vna_csv_headers(text) if path.suffix.lower() in {".csv", ".txt"} else ()
+        mapping = self._vna_column_mappings.get(headers) if headers else None
+        try:
+            return parse_vna_data(
+                text,
+                suffix=path.suffix,
+                s2p_port=s2p_port,
+                mapping=mapping,
+            )
+        except VnaCsvError as exc:
+            if not headers or "column" not in str(exc).lower():
+                raise
+            dialog = VnaMappingDialog(
+                self._translator,
+                headers,
+                self,
+                initial=mapping,
+            )
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                raise
+            mapping = dialog.mapping()
+            self._vna_column_mappings[headers] = mapping
+            return parse_vna_data(
+                text,
+                suffix=path.suffix,
+                s2p_port=s2p_port,
+                mapping=mapping,
+            )
+
+    def _choose_s2p_port(self, name: str) -> int | None:
+        choice, accepted = QInputDialog.getItem(
+            self,
+            self._translator.t("dialog.vna_title"),
+            self._translator.t("dialog.vna_s2p_port", name=name),
+            [
+                self._translator.t("vna.s2p_port1"),
+                self._translator.t("vna.s2p_port2"),
+            ],
+            0,
+            False,
+        )
+        if not accepted:
+            return None
+        return 1 if choice == self._translator.t("vna.s2p_port1") else 2
+
+    def _vna_measurement_target(self, name: str) -> tuple[str | None, UUID | None]:
+        if self._project is None:
+            raise ValueError(self._translator.t("error.no_project"))
+        existing = next(
+            (measurement for measurement in self._project.measurements if measurement.name == name),
+            None,
+        )
+        if existing is None:
+            return name, None
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("dialog.vna_title"),
+            self._translator.t("dialog.vna_duplicate", name=name),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            return name, existing.id
+        candidate = f"{name} (2)"
+        index = 2
+        names = {measurement.name for measurement in self._project.measurements}
+        while candidate in names:
+            index += 1
+            candidate = f"{name} ({index})"
+        return candidate, None
 
     def _tuning_supported(self, parameters: AntennaDesignParameters | None) -> bool:
         if parameters is None or adapter_for(parameters) is None:
@@ -10059,6 +10183,38 @@ class MainWindow(QMainWindow):
             self._translator.t("app.title"),
             message,
         )
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if self._project is not None and any(
+            Path(url.toLocalFile()).suffix.lower() in VNA_SUFFIXES
+            for url in event.mimeData().urls()
+            if url.isLocalFile()
+        ):
+            event.acceptProposedAction()
+            return
+        event.ignore()
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if self._project is not None and any(
+            Path(url.toLocalFile()).suffix.lower() in VNA_SUFFIXES
+            for url in event.mimeData().urls()
+            if url.isLocalFile()
+        ):
+            event.acceptProposedAction()
+            return
+        event.ignore()
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        paths = [
+            Path(url.toLocalFile())
+            for url in event.mimeData().urls()
+            if url.isLocalFile() and Path(url.toLocalFile()).suffix.lower() in VNA_SUFFIXES
+        ]
+        if paths:
+            event.acceptProposedAction()
+            self.import_vna_paths(paths)
+            return
+        event.ignore()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._simulating:
