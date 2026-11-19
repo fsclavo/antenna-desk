@@ -15,6 +15,7 @@ from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.simulation.discretization import (
     build_segment_layout,
+    resolve_model_quality,
     validate_segmentation,
 )
 
@@ -258,6 +259,67 @@ def test_centered_feed_does_not_warn() -> None:
     codes = {diagnostic.code for diagnostic in validate_segmentation(model, spec)}
 
     assert "segmentation.feed_offset" not in codes
+
+
+def test_model_quality_reduces_a_short_wire_segment_count() -> None:
+    model = _model(_wire(length_m=0.00873, radius_m=0.0005), feed_offset_m=0.004365)
+    spec = _spec(segments_per_wire=3, frequency_hz=2_400_000_000.0)
+
+    report = resolve_model_quality(model, spec, supports_extended_kernel=False)
+
+    assert report.adjusted_wire_ids == ("radiator",)
+    assert report.blocking_codes == ()
+    assert report.spec.extended_thin_wire_kernel is False
+    layout = build_segment_layout(model, report.spec)
+    assert layout.wires[0].segments == 2
+    assert layout.wires[0].segment_length_m / layout.wires[0].wire.radius_m >= 8.0
+    assert "segmentation.radius_ratio_low" not in {
+        diagnostic.code for diagnostic in validate_segmentation(model, report.spec)
+    }
+
+
+def test_model_quality_enables_the_kernel_when_reduction_is_not_possible() -> None:
+    model = _model(_wire(length_m=1.0, radius_m=0.002), feed_offset_m=0.5)
+    spec = _spec(segments_per_wire=160, frequency_hz=2_400_000_000.0)
+
+    report = resolve_model_quality(model, spec, supports_extended_kernel=True)
+
+    assert report.adjusted_wire_ids == ()
+    assert report.blocking_codes == ()
+    assert report.extended_kernel_enabled is True
+    assert report.spec.extended_thin_wire_kernel is True
+
+
+def test_model_quality_blocks_a_segment_radius_ratio_below_two() -> None:
+    model = _model(_wire(length_m=1.0, radius_m=0.005), feed_offset_m=0.5)
+    spec = _spec(segments_per_wire=160, frequency_hz=2_400_000_000.0)
+
+    report = resolve_model_quality(model, spec, supports_extended_kernel=True)
+
+    assert "segmentation.segment_too_thin" in report.blocking_codes
+    assert report.spec.extended_thin_wire_kernel is False
+
+
+def test_model_quality_blocks_a_segment_shorter_than_one_millilambda() -> None:
+    model = _model(_wire(length_m=20.0), feed_offset_m=10.0)
+    spec = _spec(segments_per_wire=1000)
+
+    report = resolve_model_quality(model, spec, supports_extended_kernel=True)
+
+    assert "segmentation.segment_too_short" in report.blocking_codes
+
+
+def test_model_quality_allows_a_short_structural_wire() -> None:
+    # A 1.25 in feed-gap wire at 20 m is only 0.0015 lambda long. Its three
+    # fixed segments are necessarily shorter than 1e-3 lambda; this is a
+    # structural warning, not an over-segmented radiator.
+    model = _model(_wire(length_m=0.03175, radius_m=0.001), feed_offset_m=0.015875)
+    spec = _spec(segments_per_wire=3, frequency_hz=14_184_000.0)
+
+    report = resolve_model_quality(model, spec, supports_extended_kernel=True)
+
+    assert "segmentation.segment_too_short" not in report.blocking_codes
+    assert report.blocking_codes == ()
 
 
 def test_wire_specific_segment_override_takes_precedence() -> None:

@@ -49,6 +49,7 @@ from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ...domain.simulation.segmentation import SegmentationPolicy, aligned_policy_for_model
 from ...domain.simulation.spec import SimulationSpec
+from ...simulation.discretization import resolve_model_quality
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
 from .run_simulation import RunSimulation, RunSimulationCommand
@@ -719,18 +720,26 @@ def _run_point(
     structural_segmentation: tuple[tuple[str, int], ...] = (),
 ) -> _PointOutcome:
     try:
+        spec = _spec_for_point(
+            command,
+            model,
+            frequency_hz,
+            needs_pattern=needs_pattern,
+            needs_sweep=needs_sweep,
+            feed_transformer_ratio=feed_transformer_ratio,
+            structural_segmentation=structural_segmentation,
+        )
+        quality = resolve_model_quality(
+            model,
+            spec,
+            supports_extended_kernel=(solver.capabilities().supports_extended_thin_wire_kernel),
+        )
+        if quality.blocking_codes:
+            return _PointOutcome(error="optimize.constraint.model_quality")
         result = RunSimulation(solver).execute(
             RunSimulationCommand(
                 model=model,
-                spec=_spec_for_point(
-                    command,
-                    model,
-                    frequency_hz,
-                    needs_pattern=needs_pattern,
-                    needs_sweep=needs_sweep,
-                    feed_transformer_ratio=feed_transformer_ratio,
-                    structural_segmentation=structural_segmentation,
-                ),
+                spec=quality.spec,
                 cancel_token=command.cancel_token,
             )
         )

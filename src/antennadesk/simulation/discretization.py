@@ -5,13 +5,33 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.wire import Wire
 from ..domain.common import units
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.simulation.spec import SimulationSpec
+
+THIN_WIRE_MIN_RADIUS_RATIO = 8.0
+THIN_WIRE_HARD_MIN_RADIUS_RATIO = 2.0
+MIN_SEGMENT_LENGTH_RELATIVE = 1e-3
+MAX_SEGMENT_LENGTH_RELATIVE = 0.1
+# Very short structural wires (feed gaps, loading-coil sections, return stubs)
+# cannot satisfy the 1e-3 lambda segment rule with their fixed segment count.
+# Their short-segment warning is expected; only longer wires are treated as a
+# blocking over-segmentation failure.
+MIN_WIRE_LENGTH_FOR_SEGMENT_QUALITY_RELATIVE = 0.01
+
+
+@dataclass(frozen=True, slots=True)
+class ModelQualityReport:
+    """The spec after thin-wire quality adjustments and any blocking codes."""
+
+    spec: SimulationSpec
+    blocking_codes: tuple[str, ...] = ()
+    adjusted_wire_ids: tuple[str, ...] = ()
+    extended_kernel_enabled: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,3 +272,100 @@ def validate_segmentation(
                 )
 
     return tuple(diagnostics)
+
+
+def resolve_model_quality(
+    model: AntennaModel,
+    spec: SimulationSpec,
+    *,
+    supports_extended_kernel: bool,
+) -> ModelQualityReport:
+    """Adjust segmentation and select the extended kernel when needed.
+
+    Short high-frequency wires can fall below the default kernel's segment/radius
+    ratio. Reducing their segment count is preferred when the resulting segment
+    is still at most 0.1 lambda. If that is not possible, the extended kernel is
+    selected when the solver supports it. A segment/radius ratio below 2 or a
+    segment shorter than 1e-3 lambda remains blocking.
+    """
+
+    frequency_hz = spec.frequency_plan.stop_hz
+    wavelength = units.wavelength_m(frequency_hz)
+    layout = build_segment_layout(model, spec)
+    overrides = dict(spec.segmentation.wire_segments)
+    adjusted: list[str] = []
+
+    for segmentation in layout.wires:
+        wire = segmentation.wire
+        if segmentation.segments <= 1 or wire.radius_m <= 0.0:
+            continue
+        if segmentation.segment_length_m / wire.radius_m >= THIN_WIRE_MIN_RADIUS_RATIO:
+            continue
+        maximum_count = max(
+            1,
+            int(wire.length_m / (THIN_WIRE_MIN_RADIUS_RATIO * wire.radius_m)),
+        )
+        candidate_count = min(segmentation.segments, maximum_count)
+        if candidate_count >= segmentation.segments:
+            continue
+        candidate_length = wire.length_m / candidate_count
+        if candidate_length > MAX_SEGMENT_LENGTH_RELATIVE * wavelength:
+            continue
+        overrides[wire.id] = candidate_count
+        adjusted.append(wire.id)
+
+    if adjusted:
+        spec = replace(
+            spec,
+            segmentation=replace(
+                spec.segmentation,
+                min_segments_per_wire=1,
+                wire_segments=tuple(overrides.items()),
+            ),
+        )
+
+    final_layout = build_segment_layout(model, spec)
+    short = False
+    thin = False
+    radius_low = False
+    for segmentation in final_layout.wires:
+        wire = segmentation.wire
+        if wire.radius_m <= 0.0:
+            continue
+        relative_length = segmentation.segment_length_m / wavelength
+        radius_ratio = segmentation.segment_length_m / wire.radius_m
+        wire_relative = wire.length_m / wavelength
+        if radius_ratio < THIN_WIRE_HARD_MIN_RADIUS_RATIO:
+            thin = True
+        elif radius_ratio < THIN_WIRE_MIN_RADIUS_RATIO:
+            radius_low = True
+        if (
+            relative_length < MIN_SEGMENT_LENGTH_RELATIVE
+            and wire_relative >= MIN_WIRE_LENGTH_FOR_SEGMENT_QUALITY_RELATIVE
+        ):
+            short = True
+
+    if (
+        radius_low
+        and not spec.extended_thin_wire_kernel
+        and supports_extended_kernel
+        and not short
+        and not thin
+    ):
+        spec = replace(spec, extended_thin_wire_kernel=True)
+        radius_low = False
+
+    blocking: list[str] = []
+    if short:
+        blocking.append("segmentation.segment_too_short")
+    if thin:
+        blocking.append("segmentation.segment_too_thin")
+    if radius_low and not spec.extended_thin_wire_kernel:
+        blocking.append("segmentation.radius_ratio_low")
+
+    return ModelQualityReport(
+        spec=spec,
+        blocking_codes=tuple(blocking),
+        adjusted_wire_ids=tuple(adjusted),
+        extended_kernel_enabled=spec.extended_thin_wire_kernel,
+    )

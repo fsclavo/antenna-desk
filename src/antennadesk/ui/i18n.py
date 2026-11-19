@@ -15509,6 +15509,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The Moxon tips must leave a gap between the elements.",
         Language.SPANISH: "Las puntas del Moxon deben dejar una brecha entre los elementos.",
     },
+    "optimize.constraint.model_quality": {
+        Language.ENGLISH: (
+            "The candidate violates the thin-wire model-quality gate; increase "
+            "segmentation or reduce the wire radius."
+        ),
+        Language.SPANISH: (
+            "El candidato viola el gate de calidad del modelo de hilo delgado; "
+            "aumentá la segmentación o reducí el radio del conductor."
+        ),
+    },
     "optimize.constraint.moxon_geometry": {
         Language.ENGLISH: (
             "The Moxon gap or tip proportions are outside the valid geometry envelope."

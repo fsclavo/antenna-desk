@@ -16,11 +16,44 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.simulation.discretization import validate_segmentation
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.task_progress import TaskProgressState
+
+
+def test_high_frequency_moxon_uses_quality_adjusted_tip_segments(
+    window: MainWindow,
+) -> None:
+    from antennadesk.domain.antennas.moxon import MoxonParameters
+
+    foot = 0.3048
+    scale = 14_170_000.0 / 2_400_000_000.0
+    parameters = MoxonParameters(
+        frequency_hz=2_400_000_000.0,
+        width_m=25.0 * foot * scale,
+        depth_m=9.57 * foot * scale,
+        reflector_tip_m=4.85 * foot * scale,
+        driven_tip_m=4.00 * foot * scale,
+        height_m=1.0,
+        wire_radius_m=0.0005,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._design_id is not None
+    design = window._project.design_by_id(window._design_id)
+
+    spec = window._base_simulation_spec(design)
+    overrides = dict(spec.segmentation.wire_segments)
+
+    assert overrides["reflector-tip-1"] == 2
+    assert overrides["driven-tip-1"] == 1
+    assert "segmentation.radius_ratio_low" not in {
+        diagnostic.code for diagnostic in validate_segmentation(design.antenna, spec)
+    }
+    window._dirty = False
 
 
 class _BlockingSolver(FakeSolver):

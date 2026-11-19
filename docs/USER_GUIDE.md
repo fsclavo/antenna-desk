@@ -2012,6 +2012,15 @@ bounds. Unlocking a default-locked variable with the same problem is blocked
 before the solver starts. The app never silently clamps the current design to a
 different antenna.
 
+Before a solver run, the app also checks the segment length against the wire
+radius. Short high-frequency wires may use fewer segments to keep the
+segment/radius ratio at 8 or more; if that is not possible, the extended
+thin-wire kernel is selected automatically when the solver supports it. The
+optimizer rejects candidates with a ratio below 2 or with a long wire that is
+over-segmented below `1e-3 λ`; tiny feed gaps, loading-coil sections, and return
+stubs keep their structural segmentation. These are model-quality guards, not
+accuracy claims.
+
 While a run is active, the dialog shows a determinate progress bar with the
 completed evaluations and the estimated total. The estimate is an upper bound:
 the optimizer may converge early and the bar completes when the run stops. The

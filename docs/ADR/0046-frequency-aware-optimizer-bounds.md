@@ -222,7 +222,7 @@ The implementation is sliced in
 | HF4 | Moxon geometry contract, gap variable, and constraints | Implemented 2026-11-18 |
 | HF5 | Yagi wavelength-relative bounds and high-element-count QA | Implemented 2026-11-18 |
 | HF6 | Moxon high-frequency estimator, radius, and confidence | Implemented 2026-11-18 |
-| HF7 | Thin-wire model-quality gate | Queued |
+| HF7 | Thin-wire model-quality gate | Implemented 2026-11-18 |
 | HF8 | Diagnostics, default objective review, Apply Best, adaptive units | Queued |
 | HF9 | Regression matrix, evidence, and documentation | Queued |
 | HF10 | Design-frequency/geometry consistency | Queued |
@@ -313,6 +313,30 @@ scaled gap is below two conductor diameters, the estimate raises
 comparable to the wire. This is a starting-clearance rule, not a performance
 claim. A later source or measurement can be recorded separately if one becomes
 available.
+
+### HF7 implementation note
+
+`resolve_model_quality()` in `simulation/discretization.py` is the shared
+thin-wire policy. It reduces the segment count of short wires whose
+segment/radius ratio is below 8 when the resulting segment is still at most
+0.1λ. This removes the 2.4 GHz Moxon tip warning without changing the gap or
+feed geometry. If reduction is not possible and the solver advertises the
+extended thin-wire kernel, the policy enables it automatically. The main
+simulation, band-analysis, and optimizer specifications use the resolved spec.
+
+The optimizer treats a candidate as infeasible with
+`optimize.constraint.model_quality` when a segment/radius ratio is below 2 or a
+wire at least 0.01λ long has segments shorter than 1e-3λ. Short structural
+wires (feed gaps, loading-coil sections, return stubs) are exempt from the
+short-segment rule because their fixed segmentation is intentional. The model
+quality report records adjusted wires and the kernel flag for tests and
+diagnostics.
+
+NEC2C checks at 1.5/2.4 GHz Moxon and 2.4/5.8 GHz Yagi run with both kernels.
+Observed impedance changes on 2026-11-18 were 3.44/4.62 ohm for the two Moxons
+and 11.06/14.68 ohm for the 2.4/5.8 GHz Yagis. These values document the
+kernel's effect; they are not accuracy references. The tests assert completion,
+finite R/X, and a deterministic non-zero change.
 
 ## Test contract
 

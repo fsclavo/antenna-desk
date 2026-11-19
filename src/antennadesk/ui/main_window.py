@@ -93,6 +93,7 @@ from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
     UpdateDipoleDesignCommand,
 )
+from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.balun import BalunLoss
 from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import (
@@ -233,6 +234,7 @@ from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
 from ..reporting.touchstone import format_touchstone_s1p
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
+from ..simulation.discretization import resolve_model_quality
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
 from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
@@ -3801,10 +3803,30 @@ class MainWindow(QMainWindow):
         label.setToolTip(f"{text}\n\n{self._translator.t('help.section.installation')}")
 
     def _base_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
-        return replace(
+        spec = replace(
             self._family_simulation_spec(design),
             timeout_s=float(self._solver_timeout.value()),
         )
+        return self._with_model_quality(design.antenna, spec)
+
+    def _supports_extended_thin_wire_kernel(self) -> bool:
+        if self._solver is None:
+            return False
+        try:
+            return bool(self._solver.capabilities().supports_extended_thin_wire_kernel)
+        except Exception:
+            return False
+
+    def _with_model_quality(
+        self,
+        model: AntennaModel,
+        spec: SimulationSpec,
+    ) -> SimulationSpec:
+        return resolve_model_quality(
+            model,
+            spec,
+            supports_extended_kernel=self._supports_extended_thin_wire_kernel(),
+        ).spec
 
     def _with_project_chain(
         self,
@@ -4105,6 +4127,11 @@ class MainWindow(QMainWindow):
             model = design.antenna
             if isinstance(design.parameters, HexbeamParameters):
                 model = design.parameters.to_antenna(active_band=selection.band.name)
+            spec = resolve_model_quality(
+                model,
+                spec,
+                supports_extended_kernel=self._supports_extended_thin_wire_kernel(),
+            ).spec
             requests.append(BandSimulationRequest(selection.band, spec, model=model))
 
         fitted = self._fit_band_specs_to_budget(
@@ -7593,6 +7620,7 @@ class MainWindow(QMainWindow):
             return
         target_band_label: str | None = None
         band_edges_hz = self._optimizer_band_edges(design)
+        target_model = design.antenna
         if isinstance(design.parameters, HexbeamParameters) and hexbeam_band is not None:
             target = next(
                 (
@@ -7607,6 +7635,7 @@ class MainWindow(QMainWindow):
                     design.parameters,
                     active_band=hexbeam_band,
                 )
+                target_model = design.parameters.to_antenna(active_band=hexbeam_band)
                 operating_frequencies = (target.frequency_hz,)
                 band_edges_hz = ()
                 target_band_label = self._translator.t(f"hexbeam.band.{hexbeam_band}")
@@ -7618,6 +7647,7 @@ class MainWindow(QMainWindow):
             base_spec,
             timeout_s=float(self._solver_timeout.value()),
         )
+        base_spec = self._with_model_quality(target_model, base_spec)
         base_spec = self._with_project_chain(design.parameters, base_spec)
         dialog = FamilyOptimizationDialog(
             self._translator,

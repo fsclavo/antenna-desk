@@ -37,6 +37,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cells keep their exact canonical values, custom labels and frequencies are
   allowed, and custom sets are marked in the editor and in reports. Switching
   to a published preset asks before discarding custom or reference-scaled rows.
+- **Thin-wire model-quality gate.** High-frequency models now get a shared
+  segment/radius policy. Short wires reduce their segment count to reach a
+  ratio of 8 when the resulting segment is still at most 0.1λ; otherwise the
+  extended thin-wire kernel is selected automatically when the solver supports
+  it. The optimizer rejects candidates with a ratio below 2 or over-segmented
+  long wires, while tiny feed/load/return structural wires keep their
+  intentional segmentation. This removes the 2.4 GHz Moxon tip warning without
+  changing the gap geometry. NEC2C comparisons document the kernel's impedance
+  effect; no accuracy claim is made.
 - **Moxon high-frequency estimate policy.** The Cebik 20 m Moxon is
   reference-scaled only inside the 20 m band (14.0–14.35 MHz). Outside it, the
   estimate is explicitly heuristic with a wider `max(5% width, gap)` tolerance,

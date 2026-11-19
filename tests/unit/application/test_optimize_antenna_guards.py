@@ -89,6 +89,38 @@ def _command() -> OptimizeAntennaCommand:
     )
 
 
+def test_optimizer_blocks_a_thin_wire_model_quality_candidate() -> None:
+    parameters = DipoleParameters(
+        frequency_hz=2_400_000_000.0,
+        total_length_m=1.0,
+        height_m=1.0,
+        wire_radius_m=0.005,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    command = OptimizeAntennaCommand(
+        descriptor=descriptor,
+        base_spec=SimulationSpec(
+            frequency_plan=FrequencyPlan.single(2_400_000_000.0),
+            far_field=FarFieldRequest(enabled=False),
+        ),
+        objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+        budget=budget_for(BudgetProfile.FAST, len(descriptor.variables)),
+    )
+
+    result = OptimizeAntenna(_NoopSolver()).execute(command)
+
+    assert result.status is OptimizationStatus.NO_FEASIBLE
+    assert result.best_parameters is None
+    assert result.evaluations
+    assert all(not evaluation.feasible for evaluation in result.evaluations)
+    assert any(
+        "optimize.constraint.model_quality" in (evaluation.error or "")
+        for evaluation in result.evaluations
+    )
+
+
 def test_optimize_returns_error_for_an_unlocked_out_of_bounds_variable() -> None:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,
