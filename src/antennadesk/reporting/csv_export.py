@@ -8,19 +8,28 @@ import math
 from pathlib import Path
 
 from ..domain.simulation.band_result import BandAnalysisResult
+from ..domain.simulation.metrics import decision_metrics, swr_bandwidth_rows
 from ..domain.simulation.result import SimulationResult
 
 CSV_HEADER = (
     "frequency_hz,frequency_mhz,resistance_ohm,reactance_ohm,"
     "impedance_magnitude_ohm,swr,input_power_w,max_gain_dbi,"
     "directivity_dbi,realized_gain_dbi,mismatch_loss_db,"
-    "feed_line_loss_db,network_loss_db,balun_loss_db,transformer_loss_db"
+    "feed_line_loss_db,network_loss_db,balun_loss_db,transformer_loss_db,"
+    "swr_2_1_bandwidth_hz,swr_2_1_bracketed,hpbw_azimuth_deg,"
+    "hpbw_elevation_deg,front_to_back_db,sidelobe_level_db,takeoff_deg,"
+    "efficiency_percent,axial_ratio_db,polarization_sense,cp_gain_dbi,"
+    "cross_polar_discrimination_db,pattern_resolution_deg"
 )
 
 
 def _result_rows(result: SimulationResult) -> list[str]:
     rows: list[str] = []
-    for frequency in result.frequencies:
+    bandwidths = swr_bandwidth_rows(
+        [frequency.frequency_hz for frequency in result.frequencies],
+        [frequency.swr for frequency in result.frequencies],
+    )
+    for index, frequency in enumerate(result.frequencies):
         gains = [
             point.gain_total_db for point in frequency.far_field if point.gain_total_db is not None
         ]
@@ -37,6 +46,11 @@ def _result_rows(result: SimulationResult) -> list[str]:
         balun = "" if frequency.balun_loss_db is None else f"{frequency.balun_loss_db:.6f}"
         transformer = (
             "" if frequency.transformer_loss_db is None else f"{frequency.transformer_loss_db:.6f}"
+        )
+        metrics = decision_metrics(
+            frequency,
+            result.frequencies,
+            bandwidth=bandwidths[index],
         )
         rows.append(
             ",".join(
@@ -56,10 +70,33 @@ def _result_rows(result: SimulationResult) -> list[str]:
                     network,
                     balun,
                     transformer,
+                    (
+                        ""
+                        if metrics.swr_bandwidth_2_1.bandwidth_hz is None
+                        else f"{metrics.swr_bandwidth_2_1.bandwidth_hz:.6f}"
+                    ),
+                    str(metrics.swr_bandwidth_2_1.bracketed).lower(),
+                    _metric(metrics.hpbw_azimuth.width_deg),
+                    _metric(metrics.hpbw_elevation.width_deg),
+                    _metric(metrics.front_to_back_db),
+                    _metric(metrics.sidelobe_level_db),
+                    _metric(metrics.takeoff_deg),
+                    _metric(metrics.efficiency_percent),
+                    _metric(metrics.axial_ratio_db),
+                    metrics.polarization_sense or "",
+                    _metric(metrics.cp_gain_db),
+                    _metric(metrics.cross_polar_discrimination_db),
+                    _metric(metrics.pattern_resolution_deg),
                 ]
             )
         )
     return rows
+
+
+def _metric(value: float | None) -> str:
+    if value is None or not math.isfinite(value):
+        return ""
+    return f"{value:.6f}"
 
 
 def result_to_csv(result: SimulationResult) -> str:

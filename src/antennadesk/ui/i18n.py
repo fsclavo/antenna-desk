@@ -4779,6 +4779,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Place the L-network shunt element on the transmitter side.",
         Language.SPANISH: "Coloca el elemento en derivación de la red L del lado del transmisor.",
     },
+    "help.results.decision_metrics": {
+        Language.ENGLISH: (
+            "Metrics derived from the stored sweep and far-field grid. HPBW, "
+            "front-to-back, sidelobe level, and resolution are limited by angular "
+            "sampling. CP values use the stored axial ratio and are descriptive."
+        ),
+        Language.SPANISH: (
+            "Métricas derivadas del barrido y de la grilla de campo lejano guardados. "
+            "HPBW, delante/atrás, lóbulo lateral y resolución están limitados por el "
+            "muestreo angular. Los valores CP usan la relación axial guardada y son "
+            "descriptivos."
+        ),
+    },
     "help.results.create_matching_network": {
         Language.ENGLISH: (
             "Create a project matching network from the raw primary-side feed "
@@ -16916,6 +16929,78 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "results.duration": {Language.ENGLISH: "Duration", Language.SPANISH: "Duración"},
     "results.fingerprint": {Language.ENGLISH: "Fingerprint", Language.SPANISH: "Huella"},
     "results.frequency_count": {Language.ENGLISH: "Frequencies", Language.SPANISH: "Frecuencias"},
+    "results.decision_metrics": {
+        Language.ENGLISH: "Decision metrics",
+        Language.SPANISH: "Métricas de decisión",
+    },
+    "results.metric.bandwidth": {
+        Language.ENGLISH: "2:1 bandwidth",
+        Language.SPANISH: "Ancho de banda 2:1",
+    },
+    "results.metric.unbracketed": {
+        Language.ENGLISH: "unbracketed (sweep edge)",
+        Language.SPANISH: "sin bordes (límite del barrido)",
+    },
+    "results.metric.unavailable": {
+        Language.ENGLISH: "unavailable",
+        Language.SPANISH: "no disponible",
+    },
+    "results.band_edge": {
+        Language.ENGLISH: "{band} band edge",
+        Language.SPANISH: "Borde de banda de {band}",
+    },
+    "results.metric.hpbw_azimuth": {
+        Language.ENGLISH: "HPBW azimuth",
+        Language.SPANISH: "HPBW azimut",
+    },
+    "results.metric.hpbw_elevation": {
+        Language.ENGLISH: "HPBW elevation",
+        Language.SPANISH: "HPBW elevación",
+    },
+    "results.metric.front_to_back": {
+        Language.ENGLISH: "Front-to-back",
+        Language.SPANISH: "Relación delante/atrás",
+    },
+    "results.metric.sidelobe": {
+        Language.ENGLISH: "Sidelobe level",
+        Language.SPANISH: "Nivel de lóbulo lateral",
+    },
+    "results.metric.takeoff": {
+        Language.ENGLISH: "Takeoff angle",
+        Language.SPANISH: "Ángulo de salida",
+    },
+    "results.metric.efficiency": {
+        Language.ENGLISH: "Efficiency",
+        Language.SPANISH: "Eficiencia",
+    },
+    "results.metric.directivity": {
+        Language.ENGLISH: "Directivity",
+        Language.SPANISH: "Directividad",
+    },
+    "results.metric.realized": {
+        Language.ENGLISH: "Realized gain",
+        Language.SPANISH: "Ganancia realizada",
+    },
+    "results.metric.axial_ratio": {
+        Language.ENGLISH: "Axial ratio",
+        Language.SPANISH: "Relación axial",
+    },
+    "results.metric.polarization": {
+        Language.ENGLISH: "Polarization sense",
+        Language.SPANISH: "Sentido de polarización",
+    },
+    "results.metric.cp_gain": {
+        Language.ENGLISH: "Co-pol CP gain",
+        Language.SPANISH: "Ganancia CP copolar",
+    },
+    "results.metric.xpd": {
+        Language.ENGLISH: "Cross-pol discrimination",
+        Language.SPANISH: "Discriminación cross-pol",
+    },
+    "results.metric.resolution": {
+        Language.ENGLISH: "Pattern resolution",
+        Language.SPANISH: "Resolución del patrón",
+    },
     "results.gain_summary": {
         Language.ENGLISH: (
             "Power gain {gain} · Directivity {directivity} · Realized gain {realized}"

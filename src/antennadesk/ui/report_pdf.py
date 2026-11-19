@@ -35,7 +35,7 @@ from ..reporting.design_summary import (
 from ..reporting.localization import localize_diagnostic, localize_rows
 from ..reporting.pattern_cuts import pattern_cuts
 from ..reporting.pattern_lobe import pattern_lobe
-from ..reporting.result_summary import gain_metric_rows
+from ..reporting.result_summary import decision_metric_rows, gain_metric_rows
 from ..reporting.svg_chart import SvgSeries, line_chart_svg
 from .i18n import Translator
 
@@ -382,7 +382,10 @@ def write_report_pdf(
     )
 
     section(translator.t("report.gain"))
-    for label, value in localize_rows(gain_metric_rows(result), translator.report):
+    for label, value in localize_rows(
+        (*gain_metric_rows(result), *decision_metric_rows(result)),
+        translator.report,
+    ):
         row(label, value)
 
     section(translator.t("tab.impedance"))

@@ -4,6 +4,9 @@
 
 from __future__ import annotations
 
+import math
+
+from ..domain.simulation.metrics import decision_metrics
 from ..domain.simulation.result import FrequencyResult, SimulationResult
 
 
@@ -84,3 +87,44 @@ def gain_metric_rows(result: SimulationResult | None) -> tuple[tuple[str, str], 
         if losses:
             rows.append(("Total feed-chain loss", f"{sum(losses):.3f} dB"))
     return tuple(rows)
+
+
+def decision_metric_rows(result: SimulationResult | None) -> tuple[tuple[str, str], ...]:
+    """Return report-ready decision metrics at the representative frequency."""
+
+    frequency = representative_gain_frequency(result)
+    if result is None or frequency is None:
+        return ()
+    metrics = decision_metrics(frequency, result.frequencies)
+    bandwidth = metrics.swr_bandwidth_2_1
+    if bandwidth.bandwidth_hz is not None:
+        bandwidth_text = f"{bandwidth.bandwidth_hz / 1e6:.4f} MHz"
+    elif bandwidth.lower_hz is not None:
+        bandwidth_text = "unbracketed (sweep edge)"
+    else:
+        bandwidth_text = "unavailable"
+
+    def metric(value: float | None, suffix: str) -> str:
+        if value is None:
+            return "unavailable"
+        if math.isinf(value):
+            return "infinite"
+        return f"{value:.2f} {suffix}"
+
+    return (
+        ("2:1 SWR bandwidth", bandwidth_text),
+        ("HPBW azimuth", metric(metrics.hpbw_azimuth.width_deg, "deg")),
+        ("HPBW elevation", metric(metrics.hpbw_elevation.width_deg, "deg")),
+        ("Front-to-back", metric(metrics.front_to_back_db, "dB")),
+        ("Sidelobe level", metric(metrics.sidelobe_level_db, "dB")),
+        ("Takeoff angle", metric(metrics.takeoff_deg, "deg")),
+        ("Efficiency", metric(metrics.efficiency_percent, "%")),
+        ("Axial ratio", metric(metrics.axial_ratio_db, "dB")),
+        ("Polarization sense", metrics.polarization_sense or "unavailable"),
+        ("Co-pol CP gain", metric(metrics.cp_gain_db, "dBi")),
+        (
+            "Cross-pol discrimination",
+            metric(metrics.cross_polar_discrimination_db, "dB"),
+        ),
+        ("Pattern resolution", metric(metrics.pattern_resolution_deg, "deg")),
+    )

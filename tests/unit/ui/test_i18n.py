@@ -194,6 +194,7 @@ HELP_MANIFEST = frozenset(
         "help.endfed.common_mode_choke_reactance",
         "help.endfed.common_mode_choke_frequency",
         "help.endfed.common_mode_choke_source",
+        "help.results.decision_metrics",
         "help.results.create_matching_network",
         "help.action.simulate",
         "help.action.next_step",

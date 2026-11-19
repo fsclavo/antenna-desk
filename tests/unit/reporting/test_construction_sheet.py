@@ -850,7 +850,7 @@ def test_construction_sheet_reports_swr_bandwidth(sample_project: Project) -> No
     sheet = render_construction_sheet(sample_project, loop, result)
 
     assert "SWR ≤ 2 bandwidth" in sheet
-    assert "200.0 kHz" in sheet
+    assert "unbracketed (sweep edge)" in sheet
 
     spanish = render_construction_sheet(
         sample_project,

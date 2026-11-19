@@ -118,6 +118,9 @@ truth for each topic, every ADR, and the archived plans.
 - Project-level Undo/Redo and hover cursors on the result charts.
 - A segmentation convergence study that reports self-consistency across four
   segment densities, never a validated-accuracy claim.
+- Decision metrics for 2:1 bandwidth, HPBW, front-to-back, sidelobes, takeoff,
+  efficiency, gain, and descriptive circular-polarization values, with amateur
+  band edges on the SWR chart.
 - Atomic autosave to a recovery file while editing, with startup
   recover/discard and an opt-out in Preferences; the project file is never
   overwritten by the recovery copy.

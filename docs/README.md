@@ -33,6 +33,8 @@ of truth before adding another planning document.
   and remaining experimental templates.
 - [`CONVERGENCE_STUDY.md`](CONVERGENCE_STUDY.md) — segmentation-density ladder,
   self-consistency verdict thresholds, and CSV fields.
+- [`RESULT_METRICS.md`](RESULT_METRICS.md) — SWR bandwidth, pattern, and
+  circular-polarization definitions used by the results card and reports.
 - [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) — validation workflow and the
   generated evidence table.
 - [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) — confirmed product decisions.

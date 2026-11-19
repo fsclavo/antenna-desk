@@ -83,7 +83,11 @@ def test_csv_header_and_rows() -> None:
     assert lines[0] == CSV_HEADER
     assert len(lines) == 3
     assert lines[1].startswith("6900000.000000,6.900000000,60.000000,-10.000000")
-    assert lines[1].endswith(",2.0000,2.2000,1.8000,0.200000,0.100000,0.050000,0.030000,0.300000")
+    assert ",2.0000,2.2000,1.8000,0.200000,0.100000,0.050000,0.030000,0.300000," in lines[1]
+    assert "swr_2_1_bandwidth_hz" in CSV_HEADER
+    assert "axial_ratio_db" in CSV_HEADER
+    assert "cp_gain_dbi" in CSV_HEADER
+    assert len(lines[1].split(",")) == len(CSV_HEADER.split(","))
     assert lines[2].startswith("7100000.000000,7.100000000,70.000000,0.000000")
 
 

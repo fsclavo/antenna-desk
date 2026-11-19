@@ -181,7 +181,7 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 | ~~HF9~~ | ~~High-frequency regression matrix, evidence, and documentation~~ | M | HF2–HF8 | **Done 2026-11-18:** a 243-test frequency/family matrix (238 combinations plus five coverage/contract checks) covers all eleven required frequencies and every supported optimizer type, asserting bounds, non-degenerate spans, initial-vector rebuilds, and geometry validity. A 2.4 GHz Moxon regression rejects the old `0.67 λ` gap without a performance reference, including a full optimizer run with a fake solver. Real NEC2C runs complete for 2.4 GHz Moxon, 2.4/5.8 GHz Yagi, 2.4 GHz quad/biquad, 1.296 GHz discone, 144 MHz dipole, and 435 MHz vertical. ADR-0046, the estimator guide, user guide, and changelog record the contract. No accuracy claim or evidence promotion. |
 | ~~HF10~~ | ~~Design-frequency/geometry consistency for Moxon and Yagi~~ | S–M | HF1, HF2; UX34/ADR-0043 | **Done 2026-11-18:** the Moxon and Yagi forms use the ADR-0043 pristine policy. A pristine frequency change regenerates the Moxon reference or scales the Yagi table; after an edit, add/remove, loaded project, or optimizer result, geometry is preserved with a stale warning. The Moxon reference button and Yagi NBS preset reset pristine. The Moxon form warns outside the gross `0.15–0.60 λ` width guard. `yagi_gross_frequency_mismatch` rejects a Yagi outside `0.20–0.80 λ` through `optimize.unavailable.frequency_mismatch` before the solver starts. Tests cover pristine/edited changes, preset reloads, loaded parameters, new templates, and optimizer availability. |
 | ~~TS1~~ | ~~Convergence study for every wire family~~ | M | `resolve_model_quality`, segmentation | **Done 2026-11-19:** a four-density ladder reports R/X/|Z|/SWR, per-wire segment/radius metrics, pattern gain/takeoff at the ends, diagnostics, cancellation, a documented self-consistency verdict, dialog/table, and CSV export. Real NEC2C covers dipole, vertical with radials, Yagi, and custom wire. Full gate 4,147 passed, 1 skipped; NEC2C 165 passed. No schema or solver change. |
-| TS2 | Decision metrics, band-plan overlay, and CP/axial ratio | M | TS1 (soft), band plan, far-field data | **Wave 0.** Results show 2:1 SWR bandwidth, HPBW, F/B, takeoff, efficiency, band edges, and CP/axial ratio; CSV and tests. See §TS2. |
+| ~~TS2~~ | ~~Decision metrics, band-plan overlay, and CP/axial ratio~~ | M | TS1 (soft), band plan, far-field data | **Done 2026-11-19:** the Diagnostics card reports 2:1 bandwidth (bracketed/unbracketed), HPBW in both planes, front-to-back, sidelobe, takeoff, efficiency, directivity, realized gain, resolution, and CP values. SWR band edges, CSV columns, HTML/PDF rows, and unavailable states are covered by tests. Full gate 4,154 passed, 1 skipped; NEC2C 165 passed. See `docs/RESULT_METRICS.md`. |
 | ~~TS3~~ | ~~NEC-2 deck export and copy~~ | S | none | **Done 2026-11-19:** **File → Export → NEC Deck...** and **Copy NEC Deck** use the current design/spec and a deterministic provenance header. A real NEC2C round-trip reproduces the simulated impedance; the deck omits raw solver output and local paths. Unit, UI, and solver tests pass. A third-party NEC GUI reader remains release QA. |
 | ~~TS4~~ | ~~Autosave and crash recovery~~ | S–M | none | **Done 2026-11-19:** atomic project-payload plus metadata recovery in the app-data folder, startup recover/discard, missing-path **Save As** fallback, normal save/close cleanup, and a Preferences opt-out. Tests cover restore, discard, corrupt data, moved/deleted originals, read-only directories, and cleanup. No schema change. Full gate 4,130 passed, 1 skipped; NEC2C 161 passed. |
 | TS5 | VNA import 2.0 | M | none | **Wave 0.** `.s2p`, analyzer presets, column mapping, decimal comma, drag-and-drop, and multiple sweeps. See §TS5. |
@@ -195,7 +195,7 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Wave 2.** 2–4 Yagis, spacing, phasing lines, feed split, mutual coupling, optimization, and per-port results. See §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Wave 2.** Expose NEC-2 `GN` radial screen and second-medium/edge fields; validate against the manual and the dense-wire screen. See §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
-| DL9 | Circular-polarization metrics | S–M | TS2 | **Wave 0 with TS2.** Axial ratio, sense, CP gain, cross-pol, and a circular reference test. See §TS2. |
+| ~~DL9~~ | ~~Circular-polarization metrics~~ | S–M | TS2 | **Done 2026-11-19 with TS2:** axial ratio, polarization sense, co-pol CP gain, cross-pol discrimination, and explicit descriptive/heuristic labels. Tests cover perfect-circular and linear cases. See §TS2 and `docs/RESULT_METRICS.md`. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -316,6 +316,14 @@ custom wire) to calibrate it. A later cross-engine check is the stronger test.
 
 ### TS2 — Decision metrics, band-plan overlay, and circular polarization
 
+**Status:** **Done 2026-11-19.** The shared metrics module defines the 2:1
+bandwidth (with explicit sweep-edge unbracketing), HPBW, front-to-back,
+sidelobe level, takeoff, efficiency, directivity, realized gain, pattern
+resolution, and descriptive CP metrics. The Diagnostics card, SWR band-edge
+markers, frequency CSV, and HTML/PDF reports expose them; missing pattern data
+is explicitly unavailable. Full gate: 4,154 passed, 1 skipped; NEC2C 165
+passed. See [`RESULT_METRICS.md`](RESULT_METRICS.md).
+
 **Goal:** turn the result tables into a one-screen answer: does this design
 cover the band, how wide is it, where does it point, and what polarization does
 it produce?
@@ -361,11 +369,11 @@ per metric, a test case per definition, and a visible tooltip.
 
 ### DL9 — Circular-polarization metrics
 
-DL9 is the circular-polarization slice of TS2. It covers axial ratio, sense, CP
-gain, cross-polar discrimination, and a circular reference test. It uses the
-far-field data already parsed by the adapter and does not change the solver.
-See §TS2 for scope, acceptance, evidence, and risk. **Effort:** S–M (1–2
-weeks). **Release:** 1.0 with TS2.
+**Status:** **Done 2026-11-19 with TS2.** Axial ratio, sense, co-pol CP gain, and
+cross-polar discrimination are exposed in the decision card, CSV, and reports.
+The formulas and the explicit "descriptive, not validated circular gain" label
+are documented in [`RESULT_METRICS.md`](RESULT_METRICS.md). Tests cover
+perfect-circular and linear cases. No solver change.
 
 ### TS3 — NEC-2 deck export and copy
 

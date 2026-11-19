@@ -404,6 +404,28 @@ keeps completed densities and marks the study partial. **Export CSV...** writes
 one row per density with the verdict, error, and per-wire metrics. Invalid
 densities remain visible and prevent a converged verdict.
 
+## Decision metrics
+
+The **Diagnostics** tab includes a **Decision metrics** card for the selected
+pattern frequency. It reports:
+
+- 2:1 SWR bandwidth around that frequency; a band that reaches a sweep edge is
+  marked **unbracketed** instead of showing a finite width;
+- half-power beamwidth in azimuth and elevation through the sampled
+  maximum-gain direction;
+- front-to-back ratio, largest sidelobe level, takeoff angle, efficiency,
+  directivity, realized gain, and pattern resolution;
+- axial ratio, polarization sense, co-pol CP gain, and cross-polar
+  discrimination from the stored axial-ratio and field values.
+
+The SWR chart marks catalog amateur-band edges inside the visible sweep. These
+are generic IARU ranges; local band plans differ. HPBW, front-to-back, sidelobe
+level, and CP values are limited by the stored angular sampling and the
+axial-ratio approximation. They are descriptive, not an accuracy guarantee.
+Missing far-field data shows **unavailable**, never a silent zero. The frequency
+CSV and HTML/PDF reports include the same decision metrics. Formulas are
+documented in [`RESULT_METRICS.md`](RESULT_METRICS.md).
+
 ## Result confidence and explanations
 
 The **Diagnostics** tab now begins with a **Result confidence** card for the

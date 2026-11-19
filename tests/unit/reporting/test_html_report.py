@@ -83,6 +83,9 @@ def test_html_report_contains_design_results_and_charts(sample_project: Project)
     assert "7.100000" in report
     assert "Gain and efficiency" in report
     assert "Max realized gain" in report
+    assert "HPBW azimuth" in report
+    assert "Axial ratio" in report
+    assert "Cross-pol discrimination" in report
     assert "1.85 dBi" in report
 
 

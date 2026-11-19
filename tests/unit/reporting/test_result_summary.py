@@ -12,6 +12,7 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.reporting.result_summary import (
+    decision_metric_rows,
     gain_metric_rows,
     representative_gain_frequency,
 )
@@ -70,6 +71,17 @@ def test_gain_metrics_report_power_directivity_and_realized_gain() -> None:
     assert rows["Transformer loss"] == "0.300 dB"
     assert rows["Total feed-chain loss"] == "0.680 dB"
     assert rows["Link metrics at"] == "7.100000 MHz"
+
+
+def test_decision_metrics_report_bandwidth_pattern_and_circular_rows() -> None:
+    rows = dict(decision_metric_rows(_result()))
+
+    assert rows["2:1 SWR bandwidth"] == "unbracketed (sweep edge)"
+    assert rows["HPBW azimuth"] == "unavailable"
+    assert rows["Axial ratio"] == "0.00 dB"
+    assert rows["Polarization sense"] == "linear"
+    assert "Co-pol CP gain" in rows
+    assert "Pattern resolution" in rows
 
 
 def test_representative_frequency_prefers_max_realized_gain() -> None:

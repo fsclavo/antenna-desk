@@ -33,7 +33,7 @@ from .localization import (
 )
 from .pattern_cuts import pattern_cuts
 from .pattern_lobe import pattern_lobe
-from .result_summary import gain_metric_rows
+from .result_summary import decision_metric_rows, gain_metric_rows
 from .svg_chart import SvgSeries, line_chart_svg
 
 CSS = """
@@ -287,7 +287,10 @@ def render_html_report(
     )
     gain_rows = "".join(
         f"<tr><th>{_escape(label)}</th><td>{_escape(value)}</td></tr>"
-        for label, value in localize_rows(gain_metric_rows(result), tr)
+        for label, value in localize_rows(
+            (*gain_metric_rows(result), *decision_metric_rows(result)),
+            tr,
+        )
     )
     spec = result.spec
     segmentation = spec.segmentation

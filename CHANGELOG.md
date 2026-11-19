@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Decision metrics, band-edge overlay, and circular polarization.** The
+  Diagnostics tab now shows 2:1 SWR bandwidth (bracketed or sweep-edge
+  unbracketed), HPBW in both planes, front-to-back, sidelobe level, takeoff,
+  efficiency, directivity, realized gain, pattern resolution, axial ratio,
+  polarization sense, co-pol CP gain, and cross-polar discrimination. The SWR
+  chart marks catalog amateur-band edges. Frequency CSV and HTML/PDF reports
+  include the new metrics, and missing pattern data is explicitly unavailable.
+  The circular values use the stored axial ratio and are labelled descriptive,
+  not a validated circular-gain reference. No solver or schema change.
 - **Segmentation convergence study.** **Simulation → Convergence study...**
   runs the canonical model at 0.10, 0.05, 0.025, and 0.0125 wavelength per
   segment, reports R/X/|Z|/SWR and per-wire segment/radius metrics, and computes

@@ -107,6 +107,25 @@ def test_impedance_charts_keep_all_points_and_bound_the_marker_layer(
     assert "MHz" in view._impedance_cursor._label.text()
 
 
+def test_results_view_shows_decision_metrics_and_band_edges(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_result(_make_result())
+
+    labels = [
+        view._decision_table.item(row, 0).text() for row in range(view._decision_table.rowCount())
+    ]
+    assert "2:1 bandwidth" in labels
+    assert "HPBW azimuth" in labels
+    assert "Axial ratio" in labels
+    assert view._decision_table.rowCount() >= 10
+    assert any(
+        isinstance(item, pg.InfiniteLine) and "band edge" in item.toolTip()
+        for item in view._swr_plot.plotItem.items
+    )
+
+
 def test_results_view_shows_currents_and_resonance(qtbot: QtBot) -> None:
     view = ResultsView(Translator(Language.ENGLISH))
     qtbot.addWidget(view)

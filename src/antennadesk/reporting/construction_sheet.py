@@ -54,8 +54,8 @@ from ..domain.design.feed_balance import requires_current_balun
 from ..domain.design.feed_connection import feed_connection_detail
 from ..domain.design.matching_resolution import resolve_matching_network
 from ..domain.design.preflight import PreflightReport, PreflightStatus
-from ..domain.optimization.length import measure_bandwidth_hz
 from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.metrics import measure_swr_bandwidth
 from ..domain.simulation.resonance import find_resonances
 from ..domain.simulation.result import FrequencyResult, SimulationResult
 from ..presentation.units import DisplayUnits, LengthPolicy, UnitSystem
@@ -1715,16 +1715,22 @@ def render_construction_sheet(
             if item.swr is not None and math.isfinite(item.swr)
         ]
         if len(swr_points) >= 2:
-            bandwidth_hz = measure_bandwidth_hz(
+            bandwidth = measure_swr_bandwidth(
                 [point[0] for point in swr_points],
                 [point[1] for point in swr_points],
                 center_hz=parameters.frequency_hz,
                 swr_limit=2.0,
             )
-            if bandwidth_hz > 0.0:
+            if bandwidth.bandwidth_hz is not None:
+                bandwidth_value = f"{bandwidth.bandwidth_hz / 1e3:.1f} kHz"
+            elif bandwidth.lower_hz is not None and bandwidth.upper_hz is not None:
+                bandwidth_value = tr("unbracketed (sweep edge)")
+            else:
+                bandwidth_value = ""
+            if bandwidth_value:
                 bandwidth_row = (
                     f"<tr><th>{_escape(tr('SWR ≤ 2 bandwidth'))}</th>"
-                    f"<td>{bandwidth_hz / 1e3:.1f} kHz</td></tr>"
+                    f"<td>{_escape(bandwidth_value)}</td></tr>"
                 )
     simulation_rows = ""
     if result is not None and frequency is not None:

@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from ..common.units import ensure_finite, ensure_non_negative, ensure_positive
+from ..simulation.metrics import measure_bandwidth_hz as _measure_bandwidth_hz
 
 
 class OptimizationObjective(StrEnum):
@@ -498,38 +499,12 @@ def measure_bandwidth_hz(
 ) -> float:
     """Return the contiguous SWR-limited bandwidth around a center frequency."""
 
-    if len(frequencies_hz) != len(swr_values) or not frequencies_hz:
-        return 0.0
-    ordered = sorted(zip(frequencies_hz, swr_values, strict=True))
-    passing = [
-        index for index, (_, swr) in enumerate(ordered) if math.isfinite(swr) and swr <= swr_limit
-    ]
-    if not passing:
-        return 0.0
-    center_index = min(
-        range(len(ordered)),
-        key=lambda index: abs(ordered[index][0] - center_hz),
+    return _measure_bandwidth_hz(
+        frequencies_hz,
+        swr_values,
+        center_hz=center_hz,
+        swr_limit=swr_limit,
     )
-    if center_index not in passing:
-        return 0.0
-    first = center_index
-    while first - 1 in passing:
-        first -= 1
-    last = center_index
-    while last + 1 in passing:
-        last += 1
-
-    def boundary(pass_index: int, fail_index: int) -> float:
-        pass_frequency, pass_swr = ordered[pass_index]
-        fail_frequency, fail_swr = ordered[fail_index]
-        if not math.isfinite(fail_swr) or math.isclose(pass_swr, fail_swr):
-            return pass_frequency
-        ratio = (swr_limit - pass_swr) / (fail_swr - pass_swr)
-        return pass_frequency + (fail_frequency - pass_frequency) * min(max(ratio, 0.0), 1.0)
-
-    lower = ordered[first][0] if first == 0 else boundary(first, first - 1)
-    upper = ordered[last][0] if last == len(ordered) - 1 else boundary(last, last + 1)
-    return max(upper - lower, 0.0)
 
 
 def _best_bandwidth_evaluation(

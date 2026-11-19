@@ -46,7 +46,8 @@ from ...domain.measurement_uncertainty import (
 from ...domain.projects.project import DesignVariant
 from ...domain.simulation.band_result import BandAnalysisResult, BandResult
 from ...domain.simulation.band_summary import summarize_band
-from ...domain.simulation.bands import amateur_band_for
+from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_for
+from ...domain.simulation.metrics import decision_metrics
 from ...domain.simulation.pattern import (
     PatternGainMetric,
     max_power_gain_db,
@@ -381,6 +382,16 @@ class ResultsView(QWidget):
         measurement_layout.addWidget(self._measurement_table, 1)
         measurement_layout.addWidget(self._measurement_plot, 2)
 
+        self._decision_group = QGroupBox(self._diagnostics_tab)
+        self._decision_table = QTableWidget(0, 2, self._decision_group)
+        self._configure_table(self._decision_table)
+        self._decision_table.horizontalHeader().setVisible(False)
+        decision_layout = QVBoxLayout(self._decision_group)
+        decision_layout.addWidget(self._decision_table)
+        self._decision_group.setLayout(decision_layout)
+        apply_help(self._decision_group, self._translator, "results.decision_metrics")
+        apply_help(self._decision_table, self._translator, "results.decision_metrics")
+
         self._confidence_group = QGroupBox(self._diagnostics_tab)
         self._confidence_evidence = QLabel(self._confidence_group)
         self._confidence_evidence.setWordWrap(True)
@@ -426,6 +437,7 @@ class ResultsView(QWidget):
         self._diagnostics_empty = QLabel(self._diagnostics_tab)
         diagnostics_layout = QVBoxLayout(self._diagnostics_tab)
         diagnostics_layout.setContentsMargins(0, 0, 0, 0)
+        diagnostics_layout.addWidget(self._decision_group)
         diagnostics_layout.addWidget(self._confidence_group)
         diagnostics_layout.addWidget(self._summary)
         diagnostics_layout.addWidget(self._gain_summary)
@@ -905,6 +917,9 @@ class ResultsView(QWidget):
                 index,
                 self._translator.t(f"confidence.topic.{topic}"),
             )
+        self._decision_group.setTitle(self._translator.t("results.decision_metrics"))
+        apply_help(self._decision_group, self._translator, "results.decision_metrics")
+        apply_help(self._decision_table, self._translator, "results.decision_metrics")
         apply_help(self._confidence_group, self._translator, "confidence.title")
         apply_help(self._confidence_topic, self._translator, "confidence.topic")
         apply_help(
@@ -913,6 +928,7 @@ class ResultsView(QWidget):
             "confidence.topic",
         )
         self._render_confidence()
+        self._render_decision_metrics()
         self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
             [
@@ -1129,6 +1145,29 @@ class ResultsView(QWidget):
         plot.addItem(marker, ignoreBounds=True)
         return marker
 
+    def _add_band_edges(self, x_values: Sequence[float]) -> None:
+        if len(x_values) < 2:
+            return
+        lower, upper = min(x_values), max(x_values)
+        seen: set[float] = set()
+        for band in AMATEUR_BANDS:
+            if band.stop_hz / 1e6 < lower or band.start_hz / 1e6 > upper:
+                continue
+            for edge_hz in (band.start_hz, band.stop_hz):
+                edge = edge_hz / 1e6
+                if lower <= edge <= upper and edge not in seen:
+                    seen.add(edge)
+                    line = pg.InfiniteLine(
+                        pos=edge,
+                        angle=90,
+                        pen=pg.mkPen(
+                            self._colors.grid,
+                            style=Qt.PenStyle.DotLine,
+                        ),
+                    )
+                    line.setToolTip(self._translator.t("results.band_edge", band=band.name))
+                    self._swr_plot.addItem(line)
+
     def _render_impedance(self) -> None:
         self._table.setRowCount(0)
         self._impedance_plot.clear()
@@ -1230,6 +1269,7 @@ class ResultsView(QWidget):
             )
             if marker is not None:
                 self._swr_markers = (marker,)
+            self._add_band_edges(swr_x)
 
         if len(frequencies) < 2:
             resonances: tuple[ResonancePoint, ...] = ()
@@ -1442,6 +1482,7 @@ class ResultsView(QWidget):
                 return
         self._populate_cut_values()
         self._render_patterns()
+        self._render_decision_metrics()
 
     def _select_pattern_index(self, index: int) -> None:
         if not 0 <= index < self._pattern_frequency.count():
@@ -2213,6 +2254,7 @@ class ResultsView(QWidget):
             self.measurement_tune_requested.emit(self._measurements[index])
 
     def _render_diagnostics(self) -> None:
+        self._render_decision_metrics()
         self._render_confidence()
         self._diagnostics.setRowCount(0)
         if self._result is None:
@@ -2254,6 +2296,110 @@ class ResultsView(QWidget):
         self._diagnostics.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         self._diagnostics_empty.setText(self._translator.t("diagnostic.none"))
         self._diagnostics_empty.setVisible(not diagnostics)
+
+    def _render_decision_metrics(self) -> None:
+        self._decision_table.setRowCount(0)
+        if self._result is None or not self._result.frequencies:
+            self._decision_group.setVisible(False)
+            return
+        frequency = self._selected_pattern_frequency()
+        if frequency is None:
+            target = (
+                self._design.parameters.frequency_hz
+                if self._design is not None
+                else self._result.frequencies[0].frequency_hz
+            )
+            frequency = min(
+                self._result.frequencies,
+                key=lambda item: abs(item.frequency_hz - target),
+            )
+        metrics = decision_metrics(frequency, self._result.frequencies)
+        t = self._translator.t
+        bandwidth = metrics.swr_bandwidth_2_1
+        if bandwidth.bandwidth_hz is not None:
+            bandwidth_text = f"{bandwidth.bandwidth_hz / 1e6:.3f} MHz"
+        elif bandwidth.lower_hz is not None and bandwidth.upper_hz is not None:
+            bandwidth_text = t("results.metric.unbracketed")
+        else:
+            bandwidth_text = t("results.metric.unavailable")
+        rows = (
+            ("results.metric.bandwidth", bandwidth_text),
+            (
+                "results.metric.hpbw_azimuth",
+                self._beamwidth_text(
+                    metrics.hpbw_azimuth.width_deg,
+                    metrics.hpbw_azimuth.bracketed,
+                ),
+            ),
+            (
+                "results.metric.hpbw_elevation",
+                self._beamwidth_text(
+                    metrics.hpbw_elevation.width_deg,
+                    metrics.hpbw_elevation.bracketed,
+                ),
+            ),
+            (
+                "results.metric.front_to_back",
+                self._metric_value_text(metrics.front_to_back_db, "dB"),
+            ),
+            ("results.metric.sidelobe", self._metric_value_text(metrics.sidelobe_level_db, "dB")),
+            ("results.metric.takeoff", self._metric_value_text(metrics.takeoff_deg, "°")),
+            (
+                "results.metric.efficiency",
+                self._metric_value_text(metrics.efficiency_percent, "%"),
+            ),
+            ("results.metric.directivity", self._metric_value_text(metrics.directivity_db, "dBi")),
+            ("results.metric.realized", self._metric_value_text(metrics.realized_gain_db, "dBi")),
+            (
+                "results.metric.axial_ratio",
+                self._metric_value_text(metrics.axial_ratio_db, "dB"),
+            ),
+            (
+                "results.metric.polarization",
+                metrics.polarization_sense or t("results.metric.unavailable"),
+            ),
+            ("results.metric.cp_gain", self._metric_value_text(metrics.cp_gain_db, "dBi")),
+            (
+                "results.metric.xpd",
+                "∞"
+                if metrics.cross_polar_discrimination_db == math.inf
+                else (
+                    t("results.metric.unavailable")
+                    if metrics.cross_polar_discrimination_db is None
+                    else f"{metrics.cross_polar_discrimination_db:.1f} dB"
+                ),
+            ),
+            (
+                "results.metric.resolution",
+                self._metric_value_text(metrics.pattern_resolution_deg, "°"),
+            ),
+        )
+        self._decision_table.setRowCount(len(rows))
+        for row, (key, value) in enumerate(rows):
+            self._decision_table.setItem(row, 0, QTableWidgetItem(t(key)))
+            item = QTableWidgetItem(value)
+            item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            self._decision_table.setItem(row, 1, item)
+        self._decision_table.resizeColumnsToContents()
+        self._decision_table.horizontalHeader().setSectionResizeMode(
+            0,
+            QHeaderView.ResizeMode.Stretch,
+        )
+        self._decision_group.setVisible(True)
+
+    def _beamwidth_text(self, value: float | None, bracketed: bool) -> str:
+        if value is not None:
+            return f"{value:.1f}°"
+        if not bracketed:
+            return self._translator.t("results.metric.unbracketed")
+        return self._translator.t("results.metric.unavailable")
+
+    def _metric_value_text(self, value: float | None, suffix: str) -> str:
+        if value is None:
+            return self._translator.t("results.metric.unavailable")
+        if math.isinf(value):
+            return "∞"
+        return f"{value:.2f} {suffix}"
 
     def _gain_summary_text(self) -> str:
         if self._result is None:
