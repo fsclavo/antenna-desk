@@ -1634,12 +1634,12 @@ run a new solver pass or change the project.
   part. The load is the raw primary-source impedance when available; otherwise
   it is the post-chain result impedance.
 
-When the exact L-network design exceeds the entered ranges, AntennaDesk tries a
-bounded L search and reports **Best effort** if it improves the raw SWR; if it
-does not, it reports **Bypass**. Pi and T out-of-range designs remain
-**Out of range** because a bounded three-variable search is not implemented yet.
-An out-of-range result does not mean the antenna is unusable; it means the
-designed network needs a part outside the entered ranges.
+When the exact design exceeds the entered ranges, AntennaDesk tries a bounded
+search for the selected topology and reports **Best effort** if it improves the
+raw SWR; if it does not, it reports **Bypass**. The Pi/T search is coarser than
+the L search because it explores three branches. An out-of-range result does
+not mean the antenna is unusable; it means the designed network needs a part
+outside the entered ranges.
 
 The check runs at the simulated frequencies, not at every point of a full band
 sweep. Use **Analyze Bands** for denser coverage.

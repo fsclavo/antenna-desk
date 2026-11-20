@@ -57,8 +57,8 @@ def test_tuner_dialog_recomputes_a_narrow_range(qtbot: QtBot) -> None:
     dialog._topology.setCurrentIndex(pi_index)
     dialog._recompute()
 
-    assert dialog._table.item(0, 4).text() == "Out of range"
-    assert dialog._table.item(0, 7).text() == "C above range"
+    assert dialog._table.item(0, 4).text() in {"Best effort", "Bypass"}
+    assert dialog._table.item(0, 7).text() == "—"
 
 
 def test_tuner_dialog_retranslates(qtbot: QtBot) -> None:

@@ -217,12 +217,14 @@ def evaluate_tuner_match(
     if series != "ideal":
         network = realize_network(network, series)
     limiting = _limiting_component(network, limits)
-    if limiting is not None and MatchingPreviewTopology(topology) is MatchingPreviewTopology.L:
-        best = _best_effort_l(
+    if limiting is not None:
+        topology_value = MatchingPreviewTopology(topology)
+        best = _best_effort(
             load_impedance_ohm,
             frequency_hz,
             limits,
             source_impedance_ohm,
+            topology_value,
             q_factor=loaded_q if loaded_q is not None and loaded_q > 0.0 else None,
         )
         raw_swr = calculate_swr(load_impedance_ohm, source_impedance_ohm)
@@ -257,6 +259,40 @@ def evaluate_tuner_match(
         swr=calculate_swr(input_impedance, source_impedance_ohm),
         loss_db=loss_db if math.isfinite(loss_db) else None,
         limiting=limiting,
+    )
+
+
+def _best_effort(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    limits: TunerLimits,
+    source_impedance_ohm: float,
+    topology: MatchingPreviewTopology,
+    *,
+    q_factor: float | None,
+) -> tuple[MatchingNetwork, float, float] | None:
+    if topology is MatchingPreviewTopology.L:
+        return _best_effort_l(
+            load_impedance_ohm,
+            frequency_hz,
+            limits,
+            source_impedance_ohm,
+            q_factor=q_factor,
+        )
+    if topology is MatchingPreviewTopology.PI:
+        return _best_effort_pi(
+            load_impedance_ohm,
+            frequency_hz,
+            limits,
+            source_impedance_ohm,
+            q_factor=q_factor,
+        )
+    return _best_effort_t(
+        load_impedance_ohm,
+        frequency_hz,
+        limits,
+        source_impedance_ohm,
+        q_factor=q_factor,
     )
 
 
@@ -306,7 +342,109 @@ def _best_effort_l(
     return best
 
 
-def _range_values(minimum: float, maximum: float) -> tuple[float, ...]:
+def _best_effort_pi(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    limits: TunerLimits,
+    source_impedance_ohm: float,
+    *,
+    q_factor: float | None,
+) -> tuple[PiNetwork, float, float] | None:
+    options = _branch_options(limits, count=5)
+    if not options:
+        return None
+    best: tuple[PiNetwork, float, float] | None = None
+    for input_l, input_c in options:
+        for series_l, series_c in options:
+            for output_l, output_c in options:
+                network = PiNetwork(
+                    input_shunt_inductance_h=input_l,
+                    input_shunt_capacitance_f=input_c,
+                    series_inductance_h=series_l,
+                    series_capacitance_f=series_c,
+                    output_shunt_inductance_h=output_l,
+                    output_shunt_capacitance_f=output_c,
+                    q_factor=q_factor,
+                )
+                swr = calculate_swr(
+                    network.input_impedance(load_impedance_ohm, frequency_hz),
+                    source_impedance_ohm,
+                )
+                if best is None or swr < best[1]:
+                    loss = dissipative_loss_db(
+                        network.abcd(frequency_hz),
+                        source_impedance_ohm,
+                        load_impedance_ohm,
+                    )
+                    best = (network, swr, loss if math.isfinite(loss) else 0.0)
+    return best
+
+
+def _best_effort_t(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    limits: TunerLimits,
+    source_impedance_ohm: float,
+    *,
+    q_factor: float | None,
+) -> tuple[TNetwork, float, float] | None:
+    options = _branch_options(limits, count=5)
+    if not options:
+        return None
+    best: tuple[TNetwork, float, float] | None = None
+    for input_l, input_c in options:
+        for shunt_l, shunt_c in options:
+            for output_l, output_c in options:
+                network = TNetwork(
+                    input_series_inductance_h=input_l,
+                    input_series_capacitance_f=input_c,
+                    shunt_inductance_h=shunt_l,
+                    shunt_capacitance_f=shunt_c,
+                    output_series_inductance_h=output_l,
+                    output_series_capacitance_f=output_c,
+                    q_factor=q_factor,
+                )
+                swr = calculate_swr(
+                    network.input_impedance(load_impedance_ohm, frequency_hz),
+                    source_impedance_ohm,
+                )
+                if best is None or swr < best[1]:
+                    loss = dissipative_loss_db(
+                        network.abcd(frequency_hz),
+                        source_impedance_ohm,
+                        load_impedance_ohm,
+                    )
+                    best = (network, swr, loss if math.isfinite(loss) else 0.0)
+    return best
+
+
+def _branch_options(
+    limits: TunerLimits,
+    *,
+    count: int,
+) -> tuple[tuple[float, float], ...]:
+    options: list[tuple[float, float]] = []
+    for value in _range_values(
+        limits.inductance_min_h,
+        limits.inductance_max_h,
+        count=count,
+    ):
+        options.append((value, 0.0))
+    for value in _range_values(
+        limits.capacitance_min_f,
+        limits.capacitance_max_f,
+        count=count,
+    ):
+        options.append((0.0, value))
+    return tuple(options)
+
+
+def _range_values(
+    minimum: float,
+    maximum: float,
+    *,
+    count: int = 9,
+) -> tuple[float, ...]:
     if maximum <= 0.0:
         return ()
     lower = max(minimum, maximum * 1e-6)
@@ -314,8 +452,8 @@ def _range_values(minimum: float, maximum: float) -> tuple[float, ...]:
         return ()
     if lower == maximum:
         return (maximum,)
-    ratio = (maximum / lower) ** (1.0 / 8.0)
-    return tuple(lower * ratio**index for index in range(9))
+    ratio = (maximum / lower) ** (1.0 / (count - 1))
+    return tuple(lower * ratio**index for index in range(count))
 
 
 def _nearest_branch(
