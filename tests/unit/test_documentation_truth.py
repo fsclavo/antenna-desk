@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from antennadesk.persistence.constants import SCHEMA_VERSION
@@ -51,7 +52,46 @@ def test_user_guide_limitations_match_shipped_optimizer_and_feed_line() -> None:
 def test_schema_documents_name_the_current_version() -> None:
     architecture = _read(DOCS / "ARCHITECTURE.md")
     domain = _read(DOCS / "DOMAIN_MODEL.md")
+    readme = _read(README)
+    status = _read(DOCS / "STATUS.md")
+    backlog = _read(DOCS / "AUTONOMOUS_BACKLOG.md")
 
     assert f"Schema version {SCHEMA_VERSION} is" in architecture
     assert f"Current version: `{SCHEMA_VERSION}`" in domain
-    assert "Version 56 adds the Beverage feed-transformer ratio" in domain
+    assert f"writes version {SCHEMA_VERSION}" in domain
+    assert f"current development schema is `{SCHEMA_VERSION}`" in readme
+    assert f"**Development schema:** `{SCHEMA_VERSION}`" in status
+    assert f"Schema: **{SCHEMA_VERSION}**" in backlog
+
+
+def test_changelog_does_not_repeat_unreleased_entries_in_release_sections() -> None:
+    text = _read(ROOT / "CHANGELOG.md")
+    parts = re.split(r"(?m)^## ", text)
+    sections = {part.splitlines()[0]: part for part in parts[1:]}
+    unreleased = next(
+        body for header, body in sections.items() if header.startswith("[Unreleased]")
+    )
+    titles = set(re.findall(r"(?m)^- \*\*(.+?)\*\*", unreleased))
+
+    assert titles
+    for header, body in sections.items():
+        if header.startswith("[Unreleased]"):
+            continue
+        repeated = titles & set(re.findall(r"(?m)^- \*\*(.+?)\*\*", body))
+        assert not repeated, f"{header} repeats Unreleased entries: {sorted(repeated)}"
+
+
+def test_docs_index_lists_every_current_document() -> None:
+    index = _read(DOCS / "README.md")
+    linked = {
+        (DOCS / target.split("#", 1)[0]).resolve()
+        for target in re.findall(r"\]\(([^)]+\.md)(?:#[^)]*)?\)", index)
+        if not target.startswith(("http://", "https://"))
+    }
+
+    for path in DOCS.rglob("*.md"):
+        if path.parent == DOCS and path.name == "README.md":
+            continue
+        if "archive" in path.parts:
+            continue
+        assert path.resolve() in linked, f"{path.relative_to(ROOT)} is not indexed"

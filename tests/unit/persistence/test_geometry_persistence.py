@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.application.use_cases.create_dipole_project import (
@@ -414,6 +416,33 @@ def test_yagi_parameters_round_trip() -> None:
 
     assert restored.designs[0].parameters == parameters
     assert restored.designs[0].antenna_type == "yagi"
+
+
+def test_yagi_support_structure_fields_round_trip() -> None:
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    parameters = replace(
+        nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0),
+        mast_diameter_m=0.05,
+        mast_offset_m=1.5,
+        guy_count=3,
+        guy_anchor_radius_m=2.0,
+        guy_diameter_m=0.003,
+    )
+    original = _project(parameters, "Yagi support")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    restored_parameters = restored.designs[0].parameters
+    assert restored_parameters == parameters
+    assert restored_parameters.mast_diameter_m == pytest.approx(0.05)
+    assert restored_parameters.mast_offset_m == pytest.approx(1.5)
+    assert restored_parameters.guy_count == 3
+    assert restored_parameters.guy_anchor_radius_m == pytest.approx(2.0)
+    assert restored_parameters.guy_diameter_m == pytest.approx(0.003)
+    assert any(wire.id == "mast" for wire in restored.designs[0].antenna.wires)
+    assert sum(wire.id.startswith("guy-") for wire in restored.designs[0].antenna.wires) == 3
 
 
 def test_folded_yagi_parameters_round_trip() -> None:

@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
@@ -39,3 +41,11 @@ def test_stack_requires_two_to_four_levels_and_positive_spacing() -> None:
         StackedYagiParameters(yagi, count=5, spacing_m=3.0)
     with pytest.raises(ValueError):
         StackedYagiParameters(yagi, count=2, spacing_m=0.0)
+
+
+def test_stack_rejects_support_structures_until_they_are_shared() -> None:
+    yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    with_mast = replace(yagi, mast_diameter_m=0.05, mast_offset_m=1.5)
+
+    with pytest.raises(ValueError, match="mast or guy"):
+        StackedYagiParameters(with_mast, count=2, spacing_m=3.0)

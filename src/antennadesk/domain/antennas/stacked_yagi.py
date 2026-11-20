@@ -34,6 +34,8 @@ class StackedYagiParameters:
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
             raise ValueError("a stacked Yagi requires 2 to 4 levels")
+        if self.yagi.mast_diameter_m > 0.0 or self.yagi.guy_count > 0:
+            raise ValueError("a stacked Yagi does not support mast or guy wires yet")
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_positive(self.amplitude_ratio, name="amplitude_ratio")
         if not math.isfinite(self.phase_step_deg):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 
@@ -181,6 +182,29 @@ def test_yagi_plan_keeps_all_elements_and_elevation_warns_about_overlap() -> Non
     assert len(midpoints) == 3
     assert "elements 3" in plan.summary
     assert "front view: elements overlap" in elevation.summary
+
+
+def test_yagi_mast_and_guy_wires_are_preserved_in_the_scene() -> None:
+    parameters = replace(
+        YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        mast_diameter_m=0.05,
+        mast_offset_m=1.5,
+        guy_count=3,
+        guy_anchor_radius_m=2.0,
+        guy_diameter_m=0.003,
+    )
+
+    scene = _scene(parameters, "yagi", GeometryViewMode.PLAN)
+
+    assert len(scene.polylines) == len(parameters.to_antenna().wires)
+    assert len(scene.polylines) == 6
 
 
 def test_vertical_yagi_elevation_shows_the_vertical_elements_and_boom() -> None:
