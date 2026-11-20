@@ -482,6 +482,8 @@ _CONTEXT_FIELDS = {
     "transformer_leakage_inductance_h",
     "bend_enabled",
     "bend_vertical_length_m",
+    "mast_diameter_m",
+    "mast_offset_m",
 }
 
 

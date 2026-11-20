@@ -192,7 +192,7 @@ evidence, and risk are in §Product trust and station wave below.
 | ~~DL2~~ | ~~Tuner matchability and realizable components~~ | M–L | DL1 (soft), component data | **Done 2026-11-20:** bounded L/Pi/T design, C/L ranges, ideal/E12/E24, Q loss, simulated-frequency and band-center rows, SWR, loss, limiting part, L/Pi/T best effort, bypass, and input/load voltage/current at the entered power. Per-component branch ratings remain optional. See §DL2. |
 | DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
-| DL5 | Support structures | M–L | ADR | **Wave 1.** Boom, mast, tower, and guy wires as conductors with scene, BOM, report, and warnings. See §DL5. |
+| DL5 | Support structures | M–L | ADR | **Partially done 2026-11-20.** Yagi mast conductor with diameter/offset, geometry, BOM, scene, and schema 57. Boom, tower, guy wires, attachments, and structural hardware remain. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Wave 2.** 2–4 Yagis, spacing, phasing lines, feed split, mutual coupling, optimization, and per-port results. See §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Wave 2.** Expose NEC-2 `GN` radial screen and second-medium/edge fields; validate against the manual and the dense-wire screen. See §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
@@ -732,6 +732,12 @@ conservative label are mandatory. Do not ship without the ADR.
 **Effort:** L (6–10 weeks). **Release:** 1.2 (after spike).
 
 ### DL5 — Support structures
+
+**Status:** **Partially done 2026-11-20.** The Yagi family has an optional
+vertical mast conductor behind the reflector with editable diameter and offset,
+normal wire geometry, scene/BOM coverage, ADR-0048, and schema 57. It is not
+connected to the elements. Boom, tower, guy wires, bonded/insulated attachments,
+and structural hardware remain follow-ups.
 
 **Goal:** include the metal around the antenna in the model.
 

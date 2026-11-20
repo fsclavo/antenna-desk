@@ -775,6 +775,8 @@ class YagiParametersPayload(StrictModel):
     material: MaterialPayload
     ground: GroundPayload
     transformer_ratio: float = Field(default=1.0, gt=0.0)
+    mast_diameter_m: float = Field(default=0.0, ge=0.0)
+    mast_offset_m: float = Field(default=0.0, ge=0.0)
 
 
 class CustomParametersPayload(StrictModel):
@@ -2104,6 +2106,8 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        mast_diameter_m=value.mast_diameter_m,
+        mast_offset_m=value.mast_offset_m,
     )
 
 
@@ -3439,6 +3443,8 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
         transformer_ratio=value.transformer_ratio,
+        mast_diameter_m=value.mast_diameter_m,
+        mast_offset_m=value.mast_offset_m,
     )
 
 

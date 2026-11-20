@@ -4486,6 +4486,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Optional tapered tip length; zero keeps a straight element.",
         Language.SPANISH: "Longitud opcional de la punta cónica; cero mantiene el elemento recto.",
     },
+    "help.yagi.mast_diameter": {
+        Language.ENGLISH: "Optional modeled mast diameter; zero disables the mast conductor.",
+        Language.SPANISH: "Diámetro opcional del mástil modelado; cero desactiva el conductor.",
+    },
+    "help.yagi.mast_offset": {
+        Language.ENGLISH: "Horizontal distance from the reflector to the modeled mast.",
+        Language.SPANISH: "Distancia horizontal desde el reflector hasta el mástil modelado.",
+    },
     "help.yagi.taper_radius": {
         Language.ENGLISH: "Radius at the tapered tip.",
         Language.SPANISH: "Radio en la punta cónica.",
@@ -13855,6 +13863,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.taper_length": {
         Language.ENGLISH: "Tapered tip length (0 = straight)",
         Language.SPANISH: "Longitud de punta cónica (0 = recto)",
+    },
+    "yagi.mast_diameter": {
+        Language.ENGLISH: "Mast diameter",
+        Language.SPANISH: "Diámetro del mástil",
+    },
+    "yagi.mast_offset": {
+        Language.ENGLISH: "Mast offset",
+        Language.SPANISH: "Separación del mástil",
     },
     "yagi.taper_radius": {
         Language.ENGLISH: "Tapered tip radius",

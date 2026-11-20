@@ -79,11 +79,19 @@ class YagiParameters:
     material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
     transformer_ratio: float = 1.0
+    mast_diameter_m: float = 0.0
+    mast_offset_m: float = 0.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
         ensure_non_negative(self.height_m, name="height_m")
         ensure_positive(self.transformer_ratio, name="transformer_ratio")
+        ensure_non_negative(self.mast_diameter_m, name="mast_diameter_m")
+        ensure_non_negative(self.mast_offset_m, name="mast_offset_m")
+        if self.mast_diameter_m > 0.0:
+            ensure_positive(self.mast_offset_m, name="mast_offset_m")
+            if self.height_m <= 0.0:
+                raise ValueError("a modeled mast requires a positive boom height")
         ensure_non_negative(self.taper_tip_length_m, name="taper_tip_length_m")
         ensure_non_negative(self.taper_tip_radius_m, name="taper_tip_radius_m")
         if (self.taper_tip_length_m > 0.0) != (self.taper_tip_radius_m > 0.0):
@@ -720,6 +728,16 @@ class YagiParameters:
             if index == self.driven_index:
                 driven_wire_id = wire_id
 
+        if self.mast_diameter_m > 0.0:
+            mast_x = min(element.position_m for element in self.elements) - self.mast_offset_m
+            wires.append(
+                wire(
+                    "mast",
+                    Point3D(mast_x, 0.0, 0.0),
+                    Point3D(mast_x, 0.0, self.height_m),
+                    self.mast_diameter_m / 2.0,
+                )
+            )
         driven = next(wire for wire in wires if wire.id == driven_wire_id)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,

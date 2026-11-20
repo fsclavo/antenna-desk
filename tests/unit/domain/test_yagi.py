@@ -487,3 +487,32 @@ def test_yagi_length_mismatch_flags_quarter_wave_elements() -> None:
 
     assert yagi_element_length_mismatch(wrong) is True
     assert yagi_element_length_mismatch(right) is False
+
+
+def test_yagi_optional_mast_adds_a_grounded_conductor() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    with_mast = replace(
+        base,
+        mast_diameter_m=0.05,
+        mast_offset_m=1.5,
+    )
+
+    without_mast = base.to_custom_parameters().wires
+    wires = with_mast.to_custom_parameters().wires
+    mast = next(wire for wire in wires if wire.id == "mast")
+
+    assert len(wires) == len(without_mast) + 1
+    assert mast.start.z_m == 0.0
+    assert mast.end.z_m == 8.0
+    assert mast.radius_m == pytest.approx(0.025)
+    assert mast.start.x_m == pytest.approx(
+        min(element.position_m for element in base.elements) - 1.5
+    )
+    assert mast.start.y_m == 0.0
+
+
+def test_yagi_mast_requires_a_positive_offset() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+
+    with pytest.raises(ValueError):
+        replace(base, mast_diameter_m=0.05, mast_offset_m=0.0)
