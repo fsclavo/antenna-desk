@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -504,6 +510,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -571,6 +583,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -618,6 +636,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -785,6 +809,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -837,6 +867,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -1112,6 +1148,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -1136,6 +1178,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -1288,6 +1336,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -1630,6 +1684,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -2028,6 +2088,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire
@@ -2438,6 +2504,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
+  single-frequency solve while the operator drags the primary dimension, with
+  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
+  cancels stale previews, and **Apply and simulate** routes the dimension
+  through the normal design/undo path before the full run. Only the primary
+  dimension is exposed in this slice. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire

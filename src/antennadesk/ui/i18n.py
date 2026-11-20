@@ -16841,6 +16841,62 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Preview",
         Language.SPANISH: "Vista previa",
     },
+    "action.live_tuning": {
+        Language.ENGLISH: "Live Tuning...",
+        Language.SPANISH: "Ajuste en vivo...",
+    },
+    "help.action.live_tuning": {
+        Language.ENGLISH: "Preview one primary dimension with a coarse single-frequency solve.",
+        Language.SPANISH: "Previsualizá una dimensión primaria con una corrida gruesa a una frecuencia.",
+    },
+    "live.title": {
+        Language.ENGLISH: "Live tuning",
+        Language.SPANISH: "Ajuste en vivo",
+    },
+    "live.dimension_label": {
+        Language.ENGLISH: "Primary dimension: {value}",
+        Language.SPANISH: "Dimensión primaria: {value}",
+    },
+    "live.preview_note": {
+        Language.ENGLISH: "Preview only: pattern disabled, coarse segmentation, not saved. Apply runs the full simulation.",
+        Language.SPANISH: "Solo vista previa: patrón desactivado, segmentación gruesa, no se guarda. Aplicar corre la simulación completa.",
+    },
+    "live.waiting": {
+        Language.ENGLISH: "Waiting for the slider to settle...",
+        Language.SPANISH: "Esperando que se estabilice el control...",
+    },
+    "live.running": {
+        Language.ENGLISH: "Running coarse preview...",
+        Language.SPANISH: "Ejecutando vista previa gruesa...",
+    },
+    "live.preview": {
+        Language.ENGLISH: "Preview result — not a saved simulation.",
+        Language.SPANISH: "Resultado de vista previa — no es una simulación guardada.",
+    },
+    "live.result": {
+        Language.ENGLISH: "SWR {swr} · R {r} Ω · X {x} Ω · |Z| {z} Ω",
+        Language.SPANISH: "ROE {swr} · R {r} Ω · X {x} Ω · |Z| {z} Ω",
+    },
+    "live.no_result": {
+        Language.ENGLISH: "The preview returned no frequency result.",
+        Language.SPANISH: "La vista previa no devolvió resultados de frecuencia.",
+    },
+    "live.apply": {
+        Language.ENGLISH: "Apply and simulate",
+        Language.SPANISH: "Aplicar y simular",
+    },
+    "live.close": {
+        Language.ENGLISH: "Close",
+        Language.SPANISH: "Cerrar",
+    },
+    "live.unsupported": {
+        Language.ENGLISH: "Live tuning is available only for designs with one primary dimension.",
+        Language.SPANISH: "El ajuste en vivo solo está disponible para diseños con una dimensión primaria.",
+    },
+    "help.live.dimension": {
+        Language.ENGLISH: "Drag the primary dimension; the preview re-solves after a short delay.",
+        Language.SPANISH: "Arrastrá la dimensión primaria; la vista previa recalcula tras una breve pausa.",
+    },
     "action.tuner_match": {
         Language.ENGLISH: "Tuner Matchability...",
         Language.SPANISH: "Compatibilidad del sintonizador...",

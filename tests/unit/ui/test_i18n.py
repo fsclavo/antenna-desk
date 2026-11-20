@@ -211,6 +211,8 @@ HELP_MANIFEST = frozenset(
         "help.action.component_calculator",
         "help.action.materials_reference",
         "help.action.tuner_match",
+        "help.action.live_tuning",
+        "help.live.dimension",
         "help.materials.reference_only",
         "help.materials.wire",
         "help.materials.coax",

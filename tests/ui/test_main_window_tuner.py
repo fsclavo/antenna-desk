@@ -16,3 +16,13 @@ def test_tuner_action_is_in_tools_and_retranslates(window: MainWindow) -> None:
 
     assert window._tuner_match_action.text() == "Compatibilidad del sintonizador..."
     window._set_language(Language.ENGLISH)
+
+
+def test_live_tuning_action_is_in_tools_and_retranslates(window: MainWindow) -> None:
+    assert window._live_tuning_action in window._tools_menu.actions()
+    assert window._live_tuning_action.text() == "Live Tuning..."
+
+    window._set_language(Language.SPANISH)
+
+    assert window._live_tuning_action.text() == "Ajuste en vivo..."
+    window._set_language(Language.ENGLISH)

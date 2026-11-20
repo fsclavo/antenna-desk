@@ -1654,6 +1654,18 @@ outside the entered ranges.
 The check runs at the simulated frequencies, not at every point of a full band
 sweep. Use **Analyze Bands** for denser coverage.
 
+### Live tuning
+
+Use **Tools → Live Tuning...** to explore the design's primary dimension
+without waiting for a full sweep. Drag the slider; after a short debounce,
+AntennaDesk runs a coarse single-frequency solve with the pattern disabled and
+shows SWR, R, X, and |Z|. The preview badge and note make clear that this is not
+a saved simulation.
+
+**Apply and simulate** applies the dimension through the normal design path,
+enters undo history, and starts the full simulation. Closing the dialog cancels
+the preview. Only the primary dimension is exposed in this first slice.
+
 ## Import VNA measurements
 
 Use **File → Import → VNA Data...** to add measured sweeps. The file dialog

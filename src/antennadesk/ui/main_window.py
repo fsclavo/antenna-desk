@@ -332,6 +332,7 @@ from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
 from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.journal_dialog import JournalDialog
+from .dialogs.live_tuning_dialog import LiveTuningDialog
 from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
 from .dialogs.log_periodic_dialog import LogPeriodicDialog
@@ -734,6 +735,8 @@ class MainWindow(QMainWindow):
         self._materials_action.triggered.connect(lambda: self.show_materials_reference())
         self._tuner_match_action = QAction(self)
         self._tuner_match_action.triggered.connect(lambda: self.show_tuner_matchability())
+        self._live_tuning_action = QAction(self)
+        self._live_tuning_action.triggered.connect(lambda: self.show_live_tuning())
         self._measurement_sessions_action = QAction(self)
         self._measurement_sessions_action.triggered.connect(
             lambda: self.edit_measurement_sessions()
@@ -1528,6 +1531,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._materials_action)
         self._tools_menu.addAction(self._tuner_match_action)
+        self._tools_menu.addAction(self._live_tuning_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._journal_action)
         self._tools_menu.addAction(self._tuning_action)
@@ -1632,6 +1636,9 @@ class MainWindow(QMainWindow):
         self._tuner_match_action.setText(self._translator.t("action.tuner_match"))
         self._tuner_match_action.setToolTip(self._translator.t("help.action.tuner_match"))
         self._tuner_match_action.setWhatsThis(self._translator.t("help.action.tuner_match"))
+        self._live_tuning_action.setText(self._translator.t("action.live_tuning"))
+        self._live_tuning_action.setToolTip(self._translator.t("help.action.live_tuning"))
+        self._live_tuning_action.setWhatsThis(self._translator.t("help.action.live_tuning"))
         self._journal_action.setText(self._translator.t("action.project_journal"))
         self._journal_action.setToolTip(self._translator.t("help.action.project_journal"))
         self._journal_action.setWhatsThis(self._translator.t("help.action.project_journal"))
@@ -2088,6 +2095,7 @@ class MainWindow(QMainWindow):
         self._calculator_action.setEnabled(idle)
         self._materials_action.setEnabled(idle)
         self._tuner_match_action.setEnabled(idle and has_result)
+        self._live_tuning_action.setEnabled(idle and has_project and self._solver is not None)
         self._measurement_sessions_action.setEnabled(idle and has_project)
         self._journal_action.setEnabled(idle and has_project)
         self._feed_line_action.setEnabled(idle)
@@ -2300,6 +2308,7 @@ class MainWindow(QMainWindow):
             self._calculator_action,
             self._materials_action,
             self._tuner_match_action,
+            self._live_tuning_action,
             self._measurement_sessions_action,
             self._journal_action,
             self._tuning_action,
@@ -10223,6 +10232,53 @@ class MainWindow(QMainWindow):
         self._mark_project_dirty()
         self._update_title()
         self._update_actions()
+
+    def show_live_tuning(self) -> None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        if self._solver is None:
+            self._show_error(self._translator.t("error.solver"))
+            return
+        if self._form_dirty:
+            try:
+                self._apply_fields()
+            except Exception as exc:
+                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+                return
+        design = self._project.design_by_id(self._design_id)
+        try:
+            primary_dimension_m(design.parameters)
+        except TypeError:
+            self._show_error(self._translator.t("live.unsupported"))
+            return
+        dialog = LiveTuningDialog(
+            self._translator,
+            design.parameters,
+            self._base_simulation_spec(design),
+            self._solver,
+            lambda parameters: self._apply_live_tuning(design, parameters),
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+            parent=self,
+        )
+        dialog.exec()
+
+    def _apply_live_tuning(
+        self,
+        design: DesignVariant,
+        parameters: AntennaDesignParameters,
+    ) -> None:
+        if self._project is None or self._design_id is None:
+            raise ValueError(self._translator.t("error.no_project"))
+        updated = design.with_parameters(parameters)
+        self._project = self._project.with_design(updated, updated_at=utc_now())
+        self._invalidate_design_result(self._design_id)
+        self._mark_project_dirty()
+        self._select_design(self._design_id)
+        self._last_status_key = "status.design_changed"
+        self._update_title()
+        self._update_actions()
+        self.simulate()
 
     def show_tuner_matchability(self) -> None:
         if self._last_result is None:
