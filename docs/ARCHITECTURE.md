@@ -19,7 +19,8 @@ application
              RenameDesignVariant, DeleteDesignVariant, RunSimulation,
              OptimizeDipoleLength
   simulation services: segment layout, model-quality resolution,
-             segmentation diagnostics
+             segmentation diagnostics, typed-family specs, and
+             far-field pattern presets
         │
 domain
   common: units, identifiers, time, validation

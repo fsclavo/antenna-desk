@@ -86,7 +86,7 @@ def test_trap_dipole_spec_sweeps_both_bands(window: MainWindow) -> None:
         height_m=12.0,
     )
 
-    spec = window._trap_dipole_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.frequency_plan.count == 100
     assert spec.frequency_plan.start_hz == pytest.approx(7_100_000.0 * 0.95)
@@ -173,7 +173,7 @@ def test_t2fd_spec_sweeps_the_design_band_with_centered_termination(
         transformer_ratio=16.0,
     )
 
-    spec = window._t2fd_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
     model = parameters.to_antenna()
     driven_count = spec.segmentation.segments_for(
         model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
@@ -280,7 +280,7 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
     assert window._custom_sweep_stop.value() == pytest.approx(30.0)
     assert window._custom_sweep_points.value() == 100
     assert window._custom_run_pattern_step_deg is None
-    spec = window._custom_simulation_spec(design.parameters)
+    spec = window._typed_simulation_spec(design.parameters)
     dipole = design.antenna.wire_by_id("dipole")
     count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
     assert count % 2 == 1
@@ -301,7 +301,7 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
         window._custom_pattern_resolution.findData(5.0)
     )
     assert window._custom_run_pattern_step_deg == 5.0
-    requested = window._custom_simulation_spec(design.parameters)
+    requested = window._typed_simulation_spec(design.parameters)
     exact = window._fit_spec_to_budget(design.antenna, requested)
     assert exact.far_field.theta_count == 19
     assert "Using 5°" in window._custom_pattern_status.text()
@@ -311,7 +311,7 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
         window._custom_pattern_frequency_mode.findData(5)
     )
     assert window._custom_pattern_frequency_count == 5
-    five = window._custom_simulation_spec(design.parameters)
+    five = window._typed_simulation_spec(design.parameters)
     fitted_five = window._fit_spec_to_budget(design.antenna, five)
     assert len(fitted_five.pattern_frequencies_hz) == 5
     assert fitted_five.far_field.theta_count == 19
@@ -352,7 +352,7 @@ def test_new_zs6bkw_creates_the_custom_preset_with_a_line(
     assert window._custom_sweep_start.value() == pytest.approx(7.0)
     assert window._custom_sweep_stop.value() == pytest.approx(29.7)
     assert window._custom_sweep_points.value() == 100
-    spec = window._custom_simulation_spec(design.parameters)
+    spec = window._typed_simulation_spec(design.parameters)
     dipole = design.antenna.wire_by_id("zs6bkw-dipole")
     count = spec.segmentation.segments_for(dipole, spec.frequency_plan.stop_hz)
     assert count % 2 == 1
@@ -395,7 +395,7 @@ def test_new_zepp_creates_the_refined_custom_preset(
     assert window._custom_sweep_start.value() == pytest.approx(7.0)
     assert window._custom_sweep_stop.value() == pytest.approx(29.7)
     assert window._custom_sweep_points.value() == 100
-    assert window._custom_simulation_spec(design.parameters).frequency_plan.count == 100
+    assert window._typed_simulation_spec(design.parameters).frequency_plan.count == 100
     window._dirty = False
 
 

@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...application.pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.antennas.dipole import (
     ANTENNA_TYPE_WIRE_DIPOLE,
@@ -51,7 +52,6 @@ from ..material_combo import (
     populate_material_combo,
     retranslate_material_combo,
 )
-from ..pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 from ..units import (
     DisplayUnits,
     LengthPolicy,

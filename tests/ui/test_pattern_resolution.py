@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.pattern_resolution import far_field_request, pattern_counts
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.pattern_resolution import far_field_request, pattern_counts
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.dipole_form import DipoleForm
 

@@ -24,7 +24,7 @@ from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
-def _generated_spec_cases() -> list[tuple[object, str]]:
+def _generated_spec_cases() -> list[object]:
     from antennadesk.domain.antennas.beverage import beverage_parameters
     from antennadesk.domain.antennas.endfed import EndFedParameters
     from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
@@ -34,54 +34,42 @@ def _generated_spec_cases() -> list[tuple[object, str]]:
     from antennadesk.domain.antennas.yagi import nbs_five_element
 
     return [
-        (
-            T2FDParameters(
-                frequency_hz=3_500_000.0,
-                highest_frequency_hz=30_000_000.0,
-                length_m=26.0,
-                spacing_m=0.9,
-            ),
-            "_t2fd_simulation_spec",
+        T2FDParameters(
+            frequency_hz=3_500_000.0,
+            highest_frequency_hz=30_000_000.0,
+            length_m=26.0,
+            spacing_m=0.9,
         ),
-        (
-            VerticalParameters(
-                frequency_hz=14_100_000.0,
-                height_m=5.0,
-                base_height_m=0.25,
-                radial_count=4,
-                radial_length_m=2.5,
-            ),
-            "_vertical_simulation_spec",
+        VerticalParameters(
+            frequency_hz=14_100_000.0,
+            height_m=5.0,
+            base_height_m=0.25,
+            radial_count=4,
+            radial_length_m=2.5,
         ),
-        (nbs_five_element(frequency_hz=145_000_000.0, height_m=10.0), "_yagi_simulation_spec"),
-        (
-            EndFedParameters(
-                frequency_hz=7_100_000.0,
-                length_m=20.0,
-                feed_height_m=10.0,
-                end_height_m=10.0,
-            ),
-            "_endfed_simulation_spec",
+        nbs_five_element(frequency_hz=145_000_000.0, height_m=10.0),
+        EndFedParameters(
+            frequency_hz=7_100_000.0,
+            length_m=20.0,
+            feed_height_m=10.0,
+            end_height_m=10.0,
         ),
-        (beverage_parameters(), "_beverage_simulation_spec"),
-        (loaded_dipole_parameters(), "_loaded_dipole_simulation_spec"),
-        (
-            TrapDipoleParameters(
-                frequency_hz=7_100_000.0,
-                high_band_frequency_hz=14_100_000.0,
-                inner_length_m=10.0,
-                outer_length_m=5.0,
-                trap_frequency_hz=14_100_000.0,
-                trap_inductance_h=10e-6,
-                height_m=12.0,
-            ),
-            "_trap_dipole_simulation_spec",
+        beverage_parameters(),
+        loaded_dipole_parameters(),
+        TrapDipoleParameters(
+            frequency_hz=7_100_000.0,
+            high_band_frequency_hz=14_100_000.0,
+            inner_length_m=10.0,
+            outer_length_m=5.0,
+            trap_frequency_hz=14_100_000.0,
+            trap_inductance_h=10e-6,
+            height_m=12.0,
         ),
     ]
 
 
 @pytest.mark.parametrize(
-    ("parameters", "method"),
+    "parameters",
     _generated_spec_cases(),
     ids=[
         "t2fd",
@@ -96,9 +84,8 @@ def _generated_spec_cases() -> list[tuple[object, str]]:
 def test_generated_specs_default_to_at_least_100_points(
     window: MainWindow,
     parameters: object,
-    method: str,
 ) -> None:
-    spec = getattr(window, method)(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.frequency_plan.count >= 100
 
@@ -129,7 +116,7 @@ def test_beverage_spec_applies_the_feed_transformer(window: MainWindow) -> None:
 
     parameters = beverage_parameters(transformer_ratio=16.0)
 
-    spec = window._beverage_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.feed_transformer_ratio == pytest.approx(16.0)
 
@@ -607,11 +594,11 @@ def test_loop_simulation_spec_has_connector_and_feed_overrides(
 def test_dense_sweep_keeps_all_points_and_uses_band_snapshots(
     window: MainWindow,
 ) -> None:
+    from antennadesk.application.pattern_resolution import far_field_request
     from antennadesk.domain.antennas.g5rv import g5rv_parameters
     from antennadesk.domain.environment.ground import GroundModel
     from antennadesk.domain.simulation.frequency import FrequencyPlan
     from antennadesk.domain.simulation.segmentation import SegmentationPolicy
-    from antennadesk.ui.pattern_resolution import far_field_request
 
     ground = GroundModel.finite(
         relative_permittivity=13.0,
@@ -638,9 +625,9 @@ def test_dense_sweep_keeps_all_points_and_uses_band_snapshots(
 def test_pattern_settings_apply_to_generated_designs(
     window: MainWindow,
 ) -> None:
+    from antennadesk.application.pattern_resolution import far_field_request
     from antennadesk.domain.simulation.frequency import FrequencyPlan
     from antennadesk.domain.simulation.segmentation import SegmentationPolicy
-    from antennadesk.ui.pattern_resolution import far_field_request
 
     assert window._project is not None
     assert window._pattern_group.isHidden() is False
@@ -678,7 +665,7 @@ def test_vertical_spec_uses_performance_safe_defaults(window: MainWindow) -> Non
         ),
     )
 
-    spec = window._vertical_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
     model = parameters.to_antenna()
     segments = sum(
         spec.segmentation.segments_for(wire, parameters.frequency_hz * 1.05) for wire in model.wires
@@ -704,7 +691,7 @@ def test_endfed_simulation_spec_carries_transformer_and_counterpoise(
         counterpoise_height_m=0.2,
     )
 
-    spec = window._endfed_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.feed_transformer_ratio == pytest.approx(49.0)
     assert len(parameters.to_antenna().wires) == 3
@@ -716,7 +703,7 @@ def test_shortened_endfed_simulation_spec_carries_the_coil(
     from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
 
     parameters = shortened_efhw_80_10_parameters()
-    spec = window._endfed_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
     model = parameters.to_antenna()
 
     assert spec.feed_transformer_ratio == pytest.approx(49.0)
@@ -727,11 +714,11 @@ def test_shortened_endfed_simulation_spec_carries_the_coil(
 
 
 def test_fit_spec_to_budget_uses_the_finest_pattern_that_fits(window: MainWindow) -> None:
+    from antennadesk.application.pattern_resolution import far_field_request
     from antennadesk.domain.antennas.dipole import DipoleParameters
     from antennadesk.domain.environment.ground import GroundModel
     from antennadesk.domain.simulation.frequency import FrequencyPlan
     from antennadesk.domain.simulation.segmentation import SegmentationPolicy
-    from antennadesk.ui.pattern_resolution import far_field_request
 
     ground = GroundModel.finite(relative_permittivity=13.0, conductivity_s_per_m=0.005)
     parameters = DipoleParameters(
@@ -999,8 +986,8 @@ def test_ocfd_and_custom_specs_include_the_transformer_ratio(window: MainWindow)
         transformer_ratio=4.0,
     )
 
-    ocfd_spec = window._ocfd_simulation_spec(parameters)
-    custom_spec = window._custom_simulation_spec(parameters.to_custom_parameters())
+    ocfd_spec = window._typed_simulation_spec(parameters)
+    custom_spec = window._typed_simulation_spec(parameters.to_custom_parameters())
 
     assert ocfd_spec.feed_transformer_ratio == pytest.approx(4.0)
     assert custom_spec.feed_transformer_ratio == pytest.approx(4.0)
@@ -1011,7 +998,7 @@ def test_biquad_simulation_spec_carries_the_transformer(window: MainWindow) -> N
 
     parameters = biquad_parameters(BiquadKind.DOUBLE, transformer_ratio=4.0)
 
-    spec = window._biquad_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.feed_transformer_ratio == pytest.approx(4.0)
 
@@ -1021,7 +1008,7 @@ def test_quad_beam_simulation_spec_carries_the_transformer(window: MainWindow) -
 
     parameters = quad_beam_parameters(element_count=3, transformer_ratio=2.0)
 
-    spec = window._quad_beam_simulation_spec(parameters)
+    spec = window._typed_simulation_spec(parameters)
 
     assert spec.feed_transformer_ratio == pytest.approx(2.0)
 
@@ -1036,8 +1023,8 @@ def test_yagi_specs_include_the_folded_transformer(window: MainWindow) -> None:
         folded_driven=True,
     )
 
-    assert window._yagi_simulation_spec(straight).feed_transformer_ratio == pytest.approx(1.0)
-    assert window._yagi_simulation_spec(folded).feed_transformer_ratio == pytest.approx(4.0)
+    assert window._typed_simulation_spec(straight).feed_transformer_ratio == pytest.approx(1.0)
+    assert window._typed_simulation_spec(folded).feed_transformer_ratio == pytest.approx(4.0)
 
 
 def test_fan_dipole_simulate_covers_all_element_bands(

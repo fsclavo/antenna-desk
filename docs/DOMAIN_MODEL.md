@@ -1075,7 +1075,9 @@ Solver-independent simulation types:
 - `SimulationSpec`: frequency plan, segmentation, reference impedance,
   extended-kernel flag, conductor-loss flag, far-field request, optional
   pattern snapshot frequencies, optional feed line, matching network,
-  `BalunLoss`, and timeout.
+  `BalunLoss`, and timeout. Typed-family defaults are built by
+  `application/simulation_specs.py`; the basic dipole forms keep their editor
+  sweep and reference-impedance controls.
 - `BalunLoss`: a project-level matched balun/unun insertion loss fitted as
   `Lref x (f/fref)^n`; it reduces realized gain but does not change geometry,
   impedance, or SWR.

@@ -31,9 +31,9 @@ pytestmark = [
 
 
 def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
+    from antennadesk.application.pattern_resolution import pattern_counts
     from antennadesk.domain.simulation.bands import band_snapshot_frequencies
     from antennadesk.domain.simulation.budget import choose_pattern_step
-    from antennadesk.ui.pattern_resolution import pattern_counts
 
     model, segmentation, ground = g5rv_model_and_segmentation()
     plan = FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 41)
@@ -74,12 +74,12 @@ def test_g5rv_default_budgeted_pattern_completes(solver: Nec2cSolver) -> None:
 
 
 def test_g5rv_dense_sweep_uses_pattern_snapshots(solver: Nec2cSolver) -> None:
+    from antennadesk.application.pattern_resolution import pattern_counts
     from antennadesk.domain.simulation.bands import band_snapshot_frequencies
     from antennadesk.domain.simulation.budget import (
         DEFAULT_MAX_PROJECT_BYTES,
         choose_pattern_step,
     )
-    from antennadesk.ui.pattern_resolution import pattern_counts
 
     model, segmentation, ground = g5rv_model_and_segmentation()
     plan = FrequencyPlan.sweep(3_500_000.0, 30_000_000.0, 200)

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.cancellation import EventCancelToken
+from antennadesk.application.pattern_resolution import far_field_request
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.optimization.engine import BudgetProfile
 from antennadesk.domain.optimization.registry import optimizer_availability
@@ -19,7 +20,6 @@ from antennadesk.ui.dialogs.family_optimization_dialog import (
     FamilyOptimizationDialog,
 )
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.pattern_resolution import far_field_request
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.task_progress import TaskProgressState
 

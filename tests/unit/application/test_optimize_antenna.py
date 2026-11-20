@@ -8,6 +8,7 @@ from dataclasses import replace
 import pytest
 
 from antennadesk.application.cancellation import EventCancelToken
+from antennadesk.application.pattern_resolution import far_field_request
 from antennadesk.application.ports.antenna_solver import ProgressCallback
 from antennadesk.application.ports.cancellation import CancelToken
 from antennadesk.application.use_cases.optimize_antenna import (
@@ -33,7 +34,6 @@ from antennadesk.domain.simulation.result import (
 )
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.ui.pattern_resolution import far_field_request
 
 
 class LengthSolver:

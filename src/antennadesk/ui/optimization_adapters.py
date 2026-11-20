@@ -64,95 +64,95 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
         lambda window, parameters: window._form.set_parameters(parameters, reset_sweep=False),
     ),
     VerticalParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._vertical_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._vertical_form.set_parameters(parameters),
     ),
     InvertedVParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._inverted_v_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._inverted_v_form.set_parameters(parameters),
     ),
     InvertedLParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._inverted_l_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._inverted_l_form.set_parameters(parameters),
     ),
     JPoleParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._j_pole_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._j_pole_form.set_parameters(parameters),
     ),
     RingoParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._ringo_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._ringo_form.set_parameters(parameters),
     ),
     ScvParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._scv_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._scv_form.set_parameters(parameters),
     ),
     BiquadParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._biquad_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._biquad_form.set_parameters(parameters),
     ),
     BeverageParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._beverage_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._beverage_form.set_parameters(parameters),
     ),
     LoadedDipoleParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._loaded_dipole_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._loaded_dipole_form.set_parameters(parameters),
     ),
     DisconeParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._discone_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._discone_form.set_parameters(parameters),
     ),
     PhasedVerticalParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._phased_vertical_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._phased_vertical_form.set_parameters(parameters),
     ),
     QuadBeamParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._quad_beam_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._quad_beam_form.set_parameters(parameters),
     ),
     OCFDParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._ocfd_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._ocfd_form.set_parameters(parameters),
     ),
     EndFedParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._endfed_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._endfed_form.set_parameters(parameters),
     ),
     FanDipoleParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._fan_dipole_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._fan_dipole_form.set_parameters(parameters),
     ),
     TrapDipoleParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._trap_dipole_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._trap_dipole_form.set_parameters(parameters),
     ),
     TrapYagiParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._trap_yagi_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._trap_yagi_form.set_parameters(parameters),
     ),
     HexbeamParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._hexbeam_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._hexbeam_form.set_parameters(parameters),
     ),
     T2FDParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._t2fd_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._t2fd_form.set_parameters(parameters),
     ),
     YagiParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._yagi_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._yagi_form.set_parameters(parameters),
     ),
     MoxonParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._moxon_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._moxon_form.set_parameters(parameters),
     ),
     TransmissionLineDoubletParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._doublet_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._doublet_form.set_parameters(parameters),
     ),
     ZeppParameters: OptimizationUiAdapter(
-        lambda window, parameters: window._zepp_simulation_spec(parameters),
+        lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._zepp_form.set_parameters(parameters),
     ),
 }

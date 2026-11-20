@@ -56,8 +56,20 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..application.cancellation import EventCancelToken
 from ..application.discretization import resolve_model_quality
+from ..application.pattern_resolution import (
+    DEFAULT_PATTERN_SNAPSHOT_COUNT,
+    DEFAULT_PATTERN_STEP_DEG,
+    PATTERN_STEPS_DEG,
+    far_field_request,
+    pattern_counts,
+)
 from ..application.ports.antenna_solver import AntennaSolver
 from ..application.ports.project_repository import ProjectRepository
+from ..application.simulation_specs import (
+    DEFAULT_GENERATED_SWEEP_POINTS,
+    CustomSweepOptions,
+    build_typed_family_simulation_spec,
+)
 from ..application.use_cases.add_design_variant import (
     AddDesignVariant,
     AddDesignVariantCommand,
@@ -118,9 +130,6 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import (
     EndFedParameters,
     EndFedPreset,
-    endfed_design_matching_network,
-    endfed_matching_network,
-    endfed_segmentation_overrides,
 )
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
@@ -138,7 +147,6 @@ from ..domain.antennas.loop import LoopParameters
 from ..domain.antennas.magnetic_loop import MagneticLoopParameters
 from ..domain.antennas.matching_network import (
     MatchingNetwork,
-    MatchingNetworkOrigin,
     MatchingNetworkPosition,
     design_l_network,
     design_pi_network,
@@ -169,7 +177,7 @@ from ..domain.antennas.yagi import (
     nbs_five_element,
     yagi_element_length_mismatch,
 )
-from ..domain.antennas.zepp import ZEPP_BASE_ID, ZeppParameters
+from ..domain.antennas.zepp import ZeppParameters
 from ..domain.antennas.zs6bkw import (
     ZS6BKW_DIPOLE_ID,
     zs6bkw_with_dimensions,
@@ -372,13 +380,6 @@ from .help import apply_help
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
 from .optimization_adapters import adapter_for
-from .pattern_resolution import (
-    DEFAULT_PATTERN_SNAPSHOT_COUNT,
-    DEFAULT_PATTERN_STEP_DEG,
-    PATTERN_STEPS_DEG,
-    far_field_request,
-    pattern_counts,
-)
 from .preferences import (
     FontSize,
     FontSizeController,
@@ -437,9 +438,7 @@ from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
-DEFAULT_GENERATED_SWEEP_POINTS = 100
 VNA_SUFFIXES = frozenset({".csv", ".txt", ".s1p", ".s2p"})
-DEFAULT_TWO_BAND_SWEEP_POINTS = 100
 YAGI_OPTIMIZATION_MIN_GAP_M = 0.1
 
 
@@ -3962,59 +3961,30 @@ class MainWindow(QMainWindow):
 
     def _family_simulation_spec(self, design: DesignVariant) -> SimulationSpec:
         parameters = design.parameters
-        if isinstance(parameters, CustomAntennaParameters):
-            return self._custom_simulation_spec(parameters)
-        if isinstance(parameters, OCFDParameters):
-            return self._ocfd_simulation_spec(parameters)
-        if isinstance(parameters, VerticalParameters):
-            return self._vertical_simulation_spec(parameters)
-        if isinstance(parameters, InvertedVParameters):
-            return self._inverted_v_simulation_spec(parameters)
-        if isinstance(parameters, InvertedLParameters):
-            return self._inverted_l_simulation_spec(parameters)
-        if isinstance(parameters, MagneticLoopParameters):
-            return self._magnetic_loop_simulation_spec(parameters)
-        if isinstance(parameters, YagiParameters):
-            return self._yagi_simulation_spec(parameters)
-        if isinstance(parameters, MoxonParameters):
-            return self._moxon_simulation_spec(parameters)
-        if isinstance(parameters, FanDipoleParameters):
-            return self._fan_dipole_simulation_spec(parameters)
-        if isinstance(parameters, TrapDipoleParameters):
-            return self._trap_dipole_simulation_spec(parameters)
-        if isinstance(parameters, T2FDParameters):
-            return self._t2fd_simulation_spec(parameters)
-        if isinstance(parameters, EndFedParameters):
-            return self._endfed_simulation_spec(parameters)
-        if isinstance(parameters, JPoleParameters):
-            return self._j_pole_simulation_spec(parameters)
-        if isinstance(parameters, RingoParameters):
-            return self._ringo_simulation_spec(parameters)
-        if isinstance(parameters, ScvParameters):
-            return self._scv_simulation_spec(parameters)
-        if isinstance(parameters, BiquadParameters):
-            return self._biquad_simulation_spec(parameters)
-        if isinstance(parameters, BeverageParameters):
-            return self._beverage_simulation_spec(parameters)
-        if isinstance(parameters, LoadedDipoleParameters):
-            return self._loaded_dipole_simulation_spec(parameters)
-        if isinstance(parameters, PhasedVerticalParameters):
-            return self._phased_vertical_simulation_spec(parameters)
-        if isinstance(parameters, QuadBeamParameters):
-            return self._quad_beam_simulation_spec(parameters)
-        if isinstance(parameters, LogPeriodicParameters):
-            return self._log_periodic_simulation_spec(parameters)
-        if isinstance(parameters, DisconeParameters):
-            return self._discone_simulation_spec(parameters)
-        if isinstance(parameters, TrapYagiParameters):
-            return self._trap_yagi_simulation_spec(parameters)
-        if isinstance(parameters, HexbeamParameters):
-            return self._hexbeam_simulation_spec(parameters)
-        if isinstance(parameters, TransmissionLineDoubletParameters):
-            return self._doublet_simulation_spec(parameters)
-        if isinstance(parameters, ZeppParameters):
-            return self._zepp_simulation_spec(parameters)
-        return self._form.simulation_spec()
+        if isinstance(parameters, (DipoleParameters, FoldedDipoleParameters, LoopParameters)):
+            return self._form.simulation_spec()
+        return self._typed_simulation_spec(parameters)
+
+    def _typed_simulation_spec(
+        self,
+        parameters: AntennaDesignParameters,
+        *,
+        active_hexbeam_band: str | None = None,
+    ) -> SimulationSpec:
+        return build_typed_family_simulation_spec(
+            parameters,
+            pattern_step_deg=self._custom_pattern_step_deg,
+            custom_sweep=self._custom_sweep_options(),
+            active_hexbeam_band=active_hexbeam_band,
+        )
+
+    def _custom_sweep_options(self) -> CustomSweepOptions:
+        return CustomSweepOptions(
+            enabled=self._custom_sweep.isChecked(),
+            start_hz=self._custom_sweep_start.value() * 1_000_000.0,
+            stop_hz=self._custom_sweep_stop.value() * 1_000_000.0,
+            points=self._custom_sweep_points.value(),
+        )
 
     def _apply_sweep_override(
         self,
@@ -4738,566 +4708,6 @@ class MainWindow(QMainWindow):
                 size=size,
             )
         self._custom_pattern_status.setText(text)
-
-    def _ocfd_simulation_spec(self, parameters: OCFDParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="OCFD")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _vertical_simulation_spec(self, parameters: VerticalParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="Vertical")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _inverted_v_simulation_spec(self, parameters: InvertedVParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="Inverted V")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _inverted_l_simulation_spec(self, parameters: InvertedLParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="Inverted L")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _magnetic_loop_simulation_spec(
-        self,
-        parameters: MagneticLoopParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna(name="Magnetic loop")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.90,
-                frequency_hz * 1.10,
-                101,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.10,
-                SegmentationPolicy(min_segments_per_wire=1),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _yagi_simulation_spec(self, parameters: YagiParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="Yagi")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=1),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _moxon_simulation_spec(self, parameters: MoxonParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="Moxon")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _fan_dipole_simulation_spec(
-        self,
-        parameters: FanDipoleParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna(name="Fan dipole")
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _trap_dipole_simulation_spec(
-        self,
-        parameters: TrapDipoleParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna(name="Trap dipole")
-        low_band_hz = parameters.frequency_hz
-        high_band_hz = parameters.high_band_frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                low_band_hz * 0.95,
-                high_band_hz * 1.05,
-                DEFAULT_TWO_BAND_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                high_band_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _t2fd_simulation_spec(self, parameters: T2FDParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="T2FD")
-        stop_hz = parameters.highest_frequency_hz
-        base = aligned_policy_for_model(
-            model,
-            stop_hz,
-            SegmentationPolicy(min_segments_per_wire=3),
-        )
-        driven_count = base.segments_for(
-            model.wire_by_id(T2FD_DRIVEN_WIRE_ID),
-            stop_hz,
-        )
-        if driven_count % 2 == 0:
-            driven_count += 1
-        wire_segments = tuple(
-            (
-                wire.id,
-                driven_count
-                if wire.id in {T2FD_DRIVEN_WIRE_ID, T2FD_TERMINATED_WIRE_ID}
-                else base.segments_for(wire, stop_hz),
-            )
-            for wire in model.wires
-        )
-        segmentation = SegmentationPolicy(
-            min_segments_per_wire=3,
-            wire_segments=wire_segments,
-        )
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                parameters.frequency_hz,
-                parameters.highest_frequency_hz,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=segmentation,
-            far_field=far_field_request(
-                self._custom_pattern_step_deg,
-                parameters.ground,
-            ),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _endfed_simulation_spec(self, parameters: EndFedParameters) -> SimulationSpec:
-        model = parameters.to_antenna(name="End-fed")
-        frequency_hz = parameters.frequency_hz
-        matching_network = endfed_matching_network(parameters)
-        design_matching = endfed_design_matching_network(parameters)
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(
-                    min_segments_per_wire=3,
-                    wire_segments=endfed_segmentation_overrides(parameters),
-                ),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-            transformer_loss=parameters.transformer_loss,
-            matching_network=matching_network,
-            matching_network_origin=(
-                MatchingNetworkOrigin.DESIGN_ENDFED
-                if design_matching is not None
-                else (
-                    MatchingNetworkOrigin.INTERNAL_ENDFED
-                    if matching_network is not None
-                    else MatchingNetworkOrigin.NONE
-                )
-            ),
-        )
-
-    def _j_pole_simulation_spec(self, parameters: JPoleParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _ringo_simulation_spec(self, parameters: RingoParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _scv_simulation_spec(self, parameters: ScvParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _biquad_simulation_spec(self, parameters: BiquadParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.9,
-                frequency_hz * 1.1,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.1,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _beverage_simulation_spec(
-        self,
-        parameters: BeverageParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.9,
-                frequency_hz * 1.1,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.1,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _loaded_dipole_simulation_spec(
-        self,
-        parameters: LoadedDipoleParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.85,
-                frequency_hz * 1.15,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.15,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _phased_vertical_simulation_spec(
-        self,
-        parameters: PhasedVerticalParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.9,
-                frequency_hz * 1.1,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.1,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _quad_beam_simulation_spec(
-        self,
-        parameters: QuadBeamParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.9,
-                frequency_hz * 1.1,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.1,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.transformer_ratio,
-        )
-
-    def _log_periodic_simulation_spec(
-        self,
-        parameters: LogPeriodicParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                parameters.frequency_low_hz,
-                parameters.frequency_high_hz,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_wire_centers(
-                model,
-                parameters.frequency_high_hz,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            feed_transformer_ratio=parameters.feed_transformer_ratio,
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _discone_simulation_spec(
-        self,
-        parameters: DisconeParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.5,
-                frequency_hz * 1.5,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.5,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _trap_yagi_simulation_spec(
-        self,
-        parameters: TrapYagiParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.9,
-                frequency_hz * 1.1,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.1,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _hexbeam_simulation_spec(
-        self,
-        parameters: HexbeamParameters,
-        *,
-        active_band: str | None = None,
-    ) -> SimulationSpec:
-        band = parameters.resolved_bands[0]
-        if active_band is not None:
-            key = active_band.casefold()
-            band = next(
-                (item for item in parameters.resolved_bands if item.label.casefold() == key),
-                band,
-            )
-        model = parameters.to_antenna(active_band=active_band)
-        frequency_hz = band.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _doublet_simulation_spec(
-        self,
-        parameters: TransmissionLineDoubletParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _zepp_simulation_spec(self, parameters: ZeppParameters) -> SimulationSpec:
-        model = parameters.to_antenna()
-        frequency_hz = parameters.frequency_hz
-        return SimulationSpec(
-            frequency_plan=FrequencyPlan.sweep(
-                frequency_hz * 0.95,
-                frequency_hz * 1.05,
-                DEFAULT_GENERATED_SWEEP_POINTS,
-            ),
-            segmentation=aligned_policy_for_model(
-                model,
-                frequency_hz * 1.05,
-                SegmentationPolicy(min_segments_per_wire=3),
-            ),
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-        )
-
-    def _custom_simulation_spec(
-        self,
-        parameters: CustomAntennaParameters,
-    ) -> SimulationSpec:
-        model = parameters.to_antenna(name="Custom")
-        if self._custom_sweep.isChecked():
-            frequency_plan = FrequencyPlan.sweep(
-                self._custom_sweep_start.value() * 1_000_000.0,
-                self._custom_sweep_stop.value() * 1_000_000.0,
-                self._custom_sweep_points.value(),
-            )
-        else:
-            frequency_plan = FrequencyPlan.single(parameters.frequency_hz)
-        segmentation = SegmentationPolicy(min_segments_per_wire=3)
-        if parameters.generator_id in {"g5rv", "zs6bkw"}:
-            dipole_id = G5RV_DIPOLE_ID if parameters.generator_id == "g5rv" else ZS6BKW_DIPOLE_ID
-            dipole = model.wire_by_id(dipole_id)
-            count = segmentation.segments_for(dipole, frequency_plan.stop_hz)
-            if count % 2 == 0:
-                count += 1
-            segmentation = SegmentationPolicy(
-                min_segments_per_wire=3,
-                wire_segments=((dipole_id, count),),
-            )
-        elif parameters.generator_id == "zepp":
-            # The base connector is a short source jumper; one segment keeps
-            # the delta gap centered and avoids a spurious too-short warning.
-            segmentation = SegmentationPolicy(
-                min_segments_per_wire=1,
-                wire_segments=((ZEPP_BASE_ID, 1),),
-            )
-        segmentation = aligned_policy_for_model(
-            model,
-            frequency_plan.stop_hz,
-            segmentation,
-        )
-        return SimulationSpec(
-            frequency_plan=frequency_plan,
-            segmentation=segmentation,
-            far_field=far_field_request(self._custom_pattern_step_deg, parameters.ground),
-            feed_transformer_ratio=parameters.feed_transformer_ratio,
-        )
 
     def _suggested_project_name(
         self,
@@ -8111,9 +7521,9 @@ class MainWindow(QMainWindow):
                 None,
             )
             if target is not None:
-                base_spec = self._hexbeam_simulation_spec(
+                base_spec = self._typed_simulation_spec(
                     design.parameters,
-                    active_band=hexbeam_band,
+                    active_hexbeam_band=hexbeam_band,
                 )
                 target_model = design.parameters.to_antenna(active_band=hexbeam_band)
                 operating_frequencies = (target.frequency_hz,)
@@ -8204,36 +7614,13 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
-        if isinstance(design.parameters, OCFDParameters):
-            base_spec = self._ocfd_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, EndFedParameters):
-            base_spec = self._endfed_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, TrapDipoleParameters):
-            base_spec = self._trap_dipole_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, T2FDParameters):
-            base_spec = self._t2fd_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, ScvParameters):
-            base_spec = self._scv_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, BiquadParameters):
-            base_spec = self._biquad_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, BeverageParameters):
-            base_spec = self._beverage_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, LoadedDipoleParameters):
-            base_spec = self._loaded_dipole_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, PhasedVerticalParameters):
-            base_spec = self._phased_vertical_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, QuadBeamParameters):
-            base_spec = self._quad_beam_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, LogPeriodicParameters):
-            base_spec = self._log_periodic_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, DisconeParameters):
-            base_spec = self._discone_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, TrapYagiParameters):
-            base_spec = self._trap_yagi_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, HexbeamParameters):
-            base_spec = self._hexbeam_simulation_spec(design.parameters)
-        else:
+        if isinstance(
+            design.parameters,
+            (DipoleParameters, FoldedDipoleParameters, LoopParameters),
+        ):
             base_spec = self._form.simulation_spec()
+        else:
+            base_spec = self._typed_simulation_spec(design.parameters)
 
         base_spec = replace(
             base_spec,
@@ -8306,12 +7693,9 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
-        if isinstance(design.parameters, OCFDParameters):
-            base_spec = self._ocfd_simulation_spec(design.parameters)
-        elif isinstance(design.parameters, JPoleParameters):
-            base_spec = self._j_pole_simulation_spec(design.parameters)
-        else:
+        if not isinstance(design.parameters, (OCFDParameters, JPoleParameters)):
             return
+        base_spec = self._typed_simulation_spec(design.parameters)
         synthesis_spec = replace(
             base_spec,
             timeout_s=float(self._solver_timeout.value()),
@@ -8406,7 +7790,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._yagi_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.yagi_title",
             hint_key="element_optimize.yagi_hint",
@@ -8506,7 +7890,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._fan_dipole_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.fan_title",
             variables=tuple(variables),
@@ -8590,7 +7974,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._moxon_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.moxon_title",
             variables=variables,
@@ -8726,7 +8110,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._vertical_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.vertical_title",
             variables=tuple(variables),
@@ -8776,7 +8160,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._inverted_v_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.inverted_v_title",
             variables=(
@@ -8852,7 +8236,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._ringo_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.ringo_title",
             variables=variables,
@@ -8922,7 +8306,7 @@ class MainWindow(QMainWindow):
             self._solver,
             self._with_project_chain(
                 parameters,
-                self._custom_simulation_spec(parameters),
+                self._typed_simulation_spec(parameters),
             ),
             title_key="element_optimize.zs6bkw_title",
             variables=(

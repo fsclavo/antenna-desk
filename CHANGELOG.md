@@ -293,6 +293,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   disabled with an explanation for loaded, trapped, multiband, Yagi/Moxon, and
   fan-dipole designs. It enters undo history; no schema or solver change.
 
+### Changed
+
+- **Typed simulation-spec assembly moved out of the main window.** The
+  per-family `SimulationSpec` builders and far-field pattern presets now live
+  in the Qt-free application layer (`application/simulation_specs.py` and
+  `application/pattern_resolution.py`). The main window keeps only the
+  form-controlled basic dipole/folded/loop path and applies the project chain.
+  No solver, schema, or user-visible behavior change.
+
 ### Fixed
 
 - **Bounded project decompression.** Loading a gzip-compressed project now

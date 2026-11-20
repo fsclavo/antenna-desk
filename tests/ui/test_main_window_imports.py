@@ -59,7 +59,7 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._project.name == "Custom"
     assert window._project.designs[0].antenna_type == "custom"
     assert window._design_stack.currentWidget() is window._custom_panel
-    assert window._custom_simulation_spec(parameters).frequency_plan.count == 100
+    assert window._typed_simulation_spec(parameters).frequency_plan.count == 100
 
     window.simulate()
     wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
