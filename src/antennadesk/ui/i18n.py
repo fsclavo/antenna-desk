@@ -16873,6 +16873,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Matched",
         Language.SPANISH: "Adaptable",
     },
+    "tuner.status.best_effort": {
+        Language.ENGLISH: "Best effort",
+        Language.SPANISH: "Mejor esfuerzo",
+    },
+    "tuner.status.bypass": {
+        Language.ENGLISH: "Bypass",
+        Language.SPANISH: "Derivación",
+    },
     "tuner.status.out_of_range": {
         Language.ENGLISH: "Out of range",
         Language.SPANISH: "Fuera de rango",
