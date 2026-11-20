@@ -41,6 +41,25 @@ reference-plane selection; the widget only draws the points.
 The plane selector is disabled for a plane with no data. Multi-source designs
 show the primary feed only; per-source values remain in the **Sources** tab.
 
+## Preview overlays
+
+The Smith tab has two mutually exclusive previews:
+
+- **Feed-line preview** builds a lossless `FeedLine` from the entered length,
+  characteristic impedance, and velocity factor, applies it to the antenna
+  feedpoint locus, and draws the result as a dashed-dot overlay. It does not
+  modify the project feed line.
+- **Matching preview** designs an L, Pi, or T network from the point at the
+  marker frequency to the display `Z0` using the domain design functions. A
+  positive design Q applies the component-loss model; zero lets the domain pick
+  a practical value for Pi and T. The component values are shown as a summary.
+  The network is a starting design, not an optimized or validated construction.
+
+The preview is a presentation overlay: it does not run a new solver pass and it
+does not replace the as-simulated result. When matching is previewed from the
+as-simulated plane, the load already includes the project chain; it is a
+what-if view, not a second station model.
+
 ## Measured overlay
 
 Imported measurement points are normalized to the display `Z0`, not to the
@@ -51,9 +70,9 @@ the measurement record is unchanged.
 ## Drawing and export
 
 The widget limits the number of drawn symbols for large sweeps. The full locus
-is retained in memory and the CSV export writes every simulated and measured
-point. PNG and SVG export use a fixed 1200 × 900 canvas and the current theme;
-the CSV columns are:
+is retained in memory and the CSV export writes every simulated, measured, and
+preview point. PNG and SVG export use a fixed 1200 × 900 canvas and the current
+theme; the CSV columns are:
 
 ```
 series,frequency_hz,resistance_ohm,reactance_ohm,gamma_real,gamma_imag,swr,reference_impedance_ohm
@@ -65,7 +84,11 @@ series,frequency_hz,resistance_ohm,reactance_ohm,gamma_real,gamma_imag,swr,refer
   reference-impedance chart.
 - **Feed line only** excludes the matching network and is not a substitute for
   a full simulation.
-- The chart does not preview arbitrary matching-network values. Edit the
-  matching network and run the normal simulation to evaluate a new network.
+- **Matching preview** is an automatic starting design from the marker point;
+  manual component entry and network optimization remain follow-ups. Edit the
+  project matching network and run the normal simulation to evaluate a built or
+  optimized network.
+- The preview overlays are presentation transforms of the stored locus; they do
+  not run a new solver pass or change the saved result.
 - The chart is a presentation of the stored result; it does not improve the
   accuracy of the segmentation, ground, or solver model.

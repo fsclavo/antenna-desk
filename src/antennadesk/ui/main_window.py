@@ -1324,7 +1324,10 @@ class MainWindow(QMainWindow):
         self._geometry_hidden_label.setTextFormat(Qt.TextFormat.PlainText)
         self._geometry_hidden_label.hide()
         self._geometry.hidden_dimensions_changed.connect(self._on_hidden_dimensions_changed)
-        self._results = ResultsView(self._translator)
+        self._results = ResultsView(
+            self._translator,
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+        )
         self._results.measurement_edit_requested.connect(self.edit_measurement)
         self._results.measurement_delete_requested.connect(self.delete_measurement)
         self._results.measurement_sessions_requested.connect(self.edit_measurement_sessions)
@@ -10102,6 +10105,7 @@ class MainWindow(QMainWindow):
             form.set_unit_system(unit_system)
         self._geometry.set_unit_system(unit_system)
         self._geometry.set_display_units(DisplayUnits(unit_system, self._length_policy))
+        self._results.set_display_units(DisplayUnits(unit_system, self._length_policy))
         self._refresh_installation_summary()
 
     def _set_unit_system(self, unit_system: UnitSystem) -> None:

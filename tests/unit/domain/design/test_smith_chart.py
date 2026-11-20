@@ -14,18 +14,23 @@ import pytest
 from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.antennas.matching_network import (
     MatchingNetworkPosition,
+    PiNetwork,
+    TNetwork,
     design_l_network,
 )
 from antennadesk.domain.design.smith_chart import (
+    MatchingPreviewTopology,
     SmithPlane,
     available_smith_planes,
     constant_reactance_arc_points,
     constant_resistance_circle_points,
+    design_preview_network,
     smith_locus,
     smith_point,
     smith_points_for_measurement,
     smith_points_for_result,
     transform_with_feed_line,
+    transform_with_matching_network,
 )
 from antennadesk.domain.measurement import Measurement, MeasurementPoint
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -184,6 +189,32 @@ def test_transform_with_feed_line_preserves_frequency_and_reference() -> None:
     assert transformed[0].frequency_hz == points[0].frequency_hz
     assert transformed[0].reference_impedance_ohm == points[0].reference_impedance_ohm
     assert transformed[0].impedance_ohm != points[0].impedance_ohm
+
+
+def test_preview_network_designs_l_pi_and_t_and_moves_the_locus_to_target() -> None:
+    load = complex(100.0, 0.0)
+    frequency = 14_000_000.0
+    points = smith_locus([frequency], [load], 50.0)
+
+    for topology in (
+        MatchingPreviewTopology.L,
+        MatchingPreviewTopology.PI,
+        MatchingPreviewTopology.T,
+    ):
+        network = design_preview_network(
+            load,
+            frequency,
+            topology,
+            source_impedance_ohm=50.0,
+        )
+        assert network is not None, topology
+        transformed = transform_with_matching_network(points, network)
+        assert transformed[0].impedance_ohm.real == pytest.approx(50.0, abs=0.2)
+        assert transformed[0].impedance_ohm.imag == pytest.approx(0.0, abs=0.2)
+        if topology is MatchingPreviewTopology.PI:
+            assert isinstance(network, PiNetwork)
+        if topology is MatchingPreviewTopology.T:
+            assert isinstance(network, TNetwork)
 
 
 def test_measured_points_use_the_display_reference_impedance() -> None:

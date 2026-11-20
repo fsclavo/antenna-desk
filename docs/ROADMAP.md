@@ -271,7 +271,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; waves 1–2 queued; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; wave 1 in progress; wave 2 queued; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -540,7 +540,7 @@ and new catalog presets) waits until this track closes.
 | 1.0 Confidence | TS5 | VNA import 2.0 | `.s2p`, presets, mapping, locale-aware parsing | M | n/a | done 2026-11-19 |
 | 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | done 2026-11-19 |
 | 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
-| 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, export; editable values remain | M–L | n/a | partial 2026-11-19 |
+| 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | "Will my ATU match it?" with real values | M–L | B/C | queued 2026-11-19 |
 | 1.1 Station | DL5 | Support structures | Boom, mast, tower, and guy wires in the model | M–L | B/C | queued 2026-11-19 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Coarse drag-to-preview, commit to full run | M–L | n/a | queued 2026-11-19 |
@@ -551,8 +551,8 @@ and new catalog presets) waits until this track closes.
 
 Release sequence for this track: **1.0 Confidence** closed truth,
 interoperability, convergence, metrics, and recovery on 2026-11-19. **1.1
-Station** adds Smith, tuner/components, and support structures; DL1 is the
-next slice. **1.2 Site and exploration** adds live preview, near-field,
+Station** adds Smith, tuner/components, and support structures; DL1 is done,
+and DL2/DL5 are next. **1.2 Site and exploration** adds live preview, near-field,
 stacking, and native ground screen/cliff. **DL8** remains post-1.2 until a
 validated terrain ADR exists. The names and numbers are working labels; the
 backlog is the executable order.
@@ -574,11 +574,11 @@ Product track:
    manual visual QA remain before release preparation.
 2. The 2026-11-19 **product trust and station** track has completed wave 0:
    1.0 Confidence (TS1–TS7, DL9) is done. Wave 1 Station (DL1, DL2, DL5) is
-   next. DL1's first slice (Smith tab, reference planes, measured overlay, and
-   export) is implemented; editable feed-line and arbitrary matching-value
-   preview, DL2, and DL5 remain. Wave 2 (DL3, DL4, DL6, DL7) remains queued,
-   and DL8 stays post-1.2 until a validated terrain ADR exists. Execution and
-   acceptance criteria are in
+   active: DL1 (Smith chart, reference planes, measured overlay, editable
+   feed-line preview, automatic L/Pi/T preview, and export) is done; DL2 and
+   DL5 remain. Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays
+   post-1.2 until a validated terrain ADR exists. Execution and acceptance
+   criteria are in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
 
 Modeling track:

@@ -1156,3 +1156,47 @@ def test_results_view_smith_tab_overlays_a_measurement(qtbot: QtBot) -> None:
 
     assert len(view._smith_view.measured_points()) == 1
     assert "measured," in view._smith_csv_text()
+
+
+def test_results_view_smith_feed_line_preview(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(_make_result())
+
+    view._smith_feed_group.setChecked(True)
+    view._smith_feed_length_field.set_value_m(10.0)
+    view._smith_feed_z0.setValue(50.0)
+    view._smith_feed_vf.setValue(0.66)
+    view._on_smith_preview_changed()
+
+    assert view._smith_view.preview_points()
+    assert "preview," in view._smith_csv_text()
+    assert "Lossless preview" in view._smith_note.text()
+
+
+def test_results_view_smith_matching_preview(qtbot: QtBot) -> None:
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(_make_result())
+
+    view._smith_match_group.setChecked(True)
+    index = view._smith_match_topology.findData("l")
+    assert index >= 0
+    view._smith_match_topology.setCurrentIndex(index)
+    view._on_smith_matching_changed()
+
+    assert view._smith_view.preview_points()
+    assert "L:" in view._smith_match_status.text()
+    assert "preview," in view._smith_csv_text()
+
+
+def test_results_view_smith_feed_length_uses_display_units(qtbot: QtBot) -> None:
+    from antennadesk.presentation.units import DisplayUnits, LengthPolicy, UnitSystem
+
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.set_result(_make_result())
+
+    view.set_display_units(DisplayUnits(UnitSystem.IMPERIAL, LengthPolicy.AUTO))
+
+    assert "ft" in view._smith_feed_length.suffix()

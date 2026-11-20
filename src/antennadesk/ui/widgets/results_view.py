@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable, Sequence
+from dataclasses import replace
 from pathlib import Path
 from uuid import UUID
 
@@ -15,6 +16,7 @@ from PySide6.QtGui import QColor, QFont, QFontDatabase, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
+    QDoubleSpinBox,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -32,16 +34,28 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.antennas.feed_line import FeedLine
+from ...domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    PiNetwork,
+    TNetwork,
+)
 from ...domain.common.validation import Diagnostic, Severity
 from ...domain.design.matching_design import (
     MatchingNetworkDesign,
     matching_network_design_from_frequency,
 )
 from ...domain.design.smith_chart import (
+    MatchingPreviewTopology,
     SmithPlane,
+    SmithPoint,
     available_smith_planes,
+    design_preview_network,
     smith_points_for_measurement,
     smith_points_for_result,
+    transform_with_feed_line,
+    transform_with_matching_network,
 )
 from ...domain.environment.ground import GroundKind
 from ...domain.measurement import Measurement, MeasurementPoint, MeasurementSession
@@ -74,7 +88,9 @@ from ..fonts import apply_plot_fonts, scaled_font_copy
 from ..help import apply_help
 from ..i18n import Translator
 from ..theme import theme_colors
+from ..units import DisplayUnits
 from .chart_cursor import ChartCursor, CursorSeries
+from .form_units import LengthField, LengthFieldSpec
 from .polar_pattern_view import PolarPatternView
 from .radiation_pattern_3d_view import RadiationPattern3DView
 from .smith_chart_view import SmithChartView
@@ -124,9 +140,16 @@ class ResultsView(QWidget):
     matching_network_requested = Signal(object)
     tab_changed = Signal(str)
 
-    def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        translator: Translator,
+        parent: QWidget | None = None,
+        *,
+        display_units: DisplayUnits | None = None,
+    ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._display_units = display_units or DisplayUnits()
         self._colors = theme_colors(self.palette())
         self._result: SimulationResult | None = None
         self._design: DesignVariant | None = None
@@ -214,9 +237,83 @@ class ResultsView(QWidget):
         self._smith_export_png.clicked.connect(lambda: self._export_smith_image(".png"))
         self._smith_export_svg.clicked.connect(lambda: self._export_smith_image(".svg"))
         self._smith_export_csv.clicked.connect(self._export_smith_csv)
-        self._smith_plane.currentIndexChanged.connect(self._render_smith)
+        self._smith_plane.currentIndexChanged.connect(self._on_smith_plane_changed)
         self._smith_measurement.currentIndexChanged.connect(self._render_smith)
         self._smith_frequency.currentIndexChanged.connect(self._on_smith_frequency_changed)
+        self._smith_preview_network: MatchingNetwork | None = None
+
+        self._smith_feed_group = QGroupBox(self._smith_tab)
+        self._smith_feed_group.setCheckable(True)
+        self._smith_feed_group.setChecked(False)
+        self._smith_feed_length = QDoubleSpinBox(self._smith_feed_group)
+        self._smith_feed_length_spec = LengthFieldSpec(
+            minimum_m=0.0,
+            maximum_m=10_000.0,
+            step_m=0.1,
+        )
+        self._smith_feed_length_field = LengthField(
+            self._smith_feed_length,
+            self._smith_feed_length_spec,
+            translator,
+            self._display_units,
+        )
+        self._smith_feed_length_field.configure(30.0)
+        self._smith_feed_z0 = QDoubleSpinBox(self._smith_feed_group)
+        self._smith_feed_z0.setRange(1.0, 1_000.0)
+        self._smith_feed_z0.setDecimals(1)
+        self._smith_feed_z0.setValue(50.0)
+        self._smith_feed_z0.setSuffix(" Ω")
+        self._smith_feed_vf = QDoubleSpinBox(self._smith_feed_group)
+        self._smith_feed_vf.setRange(0.10, 1.0)
+        self._smith_feed_vf.setDecimals(3)
+        self._smith_feed_vf.setSingleStep(0.01)
+        self._smith_feed_vf.setValue(0.66)
+        self._smith_feed_length_label = QLabel(self._smith_feed_group)
+        self._smith_feed_z0_label = QLabel(self._smith_feed_group)
+        self._smith_feed_vf_label = QLabel(self._smith_feed_group)
+        self._smith_feed_group.toggled.connect(self._on_smith_feed_toggled)
+        self._smith_feed_length.valueChanged.connect(self._on_smith_preview_changed)
+        self._smith_feed_z0.valueChanged.connect(self._on_smith_preview_changed)
+        self._smith_feed_vf.valueChanged.connect(self._on_smith_preview_changed)
+        feed_layout = QHBoxLayout(self._smith_feed_group)
+        feed_layout.addWidget(self._smith_feed_length_label)
+        feed_layout.addWidget(self._smith_feed_length)
+        feed_layout.addWidget(self._smith_feed_z0_label)
+        feed_layout.addWidget(self._smith_feed_z0)
+        feed_layout.addWidget(self._smith_feed_vf_label)
+        feed_layout.addWidget(self._smith_feed_vf)
+        feed_layout.addStretch(1)
+
+        self._smith_match_group = QGroupBox(self._smith_tab)
+        self._smith_match_group.setCheckable(True)
+        self._smith_match_group.setChecked(False)
+        self._smith_match_topology = QComboBox(self._smith_match_group)
+        for key, value in (
+            ("smith.match.l", MatchingPreviewTopology.L.value),
+            ("smith.match.pi", MatchingPreviewTopology.PI.value),
+            ("smith.match.t", MatchingPreviewTopology.T.value),
+        ):
+            self._smith_match_topology.addItem(translator.t(key), value)
+        self._smith_match_q = QDoubleSpinBox(self._smith_match_group)
+        self._smith_match_q.setRange(0.0, 100.0)
+        self._smith_match_q.setDecimals(2)
+        self._smith_match_q.setSingleStep(0.5)
+        self._smith_match_q.setValue(0.0)
+        self._smith_match_q.setSuffix(" Q")
+        self._smith_match_topology_label = QLabel(self._smith_match_group)
+        self._smith_match_q_label = QLabel(self._smith_match_group)
+        self._smith_match_status = QLabel(self._smith_match_group)
+        self._smith_match_status.setWordWrap(True)
+        self._smith_match_group.toggled.connect(self._on_smith_matching_toggled)
+        self._smith_match_topology.currentIndexChanged.connect(self._on_smith_matching_changed)
+        self._smith_match_q.valueChanged.connect(self._on_smith_matching_changed)
+        match_layout = QHBoxLayout(self._smith_match_group)
+        match_layout.addWidget(self._smith_match_topology_label)
+        match_layout.addWidget(self._smith_match_topology)
+        match_layout.addWidget(self._smith_match_q_label)
+        match_layout.addWidget(self._smith_match_q)
+        match_layout.addWidget(self._smith_match_status, 1)
+
         smith_controls = QHBoxLayout()
         smith_controls.addWidget(self._smith_plane_label)
         smith_controls.addWidget(self._smith_plane)
@@ -235,9 +332,12 @@ class ResultsView(QWidget):
         smith_layout = QVBoxLayout(self._smith_tab)
         smith_layout.setContentsMargins(0, 0, 0, 0)
         smith_layout.addLayout(smith_controls)
+        smith_layout.addWidget(self._smith_feed_group)
+        smith_layout.addWidget(self._smith_match_group)
         smith_layout.addWidget(self._smith_view, 1)
         smith_layout.addLayout(smith_exports)
         self._set_smith_controls_enabled(False)
+        self._update_smith_matching_q_enabled()
 
         self._sources_tab = QWidget(self)
         self._sources_table = QTableWidget(0, 8, self._sources_tab)
@@ -847,6 +947,8 @@ class ResultsView(QWidget):
             self._currents_frequency.setCurrentIndex(0)
         self._populate_cut_values()
         self._render()
+        if self._smith_match_group.isChecked():
+            self._on_smith_preview_changed()
 
     def _pattern_entries(
         self,
@@ -1042,8 +1144,26 @@ class ResultsView(QWidget):
                 0,
                 self._translator.t("smith.measurement.none"),
             )
+        self._smith_feed_group.setTitle(self._translator.t("smith.feed_group"))
+        self._smith_feed_length_label.setText(self._translator.t("smith.feed_length"))
+        self._smith_feed_z0_label.setText(self._translator.t("smith.feed_z0"))
+        self._smith_feed_vf_label.setText(self._translator.t("smith.feed_vf"))
+        self._smith_match_group.setTitle(self._translator.t("smith.match_group"))
+        self._smith_match_topology_label.setText(self._translator.t("smith.match_topology"))
+        self._smith_match_q_label.setText(self._translator.t("smith.match_q"))
+        for topology, key in (
+            (MatchingPreviewTopology.L.value, "smith.match.l"),
+            (MatchingPreviewTopology.PI.value, "smith.match.pi"),
+            (MatchingPreviewTopology.T.value, "smith.match.t"),
+        ):
+            index = self._smith_match_topology.findData(topology)
+            if index >= 0:
+                self._smith_match_topology.setItemText(
+                    index,
+                    self._translator.t(key),
+                )
         self._smith_view.retranslate()
-        self._render_smith()
+        self._on_smith_preview_changed()
         self._band_label.setText(self._translator.t("band.table.band"))
         self._bands_table.setHorizontalHeaderLabels(
             [
@@ -1204,6 +1324,16 @@ class ResultsView(QWidget):
             (self._smith_export_csv, "smith.export_csv"),
         ):
             apply_help(button, self._translator, key)
+        for widget, key in (
+            (self._smith_feed_group, "smith.feed_group"),
+            (self._smith_feed_length, "smith.feed_length"),
+            (self._smith_feed_z0, "smith.feed_z0"),
+            (self._smith_feed_vf, "smith.feed_vf"),
+            (self._smith_match_group, "smith.match_group"),
+            (self._smith_match_topology, "smith.match_topology"),
+            (self._smith_match_q, "smith.match_q"),
+        ):
+            apply_help(widget, self._translator, key)
         for control, key in (
             (self._band_selector, "band.selector"),
             (self._pattern_frequency, "pattern.frequency"),
@@ -1335,18 +1465,42 @@ class ResultsView(QWidget):
                 z0=f"{result.spec.reference_impedance_ohm:g}",
                 measured_z0=f"{measurement.reference_impedance_ohm:g}",
             )
+        preview_points: tuple[SmithPoint, ...] = ()
+        preview_label = ""
+        if self._smith_feed_group.isChecked():
+            source_points = points
+            if plane is not SmithPlane.ANTENNA and SmithPlane.ANTENNA.value in available:
+                source_points = smith_points_for_result(result, SmithPlane.ANTENNA)
+            preview_line = FeedLine(
+                characteristic_impedance_ohm=self._smith_feed_z0.value(),
+                length_m=self._smith_feed_length_field.value_m(),
+                velocity_factor=self._smith_feed_vf.value(),
+            )
+            preview_points = transform_with_feed_line(source_points, preview_line)
+            preview_label = self._translator.t("smith.preview.feed_line")
+        elif self._smith_match_group.isChecked() and self._smith_preview_network is not None:
+            preview_points = transform_with_matching_network(
+                points,
+                self._smith_preview_network,
+            )
+            preview_label = self._translator.t("smith.preview.matching")
         self._smith_view.set_data(
             points,
             measured=measured,
+            preview=preview_points,
             reference_impedance_ohm=result.spec.reference_impedance_ohm,
             plane_label=self._smith_plane.currentText(),
+            preview_label=preview_label,
             measured_note=measured_note,
         )
         selected_frequency = self._smith_frequency.currentData()
         self._smith_view.set_selected_frequency(
             float(selected_frequency) if isinstance(selected_frequency, (int, float)) else None
         )
-        self._smith_note.setText(self._translator.t(f"smith.note.{plane.value}"))
+        note = self._translator.t(f"smith.note.{plane.value}")
+        if self._smith_feed_group.isChecked():
+            note = f"{note} {self._translator.t('smith.feed_note')}"
+        self._smith_note.setText(note)
         self._set_smith_controls_enabled(True)
         has_points = bool(points)
         self._smith_export_png.setEnabled(has_points)
@@ -1358,6 +1512,8 @@ class ResultsView(QWidget):
             self._smith_plane,
             self._smith_frequency,
             self._smith_measurement,
+            self._smith_feed_group,
+            self._smith_match_group,
             self._smith_export_png,
             self._smith_export_svg,
             self._smith_export_csv,
@@ -1368,11 +1524,167 @@ class ResultsView(QWidget):
         measurement = self._smith_measurement.currentData()
         return measurement if isinstance(measurement, Measurement) else None
 
+    def _on_smith_plane_changed(self, _index: int) -> None:
+        self._on_smith_preview_changed()
+
     def _on_smith_frequency_changed(self, _index: int) -> None:
-        frequency = self._smith_frequency.currentData()
-        self._smith_view.set_selected_frequency(
-            float(frequency) if isinstance(frequency, (int, float)) else None
+        self._on_smith_preview_changed()
+
+    def _on_smith_feed_toggled(self, checked: bool) -> None:
+        if checked and self._smith_match_group.isChecked():
+            self._smith_match_group.setChecked(False)
+        self._on_smith_preview_changed()
+
+    def _on_smith_matching_toggled(self, checked: bool) -> None:
+        if checked and self._smith_feed_group.isChecked():
+            self._smith_feed_group.setChecked(False)
+        self._update_smith_matching_q_enabled()
+        self._on_smith_preview_changed()
+
+    def _on_smith_matching_changed(self, *_args: object) -> None:
+        self._update_smith_matching_q_enabled()
+        self._on_smith_preview_changed()
+
+    def _on_smith_preview_changed(self, *_args: object) -> None:
+        self._design_smith_matching_preview()
+        self._render_smith()
+
+    def _update_smith_matching_q_enabled(self) -> None:
+        topology = self._smith_match_topology.currentData()
+        self._smith_match_q.setEnabled(
+            self._smith_match_group.isChecked() and topology != MatchingPreviewTopology.L.value
         )
+
+    def _design_smith_matching_preview(self) -> None:
+        self._smith_preview_network = None
+        self._smith_match_status.clear()
+        if not self._smith_match_group.isChecked():
+            return
+        result = self._result
+        points = self._smith_base_points()
+        selected = self._selected_smith_point(points)
+        if result is None or selected is None:
+            self._smith_match_status.setText(self._translator.t("smith.match.no_data"))
+            return
+        topology = MatchingPreviewTopology(
+            self._smith_match_topology.currentData() or MatchingPreviewTopology.L.value
+        )
+        loaded_q = self._smith_match_q.value()
+        network = design_preview_network(
+            selected.impedance_ohm,
+            selected.frequency_hz,
+            topology,
+            source_impedance_ohm=result.spec.reference_impedance_ohm,
+            loaded_q=loaded_q if loaded_q > 0.0 else None,
+        )
+        if (
+            network is not None
+            and loaded_q > 0.0
+            and isinstance(network, (LNetwork, PiNetwork, TNetwork))
+        ):
+            network = replace(network, q_factor=loaded_q)
+        self._smith_preview_network = network
+        if network is None:
+            self._smith_match_status.setText(self._translator.t("smith.match.no_solution"))
+            return
+        summary = self._matching_summary(network)
+        if loaded_q > 0.0:
+            summary = (
+                f"{summary} · {self._translator.t('smith.match.q_summary', q=f'{loaded_q:g}')}"
+            )
+        self._smith_match_status.setText(summary)
+
+    def _smith_base_points(self) -> tuple[SmithPoint, ...]:
+        result = self._result
+        if result is None or not result.frequencies:
+            return ()
+        plane = SmithPlane(self._smith_plane.currentData() or SmithPlane.SIMULATED.value)
+        return smith_points_for_result(result, plane)
+
+    def _selected_smith_point(
+        self,
+        points: Sequence[SmithPoint],
+    ) -> SmithPoint | None:
+        if not points:
+            return None
+        frequency = self._smith_frequency.currentData()
+        if isinstance(frequency, (int, float)):
+            return min(
+                points,
+                key=lambda point: abs(point.frequency_hz - float(frequency)),
+            )
+        return points[0]
+
+    def _matching_summary(self, network: MatchingNetwork) -> str:
+        if isinstance(network, LNetwork):
+            side = self._translator.t(
+                "smith.match.input" if network.shunt_at_input else "smith.match.output"
+            )
+            return self._translator.t(
+                "smith.match.summary_l",
+                series=self._component_label(
+                    network.series_inductance_h,
+                    network.series_capacitance_f,
+                ),
+                shunt=self._component_label(
+                    network.shunt_inductance_h,
+                    network.shunt_capacitance_f,
+                ),
+                side=side,
+            )
+        if isinstance(network, PiNetwork):
+            return self._translator.t(
+                "smith.match.summary_pi",
+                input=self._component_label(
+                    network.input_shunt_inductance_h,
+                    network.input_shunt_capacitance_f,
+                ),
+                series=self._component_label(
+                    network.series_inductance_h,
+                    network.series_capacitance_f,
+                ),
+                output=self._component_label(
+                    network.output_shunt_inductance_h,
+                    network.output_shunt_capacitance_f,
+                ),
+            )
+        if isinstance(network, TNetwork):
+            return self._translator.t(
+                "smith.match.summary_t",
+                input=self._component_label(
+                    network.input_series_inductance_h,
+                    network.input_series_capacitance_f,
+                ),
+                shunt=self._component_label(
+                    network.shunt_inductance_h,
+                    network.shunt_capacitance_f,
+                ),
+                output=self._component_label(
+                    network.output_series_inductance_h,
+                    network.output_series_capacitance_f,
+                ),
+            )
+        return ""
+
+    def _component_label(self, inductance_h: float, capacitance_f: float) -> str:
+        if inductance_h > 0.0:
+            return f"{inductance_h * 1e6:.3g} {self._translator.t('smith.unit_uh')}"
+        if capacitance_f > 0.0:
+            return f"{capacitance_f * 1e12:.3g} {self._translator.t('smith.unit_pf')}"
+        return self._translator.t("smith.match.none_component")
+
+    def set_display_units(self, display_units: DisplayUnits) -> None:
+        value_m = self._smith_feed_length_field.value_m()
+        self._display_units = display_units
+        self._smith_feed_length_field = LengthField(
+            self._smith_feed_length,
+            self._smith_feed_length_spec,
+            self._translator,
+            display_units,
+        )
+        self._smith_feed_length_field.configure(value_m)
+        if self._result is not None:
+            self._on_smith_preview_changed()
 
     def _export_smith_image(self, suffix: str) -> None:
         if not self._smith_view.simulated_points():
@@ -1424,6 +1736,7 @@ class ResultsView(QWidget):
         for series, points in (
             ("simulated", self._smith_view.simulated_points()),
             ("measured", self._smith_view.measured_points()),
+            ("preview", self._smith_view.preview_points()),
         ):
             for point in points:
                 lines.append(

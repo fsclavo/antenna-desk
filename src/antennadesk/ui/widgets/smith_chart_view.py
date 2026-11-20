@@ -40,11 +40,13 @@ class SmithChartView(QWidget):
         self._translator = translator
         self._simulated: tuple[SmithPoint, ...] = ()
         self._measured: tuple[SmithPoint, ...] = ()
+        self._preview: tuple[SmithPoint, ...] = ()
         self._reference_impedance_ohm = 50.0
         self._plane_label = ""
+        self._preview_label = ""
         self._measured_note = ""
         self._selected_frequency_hz: float | None = None
-        self._hover: tuple[bool, int] | None = None
+        self._hover: tuple[int, int] | None = None
         self._colors = theme_colors(self.palette())
         self.setMouseTracking(True)
         self.setMinimumSize(260, 260)
@@ -65,14 +67,18 @@ class SmithChartView(QWidget):
         simulated: Sequence[SmithPoint],
         *,
         measured: Sequence[SmithPoint] = (),
+        preview: Sequence[SmithPoint] = (),
         reference_impedance_ohm: float = 50.0,
         plane_label: str = "",
+        preview_label: str = "",
         measured_note: str = "",
     ) -> None:
         self._simulated = tuple(simulated)
         self._measured = tuple(measured)
+        self._preview = tuple(preview)
         self._reference_impedance_ohm = reference_impedance_ohm
         self._plane_label = plane_label
+        self._preview_label = preview_label
         self._measured_note = measured_note
         if self._selected_frequency_hz is None and self._simulated:
             self._selected_frequency_hz = self._simulated[0].frequency_hz
@@ -89,6 +95,9 @@ class SmithChartView(QWidget):
     def measured_points(self) -> tuple[SmithPoint, ...]:
         return self._measured
 
+    def preview_points(self) -> tuple[SmithPoint, ...]:
+        return self._preview
+
     def retranslate(self) -> None:
         self.update()
 
@@ -101,6 +110,7 @@ class SmithChartView(QWidget):
     def clear(self) -> None:
         self._simulated = ()
         self._measured = ()
+        self._preview = ()
         self._selected_frequency_hz = None
         self._hover = None
         self.update()
@@ -192,6 +202,7 @@ class SmithChartView(QWidget):
         self._draw_grid(painter, center, radius)
         self._draw_measured(painter, center, radius)
         self._draw_simulated(painter, center, radius)
+        self._draw_preview(painter, center, radius)
         self._draw_target(painter, center, radius)
         self._draw_selected(painter, center, radius)
         self._draw_hover(painter, center, radius)
@@ -283,6 +294,21 @@ class SmithChartView(QWidget):
             screen = self._to_screen(point.gamma, center, radius)
             painter.drawEllipse(screen, 2.0, 2.0)
 
+    def _draw_preview(self, painter: QPainter, center: QPointF, radius: float) -> None:
+        if not self._preview:
+            return
+        points = _decimated(self._preview, _DRAW_LIMIT)
+        if len(points) >= 2:
+            painter.setPen(QPen(self._colors.pattern, 1.8, Qt.PenStyle.DashDotLine))
+            painter.drawPolyline(
+                QPolygonF([self._to_screen(point.gamma, center, radius) for point in points])
+            )
+        painter.setPen(QPen(self._colors.pattern, 1.0))
+        painter.setBrush(self._colors.pattern)
+        for point in points:
+            screen = self._to_screen(point.gamma, center, radius)
+            painter.drawEllipse(screen, 2.2, 2.2)
+
     def _draw_target(self, painter: QPainter, center: QPointF, radius: float) -> None:
         target = self._to_screen(complex(0.0, 0.0), center, radius)
         painter.setPen(QPen(self._colors.feed, 1.2))
@@ -316,8 +342,11 @@ class SmithChartView(QWidget):
     def _draw_hover(self, painter: QPainter, center: QPointF, radius: float) -> None:
         if self._hover is None:
             return
-        measured, index = self._hover
-        points = self._measured if measured else self._simulated
+        series_index, index = self._hover
+        series = (self._simulated, self._measured, self._preview)
+        if not 0 <= series_index < len(series):
+            return
+        points = series[series_index]
         if not 0 <= index < len(points):
             return
         point = points[index]
@@ -365,9 +394,20 @@ class SmithChartView(QWidget):
             painter.drawLine(QPointF(x, y), QPointF(x + 18.0, y))
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
-                QRectF(x + 24.0, y - 8.0, 130.0, 16.0),
+                QRectF(x + 24.0, y - 8.0, 160.0, 16.0),
                 Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
                 self._translator.t("smith.legend_measured"),
+            )
+        if self._preview:
+            y += 15.0
+            painter.setPen(QPen(self._colors.pattern, 1.6, Qt.PenStyle.DashDotLine))
+            painter.drawLine(QPointF(x, y), QPointF(x + 18.0, y))
+            painter.setPen(self._colors.secondary_text)
+            label = self._preview_label or self._translator.t("smith.legend_preview")
+            painter.drawText(
+                QRectF(x + 24.0, y - 8.0, 200.0, 16.0),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                label,
             )
         summary = self._translator.t(
             "smith.summary",
@@ -428,19 +468,19 @@ class SmithChartView(QWidget):
             key=lambda point: abs(point.frequency_hz - selected),
         )
 
-    def _nearest(self, gamma: complex, rect: QRectF) -> tuple[bool, int] | None:
+    def _nearest(self, gamma: complex, rect: QRectF) -> tuple[int, int] | None:
         radius = self._radius(rect)
         center = rect.center()
         target = self._to_screen(gamma, center, radius)
-        best: tuple[bool, int] | None = None
+        best: tuple[int, int] | None = None
         best_distance = _HOVER_RADIUS_PX
-        for measured, points in ((False, self._simulated), (True, self._measured)):
+        for series_index, points in enumerate((self._simulated, self._measured, self._preview)):
             for index, point in enumerate(points):
                 screen = self._to_screen(point.gamma, center, radius)
                 distance = math.hypot(screen.x() - target.x(), screen.y() - target.y())
                 if distance <= best_distance:
                     best_distance = distance
-                    best = (measured, index)
+                    best = (series_index, index)
         return best
 
     def _hover_text(self, point: SmithPoint) -> str:

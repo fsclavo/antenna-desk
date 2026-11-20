@@ -15,6 +15,12 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from ..antennas.feed_line import FeedLine
+from ..antennas.matching_network import (
+    MatchingNetwork,
+    design_l_network,
+    design_pi_network,
+    design_t_network,
+)
 from ..common.reflection import calculate_reflection_coefficient, calculate_swr
 from ..common.units import ensure_positive
 from ..measurement import Measurement
@@ -27,6 +33,14 @@ class SmithPlane(StrEnum):
     SIMULATED = "simulated"
     ANTENNA = "antenna"
     FEED_LINE = "feed_line"
+
+
+class MatchingPreviewTopology(StrEnum):
+    """Matching-network topology used by the Smith preview."""
+
+    L = "l"
+    PI = "pi"
+    T = "t"
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,6 +178,59 @@ def transform_with_feed_line(
             point.reference_impedance_ohm,
         )
         for point in points
+    )
+
+
+def transform_with_matching_network(
+    points: Sequence[SmithPoint],
+    network: MatchingNetwork,
+) -> tuple[SmithPoint, ...]:
+    """Return a preview locus after a matching network."""
+
+    return tuple(
+        smith_point(
+            point.frequency_hz,
+            network.input_impedance(point.impedance_ohm, point.frequency_hz),
+            point.reference_impedance_ohm,
+        )
+        for point in points
+    )
+
+
+def design_preview_network(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    topology: MatchingPreviewTopology | str,
+    *,
+    source_impedance_ohm: float = 50.0,
+    loaded_q: float | None = None,
+) -> MatchingNetwork | None:
+    """Design a lossless preview network for the Smith overlay.
+
+    The returned network is a starting design, not an optimized or validated
+    construction.  ``loaded_q`` applies only to Pi and T topologies; a value of
+    zero or ``None`` lets the domain choose the minimum practical Q.
+    """
+
+    selected = MatchingPreviewTopology(topology)
+    if selected is MatchingPreviewTopology.L:
+        return design_l_network(
+            load_impedance_ohm,
+            frequency_hz,
+            source_impedance_ohm=source_impedance_ohm,
+        )
+    if selected is MatchingPreviewTopology.PI:
+        return design_pi_network(
+            load_impedance_ohm,
+            frequency_hz,
+            source_impedance_ohm=source_impedance_ohm,
+            loaded_q=loaded_q,
+        )
+    return design_t_network(
+        load_impedance_ohm,
+        frequency_hz,
+        source_impedance_ohm=source_impedance_ohm,
+        loaded_q=loaded_q,
     )
 
 

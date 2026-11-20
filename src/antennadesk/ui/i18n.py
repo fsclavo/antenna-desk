@@ -2349,6 +2349,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Export the simulated and measured Smith points as CSV.",
         Language.SPANISH: "Exportá los puntos simulados y medidos de la carta de Smith como CSV.",
     },
+    "help.smith.feed_group": {
+        Language.ENGLISH: "Optional lossless feed-line preview applied to the antenna feedpoint.",
+        Language.SPANISH: "Vista previa opcional sin pérdidas de la línea aplicada al punto de alimentación.",
+    },
+    "help.smith.feed_length": {
+        Language.ENGLISH: "Preview feed-line length; it does not change the project feed line.",
+        Language.SPANISH: "Longitud de la línea de vista previa; no cambia la línea del proyecto.",
+    },
+    "help.smith.feed_z0": {
+        Language.ENGLISH: "Preview feed-line characteristic impedance.",
+        Language.SPANISH: "Impedancia característica de la línea de vista previa.",
+    },
+    "help.smith.feed_vf": {
+        Language.ENGLISH: "Preview feed-line velocity factor.",
+        Language.SPANISH: "Factor de velocidad de la línea de vista previa.",
+    },
+    "help.smith.match_group": {
+        Language.ENGLISH: "Optional matching-network preview designed from the marker point.",
+        Language.SPANISH: "Vista previa opcional de una red de adaptación diseñada desde el marcador.",
+    },
+    "help.smith.match_topology": {
+        Language.ENGLISH: "Preview network topology: L, Pi, or T.",
+        Language.SPANISH: "Topología de la red de vista previa: L, Pi o T.",
+    },
+    "help.smith.match_q": {
+        Language.ENGLISH: "Design Q for Pi or T; zero lets the domain choose a practical value.",
+        Language.SPANISH: "Q de diseño para Pi o T; cero deja que el dominio elija un valor práctico.",
+    },
     "help.pattern.frequency": {
         Language.ENGLISH: "Snapshot frequency used for the pattern.",
         Language.SPANISH: "Frecuencia de captura usada para el patrón.",
@@ -16667,6 +16695,111 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "smith.export_filter_csv": {
         Language.ENGLISH: "CSV file (*.csv)",
         Language.SPANISH: "Archivo CSV (*.csv)",
+    },
+    "smith.feed_group": {
+        Language.ENGLISH: "Feed-line preview",
+        Language.SPANISH: "Vista previa de línea de alimentación",
+    },
+    "smith.feed_length": {
+        Language.ENGLISH: "Length",
+        Language.SPANISH: "Longitud",
+    },
+    "smith.feed_z0": {
+        Language.ENGLISH: "Z0",
+        Language.SPANISH: "Z0",
+    },
+    "smith.feed_vf": {
+        Language.ENGLISH: "Velocity factor",
+        Language.SPANISH: "Factor de velocidad",
+    },
+    "smith.feed_note": {
+        Language.ENGLISH: (
+            "Lossless preview applied to the antenna feedpoint; the project feed line is unchanged."
+        ),
+        Language.SPANISH: (
+            "Vista previa sin pérdidas aplicada al punto de alimentación de la "
+            "antena; la línea del proyecto no cambia."
+        ),
+    },
+    "smith.match_group": {
+        Language.ENGLISH: "Matching preview",
+        Language.SPANISH: "Vista previa de adaptación",
+    },
+    "smith.match_topology": {
+        Language.ENGLISH: "Topology",
+        Language.SPANISH: "Topología",
+    },
+    "smith.match_q": {
+        Language.ENGLISH: "Design Q (0 = auto)",
+        Language.SPANISH: "Q de diseño (0 = automática)",
+    },
+    "smith.match.l": {
+        Language.ENGLISH: "L",
+        Language.SPANISH: "L",
+    },
+    "smith.match.pi": {
+        Language.ENGLISH: "Pi",
+        Language.SPANISH: "Pi",
+    },
+    "smith.match.t": {
+        Language.ENGLISH: "T",
+        Language.SPANISH: "T",
+    },
+    "smith.match.input": {
+        Language.ENGLISH: "input",
+        Language.SPANISH: "entrada",
+    },
+    "smith.match.output": {
+        Language.ENGLISH: "output",
+        Language.SPANISH: "salida",
+    },
+    "smith.match.none_component": {
+        Language.ENGLISH: "—",
+        Language.SPANISH: "—",
+    },
+    "smith.match.no_solution": {
+        Language.ENGLISH: "No solution for this topology at the marker.",
+        Language.SPANISH: "Sin solución para esta topología en el marcador.",
+    },
+    "smith.match.no_data": {
+        Language.ENGLISH: "No impedance data to design the network.",
+        Language.SPANISH: "No hay datos de impedancia para diseñar la red.",
+    },
+    "smith.match.summary_l": {
+        Language.ENGLISH: "L: series {series}, shunt {shunt} ({side})",
+        Language.SPANISH: "L: serie {series}, paralelo {shunt} ({side})",
+    },
+    "smith.match.summary_pi": {
+        Language.ENGLISH: "Pi: input {input}, series {series}, output {output}",
+        Language.SPANISH: "Pi: entrada {input}, serie {series}, salida {output}",
+    },
+    "smith.match.summary_t": {
+        Language.ENGLISH: "T: input {input}, shunt {shunt}, output {output}",
+        Language.SPANISH: "T: entrada {input}, paralelo {shunt}, salida {output}",
+    },
+    "smith.match.q_summary": {
+        Language.ENGLISH: "Q {q}",
+        Language.SPANISH: "Q {q}",
+    },
+    "smith.unit_uh": {
+        Language.ENGLISH: "µH",
+        Language.SPANISH: "µH",
+    },
+    "smith.unit_pf": {
+        Language.ENGLISH: "pF",
+        Language.SPANISH: "pF",
+    },
+    "smith.preview.feed_line": {
+        Language.ENGLISH: "Feed-line preview",
+        Language.SPANISH: "Vista previa de línea",
+    },
+    "smith.preview.matching": {
+        Language.ENGLISH: "Matching preview",
+        Language.SPANISH: "Vista previa de adaptación",
+    },
+    "smith.legend_preview": {
+        Language.ENGLISH: "Preview",
+        Language.SPANISH: "Vista previa",
     },
     "plot.pattern": {
         Language.ENGLISH: "Power gain pattern",

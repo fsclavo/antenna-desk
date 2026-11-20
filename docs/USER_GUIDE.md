@@ -1602,10 +1602,20 @@ points are normalized to the display `Z0`; when the measurement's reference
 impedance differs, the tab states both values. The drawing is decimated for
 large sweeps, but the CSV export keeps every computed point.
 
+**Feed-line preview** is a lossless what-if overlay. Set its length,
+characteristic impedance, and velocity factor; it is applied to the antenna
+feedpoint and does not change the project feed line. **Matching preview**
+designs an L, Pi, or T network from the marker point to the display `Z0` and
+shows the component values. For Pi and T, zero design Q lets AntennaDesk choose
+a practical value; a positive Q adds the component-loss model to the preview.
+Only one preview overlay is active at a time. The matching preview is a
+starting design, not an optimized or validated construction; manual component
+entry remains a follow-up.
+
 **PNG...**, **SVG...**, and **CSV...** export the current chart and the
-simulated/measured Smith points. The Smith chart is a presentation of the
-stored impedance; it does not add electromagnetic accuracy or transform the
-simulation result.
+simulated, measured, and preview points. The Smith chart is a presentation of
+the stored impedance and the preview transforms; it does not add
+electromagnetic accuracy or replace a full simulation.
 
 ## Import VNA measurements
 
