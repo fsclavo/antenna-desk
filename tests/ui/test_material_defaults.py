@@ -268,6 +268,7 @@ def test_change_template_same_key_preserves_a_copper_yagi(
 ) -> None:
     from PySide6.QtWidgets import QDialog, QMessageBox
 
+    from antennadesk.ui import catalog as catalog_module
     from antennadesk.ui import main_window as main_window_module
     from antennadesk.ui.dialogs.antenna_catalog_dialog import (
         CATALOG_TYPE_YAGI,
@@ -300,7 +301,7 @@ def test_change_template_same_key_preserves_a_copper_yagi(
             return _yagi_parameters(ALUMINUM)
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(catalog_module, "YagiDialog", FakeYagiDialog)
     monkeypatch.setattr(
         QMessageBox,
         "question",

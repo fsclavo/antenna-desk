@@ -11,6 +11,7 @@ from helpers import wait_for_condition
 from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 
@@ -50,10 +51,10 @@ def test_new_custom_antenna_is_editable_and_simulatable(
         def result_parameters(self) -> CustomAntennaParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "CustomAntennaDialog", FakeCustomDialog)
+    monkeypatch.setattr(catalog_module, "CustomAntennaDialog", FakeCustomDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Custom", True))
 
-    window.new_custom_antenna()
+    window.new_antenna_from_key("custom")
 
     assert window._project is not None
     assert window._project.name == "Custom"

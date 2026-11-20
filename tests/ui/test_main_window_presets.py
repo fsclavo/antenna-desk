@@ -8,6 +8,7 @@ import pytest
 from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 
@@ -39,7 +40,7 @@ def test_new_trap_dipole_creates_a_first_class_design(
         def result_parameters(self) -> TrapDipoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "TrapDipoleDialog", FakeTrapDipoleDialog)
+    monkeypatch.setattr(catalog_module, "TrapDipoleDialog", FakeTrapDipoleDialog)
     monkeypatch.setattr(
         QInputDialog,
         "getText",
@@ -52,7 +53,7 @@ def test_new_trap_dipole_creates_a_first_class_design(
         lambda *args, **kwargs: errors.append(args) or QMessageBox.StandardButton.Ok,
     )
 
-    window.new_trap_dipole_antenna()
+    window.new_antenna_from_key("trap_dipole")
 
     assert window._project is not None
     assert window._project.name == "Trap dipole"
@@ -120,7 +121,7 @@ def test_new_t2fd_creates_a_first_class_design(
         def result_parameters(self) -> T2FDParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "T2FDDialog", FakeT2FDDialog)
+    monkeypatch.setattr(catalog_module, "T2FDDialog", FakeT2FDDialog)
     monkeypatch.setattr(
         QInputDialog,
         "getText",
@@ -133,7 +134,7 @@ def test_new_t2fd_creates_a_first_class_design(
         lambda *args, **kwargs: errors.append(args) or QMessageBox.StandardButton.Ok,
     )
 
-    window.new_t2fd_antenna()
+    window.new_antenna_from_key("t2fd")
 
     assert window._project is not None
     assert window._project.name == "T2FD"
@@ -227,10 +228,10 @@ def test_new_sloper_uses_the_endfed_preset(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(catalog_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Sloper", True))
 
-    window.new_sloper_antenna()
+    window.new_antenna_from_key("sloper")
 
     assert captured["preset"] is EndFedPreset.SLOPER
     assert window._project is not None
@@ -264,10 +265,10 @@ def test_new_g5rv_creates_the_custom_preset_with_a_line(
         def result_parameters(self):
             return parameters
 
-    monkeypatch.setattr(main_window_module, "G5RVDialog", FakeG5RVDialog)
+    monkeypatch.setattr(catalog_module, "G5RVDialog", FakeG5RVDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("G5RV", True))
 
-    window.new_g5rv_antenna()
+    window.new_antenna_from_key("g5rv")
     window._dirty = False
 
     assert window._project is not None
@@ -338,10 +339,10 @@ def test_new_zs6bkw_creates_the_custom_preset_with_a_line(
         def result_parameters(self):
             return parameters
 
-    monkeypatch.setattr(main_window_module, "ZS6BKWDialog", FakeZS6BKWDialog)
+    monkeypatch.setattr(catalog_module, "ZS6BKWDialog", FakeZS6BKWDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("ZS6BKW", True))
 
-    window.new_zs6bkw_antenna()
+    window.new_antenna_from_key("zs6bkw")
 
     assert window._project is not None
     assert window._project.name == "ZS6BKW"
@@ -380,10 +381,10 @@ def test_new_zepp_creates_the_refined_custom_preset(
         def result_parameters(self):
             return parameters
 
-    monkeypatch.setattr(main_window_module, "ZeppDialog", FakeZeppDialog)
+    monkeypatch.setattr(catalog_module, "ZeppDialog", FakeZeppDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Zepp", True))
 
-    window.new_zepp_antenna()
+    window.new_antenna_from_key("zepp")
 
     assert window._project is not None
     assert window._project.name == "Zepp"
@@ -432,10 +433,10 @@ def test_new_doublet_sets_the_project_feed_line(
         def result_feed_line(self) -> FeedLine:
             return line
 
-    monkeypatch.setattr(main_window_module, "DoubletDialog", FakeDoubletDialog)
+    monkeypatch.setattr(catalog_module, "DoubletDialog", FakeDoubletDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Doublet", True))
 
-    window.new_doublet_antenna()
+    window.new_antenna_from_key("doublet")
 
     assert window._project is not None
     assert window._project.name == "Doublet"
@@ -488,7 +489,7 @@ def test_change_template_to_doublet_updates_the_feed_line(
             return line
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "DoubletDialog", FakeDoubletDialog)
+    monkeypatch.setattr(catalog_module, "DoubletDialog", FakeDoubletDialog)
     monkeypatch.setattr(
         QMessageBox,
         "question",
@@ -533,10 +534,10 @@ def test_new_ocfd_creates_a_first_class_design(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(catalog_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
 
-    window.new_ocfd_antenna()
+    window.new_antenna_from_key("ocfd")
 
     assert window._project is not None
     assert window._project.name == "OCFD"
@@ -582,10 +583,10 @@ def test_new_fan_dipole_creates_a_first_class_design(
         def result_parameters(self) -> FanDipoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDipoleDialog)
+    monkeypatch.setattr(catalog_module, "FanDipoleDialog", FakeFanDipoleDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
 
-    window.new_fan_dipole_antenna()
+    window.new_antenna_from_key("fan_dipole")
 
     assert window._project is not None
     assert window._project.name == "Fan"
@@ -625,10 +626,10 @@ def test_new_endfed_creates_a_first_class_design(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(catalog_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
 
-    window.new_endfed_antenna()
+    window.new_antenna_from_key("endfed")
 
     assert window._project is not None
     assert window._project.name == "End-fed"
@@ -669,14 +670,14 @@ def test_new_shortened_endfed_creates_a_loaded_endfed_design(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(catalog_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(
         QInputDialog,
         "getText",
         lambda *args, **kwargs: ("Shortened EFHW", True),
     )
 
-    window.new_shortened_efhw_80_10_antenna()
+    window.new_antenna_from_key("shortened_endfed_80_10")
     window._dirty = False
 
     assert window._project is not None
@@ -721,10 +722,10 @@ def test_new_j_pole_creates_a_first_class_design(
         def result_parameters(self) -> JPoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "JPoleDialog", FakeJPoleDialog)
+    monkeypatch.setattr(catalog_module, "JPoleDialog", FakeJPoleDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("J Pole", True))
 
-    window.new_j_pole_antenna(folded=False)
+    window.new_antenna_from_key("j_pole")
 
     assert window._project is not None
     assert window._project.name == "J Pole"
@@ -1000,10 +1001,10 @@ def test_new_ringo_creates_a_first_class_design(
         def result_parameters(self) -> RingoParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "RingoDialog", FakeRingoDialog)
+    monkeypatch.setattr(catalog_module, "RingoDialog", FakeRingoDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Ringo", True))
 
-    window.new_ringo_antenna()
+    window.new_antenna_from_key("ringo")
 
     assert window._project is not None
     assert window._project.name == "Ringo"
@@ -1040,14 +1041,14 @@ def test_new_scv_templates_use_the_shared_array_editor(
         def result_parameters(self) -> object:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "ScvDialog", FakeScvDialog)
+    monkeypatch.setattr(catalog_module, "ScvDialog", FakeScvDialog)
     monkeypatch.setattr(
         QInputDialog,
         "getText",
         lambda *args, **kwargs: ("Bobtail curtain", True),
     )
 
-    window.new_bobtail_curtain_antenna()
+    window.new_antenna_from_key("bobtail_curtain")
 
     assert window._project is not None
     assert window._project.name == "Bobtail curtain"
@@ -1114,7 +1115,7 @@ def test_change_template_to_delta_and_quad_loop_creates_real_loops(
             )
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
+    monkeypatch.setattr(catalog_module, "BasicAntennaDialog", FakeBasicDialog)
     monkeypatch.setattr(
         QMessageBox,
         "question",
@@ -1159,7 +1160,7 @@ def test_new_delta_and_quad_loop_pass_the_expected_side_count(
             return "quad_loop"
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
+    monkeypatch.setattr(catalog_module, "BasicAntennaDialog", FakeBasicDialog)
     window._dirty = False
 
     window.new_antenna()

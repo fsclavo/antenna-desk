@@ -306,6 +306,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   fitting angular step, the disabled-pattern fallback, and the shared per-band
   step. The main window only presents the budget and stores the pending
   diagnostic. No behavior change.
+- **Catalog and template routing moved out of the main window.**
+  `ui/catalog.py` owns the New Antenna and Change Template dialog tables,
+  including variant keys, presets, feed-line, band-plan, and typed-parameter
+  extraction. The main window keeps the save prompt, project creation, undo
+  history, and template application. No behavior change.
 
 ### Fixed
 

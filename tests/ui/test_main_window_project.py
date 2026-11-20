@@ -17,6 +17,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -89,7 +90,7 @@ def test_new_antenna_from_the_empty_state_creates_a_project(
         return "First antenna", True
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
+    monkeypatch.setattr(catalog_module, "BasicAntennaDialog", FakeBasicDialog)
     monkeypatch.setattr(QInputDialog, "getText", fake_get_text)
 
     window.new_antenna()
@@ -148,10 +149,10 @@ def test_new_template_asks_for_the_project_name_after_the_template(
         suggested.append(str(kwargs["text"]))
         return "My Ringo", True
 
-    monkeypatch.setattr(main_window_module, "RingoDialog", FakeRingoDialog)
+    monkeypatch.setattr(catalog_module, "RingoDialog", FakeRingoDialog)
     monkeypatch.setattr(QInputDialog, "getText", fake_get_text)
 
-    window.new_ringo_antenna()
+    window.new_antenna_from_key("ringo")
 
     assert events == ["template", "name"]
     assert suggested[0].endswith("Ringo")

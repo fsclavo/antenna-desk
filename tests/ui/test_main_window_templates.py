@@ -8,6 +8,7 @@ import pytest
 from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.workflow import WorkflowMode
@@ -127,7 +128,7 @@ def test_new_antenna_uses_the_current_antenna_type(
             return "loop"
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
+    monkeypatch.setattr(catalog_module, "BasicAntennaDialog", FakeBasicDialog)
     window._dirty = False
 
     window.new_antenna()
@@ -170,10 +171,10 @@ def test_new_yagi_creates_a_first_class_design(
         def result_parameters(self) -> YagiParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(catalog_module, "YagiDialog", FakeYagiDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
 
-    window.new_yagi_antenna()
+    window.new_antenna_from_key("yagi")
 
     assert window._project is not None
     assert window._project.name == "Yagi"
@@ -209,10 +210,10 @@ def test_new_vertical_yagi_creates_vertical_wires(
         def result_parameters(self) -> YagiParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(catalog_module, "YagiDialog", FakeYagiDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
 
-    window.new_yagi_antenna()
+    window.new_antenna_from_key("yagi")
 
     assert window._project is not None
     assert window._yagi_form.parameters().polarization is Polarization.VERTICAL
@@ -246,10 +247,10 @@ def test_new_inverted_v_creates_a_first_class_design(
         def result_parameters(self) -> InvertedVParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "InvertedVDialog", FakeInvertedVDialog)
+    monkeypatch.setattr(catalog_module, "InvertedVDialog", FakeInvertedVDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Inv V", True))
 
-    window.new_inverted_v_antenna()
+    window.new_antenna_from_key("inverted_v")
 
     assert window._project is not None
     assert window._project.name == "Inv V"
@@ -284,10 +285,10 @@ def test_new_inverted_l_creates_a_first_class_design(
         def result_parameters(self) -> InvertedLParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "InvertedLDialog", FakeInvertedLDialog)
+    monkeypatch.setattr(catalog_module, "InvertedLDialog", FakeInvertedLDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Inv L", True))
 
-    window.new_inverted_l_antenna()
+    window.new_antenna_from_key("inverted_l")
 
     assert window._project is not None
     assert window._project.name == "Inv L"
@@ -325,10 +326,10 @@ def test_new_magnetic_loop_creates_a_first_class_design(
         def result_parameters(self) -> MagneticLoopParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "MagneticLoopDialog", FakeMagneticLoopDialog)
+    monkeypatch.setattr(catalog_module, "MagneticLoopDialog", FakeMagneticLoopDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Mag loop", True))
 
-    window.new_magnetic_loop_antenna()
+    window.new_antenna_from_key("magnetic_loop")
 
     assert window._project is not None
     assert window._project.name == "Mag loop"
@@ -391,7 +392,7 @@ def test_change_template_replaces_the_current_design(
             return parameters
 
     monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
-    monkeypatch.setattr(main_window_module, "InvertedVDialog", FakeInvertedVDialog)
+    monkeypatch.setattr(catalog_module, "InvertedVDialog", FakeInvertedVDialog)
     monkeypatch.setattr(
         QMessageBox,
         "question",
@@ -441,10 +442,10 @@ def test_new_vertical_creates_a_first_class_design(
         def result_parameters(self) -> VerticalParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
+    monkeypatch.setattr(catalog_module, "VerticalDialog", FakeVerticalDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Vertical", True))
 
-    window.new_vertical_antenna()
+    window.new_antenna_from_key("vertical")
 
     assert window._project is not None
     assert window._project.name == "Vertical"
@@ -483,14 +484,14 @@ def test_new_loaded_vertical_creates_a_design_with_the_loading_coil(
         def result_parameters(self) -> VerticalParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "VerticalDialog", FakeVerticalDialog)
+    monkeypatch.setattr(catalog_module, "VerticalDialog", FakeVerticalDialog)
     monkeypatch.setattr(
         QInputDialog,
         "getText",
         lambda *args, **kwargs: ("Loaded vertical", True),
     )
 
-    window.new_loaded_vertical_antenna()
+    window.new_antenna_from_key("loaded_vertical")
 
     assert window._project is not None
     assert window._project.name == "Loaded vertical"
@@ -530,10 +531,10 @@ def test_new_moxon_creates_a_first_class_design(
         def result_parameters(self) -> MoxonParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(catalog_module, "MoxonDialog", FakeMoxonDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
 
-    window.new_moxon_antenna()
+    window.new_antenna_from_key("moxon")
 
     assert window._project is not None
     assert window._project.name == "Moxon"
@@ -570,10 +571,10 @@ def test_new_vertical_moxon_creates_a_vertical_rectangle(
         def result_parameters(self) -> MoxonParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(catalog_module, "MoxonDialog", FakeMoxonDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
 
-    window.new_moxon_antenna()
+    window.new_antenna_from_key("moxon")
 
     assert window._project is not None
     assert window._moxon_form.parameters() == parameters
@@ -602,10 +603,10 @@ def test_new_moxon_marks_starting_dimensions_pristine(
         def result_parameters(self) -> object:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "MoxonDialog", FakeMoxonDialog)
+    monkeypatch.setattr(catalog_module, "MoxonDialog", FakeMoxonDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Moxon", True))
 
-    window.new_moxon_antenna()
+    window.new_antenna_from_key("moxon")
 
     assert window._moxon_form._starting_state.pristine is True
     window._moxon_form._frequency.setValue(28.5)
@@ -632,10 +633,10 @@ def test_new_yagi_marks_starting_dimensions_pristine(
         def result_parameters(self) -> object:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(catalog_module, "YagiDialog", FakeYagiDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
 
-    window.new_yagi_antenna()
+    window.new_antenna_from_key("yagi")
 
     assert window._yagi_form._starting_state.pristine is True
     cell = window._yagi_form._table.item(1, 2)
@@ -671,11 +672,11 @@ def test_new_quad_beam_reuses_the_active_design_frequency(
         def result_parameters(self) -> QuadBeamParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "QuadBeamDialog", FakeQuadBeamDialog)
+    monkeypatch.setattr(catalog_module, "QuadBeamDialog", FakeQuadBeamDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Quad", True))
     use_parameters(window, parameters)
 
-    window.new_quad_beam_antenna()
+    window.new_antenna_from_key("quad_beam")
 
     assert seen_frequencies
     assert seen_frequencies[0] == pytest.approx(144_000_000.0)

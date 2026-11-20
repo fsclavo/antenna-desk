@@ -9,7 +9,7 @@ ports.
 
 ```text
 presentation
-  ui/app.py, main_window.py, dialogs, widgets, workers, i18n
+  ui/app.py, main_window.py, catalog.py, dialogs, widgets, workers, i18n
   presentation/units.py: Qt-free length formatting shared with reporting
         │
 application

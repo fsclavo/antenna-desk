@@ -117,7 +117,6 @@ from ..domain.antennas.antenna import AntennaModel
 from ..domain.antennas.balun import BalunLoss
 from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import (
-    BiquadKind,
     BiquadParameters,
 )
 from ..domain.antennas.custom import CustomAntennaParameters
@@ -161,7 +160,7 @@ from ..domain.antennas.ocfd import OCFDParameters
 from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
-from ..domain.antennas.scv import ScvKind, ScvParameters
+from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -255,56 +254,13 @@ from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
+from .catalog import CatalogContext, change_template_selection, new_antenna_selection
 from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
 from .dialogs.antenna_catalog_dialog import (
-    CATALOG_TYPE_BEVERAGE,
-    CATALOG_TYPE_BIQUAD,
-    CATALOG_TYPE_BOBTAIL_CURTAIN,
-    CATALOG_TYPE_CUSTOM,
-    CATALOG_TYPE_DELTA_LOOP,
-    CATALOG_TYPE_DISCONE,
-    CATALOG_TYPE_DOUBLE_BIQUAD,
-    CATALOG_TYPE_DOUBLET,
-    CATALOG_TYPE_ENDFED,
-    CATALOG_TYPE_FAN_DIPOLE,
-    CATALOG_TYPE_FOLDED_DIPOLE,
-    CATALOG_TYPE_G5RV,
-    CATALOG_TYPE_HALF_SQUARE,
-    CATALOG_TYPE_HEXBEAM,
-    CATALOG_TYPE_INVERTED_L,
-    CATALOG_TYPE_INVERTED_V,
-    CATALOG_TYPE_J_POLE,
-    CATALOG_TYPE_LOADED_DIPOLE,
-    CATALOG_TYPE_LOADED_VERTICAL,
-    CATALOG_TYPE_LOG_PERIODIC,
-    CATALOG_TYPE_LOOP,
-    CATALOG_TYPE_MAGNETIC_LOOP,
-    CATALOG_TYPE_MOXON,
-    CATALOG_TYPE_OCFD,
-    CATALOG_TYPE_PHASED_VERTICAL,
-    CATALOG_TYPE_QUAD_BEAM,
-    CATALOG_TYPE_QUAD_LOOP,
-    CATALOG_TYPE_RANDOM_WIRE,
-    CATALOG_TYPE_RINGO,
-    CATALOG_TYPE_SHORTENED_ENDFED_40_10,
-    CATALOG_TYPE_SHORTENED_ENDFED_80_10,
-    CATALOG_TYPE_SLIM_JIM,
-    CATALOG_TYPE_SLOPER,
-    CATALOG_TYPE_T2FD,
-    CATALOG_TYPE_TRAP_DIPOLE,
-    CATALOG_TYPE_TRAP_YAGI,
-    CATALOG_TYPE_VERTICAL,
-    CATALOG_TYPE_WIRE_DIPOLE,
-    CATALOG_TYPE_YAGI,
-    CATALOG_TYPE_ZEPP,
-    CATALOG_TYPE_ZS6BKW,
     AntennaCatalogDialog,
 )
 from .dialogs.balun_loss_dialog import BalunLossDialog
 from .dialogs.band_analysis_dialog import BandAnalysisDialog
-from .dialogs.basic_antenna_dialog import BasicAntennaDialog
-from .dialogs.beverage_dialog import BeverageDialog
-from .dialogs.biquad_dialog import BiquadDialog
 from .dialogs.bom_costs_dialog import BomCostsDialog
 from .dialogs.comparison_dialog import ComparisonDialog
 from .dialogs.component_calculator_dialog import (
@@ -316,65 +272,47 @@ from .dialogs.construction_record_dialog import ConstructionRecordDialog
 from .dialogs.convergence_dialog import ConvergenceDialog
 from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
-from .dialogs.discone_dialog import DisconeDialog
-from .dialogs.doublet_dialog import DoubletDialog
 from .dialogs.element_optimization_dialog import (
     ElementOptimizationBand,
     ElementOptimizationDialog,
     ElementOptimizationVariable,
 )
-from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.family_optimization_dialog import (
     BandPlanSource,
     FamilyOptimizationDialog,
 )
-from .dialogs.fan_dipole_dialog import FanDipoleDialog
 from .dialogs.feed_chain_dialog import FeedChainDialog
 from .dialogs.feed_connection_dialog import FeedConnectionDialog
 from .dialogs.feed_line_dialog import FeedLineDialog
-from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.guided_experiments_dialog import GuidedExperimentsDialog
-from .dialogs.hexbeam_dialog import HexbeamDialog
 from .dialogs.installation_profile_dialog import InstallationProfileDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
 from .dialogs.inverted_v_dialog import InvertedVDialog
-from .dialogs.j_pole_dialog import JPoleDialog
 from .dialogs.journal_dialog import JournalDialog
 from .dialogs.live_tuning_dialog import LiveTuningDialog
-from .dialogs.loaded_dipole_dialog import LoadedDipoleDialog
 from .dialogs.loads_dialog import LoadsDialog
-from .dialogs.log_periodic_dialog import LogPeriodicDialog
 from .dialogs.magnetic_loop_dialog import MagneticLoopDialog
 from .dialogs.matching_network_dialog import MatchingNetworkDialog
 from .dialogs.materials_reference_dialog import MaterialsReferenceDialog
 from .dialogs.measurement_comparison_dialog import MeasurementComparisonDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.measurement_sessions_dialog import MeasurementSessionsDialog
-from .dialogs.moxon_dialog import MoxonDialog
 from .dialogs.ocfd_dialog import OCFDDialog
 from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.parameter_sweep_dialog import ParameterSweepDialog
-from .dialogs.phased_vertical_dialog import PhasedVerticalDialog
 from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.preflight_dialog import PreflightDialog
-from .dialogs.quad_beam_dialog import QuadBeamDialog
 from .dialogs.reference_library_dialog import ReferenceLibraryDialog
-from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.robustness_dialog import RobustnessDialog
 from .dialogs.scale_frequency_dialog import ScaleFrequencyDialog
 from .dialogs.scv_dialog import ScvDialog
 from .dialogs.synthesis_dialog import SynthesisDialog
-from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
-from .dialogs.trap_dipole_dialog import TrapDipoleDialog
-from .dialogs.trap_yagi_dialog import TrapYagiDialog
 from .dialogs.tuner_match_dialog import TunerMatchDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.vna_mapping_dialog import VnaMappingDialog
 from .dialogs.yagi_dialog import YagiDialog
-from .dialogs.zepp_dialog import ZeppDialog
-from .dialogs.zs6bkw_dialog import ZS6BKWDialog
 from .help import apply_help
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
@@ -4703,383 +4641,6 @@ class MainWindow(QMainWindow):
         elif isinstance(parameters, MoxonParameters):
             self._moxon_form.mark_starting_dimensions_pristine()
 
-    def new_custom_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = CustomAntennaDialog(
-            self._translator,
-            self._unit_system,
-            parent=self,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Custom antenna",
-        )
-
-    def new_moxon_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = MoxonDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Moxon",
-        )
-
-    def new_yagi_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = YagiDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Yagi",
-        )
-
-    def new_ringo_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = RingoDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Ringo",
-        )
-
-    def new_scv_antenna(self, *, kind: ScvKind) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = ScvDialog(self._translator, self._unit_system, self, kind=kind)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=kind.template_name,
-        )
-
-    def new_half_square_antenna(self) -> None:
-        self.new_scv_antenna(kind=ScvKind.HALF_SQUARE)
-
-    def new_bobtail_curtain_antenna(self) -> None:
-        self.new_scv_antenna(kind=ScvKind.BOBTAIL_CURTAIN)
-
-    def new_biquad_antenna(self, *, kind: BiquadKind) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = BiquadDialog(self._translator, self._unit_system, self, kind=kind)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=kind.template_name,
-        )
-
-    def new_single_biquad_antenna(self) -> None:
-        self.new_biquad_antenna(kind=BiquadKind.SINGLE)
-
-    def new_double_biquad_antenna(self) -> None:
-        self.new_biquad_antenna(kind=BiquadKind.DOUBLE)
-
-    def new_beverage_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = BeverageDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Beverage",
-        )
-
-    def new_loaded_dipole_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = LoadedDipoleDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_phased_vertical_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = PhasedVerticalDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_quad_beam_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        frequency_hz = None
-        if self._project is not None and self._design_id is not None:
-            frequency_hz = self._project.design_by_id(self._design_id).parameters.frequency_hz
-        dialog = QuadBeamDialog(
-            self._translator,
-            self._unit_system,
-            self,
-            frequency_hz=frequency_hz,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_log_periodic_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = LogPeriodicDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_discone_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = DisconeDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_trap_yagi_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = TrapYagiDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_hexbeam_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = HexbeamDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=dialog.result_parameters().template_name,
-        )
-
-    def new_j_pole_antenna(self, *, folded: bool) -> None:
-        if not self._maybe_save_changes():
-            return
-        default_name = "Slim Jim" if folded else "J Pole"
-        dialog = JPoleDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        parameters = dialog.result_parameters()
-        if folded:
-            parameters = replace(parameters, folded=True)
-        self._create_project_from_parameters(
-            parameters,
-            default_name=default_name,
-        )
-
-    def new_endfed_antenna(
-        self,
-        *,
-        preset: EndFedPreset = EndFedPreset.STANDARD,
-    ) -> None:
-        if not self._maybe_save_changes():
-            return
-        default_name = {
-            EndFedPreset.STANDARD: "End-fed",
-            EndFedPreset.SLOPER: "Sloper",
-            EndFedPreset.RANDOM_WIRE: "Random wire",
-            EndFedPreset.SHORTENED_80_10: "Shortened EFHW 80-10 m",
-            EndFedPreset.SHORTENED_40_10: "Shortened EFHW 40-20-10 m",
-        }[preset]
-        dialog = EndFedDialog(
-            self._translator,
-            self._unit_system,
-            self,
-            preset=preset,
-            solver=self._solver,
-            project_matching_network=self._matching_network,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=default_name,
-            band_plan=dialog.result_band_plan(),
-        )
-
-    def new_sloper_antenna(self) -> None:
-        self.new_endfed_antenna(preset=EndFedPreset.SLOPER)
-
-    def new_random_wire_antenna(self) -> None:
-        self.new_endfed_antenna(preset=EndFedPreset.RANDOM_WIRE)
-
-    def new_shortened_efhw_80_10_antenna(self) -> None:
-        self.new_endfed_antenna(preset=EndFedPreset.SHORTENED_80_10)
-
-    def new_shortened_efhw_40_10_antenna(self) -> None:
-        self.new_endfed_antenna(preset=EndFedPreset.SHORTENED_40_10)
-
-    def new_g5rv_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = G5RVDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
-            default_name="G5RV",
-        )
-
-    def new_zs6bkw_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = ZS6BKWDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
-            default_name="ZS6BKW",
-        )
-
-    def new_zepp_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = ZeppDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            getattr(dialog, "typed_result_parameters", dialog.result_parameters)(),
-            default_name="Zepp",
-        )
-
-    def new_doublet_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = DoubletDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Doublet",
-            feed_line=dialog.result_feed_line(),
-        )
-
-    def new_fan_dipole_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = FanDipoleDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Fan dipole",
-        )
-
-    def new_trap_dipole_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = TrapDipoleDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Trap dipole",
-        )
-
-    def new_t2fd_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = T2FDDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="T2FD",
-        )
-
-    def new_inverted_v_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = InvertedVDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Inverted V",
-        )
-
-    def new_inverted_l_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = InvertedLDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Inverted L",
-        )
-
-    def new_magnetic_loop_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = MagneticLoopDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Magnetic loop",
-        )
-
-    def new_vertical_antenna(self, *, mobile: bool = False) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = VerticalDialog(
-            self._translator,
-            self._unit_system,
-            self,
-            mobile=mobile,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="Loaded vertical" if mobile else "Vertical",
-        )
-
-    def new_loaded_vertical_antenna(self) -> None:
-        self.new_vertical_antenna(mobile=True)
-
-    def new_ocfd_antenna(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        dialog = OCFDDialog(self._translator, self._unit_system, self)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name="OCFD",
-            band_plan=dialog.result_band_plan(),
-        )
-
     @history_action("history.measurement_sessions")
     def edit_measurement_sessions(self) -> None:
         if self._project is None:
@@ -5873,372 +5434,6 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
 
-    def _parameters_from_catalog(
-        self,
-        selected: str,
-        frequency_hz: float,
-    ) -> AntennaDesignParameters | None:
-        if selected in {
-            CATALOG_TYPE_WIRE_DIPOLE,
-            CATALOG_TYPE_FOLDED_DIPOLE,
-            CATALOG_TYPE_LOOP,
-            CATALOG_TYPE_DELTA_LOOP,
-            CATALOG_TYPE_QUAD_LOOP,
-        }:
-            antenna_type = (
-                CATALOG_TYPE_LOOP
-                if selected in {CATALOG_TYPE_DELTA_LOOP, CATALOG_TYPE_QUAD_LOOP}
-                else selected
-            )
-            initial_sides = {
-                CATALOG_TYPE_DELTA_LOOP: 3,
-                CATALOG_TYPE_QUAD_LOOP: 4,
-            }.get(selected)
-            dialog: Any = BasicAntennaDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                antenna_type=antenna_type,
-                frequency_hz=frequency_hz,
-                initial_sides=initial_sides,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_MOXON:
-            dialog = MoxonDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_YAGI:
-            dialog = YagiDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        if selected == CATALOG_TYPE_RINGO:
-            dialog = RingoDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_LOADED_DIPOLE:
-            dialog = LoadedDipoleDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_PHASED_VERTICAL:
-            dialog = PhasedVerticalDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_QUAD_BEAM:
-            dialog = QuadBeamDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_LOG_PERIODIC:
-            dialog = LogPeriodicDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_DISCONE:
-            dialog = DisconeDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_TRAP_YAGI:
-            dialog = TrapYagiDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_HEXBEAM:
-            dialog = HexbeamDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_BEVERAGE:
-            dialog = BeverageDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {CATALOG_TYPE_BIQUAD, CATALOG_TYPE_DOUBLE_BIQUAD}:
-            biquad_kind = (
-                BiquadKind.SINGLE if selected == CATALOG_TYPE_BIQUAD else BiquadKind.DOUBLE
-            )
-            dialog = BiquadDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                kind=biquad_kind,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {CATALOG_TYPE_HALF_SQUARE, CATALOG_TYPE_BOBTAIL_CURTAIN}:
-            kind = (
-                ScvKind.HALF_SQUARE
-                if selected == CATALOG_TYPE_HALF_SQUARE
-                else ScvKind.BOBTAIL_CURTAIN
-            )
-            dialog = ScvDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                kind=kind,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {CATALOG_TYPE_J_POLE, CATALOG_TYPE_SLIM_JIM}:
-            dialog = JPoleDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            parameters = dialog.result_parameters()
-            if selected == CATALOG_TYPE_SLIM_JIM:
-                parameters = replace(parameters, folded=True)
-            return parameters
-        if selected == CATALOG_TYPE_ENDFED:
-            dialog = EndFedDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-                solver=self._solver,
-                project_matching_network=self._matching_network,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {CATALOG_TYPE_SLOPER, CATALOG_TYPE_RANDOM_WIRE}:
-            preset = (
-                EndFedPreset.SLOPER if selected == CATALOG_TYPE_SLOPER else EndFedPreset.RANDOM_WIRE
-            )
-            dialog = EndFedDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-                preset=preset,
-                solver=self._solver,
-                project_matching_network=self._matching_network,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {
-            CATALOG_TYPE_SHORTENED_ENDFED_80_10,
-            CATALOG_TYPE_SHORTENED_ENDFED_40_10,
-        }:
-            preset = (
-                EndFedPreset.SHORTENED_80_10
-                if selected == CATALOG_TYPE_SHORTENED_ENDFED_80_10
-                else EndFedPreset.SHORTENED_40_10
-            )
-            dialog = EndFedDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                preset=preset,
-                solver=self._solver,
-                project_matching_network=self._matching_network,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_G5RV:
-            dialog = G5RVDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
-        if selected == CATALOG_TYPE_ZS6BKW:
-            dialog = ZS6BKWDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
-        if selected == CATALOG_TYPE_ZEPP:
-            dialog = ZeppDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return getattr(dialog, "typed_result_parameters", dialog.result_parameters)()
-        if selected == CATALOG_TYPE_DOUBLET:
-            dialog = DoubletDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_FAN_DIPOLE:
-            dialog = FanDipoleDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_TRAP_DIPOLE:
-            dialog = TrapDipoleDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_T2FD:
-            dialog = T2FDDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected == CATALOG_TYPE_INVERTED_V:
-            dialog = InvertedVDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        if selected == CATALOG_TYPE_INVERTED_L:
-            dialog = InvertedLDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        if selected == CATALOG_TYPE_MAGNETIC_LOOP:
-            dialog = MagneticLoopDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        if selected == CATALOG_TYPE_OCFD:
-            dialog = OCFDDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                return None
-            return dialog.result_parameters()
-        if selected in {CATALOG_TYPE_VERTICAL, CATALOG_TYPE_LOADED_VERTICAL}:
-            dialog = VerticalDialog(
-                self._translator,
-                self._unit_system,
-                self,
-                frequency_hz=frequency_hz,
-                mobile=selected == CATALOG_TYPE_LOADED_VERTICAL,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        if selected == CATALOG_TYPE_CUSTOM:
-            dialog = CustomAntennaDialog(
-                self._translator,
-                self._unit_system,
-                parent=self,
-                frequency_hz=frequency_hz,
-            )
-            return (
-                dialog.result_parameters() if dialog.exec() == QDialog.DialogCode.Accepted else None
-            )
-        return None
-
     @history_action("history.change_template")
     def change_template(self) -> None:
         if self._project is None or self._design_id is None:
@@ -6257,31 +5452,15 @@ class MainWindow(QMainWindow):
         selected = catalog.selected_key()
         if selected is None:
             return
-        feed_line = None
-        parameters: AntennaDesignParameters | None = None
         try:
-            if selected == CATALOG_TYPE_DOUBLET:
-                dialog = DoubletDialog(
-                    self._translator,
-                    self._unit_system,
-                    self,
-                    frequency_hz=design.parameters.frequency_hz,
-                    feed_line=self._feed_line,
-                )
-                if dialog.exec() != QDialog.DialogCode.Accepted:
-                    return
-                parameters = dialog.parameters()
-                feed_line = dialog.feed_line()
-            else:
-                parameters = self._parameters_from_catalog(
-                    selected,
-                    design.parameters.frequency_hz,
-                )
+            change = change_template_selection(self._catalog_context(), selected)
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return
-        if parameters is None:
+        if change is None:
             return
+        parameters = change.parameters
+        feed_line = change.feed_line
         if (
             selected == catalog_key_for(design.parameters)
             and type(parameters) is type(design.parameters)
@@ -6376,7 +5555,38 @@ class MainWindow(QMainWindow):
             return
         selected = dialog.selected_catalog_key()
         if selected is not None:
-            self._new_antenna_from_key(selected)
+            self.new_antenna_from_key(selected)
+
+    def _catalog_context(self) -> CatalogContext:
+        frequency_hz = None
+        if self._project is not None and self._design_id is not None:
+            frequency_hz = self._project.design_by_id(self._design_id).parameters.frequency_hz
+        return CatalogContext(
+            parent=self,
+            translator=self._translator,
+            unit_system=self._unit_system,
+            solver=self._solver,
+            matching_network=self._matching_network,
+            current_frequency_hz=frequency_hz,
+            current_feed_line=self._feed_line,
+        )
+
+    def new_antenna_from_key(self, key: str) -> None:
+        if not self._maybe_save_changes():
+            return
+        try:
+            selection = new_antenna_selection(self._catalog_context(), key)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
+            return
+        if selection is None:
+            return
+        self._create_project_from_parameters(
+            selection.parameters,
+            default_name=selection.default_name,
+            feed_line=selection.feed_line,
+            band_plan=selection.band_plan,
+        )
 
     def new_antenna(self) -> None:
         dialog = AntennaCatalogDialog(self._translator, self)
@@ -6384,127 +5594,7 @@ class MainWindow(QMainWindow):
             return
         selected = dialog.selected_key()
         if selected is not None:
-            self._new_antenna_from_key(selected)
-
-    def _new_antenna_from_key(self, selected: str) -> None:
-        if selected == CATALOG_TYPE_CUSTOM:
-            self.new_custom_antenna()
-        elif selected == CATALOG_TYPE_YAGI:
-            self.new_yagi_antenna()
-        elif selected == CATALOG_TYPE_MOXON:
-            self.new_moxon_antenna()
-        elif selected == CATALOG_TYPE_INVERTED_V:
-            self.new_inverted_v_antenna()
-        elif selected == CATALOG_TYPE_INVERTED_L:
-            self.new_inverted_l_antenna()
-        elif selected == CATALOG_TYPE_MAGNETIC_LOOP:
-            self.new_magnetic_loop_antenna()
-        elif selected == CATALOG_TYPE_FAN_DIPOLE:
-            self.new_fan_dipole_antenna()
-        elif selected == CATALOG_TYPE_TRAP_DIPOLE:
-            self.new_trap_dipole_antenna()
-        elif selected == CATALOG_TYPE_T2FD:
-            self.new_t2fd_antenna()
-        elif selected == CATALOG_TYPE_ENDFED:
-            self.new_endfed_antenna()
-        elif selected == CATALOG_TYPE_SLOPER:
-            self.new_sloper_antenna()
-        elif selected == CATALOG_TYPE_RANDOM_WIRE:
-            self.new_random_wire_antenna()
-        elif selected == CATALOG_TYPE_SHORTENED_ENDFED_80_10:
-            self.new_shortened_efhw_80_10_antenna()
-        elif selected == CATALOG_TYPE_SHORTENED_ENDFED_40_10:
-            self.new_shortened_efhw_40_10_antenna()
-        elif selected == CATALOG_TYPE_DOUBLET:
-            self.new_doublet_antenna()
-        elif selected == CATALOG_TYPE_G5RV:
-            self.new_g5rv_antenna()
-        elif selected == CATALOG_TYPE_ZS6BKW:
-            self.new_zs6bkw_antenna()
-        elif selected == CATALOG_TYPE_ZEPP:
-            self.new_zepp_antenna()
-        elif selected == CATALOG_TYPE_J_POLE:
-            self.new_j_pole_antenna(folded=False)
-        elif selected == CATALOG_TYPE_SLIM_JIM:
-            self.new_j_pole_antenna(folded=True)
-        elif selected == CATALOG_TYPE_RINGO:
-            self.new_ringo_antenna()
-        elif selected == CATALOG_TYPE_HALF_SQUARE:
-            self.new_half_square_antenna()
-        elif selected == CATALOG_TYPE_BOBTAIL_CURTAIN:
-            self.new_bobtail_curtain_antenna()
-        elif selected == CATALOG_TYPE_BIQUAD:
-            self.new_single_biquad_antenna()
-        elif selected == CATALOG_TYPE_DOUBLE_BIQUAD:
-            self.new_double_biquad_antenna()
-        elif selected == CATALOG_TYPE_BEVERAGE:
-            self.new_beverage_antenna()
-        elif selected == CATALOG_TYPE_LOADED_DIPOLE:
-            self.new_loaded_dipole_antenna()
-        elif selected == CATALOG_TYPE_PHASED_VERTICAL:
-            self.new_phased_vertical_antenna()
-        elif selected == CATALOG_TYPE_QUAD_BEAM:
-            self.new_quad_beam_antenna()
-        elif selected == CATALOG_TYPE_LOG_PERIODIC:
-            self.new_log_periodic_antenna()
-        elif selected == CATALOG_TYPE_DISCONE:
-            self.new_discone_antenna()
-        elif selected == CATALOG_TYPE_TRAP_YAGI:
-            self.new_trap_yagi_antenna()
-        elif selected == CATALOG_TYPE_HEXBEAM:
-            self.new_hexbeam_antenna()
-        elif selected == CATALOG_TYPE_OCFD:
-            self.new_ocfd_antenna()
-        elif selected == CATALOG_TYPE_DELTA_LOOP:
-            self._new_basic_antenna(CATALOG_TYPE_LOOP, initial_sides=3)
-        elif selected == CATALOG_TYPE_QUAD_LOOP:
-            self._new_basic_antenna(CATALOG_TYPE_LOOP, initial_sides=4)
-        elif selected == CATALOG_TYPE_VERTICAL:
-            self.new_vertical_antenna()
-        elif selected == CATALOG_TYPE_LOADED_VERTICAL:
-            self.new_loaded_vertical_antenna()
-        elif selected in {
-            CATALOG_TYPE_WIRE_DIPOLE,
-            CATALOG_TYPE_FOLDED_DIPOLE,
-            CATALOG_TYPE_LOOP,
-        }:
-            self._new_basic_antenna(selected)
-
-    def _new_basic_antenna(
-        self,
-        antenna_type: str,
-        *,
-        initial_sides: int | None = None,
-    ) -> None:
-        if not self._maybe_save_changes():
-            return
-        initial_frequency = 7_100_000.0
-        if self._project is not None and self._design_id is not None:
-            initial_frequency = self._project.design_by_id(self._design_id).parameters.frequency_hz
-        dialog = BasicAntennaDialog(
-            self._translator,
-            self._unit_system,
-            self,
-            antenna_type=antenna_type,
-            frequency_hz=initial_frequency,
-            initial_sides=initial_sides,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        if antenna_type == CATALOG_TYPE_WIRE_DIPOLE:
-            default_name = "Wire dipole"
-        elif antenna_type == CATALOG_TYPE_FOLDED_DIPOLE:
-            default_name = "Folded dipole"
-        elif initial_sides == 3:
-            default_name = "Delta loop"
-        elif initial_sides == 4:
-            default_name = "Quad loop"
-        else:
-            default_name = "Loop"
-        self._create_project_from_parameters(
-            dialog.result_parameters(),
-            default_name=default_name,
-        )
+            self.new_antenna_from_key(selected)
 
     def new_dipole(self) -> None:
         self.new_antenna()

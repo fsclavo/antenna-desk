@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QDialog, QInputDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.dialogs.family_optimization_dialog import BandPlanSource
 from antennadesk.ui.main_window import MainWindow
@@ -80,9 +81,9 @@ def test_optimize_endfed_applies_to_the_endfed_form(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "EndFedDialog", FakeEndFedDialog)
+    monkeypatch.setattr(catalog_module, "EndFedDialog", FakeEndFedDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("End-fed", True))
-    window.new_endfed_antenna()
+    window.new_antenna_from_key("endfed")
 
     class FakeOptimizationDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -504,9 +505,9 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(catalog_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
-    window.new_ocfd_antenna()
+    window.new_antenna_from_key("ocfd")
 
     class FakeOptimizationDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
@@ -569,9 +570,9 @@ def test_synthesize_dimensions_applies_and_simulates(
 
             return default_band_plan(parameters).plan
 
-    monkeypatch.setattr(main_window_module, "OCFDDialog", FakeOCFDDialog)
+    monkeypatch.setattr(catalog_module, "OCFDDialog", FakeOCFDDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("OCFD", True))
-    window.new_ocfd_antenna()
+    window.new_antenna_from_key("ocfd")
 
     synthesized = replace(parameters, total_length_m=21.0, feed_ratio=0.4)
 
@@ -665,9 +666,9 @@ def test_optimize_yagi_applies_and_simulates(
         def result_parameters(self) -> object:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "YagiDialog", FakeYagiDialog)
+    monkeypatch.setattr(catalog_module, "YagiDialog", FakeYagiDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Yagi", True))
-    window.new_yagi_antenna()
+    window.new_antenna_from_key("yagi")
 
     elements = list(parameters.elements)
     elements[0] = replace(elements[0], length_m=elements[0].length_m + 0.1)
@@ -780,9 +781,9 @@ def test_fan_optimizer_opens_on_the_selected_band(
         def result_parameters(self) -> FanDipoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDialog)
+    monkeypatch.setattr(catalog_module, "FanDipoleDialog", FakeFanDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
-    window.new_fan_dipole_antenna()
+    window.new_antenna_from_key("fan_dipole")
     window.simulate()
     wait_for_condition(
         lambda: not window._simulating and window._thread is None,
@@ -849,9 +850,9 @@ def test_fan_optimizer_defaults_to_the_lowest_element_band(
         def result_parameters(self) -> FanDipoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDialog)
+    monkeypatch.setattr(catalog_module, "FanDipoleDialog", FakeFanDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
-    window.new_fan_dipole_antenna()
+    window.new_antenna_from_key("fan_dipole")
 
     captured: dict[str, object] = {}
 

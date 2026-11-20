@@ -4,8 +4,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pytest
 from PySide6.QtWidgets import QDialog
 
@@ -57,10 +55,16 @@ from antennadesk.domain.design.estimators import (
     supports_estimation,
 )
 from antennadesk.domain.design.evidence import EVIDENCE, EvidenceLevel
-from antennadesk.ui import main_window as main_window_module
+from antennadesk.ui import catalog as catalog_module
+from antennadesk.ui.catalog import (
+    CHANGE_BUILDERS,
+    NEW_BUILDERS,
+    CatalogContext,
+    change_template_selection,
+    new_antenna_selection,
+)
 from antennadesk.ui.dialogs import antenna_catalog_dialog
 from antennadesk.ui.i18n import Language, Translator
-from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.template_identity import catalog_key_for
 from antennadesk.ui.units import UnitSystem
 
@@ -269,195 +273,81 @@ def test_catalog_constants_and_entries_match() -> None:
     assert constants == entries
 
 
-def test_every_catalog_entry_has_a_change_template_route(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    class FakeDialog:
-        def __init__(self, parameters: object) -> None:
-            self._parameters = parameters
-
-        def exec(self) -> QDialog.DialogCode:
-            return QDialog.DialogCode.Accepted
-
-        def build_parameters(self) -> object:
-            return self._parameters
-
-        def result_parameters(self) -> object:
-            return self._parameters
-
-    for key in sorted(_catalog_constants().values()):
-        parameters = _parameters_for(key)
-
-        def fake_factory(*_args: object, _parameters: object = parameters, **_kwargs: object):
-            return FakeDialog(_parameters)
-
-        for class_name in (
-            "BasicAntennaDialog",
-            "MoxonDialog",
-            "YagiDialog",
-            "RingoDialog",
-            "ScvDialog",
-            "JPoleDialog",
-            "EndFedDialog",
-            "FanDipoleDialog",
-            "TrapDipoleDialog",
-            "T2FDDialog",
-            "InvertedLDialog",
-            "InvertedVDialog",
-            "MagneticLoopDialog",
-            "OCFDDialog",
-            "VerticalDialog",
-            "CustomAntennaDialog",
-            "DoubletDialog",
-            "G5RVDialog",
-            "ZS6BKWDialog",
-            "ZeppDialog",
-            "BiquadDialog",
-            "BeverageDialog",
-            "LoadedDipoleDialog",
-            "LogPeriodicDialog",
-            "DisconeDialog",
-            "TrapYagiDialog",
-            "HexbeamDialog",
-            "PhasedVerticalDialog",
-            "QuadBeamDialog",
-        ):
-            monkeypatch.setattr(main_window_module, class_name, fake_factory)
-        fake_self = SimpleNamespace(
-            _translator=Translator(Language.ENGLISH),
-            _unit_system=UnitSystem.METRIC,
-            _solver=None,
-            _matching_network=None,
-        )
-
-        result = MainWindow._parameters_from_catalog(fake_self, key, 7_100_000.0)
-
-        assert result is not None, f"catalog entry has no parameter route: {key}"
-
-
-def test_every_catalog_entry_has_a_new_antenna_route(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    routes: dict[str, object] = {
-        "wire_dipole": ("basic", "wire_dipole", None),
-        "folded_dipole": ("basic", "folded_dipole", None),
-        "loop": ("basic", "loop", None),
-        "delta_loop": ("basic", "loop", 3),
-        "quad_loop": ("basic", "loop", 4),
-        "magnetic_loop": ("magnetic_loop",),
-        "ocfd": ("ocfd",),
-        "vertical": ("vertical",),
-        "loaded_vertical": ("loaded_vertical",),
-        "inverted_v": ("inverted_v",),
-        "inverted_l": ("inverted_l",),
-        "yagi": ("yagi",),
-        "moxon": ("moxon",),
-        "fan_dipole": ("fan_dipole",),
-        "trap_dipole": ("trap_dipole",),
-        "t2fd": ("t2fd",),
-        "endfed": ("endfed",),
-        "sloper": ("sloper",),
-        "random_wire": ("random_wire",),
-        "shortened_endfed_80_10": ("shortened_endfed_80_10",),
-        "shortened_endfed_40_10": ("shortened_endfed_40_10",),
-        "doublet": ("doublet",),
-        "g5rv": ("g5rv",),
-        "zs6bkw": ("zs6bkw",),
-        "zepp": ("zepp",),
-        "j_pole": ("j_pole", False),
-        "slim_jim": ("j_pole", True),
-        "ringo": ("ringo",),
-        "half_square": ("half_square",),
-        "bobtail_curtain": ("bobtail_curtain",),
-        "biquad": ("single_biquad",),
-        "double_biquad": ("double_biquad",),
-        "beverage": ("beverage",),
-        "loaded_dipole": ("loaded_dipole",),
-        "log_periodic": ("log_periodic",),
-        "discone": ("discone",),
-        "trap_yagi": ("trap_yagi",),
-        "hexbeam": ("hexbeam",),
-        "phased_vertical": ("phased_vertical",),
-        "quad_beam": ("quad_beam",),
-        "custom": ("custom",),
-    }
-
-    catalog_keys = {entry.key for entry in antenna_catalog_dialog.ENTRIES}
-    assert set(routes) == catalog_keys, (
-        f"New Antenna route table is out of date: {set(routes) ^ catalog_keys}"
+def _context() -> CatalogContext:
+    return CatalogContext(
+        parent=None,  # type: ignore[arg-type]
+        translator=Translator(Language.ENGLISH),
+        unit_system=UnitSystem.METRIC,
+        current_frequency_hz=7_100_000.0,
+        current_feed_line=None,
     )
 
-    class FakeCatalog:
-        selected = "wire_dipole"
 
+def _fake_dialog_class(parameters: object) -> type:
+    class FakeDialog:
         def __init__(self, *args: object, **kwargs: object) -> None:
             pass
 
         def exec(self) -> QDialog.DialogCode:
             return QDialog.DialogCode.Accepted
 
-        def selected_key(self) -> str:
-            return self.selected
+        def result_parameters(self) -> object:
+            return parameters
 
-    calls: list[tuple[object, ...]] = []
+        def typed_result_parameters(self) -> object:
+            return parameters
 
-    def record(name: str):
-        def handler(*args: object, **kwargs: object) -> None:
-            if name == "basic":
-                calls.append(("basic", args[0], kwargs.get("initial_sides")))
-            elif name == "j_pole":
-                calls.append((name, kwargs.get("folded")))
-            else:
-                calls.append((name, *args))
+        def parameters(self) -> object:
+            return parameters
 
-        return handler
+        def result_feed_line(self) -> None:
+            return None
 
-    fake_self = SimpleNamespace(
-        _translator=Translator(Language.ENGLISH),
-        _unit_system=UnitSystem.METRIC,
-        new_custom_antenna=record("custom"),
-        new_yagi_antenna=record("yagi"),
-        new_moxon_antenna=record("moxon"),
-        new_inverted_v_antenna=record("inverted_v"),
-        new_inverted_l_antenna=record("inverted_l"),
-        new_magnetic_loop_antenna=record("magnetic_loop"),
-        new_fan_dipole_antenna=record("fan_dipole"),
-        new_trap_dipole_antenna=record("trap_dipole"),
-        new_t2fd_antenna=record("t2fd"),
-        new_endfed_antenna=record("endfed"),
-        new_sloper_antenna=record("sloper"),
-        new_random_wire_antenna=record("random_wire"),
-        new_shortened_efhw_80_10_antenna=record("shortened_endfed_80_10"),
-        new_shortened_efhw_40_10_antenna=record("shortened_endfed_40_10"),
-        new_doublet_antenna=record("doublet"),
-        new_g5rv_antenna=record("g5rv"),
-        new_zs6bkw_antenna=record("zs6bkw"),
-        new_zepp_antenna=record("zepp"),
-        new_j_pole_antenna=record("j_pole"),
-        new_ringo_antenna=record("ringo"),
-        new_half_square_antenna=record("half_square"),
-        new_bobtail_curtain_antenna=record("bobtail_curtain"),
-        new_single_biquad_antenna=record("single_biquad"),
-        new_double_biquad_antenna=record("double_biquad"),
-        new_beverage_antenna=record("beverage"),
-        new_loaded_dipole_antenna=record("loaded_dipole"),
-        new_log_periodic_antenna=record("log_periodic"),
-        new_discone_antenna=record("discone"),
-        new_trap_yagi_antenna=record("trap_yagi"),
-        new_hexbeam_antenna=record("hexbeam"),
-        new_phased_vertical_antenna=record("phased_vertical"),
-        new_quad_beam_antenna=record("quad_beam"),
-        new_ocfd_antenna=record("ocfd"),
-        new_vertical_antenna=record("vertical"),
-        new_loaded_vertical_antenna=record("loaded_vertical"),
-        _new_basic_antenna=record("basic"),
-    )
-    monkeypatch.setattr(main_window_module, "AntennaCatalogDialog", FakeCatalog)
+        def feed_line(self) -> None:
+            return None
 
-    for key, expected in routes.items():
-        calls.clear()
-        MainWindow._new_antenna_from_key(fake_self, key)
-        assert calls == [expected], f"wrong New Antenna route for {key}: {calls}"
+        def result_band_plan(self) -> None:
+            return None
+
+    return FakeDialog
+
+
+def test_every_catalog_entry_has_a_change_template_route(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    keys = set(_catalog_constants().values())
+
+    assert set(CHANGE_BUILDERS) == keys
+    for key in sorted(keys):
+        parameters = _parameters_for(key)
+        monkeypatch.setattr(
+            catalog_module,
+            "_dialog_class",
+            lambda _name, parameters=parameters: _fake_dialog_class(parameters),
+        )
+        change = change_template_selection(_context(), key)
+
+        assert change is not None, f"catalog entry has no parameter route: {key}"
+        assert change.parameters is not None
+
+
+def test_every_catalog_entry_has_a_new_antenna_route(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    keys = set(_catalog_constants().values())
+
+    assert set(NEW_BUILDERS) == keys
+    for key in sorted(keys):
+        parameters = _parameters_for(key)
+        monkeypatch.setattr(
+            catalog_module,
+            "_dialog_class",
+            lambda _name, parameters=parameters: _fake_dialog_class(parameters),
+        )
+        selection = new_antenna_selection(_context(), key)
+
+        assert selection is not None, f"catalog entry has no New Antenna route: {key}"
+        assert selection.default_name
 
 
 def test_delta_and_quad_change_template_use_the_loop_dialog(
@@ -480,18 +370,13 @@ def test_delta_and_quad_change_template_use_the_loop_dialog(
                 sides=int(captured[-1].get("initial_sides") or 4),
             )
 
-    monkeypatch.setattr(main_window_module, "BasicAntennaDialog", FakeBasicDialog)
-    fake_self = SimpleNamespace(
-        _translator=Translator(Language.ENGLISH),
-        _unit_system=UnitSystem.METRIC,
-        _solver=None,
-        _matching_network=None,
-    )
+    monkeypatch.setattr(catalog_module, "_dialog_class", lambda _name: FakeBasicDialog)
 
     for key, expected_sides in (("delta_loop", 3), ("quad_loop", 4)):
-        result = MainWindow._parameters_from_catalog(fake_self, key, 7_100_000.0)
-        assert isinstance(result, LoopParameters)
-        assert result.sides == expected_sides
+        change = change_template_selection(_context(), key)
+
+        assert isinstance(change.parameters, LoopParameters)
+        assert change.parameters.sides == expected_sides
         assert captured[-1]["antenna_type"] == "loop"
 
 

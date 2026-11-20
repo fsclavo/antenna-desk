@@ -49,7 +49,7 @@ def test_advisor_action_opens_the_selected_family(
     )
     monkeypatch.setattr(
         window,
-        "_new_antenna_from_key",
+        "new_antenna_from_key",
         lambda key: selected.append(key),
     )
 
@@ -82,7 +82,7 @@ def test_advisor_receives_the_active_installation_profile(
     )
     monkeypatch.setattr(
         window,
-        "_new_antenna_from_key",
+        "new_antenna_from_key",
         lambda _key: None,
     )
 

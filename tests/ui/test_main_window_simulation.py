@@ -17,6 +17,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.application.discretization import validate_segmentation
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -1053,9 +1054,9 @@ def test_fan_dipole_simulate_covers_all_element_bands(
         def result_parameters(self) -> FanDipoleParameters:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "FanDipoleDialog", FakeFanDialog)
+    monkeypatch.setattr(catalog_module, "FanDipoleDialog", FakeFanDialog)
     monkeypatch.setattr(QInputDialog, "getText", lambda *args, **kwargs: ("Fan", True))
-    window.new_fan_dipole_antenna()
+    window.new_antenna_from_key("fan_dipole")
 
     window.simulate()
     wait_for_condition(
