@@ -332,6 +332,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   debounce, recovery-file clear/load/save, the corrupt-file warning, and the
   startup restore/discard prompt. The main window supplies the current project
   and policy callbacks. No behavior change.
+- **Element-optimizer dialogs moved out of the main window.**
+  `ui/element_optimization_actions.py` owns the Yagi, fan-dipole, Moxon, loop,
+  vertical, inverted-V, Ringo, and ZS6BKW variable/build/band setup and dialog
+  execution. The main window keeps the shared solver/form checks, applies the
+  selected parameters, and starts the full simulation. No behavior change.
 
 ### Fixed
 

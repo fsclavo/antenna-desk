@@ -23,8 +23,9 @@
   application layer, catalog/template routing into `ui/catalog.py`, export
   dialogs/writer dispatch into `ui/exporters.py`, VNA/NEC/MMANA import parsing
   into `ui/import_actions.py`, project open/save workers into
-  `ui/project_io.py`, and autosave/recovery cadence into
-  `ui/recovery_actions.py`.
+  `ui/project_io.py`, autosave/recovery cadence into
+  `ui/recovery_actions.py`, and element-optimizer dialogs into
+  `ui/element_optimization_actions.py`.
 
 ## Next
 

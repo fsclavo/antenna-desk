@@ -14,7 +14,7 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.zs6bkw import zs6bkw_parameters
-from antennadesk.ui import main_window as main_window_module
+from antennadesk.ui import element_optimization_actions as element_optimization_actions_module
 from antennadesk.ui.main_window import MainWindow
 
 ELEMENT_CASES = (
@@ -96,7 +96,9 @@ def test_element_optimizer_updates_the_design_and_starts_a_simulation(
         def selected_parameters(self) -> object:
             return parameters
 
-    monkeypatch.setattr(main_window_module, "ElementOptimizationDialog", FakeElementDialog)
+    monkeypatch.setattr(
+        element_optimization_actions_module, "ElementOptimizationDialog", FakeElementDialog
+    )
     simulations: list[bool] = []
     monkeypatch.setattr(window, "simulate", lambda: simulations.append(True))
 

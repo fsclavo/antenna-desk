@@ -889,13 +889,14 @@ decision:
 ## Current baseline
 
 - Schema: **58**.
-- Full gate: **4,260 passed, 1 skipped** on 2026-11-20 after the full QA and
+- Full gate: **4,282 passed, 1 skipped** on 2026-11-20 after the full QA and
   technical-debt sweep and the main-window extractions (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
-  project open/save workers in `ui/project_io.py`, and autosave/recovery in
-  `ui/recovery_actions.py`), with `NEC2C` auto-detected by the test
+  project open/save workers in `ui/project_io.py`, autosave/recovery in
+  `ui/recovery_actions.py`, and element-optimizer dialogs in
+  `ui/element_optimization_actions.py`), with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
   See
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).

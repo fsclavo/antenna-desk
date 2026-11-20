@@ -12,6 +12,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui import catalog as catalog_module
+from antennadesk.ui import element_optimization_actions as element_optimization_actions_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.dialogs.family_optimization_dialog import BandPlanSource
 from antennadesk.ui.main_window import MainWindow
@@ -687,7 +688,7 @@ def test_optimize_yagi_applies_and_simulates(
             return optimized
 
     monkeypatch.setattr(
-        main_window_module,
+        element_optimization_actions_module,
         "ElementOptimizationDialog",
         FakeYagiOptimizationDialog,
     )
@@ -808,7 +809,7 @@ def test_fan_optimizer_opens_on_the_selected_band(
             return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(
-        main_window_module,
+        element_optimization_actions_module,
         "ElementOptimizationDialog",
         FakeOptimizationDialog,
     )
@@ -864,7 +865,7 @@ def test_fan_optimizer_defaults_to_the_lowest_element_band(
             return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(
-        main_window_module,
+        element_optimization_actions_module,
         "ElementOptimizationDialog",
         FakeOptimizationDialog,
     )
