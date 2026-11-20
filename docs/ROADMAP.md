@@ -542,7 +542,7 @@ and new catalog presets) waits until this track closes.
 | 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part, best effort/bypass, band-center rows, port ratings | M–L | B/C | done 2026-11-20; per-component branch ratings optional |
-| 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, and attachments remain | M–L | B/C | partial 2026-11-20 |
+| 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; conductive boom deferred pending ADR/spike; tower and attachments remain | M–L | B/C | partial 2026-11-20 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Coarse drag-to-preview, commit to full run | M–L | n/a | queued 2026-11-19 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | E/H grid and compliance distance, with limits | L | B/C | queued after ADR/spike |
 | 1.2 Site and exploration | DL6 | Stacked Yagi arrays | 2–4 Yagis with phasing and per-port results | L | B/C | queued 2026-11-19 |

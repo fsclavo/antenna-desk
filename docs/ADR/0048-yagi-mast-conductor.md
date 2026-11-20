@@ -19,6 +19,11 @@ not a boom or a structural tower model. Boom mounting, lattice towers,
 insulated/bonded attachments, and interaction with the real rotator or mast
 hardware remain unmodeled and are visible limitations.
 
+A conductive boom is deliberately outside this ADR. It changes the wire graph
+and the feed junction at every element center; it requires a separate ADR and a
+NEC2C validation spike before implementation. A mechanical or insulated boom is
+the low-risk alternative.
+
 ## Consequences
 
 - No new solver or analysis code; the mast is ordinary wire geometry.
