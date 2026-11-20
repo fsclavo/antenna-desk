@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   read-only table reports frequency, band, load R/X, matched/out-of-range/no
   solution, SWR, loss, and the limiting part. Out-of-range L/Pi/T designs try a
   bounded best-effort search and fall back to bypass when they do not improve
-  the raw SWR. Ranges are operator inputs, not a specific commercial ATU model,
-  and the check does not run a solver. Per-part voltage/current ratings and a
-  dedicated per-band sweep remain follow-ups. No solver or schema change.
+  the raw SWR. The table can show simulated frequencies or amateur-band centers,
+  and reports input/load voltage and current for the entered power. Ranges are
+  operator inputs, not a specific commercial ATU model, and the check does not
+  run a solver. Per-component branch ratings remain optional follow-ups. No
+  solver or schema change.
 - **Smith chart and matching workbench.** The results area now has a
   **Smith** tab with a normalized impedance locus, constant-resistance circles
   and reactance arcs, a hover readout, and a frequency marker. A reference-plane

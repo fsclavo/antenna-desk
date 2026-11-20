@@ -1630,9 +1630,12 @@ run a new solver pass or change the project.
   value. A positive Q adds the component-loss model.
 - **Minimum/maximum capacitance and inductance** describe the operator's tuner.
   They are generic inputs, not a specific commercial ATU model.
-- The table shows frequency, band, load R/X, status, SWR, loss, and the limiting
-  part. The load is the raw primary-source impedance when available; otherwise
-  it is the post-chain result impedance.
+- The table shows frequency, band, load R/X, status, SWR, loss, the limiting
+  part, and port voltage/current estimates for the entered input power. The
+  estimates are at the tuner input and antenna load, not per component.
+- **Table rows** selects one row per simulated frequency or one row per amateur
+  band center. The load is the raw primary-source impedance when available;
+  otherwise it is the post-chain result impedance.
 
 When the exact design exceeds the entered ranges, AntennaDesk tries a bounded
 search for the selected topology and reports **Best effort** if it improves the

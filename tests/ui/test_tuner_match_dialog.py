@@ -71,3 +71,26 @@ def test_tuner_dialog_retranslates(qtbot: QtBot) -> None:
 
     assert dialog._table.horizontalHeaderItem(4).text() == "Estado"
     assert dialog._table.horizontalHeaderItem(5).text() == "ROE"
+
+
+def test_tuner_dialog_can_group_by_amateur_band(qtbot: QtBot) -> None:
+    dialog = TunerMatchDialog(Translator(Language.ENGLISH), _result())
+    qtbot.addWidget(dialog)
+
+    index = dialog._rows.findData("bands")
+    assert index >= 0
+    dialog._rows.setCurrentIndex(index)
+    dialog._recompute()
+
+    assert dialog._table.rowCount() >= 1
+    assert dialog._table.item(0, 1).text() in {"40m", "30m", "20m"}
+
+
+def test_tuner_dialog_reports_port_ratings(qtbot: QtBot) -> None:
+    dialog = TunerMatchDialog(Translator(Language.ENGLISH), _result())
+    qtbot.addWidget(dialog)
+
+    assert dialog._table.item(0, 8).text() != "—"
+    assert dialog._table.item(0, 9).text() != "—"
+    assert dialog._table.item(0, 10).text() != "—"
+    assert dialog._table.item(0, 11).text() != "—"

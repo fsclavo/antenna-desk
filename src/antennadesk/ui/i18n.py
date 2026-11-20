@@ -16817,6 +16817,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Topology",
         Language.SPANISH: "Topología",
     },
+    "tuner.rows": {
+        Language.ENGLISH: "Table rows",
+        Language.SPANISH: "Filas de la tabla",
+    },
+    "tuner.rows.frequencies": {
+        Language.ENGLISH: "Simulated frequencies",
+        Language.SPANISH: "Frecuencias simuladas",
+    },
+    "tuner.rows.bands": {
+        Language.ENGLISH: "Amateur bands (center)",
+        Language.SPANISH: "Bandas de radioaficionado (centro)",
+    },
     "tuner.series": {
         Language.ENGLISH: "Component series",
         Language.SPANISH: "Serie de componentes",
@@ -16836,6 +16848,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "tuner.q": {
         Language.ENGLISH: "Design Q (0 = auto)",
         Language.SPANISH: "Q de diseño (0 = automática)",
+    },
+    "tuner.power": {
+        Language.ENGLISH: "Input power",
+        Language.SPANISH: "Potencia de entrada",
     },
     "tuner.c_min": {
         Language.ENGLISH: "Minimum capacitance",
@@ -16937,9 +16953,29 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Limiting part",
         Language.SPANISH: "Componente limitante",
     },
+    "tuner.column.input_voltage": {
+        Language.ENGLISH: "Vin (V)",
+        Language.SPANISH: "Vin (V)",
+    },
+    "tuner.column.input_current": {
+        Language.ENGLISH: "Iin (A)",
+        Language.SPANISH: "Iin (A)",
+    },
+    "tuner.column.load_voltage": {
+        Language.ENGLISH: "Vload (V)",
+        Language.SPANISH: "Vcarga (V)",
+    },
+    "tuner.column.load_current": {
+        Language.ENGLISH: "Iload (A)",
+        Language.SPANISH: "Icarga (A)",
+    },
     "help.tuner.topology": {
         Language.ENGLISH: "Tuner topology being checked: L, Pi, or T.",
         Language.SPANISH: "Topología del sintonizador a verificar: L, Pi o T.",
+    },
+    "help.tuner.rows": {
+        Language.ENGLISH: "Show one row per simulated frequency or per amateur-band center.",
+        Language.SPANISH: "Mostrá una fila por frecuencia simulada o por centro de banda.",
     },
     "help.tuner.series": {
         Language.ENGLISH: "Use ideal values or snap components to E12/E24.",
@@ -16948,6 +16984,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.tuner.q": {
         Language.ENGLISH: "Design Q for Pi/T; zero lets the domain choose a practical value.",
         Language.SPANISH: "Q de diseño para Pi/T; cero deja que el dominio elija un valor práctico.",
+    },
+    "help.tuner.power": {
+        Language.ENGLISH: "Input power used for the port voltage and current estimates.",
+        Language.SPANISH: "Potencia de entrada usada para estimar tensión y corriente en los puertos.",
     },
     "help.tuner.c_min": {
         Language.ENGLISH: "Lowest capacitance the tuner can present.",

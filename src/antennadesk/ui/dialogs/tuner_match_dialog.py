@@ -25,8 +25,8 @@ from ...domain.design.tuner import (
     TunerLimits,
     evaluate_tuner_match,
 )
-from ...domain.simulation.bands import amateur_band_for
-from ...domain.simulation.result import SimulationResult
+from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_for
+from ...domain.simulation.result import FrequencyResult, SimulationResult
 from ..fonts import scaled_dialog_size
 from ..help import apply_row_help
 from ..i18n import Translator
@@ -52,6 +52,12 @@ class TunerMatchDialog(QDialog):
             ("smith.match.t", MatchingPreviewTopology.T.value),
         ):
             self._topology.addItem(translator.t(key), value)
+        self._rows = QComboBox(self)
+        for key, value in (
+            ("tuner.rows.frequencies", "frequencies"),
+            ("tuner.rows.bands", "bands"),
+        ):
+            self._rows.addItem(translator.t(key), value)
         self._series = QComboBox(self)
         for key, value in (
             ("tuner.series_ideal", "ideal"),
@@ -65,6 +71,11 @@ class TunerMatchDialog(QDialog):
         self._q.setSingleStep(0.5)
         self._q.setValue(0.0)
         self._q.setSuffix(" Q")
+        self._power = QDoubleSpinBox(self)
+        self._power.setRange(1.0, 10_000.0)
+        self._power.setDecimals(0)
+        self._power.setValue(100.0)
+        self._power.setSuffix(" W")
         self._c_min = self._component_spin(1.0, 100_000.0, 5.0, "pf")
         self._c_max = self._component_spin(1.0, 100_000.0, 1_000.0, "pf")
         self._l_min = self._component_spin(0.01, 10_000.0, 0.1, "uh")
@@ -72,8 +83,10 @@ class TunerMatchDialog(QDialog):
 
         form = QFormLayout()
         form.addRow(QLabel(translator.t("tuner.topology"), self), self._topology)
+        form.addRow(QLabel(translator.t("tuner.rows"), self), self._rows)
         form.addRow(QLabel(translator.t("tuner.series"), self), self._series)
         form.addRow(QLabel(translator.t("tuner.q"), self), self._q)
+        form.addRow(QLabel(translator.t("tuner.power"), self), self._power)
         form.addRow(QLabel(translator.t("tuner.c_min"), self), self._c_min)
         form.addRow(QLabel(translator.t("tuner.c_max"), self), self._c_max)
         form.addRow(QLabel(translator.t("tuner.l_min"), self), self._l_min)
@@ -81,8 +94,10 @@ class TunerMatchDialog(QDialog):
         for row, key in enumerate(
             (
                 "tuner.topology",
+                "tuner.rows",
                 "tuner.series",
                 "tuner.q",
+                "tuner.power",
                 "tuner.c_min",
                 "tuner.c_max",
                 "tuner.l_min",
@@ -102,7 +117,7 @@ class TunerMatchDialog(QDialog):
         controls.addWidget(self._recompute_button)
         controls.addStretch(1)
 
-        self._table = QTableWidget(0, 8, self)
+        self._table = QTableWidget(0, 12, self)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setAlternatingRowColors(True)
@@ -153,23 +168,65 @@ class TunerMatchDialog(QDialog):
         series = self._series.currentData() or "ideal"
         q = self._q.value()
         rows = []
-        for frequency in self._result.frequencies:
-            load = (
-                frequency.source_results[0].impedance_ohm
-                if frequency.source_results
-                else frequency.impedance_ohm
-            )
-            evaluation = evaluate_tuner_match(
-                load,
-                frequency.frequency_hz,
-                limits,
-                topology,
-                source_impedance_ohm=self._result.spec.reference_impedance_ohm,
-                loaded_q=q if q > 0.0 else None,
-                series=series if isinstance(series, str) else "ideal",
-            )
-            band = amateur_band_for(frequency.frequency_hz)
-            rows.append((frequency, load, evaluation, band.name if band else ""))
+        if self._rows.currentData() == "bands":
+            lowest = min(frequency.frequency_hz for frequency in self._result.frequencies)
+            highest = max(frequency.frequency_hz for frequency in self._result.frequencies)
+            for band in AMATEUR_BANDS:
+                if band.stop_hz < lowest or band.start_hz > highest:
+                    continue
+                nearest = min(
+                    self._result.frequencies,
+                    key=lambda frequency: abs(frequency.frequency_hz - band.center_hz),
+                )
+                load = (
+                    nearest.source_results[0].impedance_ohm
+                    if nearest.source_results
+                    else nearest.impedance_ohm
+                )
+                evaluation = evaluate_tuner_match(
+                    load,
+                    band.center_hz,
+                    limits,
+                    topology,
+                    source_impedance_ohm=self._result.spec.reference_impedance_ohm,
+                    loaded_q=q if q > 0.0 else None,
+                    series=series if isinstance(series, str) else "ideal",
+                    power_w=self._power.value(),
+                )
+                rows.append(
+                    (
+                        FrequencyResult(
+                            band.center_hz,
+                            nearest.feed_tag,
+                            nearest.feed_segment,
+                            load,
+                            nearest.swr,
+                            nearest.input_power_w,
+                        ),
+                        load,
+                        evaluation,
+                        band.name,
+                    )
+                )
+        else:
+            for frequency in self._result.frequencies:
+                load = (
+                    frequency.source_results[0].impedance_ohm
+                    if frequency.source_results
+                    else frequency.impedance_ohm
+                )
+                evaluation = evaluate_tuner_match(
+                    load,
+                    frequency.frequency_hz,
+                    limits,
+                    topology,
+                    source_impedance_ohm=self._result.spec.reference_impedance_ohm,
+                    loaded_q=q if q > 0.0 else None,
+                    series=series if isinstance(series, str) else "ideal",
+                    power_w=self._power.value(),
+                )
+                band_match = amateur_band_for(frequency.frequency_hz)
+                rows.append((frequency, load, evaluation, band_match.name if band_match else ""))
         self._table.setRowCount(len(rows))
         for row, (frequency, load, evaluation, band_name) in enumerate(rows):
             values = (
@@ -185,6 +242,10 @@ class TunerMatchDialog(QDialog):
                     if evaluation.limiting is None
                     else self._translator.t(f"tuner.limit.{evaluation.limiting}")
                 ),
+                "—" if evaluation.input_voltage_v is None else f"{evaluation.input_voltage_v:.1f}",
+                "—" if evaluation.input_current_a is None else f"{evaluation.input_current_a:.3f}",
+                "—" if evaluation.load_voltage_v is None else f"{evaluation.load_voltage_v:.1f}",
+                "—" if evaluation.load_current_a is None else f"{evaluation.load_current_a:.3f}",
             )
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
@@ -196,6 +257,8 @@ class TunerMatchDialog(QDialog):
         self.setWindowTitle(self._translator.t("tuner.title"))
         self._recompute_button.setText(self._translator.t("tuner.recompute"))
         self._note.setText(self._translator.t("tuner.note"))
+        self._rows.setItemText(0, self._translator.t("tuner.rows.frequencies"))
+        self._rows.setItemText(1, self._translator.t("tuner.rows.bands"))
         self._table.setHorizontalHeaderLabels(
             [
                 self._translator.t("tuner.column.frequency"),
@@ -206,5 +269,9 @@ class TunerMatchDialog(QDialog):
                 self._translator.t("tuner.column.swr"),
                 self._translator.t("tuner.column.loss"),
                 self._translator.t("tuner.column.limiting"),
+                self._translator.t("tuner.column.input_voltage"),
+                self._translator.t("tuner.column.input_current"),
+                self._translator.t("tuner.column.load_voltage"),
+                self._translator.t("tuner.column.load_current"),
             ]
         )

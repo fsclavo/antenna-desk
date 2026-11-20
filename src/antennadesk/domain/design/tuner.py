@@ -90,6 +90,10 @@ class TunerEvaluation:
     swr: float | None
     loss_db: float | None
     limiting: str | None = None
+    input_voltage_v: float | None = None
+    input_current_a: float | None = None
+    load_voltage_v: float | None = None
+    load_current_a: float | None = None
 
 
 def nearest_e_series(value: float, series: str) -> float:
@@ -193,17 +197,30 @@ def evaluate_tuner_match(
     source_impedance_ohm: float = 50.0,
     loaded_q: float | None = None,
     series: str = "ideal",
+    power_w: float = 100.0,
 ) -> TunerEvaluation:
     """Design a network, snap it if requested, and check the tuner ranges."""
 
     ensure_positive(frequency_hz, name="frequency_hz")
+    ensure_positive(power_w, name="power_w")
     if abs(load_impedance_ohm - source_impedance_ohm) <= max(1e-9, source_impedance_ohm * 1e-9):
+        ratings = _port_ratings(
+            load_impedance_ohm,
+            load_impedance_ohm,
+            source_impedance_ohm,
+            power_w,
+            0.0,
+        )
         return TunerEvaluation(
             TunerStatus.MATCHED,
             None,
             load_impedance_ohm,
             calculate_swr(load_impedance_ohm, source_impedance_ohm),
             0.0,
+            input_voltage_v=ratings[0],
+            input_current_a=ratings[1],
+            load_voltage_v=ratings[2],
+            load_current_a=ratings[3],
         )
     network = design_preview_network(
         load_impedance_ohm,
@@ -230,14 +247,30 @@ def evaluate_tuner_match(
         raw_swr = calculate_swr(load_impedance_ohm, source_impedance_ohm)
         if best is not None and best[1] < raw_swr - 0.05:
             best_network, best_swr, best_loss = best
+            best_input = best_network.input_impedance(load_impedance_ohm, frequency_hz)
+            ratings = _port_ratings(
+                load_impedance_ohm,
+                best_input,
+                source_impedance_ohm,
+                power_w,
+                best_loss,
+            )
             return TunerEvaluation(
                 TunerStatus.BEST_EFFORT,
                 best_network,
-                best_network.input_impedance(load_impedance_ohm, frequency_hz),
+                best_input,
                 best_swr,
                 best_loss,
                 None,
+                *ratings,
             )
+        ratings = _port_ratings(
+            load_impedance_ohm,
+            load_impedance_ohm,
+            source_impedance_ohm,
+            power_w,
+            0.0,
+        )
         return TunerEvaluation(
             TunerStatus.BYPASS,
             None,
@@ -245,6 +278,7 @@ def evaluate_tuner_match(
             raw_swr,
             0.0,
             None,
+            *ratings,
         )
     input_impedance = network.input_impedance(load_impedance_ohm, frequency_hz)
     loss_db = dissipative_loss_db(
@@ -252,13 +286,53 @@ def evaluate_tuner_match(
         source_impedance_ohm,
         load_impedance_ohm,
     )
+    finite_loss = loss_db if math.isfinite(loss_db) else None
+    ratings = _port_ratings(
+        load_impedance_ohm,
+        input_impedance,
+        source_impedance_ohm,
+        power_w,
+        finite_loss,
+    )
     return TunerEvaluation(
         status=TunerStatus.MATCHED if limiting is None else TunerStatus.OUT_OF_RANGE,
         network=network,
         input_impedance_ohm=input_impedance,
         swr=calculate_swr(input_impedance, source_impedance_ohm),
-        loss_db=loss_db if math.isfinite(loss_db) else None,
+        loss_db=finite_loss,
         limiting=limiting,
+        input_voltage_v=ratings[0],
+        input_current_a=ratings[1],
+        load_voltage_v=ratings[2],
+        load_current_a=ratings[3],
+    )
+
+
+def _port_ratings(
+    load_impedance_ohm: complex,
+    input_impedance_ohm: complex,
+    source_impedance_ohm: float,
+    power_w: float,
+    loss_db: float | None,
+) -> tuple[float | None, float | None, float | None, float | None]:
+    if loss_db is None or load_impedance_ohm.real <= 0.0:
+        return (None, None, None, None)
+    if abs(source_impedance_ohm + input_impedance_ohm) < 1e-18:
+        return (None, None, None, None)
+    source_voltage = math.sqrt(4.0 * power_w * source_impedance_ohm)
+    input_current = source_voltage / (source_impedance_ohm + input_impedance_ohm)
+    input_voltage = input_current * input_impedance_ohm
+    input_power = abs(input_current) ** 2 * input_impedance_ohm.real
+    if input_power <= 0.0:
+        return (None, None, None, None)
+    load_power = input_power / (10.0 ** (loss_db / 10.0))
+    load_current = math.sqrt(2.0 * load_power / load_impedance_ohm.real)
+    load_voltage = load_current * abs(load_impedance_ohm)
+    return (
+        abs(input_voltage),
+        abs(input_current),
+        load_voltage,
+        load_current,
     )
 
 
