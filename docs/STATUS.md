@@ -20,8 +20,9 @@
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
   The follow-up extractions moved typed-family simulation-spec assembly,
   far-field pattern presets, and pattern-budget planning into the Qt-free
-  application layer, catalog/template routing into `ui/catalog.py`, and export
-  dialogs/writer dispatch into `ui/exporters.py`.
+  application layer, catalog/template routing into `ui/catalog.py`, export
+  dialogs/writer dispatch into `ui/exporters.py`, and VNA/NEC/MMANA import
+  parsing into `ui/import_actions.py`.
 
 ## Next
 

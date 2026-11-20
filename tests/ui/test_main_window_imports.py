@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui import catalog as catalog_module
+from antennadesk.ui import import_actions as import_actions_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.main_window import MainWindow
 
@@ -262,7 +263,7 @@ def test_import_vna_data_adds_a_measurement(
         lambda *args, **kwargs: ([str(vna_path)], ""),
     )
     monkeypatch.setattr(
-        main_window_module,
+        import_actions_module,
         "MeasurementDetailsDialog",
         FakeDetailsDialog,
     )
@@ -329,7 +330,7 @@ def test_import_s2p_uses_the_explicitly_selected_port(
         lambda *args, **kwargs: ("Port 2 (S22)", True),
     )
     monkeypatch.setattr(
-        main_window_module,
+        import_actions_module,
         "MeasurementDetailsDialog",
         FakeDetailsDialog,
     )
@@ -390,7 +391,7 @@ def test_import_vna_multiple_files_and_duplicate_names(
         lambda *args, **kwargs: QMessageBox.StandardButton.No,
     )
     monkeypatch.setattr(
-        main_window_module,
+        import_actions_module,
         "MeasurementDetailsDialog",
         FakeDetailsDialog,
     )
@@ -458,9 +459,9 @@ def test_vna_manual_mapping_is_remembered_and_shown(
         "getOpenFileNames",
         lambda *args, **kwargs: ([str(path)], ""),
     )
-    monkeypatch.setattr(main_window_module, "VnaMappingDialog", FakeMappingDialog)
+    monkeypatch.setattr(import_actions_module, "VnaMappingDialog", FakeMappingDialog)
     monkeypatch.setattr(
-        main_window_module,
+        import_actions_module,
         "MeasurementDetailsDialog",
         FakeDetailsDialog,
     )

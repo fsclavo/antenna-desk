@@ -16,6 +16,7 @@ from antennadesk.domain.measurement import (
     MeasurementPoint,
     MeasurementSession,
 )
+from antennadesk.ui import import_actions as import_actions_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language
 from antennadesk.ui.main_window import MainWindow
@@ -182,7 +183,7 @@ def test_import_vna_csv_assigns_the_selected_session(
         lambda *args, **kwargs: ([str(csv_path)], ""),
     )
     monkeypatch.setattr(
-        main_window_module,
+        import_actions_module,
         "MeasurementDetailsDialog",
         FakeDetailsDialog,
     )

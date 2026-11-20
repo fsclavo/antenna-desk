@@ -9,7 +9,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Literal, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from PySide6.QtCore import QEventLoop, Qt, QThread, QTimer
 from PySide6.QtGui import (
@@ -233,11 +233,7 @@ from ..domain.simulation.segmentation import (
     aligned_policy_for_wire_centers,
 )
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
-from ..importers import read_import_text
-from ..importers.mmana import parse_mmana_file
-from ..importers.nec2_deck import parse_nec2_deck
-from ..importers.vna import ParsedVnaData, parse_vna_data
-from ..importers.vna_csv import VnaColumnMapping, VnaCsvError, vna_csv_headers
+from ..importers.vna_csv import VnaColumnMapping
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.design_summary import installation_profile_rows
 from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
@@ -300,7 +296,6 @@ from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.tuner_match_dialog import TunerMatchDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
-from .dialogs.vna_mapping_dialog import VnaMappingDialog
 from .dialogs.yagi_dialog import YagiDialog
 from .exporters import (
     ExportContext,
@@ -323,6 +318,14 @@ from .exporters import (
 from .help import apply_help
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
+from .import_actions import (
+    choose_and_import_mmana,
+    choose_and_import_nec,
+    choose_vna_paths,
+)
+from .import_actions import (
+    import_vna_paths as import_vna_files,
+)
 from .optimization_adapters import adapter_for
 from .preferences import (
     FontSize,
@@ -4999,83 +5002,25 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
-        filenames, _ = QFileDialog.getOpenFileNames(
-            self,
-            self._translator.t("dialog.vna_title"),
-            str(Path.home()),
-            self._translator.t("dialog.vna_filter"),
-        )
-        if filenames:
-            self.import_vna_paths([Path(filename) for filename in filenames])
+        paths = choose_vna_paths(self, self._translator)
+        if paths:
+            self.import_vna_paths(paths)
 
     def import_vna_paths(self, paths: Sequence[Path]) -> None:
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
-        if not paths:
+        result = import_vna_files(
+            parent=self,
+            translator=self._translator,
+            project=self._project,
+            paths=paths,
+            mappings=self._vna_column_mappings,
+            show_error=self._show_error,
+        )
+        if result is None:
             return
-        imported = 0
-        warnings: list[str] = []
-        for path in paths:
-            try:
-                text = read_import_text(path, errors="replace")
-                s2p_port = 1
-                if path.suffix.lower() == ".s2p":
-                    selected = self._choose_s2p_port(path.name)
-                    if selected is None:
-                        continue
-                    s2p_port = selected
-                parsed = self._parse_vna_with_mapping(text, path, s2p_port)
-                details = MeasurementDetailsDialog(
-                    self._translator,
-                    path.stem,
-                    self,
-                    sessions=self._project.measurement_sessions,
-                )
-                if details.exec() != QDialog.DialogCode.Accepted:
-                    continue
-                name, existing_id = self._vna_measurement_target(details.name() or path.stem)
-                if name is None:
-                    continue
-                measurement = Measurement(
-                    id=existing_id or uuid4(),
-                    name=name,
-                    created_at=utc_now(),
-                    reference_impedance_ohm=parsed.reference_impedance_ohm,
-                    points=parsed.points,
-                    source=(
-                        f"{path} · {parsed.profile}"
-                        + (f" · {parsed.mapping}" if parsed.mapping else "")
-                    ),
-                    calibration=details.calibration(),
-                    reference_plane=details.reference_plane(),
-                    feed_line=details.feed_line(),
-                    notes=details.notes(),
-                    session_id=details.session_id(),
-                )
-                if existing_id is None:
-                    self._project = self._project.with_measurement(
-                        measurement,
-                        updated_at=utc_now(),
-                    )
-                else:
-                    self._project = self._project.with_updated_measurement(
-                        measurement,
-                        updated_at=utc_now(),
-                    )
-                imported += 1
-                warnings.extend(parsed.warnings)
-            except Exception as exc:
-                self._show_error(
-                    self._translator.t(
-                        "error.import_vna_file",
-                        name=path.name,
-                        message=str(exc),
-                    )
-                )
-                continue
-        if imported == 0:
-            return
+        self._project = result.project
         if self._design_id is not None:
             self._workflow_measurement_compared.discard(self._design_id)
         self._mark_project_dirty()
@@ -5085,93 +5030,70 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
         self._update_status_text()
-        if warnings:
+        if result.warnings:
             QMessageBox.warning(
                 self,
                 self._translator.t("dialog.vna_title"),
                 self._translator.t(
                     "dialog.vna_warnings",
-                    count=len(warnings),
-                    details="\n".join(warnings[:12]),
+                    count=len(result.warnings),
+                    details="\n".join(result.warnings[:12]),
                 ),
             )
 
-    def _parse_vna_with_mapping(
-        self,
-        text: str,
-        path: Path,
-        s2p_port: int,
-    ) -> ParsedVnaData:
-        headers = vna_csv_headers(text) if path.suffix.lower() in {".csv", ".txt"} else ()
-        mapping = self._vna_column_mappings.get(headers) if headers else None
+    def import_nec_deck(self) -> None:
+        if not self._maybe_save_changes():
+            return
         try:
-            return parse_vna_data(
-                text,
-                suffix=path.suffix,
-                s2p_port=s2p_port,
-                mapping=mapping,
-            )
-        except VnaCsvError as exc:
-            if not headers or "column" not in str(exc).lower():
-                raise
-            dialog = VnaMappingDialog(
-                self._translator,
-                headers,
+            imported = choose_and_import_nec(self, self._translator)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.import_nec", message=str(exc)))
+            return
+        if imported is None:
+            return
+        self._set_project(
+            imported.project,
+            imported.project.designs[0].id,
+            path=None,
+            dirty=True,
+        )
+        if imported.warnings:
+            QMessageBox.warning(
                 self,
-                initial=mapping,
-            )
-            if dialog.exec() != QDialog.DialogCode.Accepted:
-                raise
-            mapping = dialog.mapping()
-            self._vna_column_mappings[headers] = mapping
-            return parse_vna_data(
-                text,
-                suffix=path.suffix,
-                s2p_port=s2p_port,
-                mapping=mapping,
+                self._translator.t("dialog.nec_title"),
+                self._translator.t(
+                    "dialog.nec_warnings",
+                    count=len(imported.warnings),
+                    details="\n".join(imported.warnings[:12]),
+                ),
             )
 
-    def _choose_s2p_port(self, name: str) -> int | None:
-        choice, accepted = QInputDialog.getItem(
-            self,
-            self._translator.t("dialog.vna_title"),
-            self._translator.t("dialog.vna_s2p_port", name=name),
-            [
-                self._translator.t("vna.s2p_port1"),
-                self._translator.t("vna.s2p_port2"),
-            ],
-            0,
-            False,
+    def import_mmana_file(self) -> None:
+        if not self._maybe_save_changes():
+            return
+        try:
+            imported = choose_and_import_mmana(self, self._translator)
+        except Exception as exc:
+            self._show_error(self._translator.t("error.import_mmana", message=str(exc)))
+            return
+        if imported is None:
+            return
+        self._set_project(
+            imported.project,
+            imported.project.designs[0].id,
+            path=None,
+            dirty=True,
         )
-        if not accepted:
-            return None
-        return 1 if choice == self._translator.t("vna.s2p_port1") else 2
-
-    def _vna_measurement_target(self, name: str) -> tuple[str | None, UUID | None]:
-        if self._project is None:
-            raise ValueError(self._translator.t("error.no_project"))
-        existing = next(
-            (measurement for measurement in self._project.measurements if measurement.name == name),
-            None,
-        )
-        if existing is None:
-            return name, None
-        answer = QMessageBox.question(
-            self,
-            self._translator.t("dialog.vna_title"),
-            self._translator.t("dialog.vna_duplicate", name=name),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer == QMessageBox.StandardButton.Yes:
-            return name, existing.id
-        candidate = f"{name} (2)"
-        index = 2
-        names = {measurement.name for measurement in self._project.measurements}
-        while candidate in names:
-            index += 1
-            candidate = f"{name} ({index})"
-        return candidate, None
+        if imported.warnings:
+            QMessageBox.warning(
+                self,
+                self._translator.t("dialog.mmana_title"),
+                self._translator.t(
+                    "dialog.mmana_warnings",
+                    count=len(imported.warnings),
+                    details="\n".join(imported.warnings[:12]),
+                ),
+            )
 
     def _tuning_supported(self, parameters: AntennaDesignParameters | None) -> bool:
         if parameters is None or adapter_for(parameters) is None:
@@ -5212,78 +5134,6 @@ class MainWindow(QMainWindow):
 
     def _tabs_select_measurements(self) -> None:
         self._results.show_measurements()
-
-    def import_nec_deck(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            self._translator.t("dialog.nec_title"),
-            str(Path.home()),
-            self._translator.t("dialog.nec_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        try:
-            result = parse_nec2_deck(read_import_text(path))
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=path.stem,
-                    variant_name="Imported",
-                    parameters=result.parameters,
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.import_nec", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
-        if result.warnings:
-            QMessageBox.warning(
-                self,
-                self._translator.t("dialog.nec_title"),
-                self._translator.t(
-                    "dialog.nec_warnings",
-                    count=len(result.warnings),
-                    details="\n".join(result.warnings[:12]),
-                ),
-            )
-
-    def import_mmana_file(self) -> None:
-        if not self._maybe_save_changes():
-            return
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            self._translator.t("dialog.mmana_title"),
-            str(Path.home()),
-            self._translator.t("dialog.mmana_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        try:
-            result = parse_mmana_file(read_import_text(path))
-            project = CreateDipoleProject().execute(
-                CreateDipoleProjectCommand(
-                    project_name=path.stem,
-                    variant_name="Imported",
-                    parameters=result.parameters,
-                )
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.import_mmana", message=str(exc)))
-            return
-        self._set_project(project, project.designs[0].id, path=None, dirty=True)
-        if result.warnings:
-            QMessageBox.warning(
-                self,
-                self._translator.t("dialog.mmana_title"),
-                self._translator.t(
-                    "dialog.mmana_warnings",
-                    count=len(result.warnings),
-                    details="\n".join(result.warnings[:12]),
-                ),
-            )
 
     @history_action("history.convert_custom")
     def convert_to_custom_wires(self) -> None:

@@ -316,6 +316,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dispatch, geometry/report figure generation, and pattern-image batch paths.
   The main window keeps only the current project/result context, error dialog,
   and exported-status update. No behavior change.
+- **Measurement and wire-model imports moved out of the main window.**
+  `ui/import_actions.py` owns the VNA file picker, `.s2p` port choice, column
+  mapping fallback, duplicate-name handling, measurement record building, and
+  the NEC-2/MMANA parse-and-create flow. The main window keeps save prompts,
+  project application, dirty state, and measurement refresh. No behavior
+  change.
 
 ### Fixed
 
