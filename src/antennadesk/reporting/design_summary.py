@@ -1253,6 +1253,23 @@ def design_summary_rows(
                 ("Boom length", _length(max(positions) - min(positions), display_units)),
                 ("Polarization", parameters.polarization.value),
                 ("Boom height", _length(parameters.height_m, display_units)),
+                *(
+                    [
+                        (
+                            "Mast",
+                            f"{_length(parameters.mast_diameter_m, display_units)} diameter, "
+                            f"{_length(parameters.mast_offset_m, display_units)} behind reflector",
+                        ),
+                        (
+                            "Guy wires",
+                            f"{parameters.guy_count} at "
+                            f"{_length(parameters.guy_anchor_radius_m, display_units)} "
+                            "anchor radius",
+                        ),
+                    ]
+                    if parameters.mast_diameter_m > 0.0
+                    else []
+                ),
             ]
         )
         if parameters.polarization is Polarization.VERTICAL:
