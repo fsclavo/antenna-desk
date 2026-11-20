@@ -18,8 +18,9 @@
 - A full QA and technical-debt sweep on 2026-11-20 left the complete gate green
   with no functional defect; see
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
-  The first follow-up extraction moved typed-family simulation-spec assembly
-  and far-field pattern presets into the Qt-free application layer.
+  The follow-up extractions moved typed-family simulation-spec assembly,
+  far-field pattern presets, and pattern-budget planning into the Qt-free
+  application layer.
 
 ## Next
 

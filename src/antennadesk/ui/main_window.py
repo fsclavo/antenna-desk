@@ -56,12 +56,15 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..application.cancellation import EventCancelToken
 from ..application.discretization import resolve_model_quality
+from ..application.pattern_planning import (
+    fit_band_specs_to_budget,
+    fit_spec_to_budget,
+    snapshot_frequencies,
+)
 from ..application.pattern_resolution import (
     DEFAULT_PATTERN_SNAPSHOT_COUNT,
     DEFAULT_PATTERN_STEP_DEG,
     PATTERN_STEPS_DEG,
-    far_field_request,
-    pattern_counts,
 )
 from ..application.ports.antenna_solver import AntennaSolver
 from ..application.ports.project_repository import ProjectRepository
@@ -183,7 +186,7 @@ from ..domain.antennas.zs6bkw import (
     zs6bkw_with_dimensions,
 )
 from ..domain.common.time import utc_now
-from ..domain.common.validation import Diagnostic, Severity
+from ..domain.common.validation import Diagnostic
 from ..domain.design.band_plan import (
     BandDefault,
     BandPlan,
@@ -219,14 +222,10 @@ from ..domain.simulation.band_result import BandAnalysisResult, BandResult
 from ..domain.simulation.bands import (
     amateur_band_by_id,
     amateur_band_for,
-    band_snapshot_frequencies,
 )
 from ..domain.simulation.budget import (
     PatternBudget,
-    choose_batch_pattern_step,
-    choose_pattern_step,
 )
-from ..domain.simulation.far_field import FarFieldRequest
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.segmentation import (
@@ -4481,79 +4480,24 @@ class MainWindow(QMainWindow):
         self._cancel_action.setEnabled(False)
 
     def _fit_spec_to_budget(self, model: object, spec: SimulationSpec) -> SimulationSpec:
-        """Choose pattern snapshots and the finest pattern step that fits storage."""
+        """Choose pattern snapshots and the finest pattern step that fits."""
 
         from ..domain.antennas.antenna import AntennaModel
 
-        if not isinstance(model, AntennaModel) or not spec.far_field.enabled:
+        if not isinstance(model, AntennaModel):
             self._pending_pattern_diagnostic = None
             return replace(spec, pattern_frequencies_hz=())
-        ground = model.environment.ground
-        requested_step = self._custom_run_pattern_step_deg
-        pattern_frequencies = spec.pattern_frequencies_hz
-        if not pattern_frequencies:
-            if self._custom_pattern_frequency_count is None:
-                pattern_frequencies = band_snapshot_frequencies(
-                    spec.frequency_plan,
-                    preferred_frequency_hz=model.design_frequency_hz,
-                )
-            else:
-                pattern_frequencies = spec.frequency_plan.snapshot_frequencies(
-                    self._custom_pattern_frequency_count,
-                    preferred_frequency_hz=model.design_frequency_hz,
-                )
-        pattern_count = (
-            len(pattern_frequencies) if pattern_frequencies else spec.frequency_plan.count
-        )
-        segment_count = sum(
-            spec.segmentation.segments_for(wire, spec.frequency_plan.stop_hz)
-            for wire in model.wires
-        )
-        budget = choose_pattern_step(
-            frequency_count=spec.frequency_plan.count,
-            pattern_frequency_count=pattern_count,
-            segment_count=segment_count,
-            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
-            counts_for_step=lambda step: pattern_counts(step, ground),
-            requested_step_deg=requested_step,
-        )
-        self._custom_last_budget = budget
-        self._show_custom_pattern_budget(budget)
-        if budget.far_field_enabled:
-            if requested_step is None or budget.pattern_step_deg == requested_step:
-                self._pending_pattern_diagnostic = None
-            else:
-                self._pending_pattern_diagnostic = Diagnostic(
-                    code="solver.pattern_resolution_reduced",
-                    severity=Severity.INFO,
-                    message=(
-                        "far-field pattern resolution reduced from "
-                        f"{requested_step:g}° to {budget.pattern_step_deg:g}° "
-                        "to fit the project storage limit"
-                    ),
-                    field="far_field",
-                )
-            pattern_step_deg = budget.pattern_step_deg
-            if pattern_step_deg is None:
-                raise ValueError("far-field pattern step is missing")
-            return replace(
-                spec,
-                far_field=far_field_request(pattern_step_deg, ground),
-                pattern_frequencies_hz=pattern_frequencies,
-            )
-        self._pending_pattern_diagnostic = Diagnostic(
-            code="solver.pattern_disabled",
-            severity=Severity.WARNING,
-            message=(
-                "far-field pattern disabled: the sweep is too large for the project storage limit"
-            ),
-            field="far_field",
-        )
-        return replace(
+        plan = fit_spec_to_budget(
+            model,
             spec,
-            far_field=FarFieldRequest(enabled=False),
-            pattern_frequencies_hz=(),
+            requested_step_deg=self._custom_run_pattern_step_deg,
+            pattern_frequency_count=self._custom_pattern_frequency_count,
         )
+        if plan.budget is not None:
+            self._custom_last_budget = plan.budget
+            self._show_custom_pattern_budget(plan.budget)
+        self._pending_pattern_diagnostic = plan.diagnostic
+        return plan.spec
 
     def _fit_band_specs_to_budget(
         self,
@@ -4562,43 +4506,17 @@ class MainWindow(QMainWindow):
     ) -> tuple[tuple[SimulationSpec, ...], PatternBudget | None]:
         from ..domain.antennas.antenna import AntennaModel
 
-        if not specs or not isinstance(model, AntennaModel):
+        if not isinstance(model, AntennaModel):
             return specs, None
-        ground = model.environment.ground
-        budget = choose_batch_pattern_step(
-            frequency_counts=tuple(spec.frequency_plan.count for spec in specs),
-            segment_counts=tuple(
-                sum(
-                    spec.segmentation.segments_for(wire, spec.frequency_plan.stop_hz)
-                    for wire in model.wires
-                )
-                for spec in specs
-            ),
-            candidate_steps=tuple(reversed(PATTERN_STEPS_DEG)),
-            counts_for_step=lambda step: pattern_counts(step, ground),
+        fitted, budget = fit_band_specs_to_budget(
+            model,
+            specs,
             requested_step_deg=self._custom_run_pattern_step_deg,
-            pattern_frequency_counts=tuple(
-                max(1, len(spec.pattern_frequencies_hz)) for spec in specs
-            ),
         )
-        self._custom_last_budget = budget
-        self._show_custom_pattern_budget(budget)
-        if not budget.far_field_enabled:
-            return (
-                tuple(
-                    replace(
-                        spec,
-                        far_field=FarFieldRequest(enabled=False),
-                        pattern_frequencies_hz=(),
-                    )
-                    for spec in specs
-                ),
-                budget,
-            )
-        if budget.pattern_step_deg is None:
-            return specs, budget
-        request = far_field_request(budget.pattern_step_deg, ground)
-        return tuple(replace(spec, far_field=request) for spec in specs), budget
+        if budget is not None:
+            self._custom_last_budget = budget
+            self._show_custom_pattern_budget(budget)
+        return fitted, budget
 
     def _update_custom_sweep_controls(self) -> None:
         enabled = self._custom_sweep.isChecked()
@@ -4624,14 +4542,10 @@ class MainWindow(QMainWindow):
         frequency_plan: FrequencyPlan,
         preferred_frequency_hz: float,
     ) -> tuple[float, ...]:
-        if self._custom_pattern_frequency_count is None:
-            return band_snapshot_frequencies(
-                frequency_plan,
-                preferred_frequency_hz=preferred_frequency_hz,
-            )
-        return frequency_plan.snapshot_frequencies(
-            self._custom_pattern_frequency_count,
+        return snapshot_frequencies(
+            frequency_plan,
             preferred_frequency_hz=preferred_frequency_hz,
+            count=self._custom_pattern_frequency_count,
         )
 
     def _update_custom_pattern_status(self) -> None:

@@ -301,6 +301,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `application/pattern_resolution.py`). The main window keeps only the
   form-controlled basic dipole/folded/loop path and applies the project chain.
   No solver, schema, or user-visible behavior change.
+- **Pattern-budget planning moved out of the main window.**
+  `application/pattern_planning.py` now chooses pattern snapshots, the finest
+  fitting angular step, the disabled-pattern fallback, and the shared per-band
+  step. The main window only presents the budget and stores the pending
+  diagnostic. No behavior change.
 
 ### Fixed
 

@@ -1077,7 +1077,9 @@ Solver-independent simulation types:
   pattern snapshot frequencies, optional feed line, matching network,
   `BalunLoss`, and timeout. Typed-family defaults are built by
   `application/simulation_specs.py`; the basic dipole forms keep their editor
-  sweep and reference-impedance controls.
+  sweep and reference-impedance controls. Pattern snapshots and the
+  project-size pattern budget are planned by
+  `application/pattern_planning.py`.
 - `BalunLoss`: a project-level matched balun/unun insertion loss fitted as
   `Lref x (f/fref)^n`; it reduces realized gain but does not change geometry,
   impedance, or SWR.
