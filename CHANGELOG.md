@@ -311,6 +311,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   including variant keys, presets, feed-line, band-plan, and typed-parameter
   extraction. The main window keeps the save prompt, project creation, undo
   history, and template application. No behavior change.
+- **Export file plumbing moved out of the main window.**
+  `ui/exporters.py` owns the save dialogs, suffix normalization, writer
+  dispatch, geometry/report figure generation, and pattern-image batch paths.
+  The main window keeps only the current project/result context, error dialog,
+  and exported-status update. No behavior change.
 
 ### Fixed
 

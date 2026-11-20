@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -239,18 +239,7 @@ from ..importers.nec2_deck import parse_nec2_deck
 from ..importers.vna import ParsedVnaData, parse_vna_data
 from ..importers.vna_csv import VnaColumnMapping, VnaCsvError, vna_csv_headers
 from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
-from ..reporting.csv_export import (
-    write_band_analysis_csv,
-    write_band_analysis_pattern_csv,
-    write_band_analysis_sources_csv,
-    write_csv,
-    write_pattern_csv,
-    write_sources_csv,
-)
 from ..reporting.design_summary import installation_profile_rows
-from ..reporting.html_report import write_html_report
-from ..reporting.touchstone import format_touchstone_s1p
-from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
 from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
@@ -313,6 +302,24 @@ from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.vna_mapping_dialog import VnaMappingDialog
 from .dialogs.yagi_dialog import YagiDialog
+from .exporters import (
+    ExportContext,
+    ExportFailure,
+    export_bom_csv,
+    export_frequency_csv,
+    export_geometry_dxf,
+    export_geometry_pdf,
+    export_geometry_png,
+    export_geometry_svg,
+    export_html_report,
+    export_pattern_csv,
+    export_pattern_png,
+    export_pdf_report,
+    export_sources_csv,
+    export_touchstone,
+    export_wire_schedule_csv,
+    save_nec_deck,
+)
 from .help import apply_help
 from .history import ProjectSnapshot, SnapshotCommand, history_action
 from .i18n import Language, Translator
@@ -328,7 +335,6 @@ from .preferences import (
 )
 from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
 from .recovery import AutosaveRecovery, RecoverySnapshot, RecoveryTooLargeError
-from .report_pdf import write_report_pdf
 from .template_identity import catalog_key_for, label_key_for
 from .theme import ThemeController
 from .units import DisplayUnits, UnitSystem, length_from_m, length_unit_key
@@ -7801,71 +7807,134 @@ class MainWindow(QMainWindow):
             return None
         return self._project, self._project.design_by_id(self._design_id), result
 
-    def export_csv(self) -> None:
+    def _design_export_context(self) -> ExportContext | None:
+        if self._project is None or self._design_id is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return None
+        return ExportContext(
+            parent=self,
+            translator=self._translator,
+            project=self._project,
+            design=self._project.design_by_id(self._design_id),
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+            include_3d=self._report_include_3d,
+            include_band_3d=self._report_include_band_3d,
+        )
+
+    def _result_export_context(self) -> ExportContext | None:
         data = self._current_export_data()
         if data is None:
-            return
+            return None
         project, design, result = data
-        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.csv"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.csv_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.csv_filter"),
+        return ExportContext(
+            parent=self,
+            translator=self._translator,
+            project=project,
+            design=design,
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
+            result=result,
+            band_analysis=(
+                self._band_analysis_results.get(self._design_id)
+                if self._design_id is not None
+                else None
+            ),
+            include_3d=self._report_include_3d,
+            include_band_3d=self._report_include_band_3d,
         )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".csv":
-            path = path.with_suffix(".csv")
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
+
+    def _run_export(self, action: Callable[..., Path | None], *args: object) -> None:
         try:
-            if analysis is not None:
-                write_band_analysis_csv(analysis, path)
-            else:
-                write_csv(result, path)
+            if action(*args) is None:
+                return
+        except ExportFailure as exc:
+            self._show_error(
+                self._translator.t(exc.message_key, message=exc.detail),
+            )
+            return
         except Exception as exc:
             self._show_error(self._translator.t("error.export", message=str(exc)))
             return
         self._last_status_key = "status.exported"
         self._update_status_text()
 
+    def export_csv(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_frequency_csv, context)
+
     def export_touchstone(self) -> None:
-        data = self._current_export_data()
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_touchstone, context)
+
+    def export_sources_csv(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_sources_csv, context)
+
+    def export_pattern_csv(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_pattern_csv, context)
+
+    def export_pattern_png(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_pattern_png, context, self._results)
+
+    def export_html_report(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_html_report, context)
+
+    def export_pdf_report(self) -> None:
+        context = self._result_export_context()
+        if context is not None:
+            self._run_export(export_pdf_report, context)
+
+    def export_wire_schedule_csv(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_wire_schedule_csv, context)
+
+    def export_bom_csv(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_bom_csv, context)
+
+    def export_geometry_png(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_geometry_png, context, self._geometry)
+
+    def export_geometry_svg(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_geometry_svg, context, self._geometry)
+
+    def export_geometry_pdf(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_geometry_pdf, context, self._geometry)
+
+    def export_geometry_dxf(self) -> None:
+        context = self._design_export_context()
+        if context is not None:
+            self._run_export(export_geometry_dxf, context, self._geometry)
+
+    def export_nec_deck(self) -> None:
+        data = self._current_nec_deck()
         if data is None:
             return
-        project, design, result = data
-        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.s1p"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.touchstone_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.touchstone_filter"),
+        project, design, text = data
+        context = ExportContext(
+            parent=self,
+            translator=self._translator,
+            project=project,
+            design=design,
+            display_units=DisplayUnits(self._unit_system, self._length_policy),
         )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".s1p":
-            path = path.with_suffix(".s1p")
-        try:
-            text = format_touchstone_s1p(
-                [
-                    (frequency.frequency_hz, frequency.impedance_ohm)
-                    for frequency in result.frequencies
-                ],
-                result.spec.reference_impedance_ohm,
-                comments=(f"Project: {project.name}", f"Design: {design.name}"),
-            )
-            path.write_text(text, encoding="utf-8")
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
+        self._run_export(save_nec_deck, context, text)
 
     def _current_nec_deck(self) -> tuple[Project, DesignVariant, str] | None:
         if self._project is None or self._design_id is None:
@@ -7899,31 +7968,6 @@ class MainWindow(QMainWindow):
         )
         return project, design, render_nec_deck(design.antenna, spec, metadata)
 
-    def export_nec_deck(self) -> None:
-        data = self._current_nec_deck()
-        if data is None:
-            return
-        project, design, text = data
-        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.nec"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.export_nec_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.export_nec_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".nec":
-            path = path.with_suffix(".nec")
-        try:
-            path.write_text(text, encoding="utf-8")
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
     def copy_nec_deck(self) -> None:
         data = self._current_nec_deck()
         if data is None:
@@ -7931,361 +7975,6 @@ class MainWindow(QMainWindow):
         _project, _design, text = data
         QApplication.clipboard().setText(text)
         self._last_status_key = "status.copied"
-        self._update_status_text()
-
-    def export_sources_csv(self) -> None:
-        data = self._current_export_data()
-        if data is None:
-            return
-        project, design, result = data
-        suggested = (
-            f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}-sources.csv"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.sources_csv_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.csv_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".csv":
-            path = path.with_suffix(".csv")
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
-        try:
-            if analysis is not None:
-                write_band_analysis_sources_csv(analysis, path)
-            else:
-                write_sources_csv(result, path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_wire_schedule_csv(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-wire-schedule.csv"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.wire_schedule_csv_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.csv_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".csv":
-            path = path.with_suffix(".csv")
-        try:
-            write_wire_schedule_csv(design, path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_bom_csv(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-bom.csv"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.bom_csv_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.csv_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".csv":
-            path = path.with_suffix(".csv")
-        try:
-            write_bom_csv(design, path, costs=self._project.bom_costs)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_pattern_csv(self) -> None:
-        data = self._current_export_data()
-        if data is None:
-            return
-        project, design, result = data
-        suggested = (
-            f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}-pattern.csv"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.pattern_csv_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.csv_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".csv":
-            path = path.with_suffix(".csv")
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
-        try:
-            if analysis is not None:
-                write_band_analysis_pattern_csv(analysis, path)
-            else:
-                write_pattern_csv(result, path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_geometry_png(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-geometry.png"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.geometry_png_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.png_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".png":
-            path = path.with_suffix(".png")
-        try:
-            self._geometry.save_image(path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_geometry_svg(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-geometry.svg"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.geometry_svg_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.svg_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".svg":
-            path = path.with_suffix(".svg")
-        try:
-            self._geometry.save_svg(path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_geometry_pdf(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-geometry.pdf"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.geometry_pdf_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.pdf_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".pdf":
-            path = path.with_suffix(".pdf")
-        try:
-            self._geometry.save_pdf(path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_geometry_dxf(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
-            return
-        design = self._project.design_by_id(self._design_id)
-        suggested = (
-            f"{self._safe_file_name(self._project.name)}-"
-            f"{self._safe_file_name(design.name)}-geometry.dxf"
-        )
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.geometry_dxf_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.dxf_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".dxf":
-            path = path.with_suffix(".dxf")
-        try:
-            self._geometry.save_dxf(path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def export_pattern_png(self) -> None:
-        data = self._current_export_data()
-        if data is None:
-            return
-        project, design, _result = data
-        stem = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}"
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
-        if analysis is not None and analysis.bands:
-            directory = QFileDialog.getExistingDirectory(
-                self,
-                self._translator.t("dialog.band_pattern_png_title"),
-                str(Path.home()),
-            )
-            if not directory:
-                return
-            paths = tuple(
-                Path(directory) / f"{stem}-{self._safe_file_name(band.band.name)}-pattern.png"
-                for band in analysis.bands
-            )
-            try:
-                saved = self._results.save_band_pattern_images(paths)
-            except Exception as exc:
-                self._show_error(self._translator.t("error.export", message=str(exc)))
-                return
-            if not saved:
-                self._show_error(self._translator.t("error.no_result"))
-                return
-            self._last_status_key = "status.exported"
-            self._update_status_text()
-            return
-
-        suggested = f"{stem}-pattern.png"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.pattern_png_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.png_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".png":
-            path = path.with_suffix(".png")
-        try:
-            self._results.save_pattern_image(path)
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    def _report_geometry_svg(self, design: DesignVariant) -> str | None:
-        view = GeometryView(
-            self._translator,
-            self._unit_system,
-            display_units=DisplayUnits(self._unit_system, self._length_policy),
-        )
-        view.set_export_theme()
-        view.set_model(
-            design.antenna,
-            antenna_type=design.antenna_type,
-            display_name=design.name,
-            parameters=design.parameters,
-        )
-        try:
-            return view.construction_svg(1200, 650).decode("utf-8")
-        except Exception:
-            return None
-        finally:
-            view.deleteLater()
-
-    def export_html_report(self) -> None:
-        data = self._current_export_data()
-        if data is None:
-            return
-        project, design, result = data
-        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.html"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.html_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.html_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() not in {".html", ".htm"}:
-            path = path.with_suffix(".html")
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
-        try:
-            write_html_report(
-                project,
-                design,
-                result,
-                path,
-                band_analysis=analysis,
-                labeler=self._translator.report,
-                language=self._translator.language.value,
-                geometry_svg=self._report_geometry_svg(design),
-                display_units=DisplayUnits(self._unit_system, self._length_policy),
-                include_pattern_lobe=self._report_include_3d,
-                include_band_pattern_lobes=self._report_include_band_3d,
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
         self._update_status_text()
 
     def _unique_variant_name(self, base: str) -> str:
@@ -8324,50 +8013,6 @@ class MainWindow(QMainWindow):
         self._update_title()
         self._update_actions()
         self._update_status_text()
-
-    def export_pdf_report(self) -> None:
-        data = self._current_export_data()
-        if data is None:
-            return
-        project, design, result = data
-        suggested = f"{self._safe_file_name(project.name)}-{self._safe_file_name(design.name)}.pdf"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.pdf_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.pdf_filter"),
-        )
-        if not filename:
-            return
-        path = Path(filename)
-        if path.suffix.lower() != ".pdf":
-            path = path.with_suffix(".pdf")
-        analysis = (
-            self._band_analysis_results.get(self._design_id)
-            if self._design_id is not None
-            else None
-        )
-        try:
-            write_report_pdf(
-                self._translator,
-                project,
-                design,
-                result,
-                path,
-                band_analysis=analysis,
-                geometry_svg=self._report_geometry_svg(design),
-                include_pattern_lobe=self._report_include_3d,
-                include_band_pattern_lobes=self._report_include_band_3d,
-            )
-        except Exception as exc:
-            self._show_error(self._translator.t("error.export", message=str(exc)))
-            return
-        self._last_status_key = "status.exported"
-        self._update_status_text()
-
-    @staticmethod
-    def _safe_file_name(value: str) -> str:
-        return value.replace("/", "-").replace("\\", "-").replace(":", "-")
 
     def locate_solver(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(
