@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from ...application.discretization import validate_segmentation
 from ...application.ports.antenna_solver import ProgressCallback
 from ...application.ports.cancellation import CancelToken
 from ...domain.antennas.antenna import AntennaModel
@@ -25,7 +26,6 @@ from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ...domain.simulation.solver import SolverCapabilities, SolverMetadata
 from ...domain.simulation.spec import SimulationSpec
 from ..assumptions import validate_nec2_assumptions
-from ..discretization import validate_segmentation
 from ..fingerprint import model_fingerprint
 from .capabilities import NEC2C_CAPABILITIES
 from .errors import SolverExecutionError, SolverNotAvailable, SolverOutputTooLarge

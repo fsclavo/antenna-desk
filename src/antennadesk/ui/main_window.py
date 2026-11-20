@@ -55,6 +55,7 @@ from PySide6.QtWidgets import (
 
 from .. import __version__
 from ..application.cancellation import EventCancelToken
+from ..application.discretization import resolve_model_quality
 from ..application.ports.antenna_solver import AntennaSolver
 from ..application.ports.project_repository import ProjectRepository
 from ..application.use_cases.add_design_variant import (
@@ -226,6 +227,7 @@ from ..domain.simulation.segmentation import (
     aligned_policy_for_wire_centers,
 )
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
+from ..importers import read_import_text
 from ..importers.mmana import parse_mmana_file
 from ..importers.nec2_deck import parse_nec2_deck
 from ..importers.vna import ParsedVnaData, parse_vna_data
@@ -243,7 +245,6 @@ from ..reporting.design_summary import installation_profile_rows
 from ..reporting.html_report import write_html_report
 from ..reporting.touchstone import format_touchstone_s1p
 from ..reporting.wire_schedule import write_bom_csv, write_wire_schedule_csv
-from ..simulation.discretization import resolve_model_quality
 from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
@@ -6126,7 +6127,7 @@ class MainWindow(QMainWindow):
         warnings: list[str] = []
         for path in paths:
             try:
-                text = path.read_text(encoding="utf-8", errors="replace")
+                text = read_import_text(path, errors="replace")
                 s2p_port = 1
                 if path.suffix.lower() == ".s2p":
                     selected = self._choose_s2p_port(path.name)
@@ -6334,7 +6335,7 @@ class MainWindow(QMainWindow):
             return
         path = Path(filename)
         try:
-            result = parse_nec2_deck(path.read_text(encoding="utf-8", errors="strict"))
+            result = parse_nec2_deck(read_import_text(path))
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=path.stem,
@@ -6370,7 +6371,7 @@ class MainWindow(QMainWindow):
             return
         path = Path(filename)
         try:
-            result = parse_mmana_file(path.read_text(encoding="utf-8", errors="strict"))
+            result = parse_mmana_file(read_import_text(path))
             project = CreateDipoleProject().execute(
                 CreateDipoleProjectCommand(
                     project_name=path.stem,

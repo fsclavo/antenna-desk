@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from antennadesk.application.discretization import (
+    build_segment_layout,
+    resolve_model_quality,
+    validate_segmentation,
+)
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.feed import FeedPoint
 from antennadesk.domain.antennas.geometry import Point3D
@@ -13,11 +18,6 @@ from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.simulation.discretization import (
-    build_segment_layout,
-    resolve_model_quality,
-    validate_segmentation,
-)
 
 
 def _wire(

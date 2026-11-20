@@ -49,7 +49,7 @@ from ...domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from ...domain.simulation.result import SimulationResult, SimulationStatus
 from ...domain.simulation.segmentation import SegmentationPolicy, aligned_policy_for_model
 from ...domain.simulation.spec import SimulationSpec
-from ...simulation.discretization import resolve_model_quality
+from ..discretization import resolve_model_quality
 from ..ports.antenna_solver import AntennaSolver
 from ..ports.cancellation import CancelToken
 from .run_simulation import RunSimulation, RunSimulationCommand

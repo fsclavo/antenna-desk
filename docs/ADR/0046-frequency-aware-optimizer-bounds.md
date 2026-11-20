@@ -316,7 +316,7 @@ available.
 
 ### HF7 implementation note
 
-`resolve_model_quality()` in `simulation/discretization.py` is the shared
+`resolve_model_quality()` in `application/discretization.py` is the shared
 thin-wire policy. It reduces the segment count of short wires whose
 segment/radius ratio is below 8 when the resulting segment is still at most
 0.1λ. This removes the 2.4 GHz Moxon tip warning without changing the gap or

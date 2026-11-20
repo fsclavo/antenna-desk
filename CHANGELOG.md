@@ -295,6 +295,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Bounded project decompression.** Loading a gzip-compressed project now
+  stops at 256 MB of expanded JSON and reports a size error instead of
+  materializing an unbounded payload. Normal project files are unchanged.
+- **Oversized import guard.** NEC-2, MMANA, and VNA text imports reject files
+  above 16 MB before decoding. Parser-specific row and character limits still
+  apply; normal files are unchanged.
 - **Autosave CPU regression after simulations.** Recovery snapshots now exclude
   completed simulation runs and their raw NEC input/output, update on a
   debounced design-change trigger instead of every five seconds, and are capped

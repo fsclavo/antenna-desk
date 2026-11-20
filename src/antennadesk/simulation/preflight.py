@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ..application.discretization import validate_segmentation
 from ..domain.antennas.antenna import AntennaModel
 from ..domain.common.validation import Diagnostic, Severity
 from ..domain.design.preflight import (
@@ -18,7 +19,6 @@ from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.result import SimulationResult, SimulationStatus
 from ..domain.simulation.spec import SimulationSpec
 from .assumptions import validate_nec2_assumptions
-from .discretization import validate_segmentation
 from .fingerprint import model_fingerprint
 
 _RESULT_PROBLEM_CODES = frozenset(

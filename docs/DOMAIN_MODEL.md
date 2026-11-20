@@ -805,12 +805,14 @@ and SWR at the target. The result is an explicit `TuningProposal` with
 ## Project file
 
 The native format is versioned JSON, stored losslessly gzip-compressed.
-Plain JSON files from older versions are still accepted. The envelope is:
+Plain JSON files from older versions are still accepted. Loading is bounded to
+64 MB compressed and 256 MB expanded so an untrusted file cannot decompress
+without limit. The envelope is:
 
 ```json
 {
   "format": "antennadesk-project",
-  "schema_version": 8,
+  "schema_version": 1,
   "project": {
     "id": "11111111-1111-4111-8111-111111111111",
     "name": "40 m dipole",
@@ -872,6 +874,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 }
 ```
 
+The snippet above is the version 1 envelope, not the current serialization.
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
@@ -1041,8 +1044,9 @@ the application writes version 58.
 - Measurements are imported from CSV; there is no live instrument-control
   adapter.
 - No numerical discretization in the domain; the segmentation policy is a
-  configuration value, including optional per-wire overrides, and the solver
-  adapter builds the actual layout.
+  configuration value, including optional per-wire overrides. An
+  application-layer simulation service builds the layout; the solver adapter
+  consumes it.
 - Simulation results are persisted as immutable runs (introduced in schema 30).
   Each frequency also stores the ideal input result of every driven source; the
   primary feed remains the impedance/SWR reference.

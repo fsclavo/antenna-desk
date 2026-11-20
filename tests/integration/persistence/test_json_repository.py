@@ -194,6 +194,19 @@ def test_plain_json_project_still_loads(
     assert repository.load(path) == sample_project
 
 
+def test_oversized_uncompressed_payload_is_rejected(
+    repository: JsonProjectRepository,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_UNCOMPRESSED_BYTES", 256)
+    path = tmp_path / "bomb.antennadesk"
+    path.write_bytes(gzip.compress(b"{" + b" " * 1024 + b"}"))
+
+    with pytest.raises(ProjectTooLargeError, match="uncompressed payload"):
+        repository.load(path)
+
+
 def test_unknown_format_is_rejected(
     repository: JsonProjectRepository,
     sample_project: Project,

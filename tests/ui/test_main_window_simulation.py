@@ -14,9 +14,9 @@ from main_window_support import FakeSolver, use_parameters
 from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.discretization import validate_segmentation
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.persistence.json_repository import JsonProjectRepository
-from antennadesk.simulation.discretization import validate_segmentation
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow

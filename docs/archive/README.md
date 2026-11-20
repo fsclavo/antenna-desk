@@ -18,7 +18,9 @@ current state; they are not the current source of truth.
 
 - [`qa/QA_STRATEGY_2026-11-04.md`](qa/QA_STRATEGY_2026-11-04.md) — historical
   QA baseline; the current gate is in [`../../AGENTS.md`](../../AGENTS.md).
-- [`qa/`](qa/) — QA pass records from 2026-11-13 through 2026-11-18.
+- [`qa/QA_PASS_2026-11-20.md`](qa/QA_PASS_2026-11-20.md) — full QA and
+  technical-debt sweep; no functional defect found.
+- [`qa/`](qa/) — QA pass records from 2026-11-13 through 2026-11-20.
 
 ### Plans
 

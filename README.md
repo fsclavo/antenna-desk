@@ -323,7 +323,8 @@ Per-template limitations and evidence levels are single-sourced in
   users who manage the solver themselves.
 - Simulation runs are stored in the project, including raw solver text. Project
   files are losslessly gzip-compressed JSON; the 64 MB limit applies to the
-  compressed file, with a warning above 32 MB. Use
+  compressed file, with a warning above 32 MB. Decompression is bounded to
+  256 MB of expanded JSON. Use
   **Tools → Compact Simulation History** to keep only the latest run per
   variant. High-resolution patterns and long sweeps multiply runtime and stored
   points.

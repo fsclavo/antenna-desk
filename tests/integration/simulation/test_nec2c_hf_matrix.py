@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from antennadesk.application.discretization import resolve_model_quality
 from antennadesk.application.use_cases.run_simulation import (
     RunSimulation,
     RunSimulationCommand,
@@ -31,7 +32,6 @@ from antennadesk.domain.simulation.segmentation import (
     aligned_policy_for_model,
 )
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.simulation.discretization import resolve_model_quality
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
 NEC2C = os.environ.get("NEC2C")

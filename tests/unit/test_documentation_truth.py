@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -146,3 +147,25 @@ def test_docs_index_lists_every_current_document() -> None:
         if "archive" in path.parts:
             continue
         assert path.resolve() in linked, f"{path.relative_to(ROOT)} is not indexed"
+
+
+def test_docs_index_lists_every_adr_without_dead_entries() -> None:
+    index = _read(DOCS / "README.md")
+    linked = {
+        (DOCS / target).resolve()
+        for target in re.findall(r"\]\((ADR/[^)#]+\.md)(?:#[^)]*)?\)", index)
+    }
+    current = {path.resolve() for path in (DOCS / "ADR").glob("*.md")}
+
+    assert not current - linked, f"unindexed ADRs: {sorted(current - linked)}"
+    assert not linked - current, f"dead ADR index entries: {sorted(linked - current)}"
+
+
+def test_version_one_example_stays_a_migration_fixture() -> None:
+    raw = (ROOT / "examples" / "dipole_40m.antennadesk").read_bytes()
+    document = json.loads(raw)
+    domain_model = _read(DOCS / "DOMAIN_MODEL.md")
+
+    assert document["schema_version"] == 1
+    assert '"schema_version": 1' in domain_model
+    assert "kept as a version 1 fixture" in domain_model

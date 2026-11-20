@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import gzip
+import io
 import json
 import os
 import tempfile
@@ -14,7 +15,7 @@ from typing import Any, cast
 from pydantic import ValidationError
 
 from ..domain.projects.project import Project
-from .constants import MAX_PROJECT_SIZE_BYTES
+from .constants import MAX_PROJECT_SIZE_BYTES, MAX_PROJECT_UNCOMPRESSED_BYTES
 from .errors import ProjectFormatError, ProjectTooLargeError
 from .migrations import migrate_document
 from .schema import ProjectDocument, document_from_project, project_from_document
@@ -46,9 +47,18 @@ class JsonProjectRepository:
 
     @staticmethod
     def _decompress(data: bytes) -> bytes:
-        if data.startswith(GZIP_MAGIC):
-            return gzip.decompress(data)
-        return data
+        if not data.startswith(GZIP_MAGIC):
+            return data
+        with gzip.GzipFile(fileobj=io.BytesIO(data)) as handle:
+            # Read one byte past the limit so a gzip bomb is rejected without
+            # materializing the complete expanded payload.
+            payload = handle.read(MAX_PROJECT_UNCOMPRESSED_BYTES + 1)
+        if len(payload) > MAX_PROJECT_UNCOMPRESSED_BYTES:
+            raise ProjectTooLargeError(
+                "project is too large (uncompressed payload exceeds "
+                f"{MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)"
+            )
+        return payload
 
     def prepare_payload(self, project: Project) -> bytes:
         """Serialize and compress a project without writing it to disk."""

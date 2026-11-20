@@ -27,7 +27,7 @@ from ...domain.simulation.result import (
 )
 from ...domain.simulation.segmentation import SegmentationPolicy
 from ...domain.simulation.spec import SimulationSpec
-from ...simulation.discretization import (
+from ..discretization import (
     SegmentLayout,
     build_segment_layout,
     resolve_model_quality,

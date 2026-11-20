@@ -229,7 +229,7 @@ promise that every file changes.
 
 | Area | Files |
 |---|---|
-| Formatter and policy | `ui/units.py`, `ui/preferences.py`, a shared Qt-free formatting module |
+| Formatter and policy | `presentation/units.py`, `ui/preferences.py`, `ui/units.py` compatibility re-export |
 | Form helpers | `ui/widgets/form_units.py`, family editors and dialogs |
 | Geometry | `ui/geometry/builder.py`, `ui/widgets/geometry_view.py`, `ui/geometry/dxf_export.py` |
 | Human-readable reports | `reporting/design_summary.py`, `reporting/construction_sheet.py`, `reporting/wire_schedule.py`, `reporting/bom_costs.py`, `reporting/construction_package.py`, `ui/construction_pdf.py` |

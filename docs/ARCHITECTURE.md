@@ -10,6 +10,7 @@ ports.
 ```text
 presentation
   ui/app.py, main_window.py, dialogs, widgets, workers, i18n
+  presentation/units.py: Qt-free length formatting shared with reporting
         │
 application
   ports: ProjectRepository, AntennaSolver, CancelToken
@@ -17,6 +18,8 @@ application
              EditDipoleLength, UpdateDipoleDesign, AddDesignVariant,
              RenameDesignVariant, DeleteDesignVariant, RunSimulation,
              OptimizeDipoleLength
+  simulation services: segment layout, model-quality resolution,
+             segmentation diagnostics
         │
 domain
   common: units, identifiers, time, validation
@@ -31,7 +34,7 @@ domain
 adapters
   persistence: JsonProjectRepository, Pydantic schema, migrations, atomic writes
   simulation/nec2: input writer, parser, process runner, normalization
-  simulation: discretization, SWR normalization, fingerprint
+  simulation: SWR normalization, fingerprint, assumptions, preflight
   optimization: family descriptors and hybrid deterministic engine
   reporting: CSV, self-contained HTML, construction sheet, SVG charts
 ```
@@ -46,13 +49,17 @@ project bundles. The domain is no longer dipole-only.
 - `domain/` imports only the Python standard library.
 - `application/` imports the domain and defines ports; it does not import
   PySide6, Pydantic, or concrete adapters.
+- `presentation/` is Qt-free display policy shared by the UI and human-readable
+  reports. It imports only the domain.
 - `persistence/` imports the domain and Pydantic; it is the only place where
   the project schema is serialized.
 - `simulation/nec2/` implements the `AntennaSolver` port. It imports the
-  domain and application ports, but the domain and application do not import
-  it.
-- The GUI depends on application use cases and ports, never on solver or
-  persistence details.
+  domain and application-layer ports and simulation services, but the domain
+  and application do not import it.
+- The GUI depends on application use cases and ports. `main_window.py` still
+  has four allowlisted concrete imports (project-size constants, NEC deck
+  export, solver construction, and preflight); the architecture guard lists
+  them, and new adapter imports must go through a use case or port instead.
 - UI widgets never perform electromagnetic calculations. Simulation runs in a
   `QThread` worker and returns a normalized `SimulationResult`.
 
@@ -345,7 +352,8 @@ Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
-simulation-history compaction.
+simulation-history compaction. Loading also stops above 256 MB of expanded
+JSON so a gzip bomb cannot allocate an unbounded payload.
 
 Multiband analysis is an application-level batch over the existing single-band
 solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,

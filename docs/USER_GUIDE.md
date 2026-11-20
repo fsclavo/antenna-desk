@@ -2586,7 +2586,8 @@ project-level feed line or matching network is listed as post-processed and is
 not inserted into the NEC deck.
 Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
-to the compressed file. Saving above 32 MB compressed shows a warning, and
+to the compressed file. Decompression is bounded to 256 MB of expanded JSON.
+Saving above 32 MB compressed shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
 design.
 

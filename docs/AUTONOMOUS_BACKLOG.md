@@ -38,7 +38,6 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
-| F1 | Remove the unreachable `return` in `LiveTuningDialog._finished` | S | none | **Queued 2026-11-20:** delete the duplicate `return`; no behavior change. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
@@ -890,10 +889,12 @@ decision:
 ## Current baseline
 
 - Schema: **58**.
-- Full gate: **4,214 passed, 1 skipped** on 2026-11-20 after the documentation
-  truth pass, CHANGELOG repair, support-structure guards, and documentation
-  link/duplicate guards, with `NEC2C` auto-detected by the test configuration;
-  the skip is the Windows-only console-hiding test on Linux.
+- Full gate: **4,222 passed, 1 skipped** on 2026-11-20 after the full QA and
+  technical-debt sweep (bounded project decompression, import size guards,
+  dependency-direction and documentation guards), with `NEC2C` auto-detected
+  by the test configuration; the skip is the Windows-only console-hiding test
+  on Linux. See
+  [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

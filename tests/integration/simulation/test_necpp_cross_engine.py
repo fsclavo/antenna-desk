@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from antennadesk.application.discretization import build_segment_layout
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
@@ -26,7 +27,6 @@ from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.simulation.discretization import build_segment_layout
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
 PyNEC = pytest.importorskip(

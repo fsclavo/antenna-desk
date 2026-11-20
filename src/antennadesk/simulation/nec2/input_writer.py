@@ -7,17 +7,17 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from ...domain.antennas.antenna import AntennaModel
-from ...domain.antennas.load import ParallelLoad
-from ...domain.environment.ground import GroundKind
-from ...domain.simulation.spec import SimulationSpec
-from ..assumptions import ground_clearance_offset_m
-from ..discretization import (
+from ...application.discretization import (
     FeedSegment,
     SegmentLayout,
     WireSegmentation,
     build_segment_layout,
 )
+from ...domain.antennas.antenna import AntennaModel
+from ...domain.antennas.load import ParallelLoad
+from ...domain.environment.ground import GroundKind
+from ...domain.simulation.spec import SimulationSpec
+from ..assumptions import ground_clearance_offset_m
 
 
 @dataclass(frozen=True, slots=True)

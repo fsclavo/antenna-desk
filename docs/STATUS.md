@@ -15,6 +15,9 @@
 - DL6 stacked Yagi is a domain prototype only.
 - DL7 is a completed spike; implementation is pending and the native radial
   screen remains unvalidated for SWR.
+- A full QA and technical-debt sweep on 2026-11-20 left the complete gate green
+  with no functional defect; see
+  [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
 
 ## Next
 
