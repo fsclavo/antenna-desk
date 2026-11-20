@@ -1,6 +1,11 @@
 # AntennaDesk — Development Blueprint
 ## Antenna design, simulation, and construction application for amateur radio
 
+> **Historical document.** This is the initial product and architecture
+> blueprint. Current architecture is documented in
+> [`../ARCHITECTURE.md`](../ARCHITECTURE.md) and
+> [`../DOMAIN_MODEL.md`](../DOMAIN_MODEL.md).
+
 **Version:** 1.0 · **Status:** initial blueprint for OpenCode · **Working name:** AntennaDesk  
 **Target platforms:** Linux and Windows · **Initial UI language:** Spanish, prepared for English  
 **Type:** desktop application, local-first, with an external electromagnetic engine

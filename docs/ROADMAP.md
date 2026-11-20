@@ -39,6 +39,11 @@ tolerance.
 
 ## Current state
 
+**Latest published release:** `0.9.0` (2026-11-17). The 1.0 Confidence wave is
+complete; 1.1 Station is in progress (DL1/DL2 done, DL5 partial), and 1.2 has
+partial DL3/DL6 work and a completed DL7 spike. See [`STATUS.md`](STATUS.md)
+and the [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
+
 Completed:
 
 - Solver adapter, normalized results, persistence, imports, and reports.
@@ -213,7 +218,8 @@ Deferred:
 - Optional GPG detached signatures and Windows Authenticode signing hooks
   (completed, deferred for the initial release).
 - Published `v0.1.0`, `v0.2.0`, `v0.3.0`, `v0.3.1`, `v0.4.0`, `v0.4.1`,
-  `v0.4.2`, `v0.5.0`, and `v0.6.0` with unsigned, SHA-256-verified artifacts
+  `v0.4.2`, `v0.5.0`, `v0.6.0`, `v0.7.0`, `v0.7.1`, `v0.8.0`, `v0.8.1`,
+  `v0.8.2`, and `v0.9.0` with unsigned, SHA-256-verified artifacts
   (completed).
 - Keep the wheel/sdist smoke test as the fallback distribution path
   (completed).
@@ -222,7 +228,7 @@ Deferred:
 
 Goal: let naturally multiband antennas be analyzed over a user-selected band
 set without pretending that every family is broadband. The detailed plan is in
-[`docs/MULTIBAND_ANALYSIS_PLAN.md`](MULTIBAND_ANALYSIS_PLAN.md).
+[`docs/archive/plans/MULTIBAND_ANALYSIS_PLAN.md`](archive/plans/MULTIBAND_ANALYSIS_PLAN.md).
 
 Scope:
 
@@ -271,7 +277,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; wave 1 in progress; wave 2 queued; see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19) |
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; 1.1 in progress (DL1/DL2 done, DL5 partial); 1.2 partial (DL3/DL6 prototypes, DL7 spike); see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -523,7 +529,7 @@ does it fall on the Smith chart, and what does the site do to the pattern.
 
 This is product scope. Execution, acceptance criteria, dependencies, and risk
 live in
-[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
+[`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave).
 The UX track rules apply unchanged. This track adds: table-stakes items land
 before delight items; no new antenna families; terrain starts with the bounded
 native ground screen/cliff work; near-field is conservative and never a legal
@@ -579,10 +585,11 @@ Product track:
    feed-line preview, automatic L/Pi/T preview, and export) is done. DL2's
    first slice (bounded tuner check, E12/E24, Q loss, limiting part, L/Pi/T
    best effort, bypass, band-center rows, and port ratings) is done; only
-   per-component branch ratings remain optional. DL5 is next. Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays post-1.2
-   until a validated terrain ADR exists. Execution and acceptance criteria are
-   in
-   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).
+   per-component branch ratings remain optional. DL5 is next. Wave 2 is in
+   progress: DL3 is partial, DL6 is a domain prototype, and DL7 has a completed
+   spike; DL4 is queued. DL8 stays post-1.2 until a validated terrain ADR
+   exists. Execution and acceptance criteria are in
+   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave).
 
 Modeling track:
 
@@ -609,13 +616,13 @@ Release track:
    catalog starting frequencies. All release jobs completed successfully in CI,
    including the Windows bundle and installer QA.
 7. Add GPG/Authenticode signing in a later release if required.
-8. `v0.7.0`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` were published after
-   this section was written; see [`CHANGELOG.md`](../CHANGELOG.md) and the
-   release QA records for details.
-9. The 2026-11-19 trust/station track completed 1.0 Confidence on 2026-11-19.
-   1.1 Station and 1.2 Site and exploration remain queued; there are no
-   committed dates, and each release is gated by the acceptance criteria in the
-   backlog.
+8. `v0.7.0`, `v0.7.1`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` are published;
+   see [`CHANGELOG.md`](../CHANGELOG.md) and the archived release QA records in
+   [`archive/releases/`](archive/releases/).
+9. The 2026-11-19 trust/station track completed 1.0 Confidence. 1.1 Station is
+   in progress (DL1/DL2 done, DL5 partial); 1.2 has partial DL3/DL6 work and a
+   completed DL7 spike. There are no committed dates, and each release is gated
+   by the acceptance criteria in the backlog.
 
 Validation track:
 

@@ -7,7 +7,7 @@
   [`../DISPLAY_UNITS_SPEC.md`](../DISPLAY_UNITS_SPEC.md),
   [ADR-0012](0012-geometry-presentation.md),
   [ADR-0027](0027-construction-view-policy.md), and
-  [`../PROJECT_DECISIONS.md`](../PROJECT_DECISIONS.md)
+  [`../archive/founding-decisions.md`](../archive/founding-decisions.md)
 
 ## Context
 
@@ -156,5 +156,5 @@ Legacy `unit_system=` scene callers keep their fixed strings.
   examples, surface matrix, test plan, and execution slices.
 - [`../AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) — U0–U6 execution
   queue, dependencies, and acceptance criteria.
-- [`../PROJECT_DECISIONS.md`](../PROJECT_DECISIONS.md) — confirmed product
+- [`../archive/founding-decisions.md`](../archive/founding-decisions.md) — founding product
   decision and canonical-unit boundary.

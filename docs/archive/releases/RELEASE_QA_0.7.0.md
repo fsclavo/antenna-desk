@@ -51,7 +51,7 @@ The user performed a manual pass over the end-fed editor (L/Pi/T, return path,
 feedpoint choke, transformer and loss selectors), the feed-line catalog and
 attenuation hints, matching precedence, reports, and light/dark plus normal text
 scaling. The pass was reported successful with no blocking issue. Details are in
-[`QA_PASS_2026-11-15.md`](QA_PASS_2026-11-15.md).
+[`QA_PASS_2026-11-15.md`](../qa/QA_PASS_2026-11-15.md).
 
 A real-display Windows pass and a second Linux display-scaling pass remain
 recommended as follow-up QA; they did not block publication.

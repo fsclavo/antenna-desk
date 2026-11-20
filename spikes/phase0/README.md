@@ -1,7 +1,7 @@
 # Phase 0 — Solver spike
 
 This directory contains the reproducible Phase 0 spike from the
-[development blueprint](../../docs/antennadesk-development-blueprint.md). Its
+[development blueprint](../../docs/archive/antennadesk-development-blueprint.md). Its
 goal is to prove that a NEC-2 engine can be integrated, executed, and
 validated on Linux and Windows before committing to the AntennaDesk
 architecture.

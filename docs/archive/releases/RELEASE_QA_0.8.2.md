@@ -130,12 +130,12 @@ executable, and completed the silent uninstall. See CI run
 
 - This is a patch release; the 0.8.1 feature set and limitations are unchanged.
 - Native Windows QA and a second Linux display-scaling setting remain manual
-  work, as recorded in [`QA_PASS_2026-11-16.md`](QA_PASS_2026-11-16.md).
+  work, as recorded in [`QA_PASS_2026-11-16.md`](../qa/QA_PASS_2026-11-16.md).
 - The Windows Python 3.11 UI suite is excluded from CI because
   PySide6/pyqtgraph can corrupt the native heap during view teardown. A
   dedicated Windows 3.11 job still runs acceptance, integration, and unit
   tests, and Windows 3.12/3.13 run the full UI suite. See
-  [`ADR/0025`](ADR/0025-pyside6-version-pin.md).
+  [`ADR/0025`](../../ADR/0025-pyside6-version-pin.md).
 - G27 remaining ferrite/core-loss and shack-end `Zcm(f)` data, the B4
   coupled-fan measurement, live VNA control, additional engines, and signing
   remain blocked or deferred.

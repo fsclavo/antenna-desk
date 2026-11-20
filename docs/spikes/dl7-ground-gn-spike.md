@@ -1,7 +1,10 @@
 # DL7 spike — NEC-2 ground screen and cliff
 
 **Date:** 2026-11-20.
-**Status:** spike complete; implementation decision pending.
+**Status:** exploratory spike; implementation decision pending. The numeric
+examples below are decision context, not a validated reference: the decks were
+temporary and the pinned source cache is git-ignored, so a clean checkout cannot
+reproduce them without adding a committed case.
 **Question:** can NEC-2's native `GN` radial screen and second-medium/cliff
 fields provide a trustworthy site model for AntennaDesk?
 

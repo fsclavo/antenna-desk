@@ -3,7 +3,7 @@
 - **Status:** Implemented 2026-11-07
 - **Date:** 2026-11-07
 - **Scope:** Foundation plus every first-class typed family
-- **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md)
+- **Related:** [ADR-0026](../../ADR/0026-family-optimizer-architecture.md)
 
 > **Implementation note.** The original plan used four pilots. During
 > implementation, disabling the other typed families or leaving their incomplete

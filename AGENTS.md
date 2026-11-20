@@ -5,11 +5,15 @@ amateur radio. The project is GPL-3.0-or-later.
 
 ## Read first
 
-- `docs/antennadesk-development-blueprint.md`
-- `docs/PROJECT_DECISIONS.md`
+- `docs/STATUS.md` for the current release, schema, and next action
+- `docs/ARCHITECTURE.md` and `docs/DOMAIN_MODEL.md` for the current system
 - Relevant files in `docs/ADR/`
 - `docs/ROADMAP.md` for product scope and priorities
 - `docs/AUTONOMOUS_BACKLOG.md` for the active execution queue
+
+Historical context in `docs/archive/` is not current guidance. When a document
+says "historical" or lives under `docs/archive/`, do not treat it as the
+source of truth.
 
 ## Architecture
 
@@ -54,8 +58,8 @@ amateur radio. The project is GPL-3.0-or-later.
 - Every new antenna family must include a family optimizer descriptor and its
   registry, field-coverage, budget, constraint, determinism, Apply Best, and
   solver QA, or an explicit unavailable reason when a trustworthy optimizer is
-  not possible. See `docs/ADR/0026-family-optimizer-architecture.md` and
-  `docs/OPTIMIZER_PHASE_A_PLAN.md`.
+  not possible. See `docs/ADR/0026-family-optimizer-architecture.md` and, for
+  historical context, `docs/archive/plans/OPTIMIZER_PHASE_A_PLAN.md`.
 
 ## Correctness and science
 

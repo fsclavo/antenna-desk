@@ -1,11 +1,16 @@
 # QA strategy
 
-**Status:** proposal; Phase 0 implemented on 2026-11-04
+> **Historical baseline (2026-11-04).** The test counts, ADR counts, and
+> coverage numbers below describe the state at that date. They are retained for
+> history and must not be used as the current gate. Current commands and gates
+> are in [`../../../AGENTS.md`](../../../AGENTS.md).
+
+**Status:** historical proposal; Phase 0 implemented on 2026-11-04
 **Date:** 2026-11-04
 **Scope:** test infrastructure, static analysis, CI, and numerical/experimental
 validation for the current codebase and the next two milestones.
 
-This document complements [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md). That file
+This document complements [`VALIDATION_PLAN.md`](../../VALIDATION_PLAN.md). That file
 defines *what* counts as evidence and the three validation levels. This one
 defines *how* the project produces, enforces, and scales that evidence.
 

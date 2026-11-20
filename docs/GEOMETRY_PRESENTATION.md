@@ -78,6 +78,10 @@ synthetic shape.
     the first multi-section case: its transposed phase line is an overlay
     between adjacent element centers, while the elements remain the canonical
     wires.
+15. **Support structures are canonical wires.**
+    Optional Yagi mast and guy wires are ordinary `Wire` values. Draw them,
+    include them in the wire schedule and scene preservation tests, and never
+    replace or hide an element wire when support structures are enabled.
 
 ## Required tests for a new family
 
@@ -85,6 +89,8 @@ Add all of the following before merging a new antenna family:
 
 - Domain tests for parameters, validation, conversion, and persistence.
 - A scene contract test asserting wire preservation for elevation and plan.
+- When optional support wires exist, a scene contract test that includes the
+  mast and guy wires in the preserved wire set.
 - A construction-view assertion: the resolved projection is the principal
   plane, and no canonical wire collapses to zero length in that view.
 - A shape signature: segment/vertex count, closure, planarity, or the
@@ -130,7 +136,7 @@ A small number of smoke images for light/dark themes is acceptable.
     dimensions.
 11. Family optimizer descriptor and QA, or an explicit unavailable reason with
     a visible explanation. See `ADR/0026-family-optimizer-architecture.md` and
-    `OPTIMIZER_PHASE_A_PLAN.md`.
+    `archive/plans/OPTIMIZER_PHASE_A_PLAN.md`.
 12. Wire schedule rows and construction-sheet content.
 13. Scene, layout, routing, legacy, and export tests.
 13. User-guide and changelog updates.

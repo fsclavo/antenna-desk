@@ -9,10 +9,12 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** pre-1.0 (0.9.0 prepared). The antenna catalog, estimators, simulation,
+**Status:** pre-1.0. Latest published release: `0.9.0` (2026-11-17). The
+current development schema is `58`; unreleased work is tracked in
+[`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
-is prepared; signing is optional and deferred for later releases. Center-fed
+is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,
 inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random wires, doublets,
@@ -99,6 +101,7 @@ optional signing steps.
 Start with the [documentation index](docs/README.md). It lists the source of
 truth for each topic, every ADR, and the archived plans.
 
+- [Project status](docs/STATUS.md)
 - [User guide](docs/USER_GUIDE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Domain model](docs/DOMAIN_MODEL.md)
@@ -108,7 +111,7 @@ truth for each topic, every ADR, and the archived plans.
 - [Roadmap and antenna backlog](docs/ROADMAP.md)
 - [Active execution backlog](docs/AUTONOMOUS_BACKLOG.md)
 - [Release checklist](docs/RELEASE.md)
-- [Confirmed project decisions](docs/PROJECT_DECISIONS.md)
+- [Historical archive](docs/archive/README.md)
 - [Changelog](CHANGELOG.md)
 
 ## What exists today
@@ -131,6 +134,10 @@ truth for each topic, every ADR, and the archived plans.
   design panel, a shape-aware construction sketch with a collision-aware
   dimension layout, front/plan orthographic views, detail insets, an isometric
   3D view, and results tabs.
+- Live tuning preview for the primary dimension, with a coarse
+  single-frequency solve and an explicit apply/full-run path.
+- Optional Yagi mast conductor and 2–4 guy wires, modeled as ordinary wires and
+  included in the sketch, wire schedule, BOM, and reports.
 - Asynchronous simulation with cancellation, timeouts, and diagnostics.
 - Multiband analysis with family defaults, per-band solver runs, a **Bands**
   results tab, and band-aware CSV/HTML/PDF summaries.
@@ -142,16 +149,10 @@ truth for each topic, every ADR, and the archived plans.
   angle at the maximum-gain marker. Sweeps use 100
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
-- Save/open of versioned `.antennadesk` projects with multiple design
-  variants; schema version 24 adds the optional multi-source antenna model,
-  schema 23 adds optional tapered Yagi tips, schema 22 adds
-  optional wire sag on horizontal dipoles, schema 21 adds loaded/linked
-  dipoles, schema 20 adds Beverage receiving wires, schema 19 adds biquad and
-  double-biquad designs, schema 18 adds persisted optimization summaries,
-  schema 17 adds typed G5RV, ZS6BKW, and Zepp designs, schema 16 adds
-  half-square and bobtail-curtain designs, schema 15 adds frequency-dependent
-  balun/unun loss and repairs undersized Yagi matching hardware, and older files
-  migrate explicitly.
+- Save/open of versioned `.antennadesk` projects with multiple design variants.
+  The current development schema is `58`; older files migrate explicitly. The
+  full migration history is in
+  [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated
   SWR, R, X, or |Z| comparison tab, including resonance differences.

@@ -8,9 +8,10 @@ of truth before adding another planning document.
 | Question | Document |
 |---|---|
 | What are we building, and in what product order? | [`ROADMAP.md`](ROADMAP.md) |
+| What is the current status? | [`STATUS.md`](STATUS.md) |
 | What are we working on now? | [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md) |
 | Is this antenna template validated? | [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md), [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) |
-| Why was a technical decision made? | [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md), [`ADR/`](ADR/) |
+| Why was a technical decision made? | [`ADR/`](ADR/); historical founding context in [`archive/founding-decisions.md`](archive/founding-decisions.md) |
 | How is the system structured? | [`ARCHITECTURE.md`](ARCHITECTURE.md), [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md) |
 | How do I use the application? | [`USER_GUIDE.md`](USER_GUIDE.md) |
 | How do I build and release it? | [`RELEASE.md`](RELEASE.md) |
@@ -23,6 +24,7 @@ of truth before adding another planning document.
 
 ## Planning
 
+- [`STATUS.md`](STATUS.md) — current release, schema, track, and next action.
 - [`ROADMAP.md`](ROADMAP.md) — product direction, milestones, product backlog,
   the ordered antenna expansion backlog, and the 1.0 trust/1.1 station/1.2 site
   tracks.
@@ -37,14 +39,11 @@ of truth before adding another planning document.
   circular-polarization definitions used by the results card and reports.
 - [`VALIDATION_PLAN.md`](VALIDATION_PLAN.md) — validation workflow and the
   generated evidence table.
-- [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md) — confirmed product decisions.
 - [`../CHANGELOG.md`](../CHANGELOG.md) — released and unreleased behavior
   changes.
 
 ## Engineering
 
-- [`antennadesk-development-blueprint.md`](antennadesk-development-blueprint.md)
-  — product and architecture blueprint.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — layer boundaries and data flow.
 - [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md) — canonical antenna, simulation, and
   project values.
@@ -55,13 +54,15 @@ of truth before adding another planning document.
   units, formatting, form/table/drawing rules, and report/export policy.
 - [`SMITH_CHART.md`](SMITH_CHART.md) — Smith-chart normalization, reference
   planes, measured overlay, and export contract.
+- [`UI_HELP_STYLE.md`](UI_HELP_STYLE.md) — tooltip, What's This, and accessible
+  help style rules.
 - [`spikes/c3-log-periodic-spike.md`](spikes/c3-log-periodic-spike.md) —
   log-periodic transposed-feed validation against the published Cebik 10 m
   NEC-4 reference.
 - [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md) — HexBeam
   single-band frame reconstruction, source reconciliation, and C6 test matrix.
-- [`spikes/dl7-ground-gn-spike.md`](spikes/dl7-ground-gn-spike.md) — NEC-2
-  radial-screen and cliff ground spike; decision and limits.
+- [`spikes/dl7-ground-gn-spike.md`](spikes/dl7-ground-gn-spike.md) —
+  exploratory NEC-2 radial-screen and cliff ground spike; decision and limits.
 - [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md) —
   stacked-Yagi composition, feed-network, and first-slice architecture.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
@@ -70,45 +71,20 @@ of truth before adding another planning document.
   coax, ferrite, and insulator reference data.
 - [`PROJECT_BUNDLE.md`](PROJECT_BUNDLE.md) — portable project bundle format,
   limits, and import validation.
-- [`QA_STRATEGY.md`](QA_STRATEGY.md) — test lanes and quality gate.
-- [`QA_PASS_2026-11-13.md`](QA_PASS_2026-11-13.md) — post-0.6.0 QA pass,
-  coverage gates, and residual debt.
-- [`QA_PASS_2026-11-15.md`](QA_PASS_2026-11-15.md) — manual QA for the 0.7.0
-  candidate.
-- [`QA_PASS_2026-11-16.md`](QA_PASS_2026-11-16.md) — post-0.8.0 stabilization,
-  LPDA feed classification fix, and P7/D4 decision.
-- [`QA_PASS_2026-11-18.md`](QA_PASS_2026-11-18.md) — adaptive-units automated
-  gate and the remaining manual light/dark/scaling checklist.
-- [`RELEASE_QA_0.7.0.md`](RELEASE_QA_0.7.0.md) — 0.7.0 release checks,
-  artifacts, and known limitations.
-- [`RELEASE_QA_0.7.1.md`](RELEASE_QA_0.7.1.md) — 0.7.1 Yagi table patch
-  candidate checks and local artifacts.
-- [`RELEASE_QA_0.8.0.md`](RELEASE_QA_0.8.0.md) — 0.8.0 LPDA and automatic
-  Pi/T matching release checks and published artifacts.
-- [`RELEASE_QA_0.8.1.md`](RELEASE_QA_0.8.1.md) — 0.8.1 LPDA feed
-  classification and dialog-scale patch release checks and published assets.
-- [`RELEASE_QA_0.8.2.md`](RELEASE_QA_0.8.2.md) — 0.8.2 element-table header
-  sizing patch release checks and published assets.
-- [`RELEASE_QA_0.9.0.md`](RELEASE_QA_0.9.0.md) — 0.9.0 Touchstone, feed
-  schematic, and material-default release checks and published assets.
 - [`EXPERIMENTAL_VALIDATION_PROTOCOL.md`](EXPERIMENTAL_VALIDATION_PROTOCOL.md) —
   how experimental templates are validated.
 - [`RELEASE.md`](RELEASE.md) — packaging, signing, and release checklist.
 - [`../AGENTS.md`](../AGENTS.md) — repository instructions for contributors and
   agents.
 
-## Measurements and plans
+## Measurements
 
 - [`MULTIBAND_PERFORMANCE.md`](MULTIBAND_PERFORMANCE.md) — per-band benchmark,
   parallel worker measurement, and architecture decision.
 - [`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md) — fan-dipole
   investigation and the deferred angle work.
-- [`MULTIBAND_ANALYSIS_PLAN.md`](MULTIBAND_ANALYSIS_PLAN.md) — implementation
-  plan for the per-band analysis architecture.
-- [`OPTIMIZER_PHASE_A_PLAN.md`](OPTIMIZER_PHASE_A_PLAN.md) — family optimizer
-  foundation (completed).
-- [`OPTIMIZER_PHASE_C_PLAN.md`](OPTIMIZER_PHASE_C_PLAN.md) — advanced optimizer
-  modes (completed).
+
+Completed plans and release/QA records are in [`archive/`](archive/).
 
 ## Architecture decisions
 
@@ -164,6 +140,9 @@ of truth before adding another planning document.
 
 ## Archive
 
+- [`archive/README.md`](archive/README.md) — index of historical releases, QA
+  records, completed plans, and founding documents.
+- [`archive/backlog/`](archive/backlog/) — historical backlog design notes.
 - [`archive/PENDING_WORK_PLAN_2026-11-04.md`](archive/PENDING_WORK_PLAN_2026-11-04.md)
   — superseded phase plan, kept for decision history.
 - [`spikes/phase0-solver-evaluation.md`](spikes/phase0-solver-evaluation.md) —
@@ -177,9 +156,11 @@ of truth before adding another planning document.
   `AUTONOMOUS_BACKLOG.md`; product scope belongs in `ROADMAP.md`.
 - Evidence changes belong in `EVIDENCE_AUDIT.md` and the machine-readable
   registry, not in a separate plan.
-- Once a plan is superseded, move it to `docs/archive/` and link it from this
-  index.
+- Once a plan is superseded or a release is closed, move it to `docs/archive/`
+  and link it from `archive/README.md`.
 - Keep one source of truth per question. Cross-link instead of copying status.
+  Current state belongs in `STATUS.md`; execution status belongs in
+  `AUTONOMOUS_BACKLOG.md`; product scope belongs in `ROADMAP.md`.
 
 ## Authorship
 

@@ -2,9 +2,10 @@
 
 This document describes the current domain. It covers the generated antenna
 families (dipoles, loops, verticals, Yagi, Moxon, fan dipole, inverted-V,
-inverted-L, end-fed, OCFD, J Pole/Slim Jim, and Ringo), custom wires, one feed
-point per antenna, basic ground models, loads, matching networks, feed lines,
-imported measurements, and persisted simulation runs.
+inverted-L, end-fed, OCFD, J Pole/Slim Jim, and Ringo), custom wires, one
+primary feed point with optional additional sources, basic ground models, loads,
+matching networks, feed lines, imported measurements, and persisted simulation
+runs.
 
 ## Units and coordinates
 
@@ -210,10 +211,15 @@ by the simulation when `driven_folded` is true; it is not part of the NEC
 geometry. New folded designs start at 4:1, and the field is forced to 1.0 when
 the driven element is straight or a beta/hairpin match is active. Gamma matches
 are not modeled because NEC-2 close-spaced gamma assemblies are unreliable; use
-the matching-network dialog for an equivalent. Vertical geometry is rejected
-when the longest element would reach the ground. The NBS TN-688 5-element 0.8λ
-preset is a starting geometry; the published design uses a folded driven
-element, which can be enabled explicitly.
+the matching-network dialog for an equivalent. Optional `mast_diameter_m` and
+`mast_offset_m` add one vertical mast wire behind the reflector;
+`guy_count`, `guy_anchor_radius_m`, and `guy_diameter_m` add 2–4 guy wires from
+the mast top to ground anchors. A mast requires a positive offset, and guy wires
+require a mast. The mast and guys are ordinary wires and are not connected to
+the elements; tower, rotator, and structural hardware are not modeled. Vertical
+geometry is rejected when the longest element would reach the ground. The NBS
+TN-688 5-element 0.8λ preset is a starting geometry; the published design uses a
+folded driven element, which can be enabled explicitly.
 Optional `taper_tip_length_m` and `taper_tip_radius_m` add a smaller-radius tip
 section to both ends of every element; a tapered element is three collinear
 wires (center plus two tips). Tapering is rejected with a folded or
@@ -869,7 +875,7 @@ Plain JSON files from older versions are still accepted. The envelope is:
 The complete example lives in
 [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
 kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 56.
+the application writes version 58.
 
 ## Schema policy
 
@@ -939,6 +945,16 @@ the application writes version 56.
   Old runs load with an empty source list and keep the primary feed result.
 - Version 30 introduces the hexbeam parameter payload. Existing designs are
   unchanged.
+- Version 31 adds optional loading-coil fields to end-fed designs. Existing
+  designs load with the coil disabled.
+- Version 32 adds the fixed feed section and installation return to end-fed
+  designs. Existing designs load with both lengths at zero.
+- Version 33 adds the optional primary matching network to end-fed designs.
+  Existing designs load with the internal network disabled.
+- Version 34 adds the optional matching-network design target to the project.
+  Existing documents load without a target.
+- Version 35 adds the optional inverted-L bend to end-fed designs. Existing
+  designs load with the bend disabled.
 - Version 36 adds optional installation profiles and the active profile
   identifier. Old documents load with no profiles.
 - Version 37 adds the matching-network position to the project and to every
@@ -964,6 +980,18 @@ the application writes version 56.
 - Version 45 adds the optional manual `bom_costs` record. The migration writes
   `None`; it does not affect simulation results or reporting unless the user
   enters costs.
+- Version 46 adds the optional measured end-fed transformer model. Existing
+  designs keep the ideal transformer.
+- Version 47 adds the optional end-fed return-path selector. Existing designs
+  keep the legacy behavior.
+- Version 48 adds the optional end-fed transformer loss model and its
+  per-frequency result row.
+- Version 49 adds the optional end-fed feedpoint common-mode choke. Existing
+  designs load with the choke disabled.
+- Version 50 adds the optional design-specific end-fed L/Pi/T network. Existing
+  designs keep the fixed internal matching unit.
+- Version 51 adds optional frequency-dependent feed-line attenuation. Existing
+  projects keep the constant matched-loss model.
 - Version 52 introduces the log-periodic parameter payload and the generic
   transmission-line `phase_reversal` flag. The migration writes
   `phase_reversal: false` to existing lines, so old designs keep their previous
@@ -977,6 +1005,8 @@ the application writes version 56.
 - Version 56 adds the Beverage feed-transformer ratio. The migration writes
   9.0 and leaves the stored geometry unchanged; the feed and termination stubs
   are derived from the existing height and length.
+- Version 57 adds the optional Yagi mast conductor fields with zero defaults.
+- Version 58 adds the optional Yagi guy-wire fields with zero defaults.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -1026,7 +1056,7 @@ the application writes version 56.
 
 ## Simulation model
 
-Phase 2 adds solver-independent simulation types:
+Solver-independent simulation types:
 
 - `FrequencyPlan`: a single frequency or a uniformly spaced sweep, with
   helpers for evenly spaced and design-frequency-preferred snapshots.

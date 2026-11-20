@@ -368,7 +368,7 @@ a long-term solution.
    was already typed as a dipole plus a project-level feed line.
 3. **Phase C — advanced quality (completed 2026-11-07):** band-aware and
    robust modes, Pareto front, persisted optimization summaries, and
-   recommendations. See `OPTIMIZER_PHASE_C_PLAN.md`.
+   recommendations. See `archive/plans/OPTIMIZER_PHASE_C_PLAN.md`.
 4. **Phase D — permanent policy (completed 2026-11-07):** the new-family
    checklist in `AGENTS.md` and `GEOMETRY_PRESENTATION.md` now requires the
    optimizer descriptor and QA, or an explicit unavailable reason.
@@ -504,8 +504,8 @@ height. A run that excludes any variable is reported as partial.
 
 ## Follow-up
 
-- See [OPTIMIZER_PHASE_A_PLAN.md](../OPTIMIZER_PHASE_A_PLAN.md) and
-  [OPTIMIZER_PHASE_C_PLAN.md](../OPTIMIZER_PHASE_C_PLAN.md) for the detailed
+- See [OPTIMIZER_PHASE_A_PLAN.md](../archive/plans/OPTIMIZER_PHASE_A_PLAN.md) and
+  [OPTIMIZER_PHASE_C_PLAN.md](../archive/plans/OPTIMIZER_PHASE_C_PLAN.md) for the detailed
   implementation records and acceptance criteria.
 - Do not add a new antenna family without an optimizer descriptor or an explicit
   unavailable reason and its tests.

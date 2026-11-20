@@ -4,7 +4,7 @@
 - **Date:** 2026-11-07
 - **Scope:** Band-aware and robust modes, Pareto front, persisted summaries, and
   post-run recommendations
-- **Related:** [ADR-0026](ADR/0026-family-optimizer-architecture.md)
+- **Related:** [ADR-0026](../../ADR/0026-family-optimizer-architecture.md)
 
 ## Purpose
 

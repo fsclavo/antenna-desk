@@ -2696,7 +2696,8 @@ limitations are recorded in [ADR](ADR/).
   included.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
-  generator supports a radial screen. General transmission-line geometry and
+  generator supports a radial screen. Transmission-line two-ports between wire
+  points are modeled as NEC `TL` geometry; physical parallel-line coupling and
   arbitrary radial screens are not modeled.
 - NEC import supports a practical subset (GW, EX, FR, GE/GN, LD 0/1), not the
   full language; unsupported cards are reported. MMANA import covers basic wire

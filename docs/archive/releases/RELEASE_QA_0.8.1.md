@@ -46,7 +46,7 @@ numerical result changes are included.
   connection summary changes.
 - Dialog sizing is a UI-only change; the form layout and scroll behavior are
   unchanged.
-- See [`QA_PASS_2026-11-16.md`](QA_PASS_2026-11-16.md) for the original finding
+- See [`QA_PASS_2026-11-16.md`](../qa/QA_PASS_2026-11-16.md) for the original finding
   and the P7/D4 benchmark decision.
 
 ## Local candidate artifacts
@@ -126,7 +126,7 @@ executable, and completed the silent uninstall. See CI run
 
 - This is a patch release; the 0.8.0 feature set and limitations are unchanged.
 - Native Windows QA and a second Linux display-scaling setting remain manual
-  work, as recorded in [`QA_PASS_2026-11-16.md`](QA_PASS_2026-11-16.md).
+  work, as recorded in [`QA_PASS_2026-11-16.md`](../qa/QA_PASS_2026-11-16.md).
 - G27 remaining ferrite/core-loss and shack-end `Zcm(f)` data, the B4
   coupled-fan measurement, live VNA control, additional engines, and signing
   remain blocked or deferred.

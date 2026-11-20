@@ -1,8 +1,12 @@
 # Confirmed project decisions
 
+> **Historical document (2026-10-28).** This record preserves the founding
+> decisions taken before Phase 0. Current technical decisions live in
+> [`../ADR/`](../ADR/); current status lives in [`../STATUS.md`](../STATUS.md).
+
 - **Date:** 2026-10-28
 - **Owner:** Fernando Sclavo (LU2EFI)
-- **Status:** initial decisions confirmed to start the project
+- **Status:** historical founding record
 
 This record preserves the answers given before Phase 0. It does not replace
 ADRs: when a decision has technical alternatives and architectural
@@ -56,7 +60,7 @@ consequences, it is documented in `docs/ADR/`.
 - Units: **metric and imperial selectable in preferences**, with an adaptive
   display policy (mm/cm/m or in/ft) and a fixed-unit escape hatch; the domain
   uses canonical units (meters, Hz, ohms). See
-  [ADR-0044](ADR/0044-adaptive-length-display-units.md).
+  [ADR-0044](../ADR/0044-adaptive-length-display-units.md).
 - Python package: `antennadesk`.
 - Project format: `.antennadesk` (versioned JSON).
 - Bands: **HF, VHF, and UHF from the start**, without promising accuracy
@@ -71,7 +75,7 @@ consequences, it is documented in `docs/ADR/`.
 - Local-first, with no accounts, cloud, or mandatory telemetry.
 - The frequency field is the **design frequency**; analysis uses sweeps or band
   analysis. Edited or tuned geometry is never silently resized. See
-  [ADR-0043](ADR/0043-design-versus-analysis-frequency.md).
+  [ADR-0043](../ADR/0043-design-versus-analysis-frequency.md).
 
 ## Quality and workflow
 
@@ -92,7 +96,12 @@ consequences, it is documented in `docs/ADR/`.
 - GPG and Windows Authenticode signing are optional and deferred until
   project-owned keys are available.
 
-## Decisions still requiring an ADR
+## Decisions that still required an ADR in 2026-10-28
+
+This list is historical, not an active gap list. The angular convention and
+project format were defined here; project format and migrations are now covered
+by ADR-0003, ADR-0004, and ADR-0021, and the current architecture is documented
+in `../ARCHITECTURE.md`.
 
 - Final architecture and boundaries.
 - Angular conventions (concrete implementation).

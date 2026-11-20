@@ -30,5 +30,9 @@ distinction explicit and leaves room for a real splitter/phase-line slice.
 - The prototype is domain-only; no form, schema, or catalog route yet.
 - Evidence is C until a published stack or measurement is available.
 - The ideal source progression is visible as a limitation.
-- A count of one remains a normal Yagi; no existing Yagi behavior changes.
+- A count of one is not a stack; use `YagiParameters` directly. The prototype
+  accepts two to four levels.
+- A Yagi with a mast or guy wires is rejected by the stack prototype until the
+  stack owns one shared support model; copying support wires per level would
+  create floating mast segments.
 - Optimizer, splitter loss, phase lines, and per-port UI are follow-ups.

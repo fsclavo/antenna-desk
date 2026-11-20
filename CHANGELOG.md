@@ -510,20 +510,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - **Touchstone `.s1p` measurement import and simulated export.** The VNA import
   action accepts one-port Touchstone files with RI, MA, or DB data, Hz–GHz
   frequency units, inline comments, and the file's reference impedance. The
@@ -583,20 +569,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - **Log-periodic dipole array (LPDA).** Added a straight-element LPDA family
   with τ/σ geometry, a front-element feed, a common-boom element table, and a
   transposed phase line built from the existing `TransmissionLine` primitive.
@@ -636,20 +608,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - **Stainless steel 304 conductor.** Added a source-backed 304 preset
   (1.389 MS/m, μr = 1.0) to every antenna editor and the component calculator.
   The materials reference now includes its ASM source and the higher-loss,
@@ -809,20 +767,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - **Materials reference.** **Tools → Materials Reference...** adds source-backed
   wire, coax, ferrite, and insulator tables with citations and limitations. The
   coax tab can apply a datasheet impedance, velocity factor, and matched loss to
@@ -867,20 +811,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - **Side-by-side pattern cuts.** The **Cuts** tab now shows azimuth and
   elevation side by side, each with its own line chart and polar lobe. The
   azimuth pane selects an elevation angle θ and sweeps φ; the elevation pane
@@ -1148,20 +1078,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - Windows releases now include an **NSIS installer** in addition to the portable
   onedir zip. The installer places AntennaDesk under `Program Files`, creates
   Start Menu and Desktop shortcuts, registers an uninstaller in Add/Remove
@@ -1178,20 +1094,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - Shortened EFHW designs now support an optional **Inverted-L bend**. The editor
   takes the vertical conductor length from the feed, derives the horizontal run
   from the remaining wire length, and shows the resulting top height; the
@@ -1336,20 +1238,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - Added two **shortened EFHW** catalog presets with an optional series loading
   coil: **80-10 m** (20.35 m + 110 µH + 2.39 m) and **40-20-10 m** (10.01 m +
   23 µH + 1.85 m), both with a 49:1 transformer. The coil position,
@@ -1684,20 +1572,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - The loop editor now supports **vertical** and **horizontal / sky-loop**
   orientation. Horizontal loops use plan view by default, keep their polygon
   when dimensioned and reported, and persist in schema 10 with existing loops
@@ -2088,20 +1962,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - Project-level Undo/Redo for applied design, variant, template, load, feed-line,
   matching-network, measurement, and estimator changes, with protected
   simulation-run history.
@@ -2504,20 +2364,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
-  single-frequency solve while the operator drags the primary dimension, with
-  pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
-  cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Only the primary
-  dimension is exposed in this slice. No schema or solver change.
-- **Yagi mast conductor (first support-structure slice).** A Yagi can include
-  one optional vertical mast wire behind the reflector, with editable diameter
-  and offset. It uses the element material, is drawn and included in the wire
-  schedule/BOM, and is persisted in schema 57 with zero defaults. Optional
-  guy wires from the mast top to 2–4 ground anchors are persisted in schema 58.
-  The mast is not connected to the elements; boom mounting, towers, and
-  structural hardware remain unmodeled. No solver change. See
-  [`ADR-0048`](docs/ADR/0048-yagi-mast-conductor.md).
 - Phase 0 solver spike selecting `nec2c 1.3.3` as the external NEC-2 engine.
 - Reproducible reference cases from the NEC-2 User's Guide.
 - Linux and Windows build scripts, including a Windows portability patch.

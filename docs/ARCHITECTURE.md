@@ -36,6 +36,11 @@ adapters
   reporting: CSV, self-contained HTML, construction sheet, SVG charts
 ```
 
+The application block lists the original dipole-core use cases. Current use
+cases also include band analysis, family optimization, convergence studies,
+parameter sweeps, robustness, impedance synthesis, measurement tuning, and
+project bundles. The domain is no longer dipole-only.
+
 ## Dependency rules
 
 - `domain/` imports only the Python standard library.
@@ -51,7 +56,7 @@ adapters
 - UI widgets never perform electromagnetic calculations. Simulation runs in a
   `QThread` worker and returns a normalized `SimulationResult`.
 
-## Phase 1 flow
+## Project creation and persistence flow
 
 ```text
 CreateDipoleProjectCommand
@@ -70,7 +75,7 @@ Opening a project reverses the flow: the repository validates and migrates the
 document, maps it to domain objects, and the application re-validates the
 project before returning it.
 
-## Phase 2 flow
+## Simulation flow
 
 ```text
 RunSimulationCommand
@@ -116,7 +121,7 @@ solver adapter calls the same `validate_nec2_assumptions()` helper, so
 pre-flight and a real run cannot disagree about below-ground geometry,
 ground clearance, permeability, or the far-field ground request.
 
-## Phase 3 flow
+## Main-window flow
 
 ```text
 MainWindow
@@ -136,7 +141,7 @@ them, and comparison/report/construction actions work across sessions. Editing
 a design clears its current result view, but earlier run snapshots remain in
 the project.
 
-## Phase 4 flow
+## Comparison and report flow
 
 ```text
 Selected DesignVariant ──► RunSimulation ──► SimulationResult
@@ -198,9 +203,9 @@ normal result/report path remains the single source of truth. The UI adapter
 registry is exhaustive: a supported optimizer cannot silently write into the
 basic dipole form.
 
-## Phase 6 — new geometry (completed; physical validation deferred)
+## Geometry families and persistence (completed; physical validation deferred)
 
-Phase 6 starts with a vertical center-fed dipole in the existing
+The geometry work started with a vertical center-fed dipole in the existing
 `wire_dipole` model. `DipoleParameters.orientation` selects horizontal or
 vertical geometry; the vertical template uses `height_m` as the base height.
 Yagi and Moxon use a separate `polarization` field: the boom always stays
@@ -331,35 +336,9 @@ application-data recovery folder: it writes a design-only project payload
 small JSON metadata sidecar, and never replaces the project file. It is debounced
 after design edits and skipped above 2 MB. A normal save or close removes both;
 startup offers recover or discard. Recording a simulation result alone does not
-trigger autosave. Schema version 2 added
-dipole orientation, version 3 added persisted simulation runs, version 4 adds
-optional band/batch metadata, version 5 adds optional OCFD/custom feed
-transformer ratios, version 6 adds optional per-design analysis band plans,
-version 7 adds Yagi/Moxon polarization, version 8 adds vertical top-hat fields,
-version 9 adds the inverted-L design type, version 10 adds loop orientation,
-version 11 adds the magnetic-loop design type, version 12 adds the folded Yagi
-driven element, version 13 adds the beta/hairpin Yagi match, version 14 adds the
-project balun/unun loss model, version 15 repairs Yagi matching hardware that is
-narrower than the conductor diameter, version 16 adds half-square and
-bobtail-curtain designs, version 17 adds typed G5RV/ZS6BKW/Zepp designs,
-version 18 adds optional optimization summaries, version 19 adds biquad and
-double-biquad designs, version 20 adds the Beverage receiving wire, version 21
-adds the loaded/linked dipole, version 22 adds optional horizontal-dipole wire
-sag, version 23 adds optional tapered Yagi tips, version 24 adds optional
-additional antenna sources with amplitude and phase, version 25 adds the phased
-vertical array design type, version 26 adds the quad beam design type, version
-27 adds the discone design type, version 28 adds the trapped Yagi design type,
-version 29 adds optional per-source input results, version 30 adds the hexbeam
-design type, version 39 adds measurement sessions, version 40 adds the project
-journal, version 41 adds the folded-dipole feed transformer ratio, version 42
-adds the full-wave loop feed transformer ratio, version 43 adds the Yagi
-folded-driven transformer ratio, version 44 adds the project current-balun
-record, version 45 adds optional manual BOM costs, version 52 adds the
-log-periodic design type and the generic transmission-line phase-reversal flag,
-version 53 adds the biquad feed-transformer ratio, version 54 adds the
-quad-beam feed-transformer ratio, version 55 adds the optional multi-band
-HexBeam list, version 56 adds the Beverage feed-transformer ratio and
-ground-referenced feed/termination stubs, and older documents are migrated
+trigger autosave. The current schema is version 58; the complete migration
+history is single-sourced in
+[`DOMAIN_MODEL.md`](DOMAIN_MODEL.md#schema-policy). Older documents are migrated
 explicitly.
 
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw

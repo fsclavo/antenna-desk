@@ -91,7 +91,9 @@ The normalizer:
 
 The far-field values are NEC **power gains** in dB. With a perfect conductor
 and no lossy loads, power gain equals directivity. Conductor and resistive-load
-losses are included when enabled. Realized gain is not computed in Phase 2.
+losses are included when enabled. Normalization also derives directivity and
+realized gain per frequency; realized gain includes the configured feed-chain
+losses.
 
 ## Reference validation
 
@@ -128,8 +130,10 @@ includes raw solver output or executable paths.
   and does not trigger the permeability warning.
 - Series and parallel RLC loads are emitted as `LD 0`/`LD 1` on one segment.
   L/Pi/T matching networks and the uniform feed line are post-processed outside
-  NEC. General transmission-line geometry is not implemented. The vertical
-  generator emits its radial screen as ordinary wires.
+  NEC. Transmission-line two-ports between wire points are implemented as NEC
+  `TL` geometry (ADR-0016); physical parallel-line coupling and arbitrary radial
+  screens are not modeled. The vertical generator emits its radial screen as
+  ordinary wires.
 - The fixed internal EFHW matching unit is an input-shunt L-section. When the
   transformed load resistance exceeds the source reference, the adapter reports
   the theoretical SWR floor as `matching_network.topology_limit`; this is a
