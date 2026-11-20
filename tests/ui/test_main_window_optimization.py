@@ -13,7 +13,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import element_optimization_actions as element_optimization_actions_module
-from antennadesk.ui import main_window as main_window_module
+from antennadesk.ui import optimization_actions as optimization_actions_module
 from antennadesk.ui.dialogs.family_optimization_dialog import BandPlanSource
 from antennadesk.ui.main_window import MainWindow
 
@@ -34,7 +34,7 @@ def test_optimize_length_applies_and_simulates(
             return 19.8
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "OptimizationDialog",
         FakeOptimizationDialog,
     )
@@ -97,7 +97,7 @@ def test_optimize_endfed_applies_to_the_endfed_form(
             return 21.0
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "OptimizationDialog",
         FakeOptimizationDialog,
     )
@@ -142,7 +142,7 @@ def test_optimize_biquad_applies_to_the_biquad_form(
             return optimized
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -210,7 +210,7 @@ def test_optimize_monoband_uses_the_current_plan_without_analyze_bands(
             return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -260,7 +260,7 @@ def test_optimize_multiband_plan_reports_all_bands(
             return QDialog.DialogCode.Rejected
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -316,7 +316,7 @@ def test_optimize_multiband_hexbeam_targets_the_active_band(
             return None
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -414,7 +414,7 @@ def test_optimize_current_design_persists_the_run_summary(
             return result
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -462,7 +462,7 @@ def test_optimize_bobtail_curtain_applies_to_the_scv_form(
             return optimized
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )
@@ -521,7 +521,7 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
             return 21.0
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "OptimizationDialog",
         FakeOptimizationDialog,
     )
@@ -587,7 +587,7 @@ def test_synthesize_dimensions_applies_and_simulates(
         def selected_parameters(self) -> OCFDParameters:
             return synthesized
 
-    monkeypatch.setattr(main_window_module, "SynthesisDialog", FakeSynthesisDialog)
+    monkeypatch.setattr(optimization_actions_module, "SynthesisDialog", FakeSynthesisDialog)
 
     assert window._optimize_action.isEnabled() is True
     window.synthesize_dimensions()
@@ -622,7 +622,7 @@ def test_optimize_loop_applies_circumference_and_simulates(
             return 41.2
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "OptimizationDialog",
         FakeOptimizationDialog,
     )

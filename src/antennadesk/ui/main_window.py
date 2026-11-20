@@ -252,7 +252,6 @@ from .dialogs.custom_antenna_dialog import CustomAntennaDialog
 from .dialogs.design_from_frequency_dialog import DesignFromFrequencyDialog
 from .dialogs.family_optimization_dialog import (
     BandPlanSource,
-    FamilyOptimizationDialog,
 )
 from .dialogs.feed_chain_dialog import FeedChainDialog
 from .dialogs.feed_connection_dialog import FeedConnectionDialog
@@ -271,7 +270,6 @@ from .dialogs.measurement_comparison_dialog import MeasurementComparisonDialog
 from .dialogs.measurement_details_dialog import MeasurementDetailsDialog
 from .dialogs.measurement_sessions_dialog import MeasurementSessionsDialog
 from .dialogs.ocfd_dialog import OCFDDialog
-from .dialogs.optimization_dialog import OptimizationDialog
 from .dialogs.parameter_sweep_dialog import ParameterSweepDialog
 from .dialogs.preferences_dialog import PreferencesDialog
 from .dialogs.preflight_dialog import PreflightDialog
@@ -279,7 +277,6 @@ from .dialogs.reference_library_dialog import ReferenceLibraryDialog
 from .dialogs.robustness_dialog import RobustnessDialog
 from .dialogs.scale_frequency_dialog import ScaleFrequencyDialog
 from .dialogs.scv_dialog import ScvDialog
-from .dialogs.synthesis_dialog import SynthesisDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.tuner_match_dialog import TunerMatchDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
@@ -323,6 +320,11 @@ from .import_actions import (
 )
 from .import_actions import (
     import_vna_paths as import_vna_files,
+)
+from .optimization_actions import (
+    run_family_optimization_dialog,
+    run_length_optimization_dialog,
+    run_synthesis_dialog,
 )
 from .optimization_adapters import adapter_for
 from .preferences import (
@@ -6177,13 +6179,13 @@ class MainWindow(QMainWindow):
         )
         base_spec = self._with_model_quality(target_model, base_spec)
         base_spec = self._with_project_chain(design.parameters, base_spec)
-        dialog = FamilyOptimizationDialog(
+        choice = run_family_optimization_dialog(
+            self,
             self._translator,
             self._unit_system,
             self._solver,
             availability.descriptor,
             base_spec,
-            self,
             topology_label=self._translator.t(label_key_for(design.parameters)),
             target_band_label=target_band_label,
             band_edges_hz=band_edges_hz,
@@ -6192,12 +6194,9 @@ class MainWindow(QMainWindow):
             operating_frequencies_hz=operating_frequencies,
             last_summary=design.optimization_summary,
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if choice is None:
             return
-        selected = dialog.selected_parameters()
-        if selected is None:
-            return
-        result = getattr(dialog, "selected_result", lambda: None)()
+        selected, result = choice
         try:
             adapter.apply_parameters(self, selected)
             self._form_dirty = True
@@ -6237,19 +6236,10 @@ class MainWindow(QMainWindow):
 
     @history_action("history.optimize")
     def optimize_length(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
+        prepared = self._prepare_optimization()
+        if prepared is None:
             return
-        if self._solver is None:
-            self._show_error(self._translator.t("error.solver"))
-            return
-        if self._form_dirty:
-            try:
-                self._apply_fields()
-            except Exception as exc:
-                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-                return
-        design = self._project.design_by_id(self._design_id)
+        design, solver = prepared
         if isinstance(
             design.parameters,
             (DipoleParameters, FoldedDipoleParameters, LoopParameters),
@@ -6257,57 +6247,29 @@ class MainWindow(QMainWindow):
             base_spec = self._form.simulation_spec()
         else:
             base_spec = self._typed_simulation_spec(design.parameters)
-
         base_spec = replace(
             base_spec,
             timeout_s=float(self._solver_timeout.value()),
         )
         base_spec = self._with_project_chain(design.parameters, base_spec)
-        dialog = OptimizationDialog(
+        dimension = run_length_optimization_dialog(
+            self,
             self._translator,
             self._unit_system,
-            self._solver,
+            solver,
             design.parameters,
             base_spec,
-            self,
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        dimension = dialog.selected_dimension_m()
         if dimension is None:
             return
         try:
             parameters = with_primary_dimension(design.parameters, dimension)
-            if isinstance(parameters, OCFDParameters):
-                self._ocfd_form.set_parameters(parameters)
-            elif isinstance(parameters, EndFedParameters):
-                self._endfed_form.set_parameters(parameters)
-            elif isinstance(parameters, TrapDipoleParameters):
-                self._trap_dipole_form.set_parameters(parameters)
-            elif isinstance(parameters, T2FDParameters):
-                self._t2fd_form.set_parameters(parameters)
-            elif isinstance(parameters, ScvParameters):
-                self._scv_form.set_parameters(parameters)
-            elif isinstance(parameters, BiquadParameters):
-                self._biquad_form.set_parameters(parameters)
-            elif isinstance(parameters, BeverageParameters):
-                self._beverage_form.set_parameters(parameters)
-            elif isinstance(parameters, LoadedDipoleParameters):
-                self._loaded_dipole_form.set_parameters(parameters)
-            elif isinstance(parameters, PhasedVerticalParameters):
-                self._phased_vertical_form.set_parameters(parameters)
-            elif isinstance(parameters, QuadBeamParameters):
-                self._quad_beam_form.set_parameters(parameters)
-            elif isinstance(parameters, LogPeriodicParameters):
-                self._log_periodic_form.set_parameters(parameters)
-            elif isinstance(parameters, DisconeParameters):
-                self._discone_form.set_parameters(parameters)
-            elif isinstance(parameters, TrapYagiParameters):
-                self._trap_yagi_form.set_parameters(parameters)
-            elif isinstance(parameters, HexbeamParameters):
-                self._hexbeam_form.set_parameters(parameters)
+            adapter = adapter_for(parameters)
+            if adapter is not None:
+                adapter.apply_parameters(self, parameters)
             else:
                 self._form.set_parameters(parameters, reset_sweep=False)
+            self._form_dirty = True
             self._apply_fields()
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
@@ -6316,47 +6278,32 @@ class MainWindow(QMainWindow):
 
     @history_action("history.optimize")
     def synthesize_dimensions(self) -> None:
-        if self._project is None or self._design_id is None:
-            self._show_error(self._translator.t("error.no_project"))
+        prepared = self._prepare_optimization()
+        if prepared is None:
             return
-        if self._solver is None:
-            self._show_error(self._translator.t("error.solver"))
-            return
-        if self._form_dirty:
-            try:
-                self._apply_fields()
-            except Exception as exc:
-                self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
-                return
-        design = self._project.design_by_id(self._design_id)
+        design, solver = prepared
         if not isinstance(design.parameters, (OCFDParameters, JPoleParameters)):
             return
-        base_spec = self._typed_simulation_spec(design.parameters)
         synthesis_spec = replace(
-            base_spec,
+            self._typed_simulation_spec(design.parameters),
             timeout_s=float(self._solver_timeout.value()),
         )
         synthesis_spec = self._with_project_chain(design.parameters, synthesis_spec)
-        dialog = SynthesisDialog(
+        selected = run_synthesis_dialog(
+            self,
             self._translator,
             self._unit_system,
-            self._solver,
+            solver,
             design.parameters,
             synthesis_spec,
-            self,
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
+        if selected is None:
             return
-        parameters = dialog.selected_parameters()
-        if parameters is None:
+        adapter = adapter_for(selected)
+        if adapter is None:
             return
         try:
-            if isinstance(parameters, OCFDParameters):
-                self._ocfd_form.set_parameters(parameters)
-            elif isinstance(parameters, JPoleParameters):
-                self._j_pole_form.set_parameters(parameters)
-            else:
-                return
+            adapter.apply_parameters(self, selected)
             self._form_dirty = True
             self._apply_fields()
         except Exception as exc:

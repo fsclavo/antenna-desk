@@ -32,7 +32,7 @@ from antennadesk.domain.optimization.summary import (
     OptimizationSummary,
 )
 from antennadesk.domain.simulation.bands import amateur_band_by_id
-from antennadesk.ui import main_window as main_window_module
+from antennadesk.ui import optimization_actions as optimization_actions_module
 from antennadesk.ui.main_window import MainWindow
 
 
@@ -184,7 +184,7 @@ def _install_fake_optimizer(
             return result
 
     monkeypatch.setattr(
-        main_window_module,
+        optimization_actions_module,
         "FamilyOptimizationDialog",
         FakeFamilyOptimizationDialog,
     )

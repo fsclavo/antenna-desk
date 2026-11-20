@@ -337,6 +337,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   vertical, inverted-V, Ringo, and ZS6BKW variable/build/band setup and dialog
   execution. The main window keeps the shared solver/form checks, applies the
   selected parameters, and starts the full simulation. No behavior change.
+- **Family, length, and synthesis dialogs moved out of the main window.**
+  `ui/optimization_actions.py` owns the dialog construction and selected-result
+  extraction for the family optimizer, primary-dimension search, and impedance
+  synthesis. The main window keeps band-plan/context assembly, parameter
+  application, optimization-summary persistence, and the final simulation. No
+  behavior change.
 
 ### Fixed
 
