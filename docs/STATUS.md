@@ -30,12 +30,18 @@
   `ui/recent_actions.py`. The standalone main-window decomposition is
   **closed**; the remaining UI-construction debt is left for extract-on-touch
   work, not another standalone refactor.
+- The save/load size invariant is fixed: a project that saves always reopens
+  under the current gzip format. The save flow checks the expanded size before
+  writing and offers compaction on failure. The structural ZIP container
+  (PF1, schema 59, no legacy reader) remains the next persistence milestone;
+  see [`ADR-0050`](ADR/0050-zip-project-container.md).
 
 ## Next
 
-1. Close the remaining DL5 slice or explicitly narrow it.
-2. Decide the DL7 bounded cliff slice after a reproducible evidence check.
-3. Continue DL4 and the remaining 1.2 items.
+1. Implement PF1, the ZIP project container and size contract.
+2. Close the remaining DL5 slice or explicitly narrow it.
+3. Decide the DL7 bounded cliff slice after a reproducible evidence check.
+4. Continue DL4 and the remaining 1.2 items.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in

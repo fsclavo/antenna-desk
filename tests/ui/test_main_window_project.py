@@ -14,6 +14,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.errors import ProjectPayloadTooLargeError
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.persistence.json_repository import JsonProjectRepository
@@ -730,6 +731,79 @@ def test_save_blocks_a_project_above_the_hard_limit(
     assert path.exists() is False
     assert messages
     assert "64 MB" in messages[0]
+    window._dirty = False
+
+
+def test_save_reports_an_oversized_expanded_project_without_history(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "blocked.antennadesk"
+
+    def blocked(project: Project) -> bytes:
+        del project
+        raise ProjectPayloadTooLargeError(
+            "project is too large when expanded",
+            size=300 * 1024 * 1024,
+            limit=256 * 1024 * 1024,
+            expanded=True,
+        )
+
+    monkeypatch.setattr(window._repository, "prepare_payload", blocked)
+    messages: list[str] = []
+    monkeypatch.setattr(
+        QMessageBox,
+        "critical",
+        lambda *args, **kwargs: messages.append(args[2]) or QMessageBox.StandardButton.Ok,
+    )
+
+    assert window._save_to(path) is False
+    assert not path.exists()
+    assert messages
+    assert "reopen limit" in messages[0]
+    window._dirty = False
+
+
+def test_save_offers_compaction_for_an_oversized_expanded_project(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 2
+
+    path = tmp_path / "compact-and-save.antennadesk"
+    original = window._repository.prepare_payload
+    calls: list[int] = []
+
+    def fail_once(project: Project) -> bytes:
+        calls.append(1)
+        if len(calls) == 1:
+            raise ProjectPayloadTooLargeError(
+                "project is too large when expanded",
+                size=300 * 1024 * 1024,
+                limit=256 * 1024 * 1024,
+                expanded=True,
+            )
+        return original(project)
+
+    monkeypatch.setattr(window._repository, "prepare_payload", fail_once)
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    assert window._save_to(path) is True
+    assert path.is_file()
+    assert len(window._project.simulation_runs) == 1
+    assert window._status_label.text() == "Project saved."
     window._dirty = False
 
 

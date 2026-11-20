@@ -17,10 +17,14 @@ class ProjectRepository(Protocol):
         """Write *project* to *path*, replacing any existing file atomically."""
 
     def prepare_payload(self, project: Project) -> bytes:
-        """Serialize and compress *project* without writing it to disk."""
+        """Serialize and compress *project* without writing it to disk.
+
+        Raises ``ProjectPayloadTooLargeError`` when the payload exceeds a
+        storage or reopen limit.
+        """
 
     def write_payload(self, path: Path, payload: bytes) -> None:
-        """Write a prepared payload atomically."""
+        """Write a prepared payload atomically, enforcing the size limits."""
 
     def load(self, path: Path) -> Project:
         """Read and validate a project from *path*."""

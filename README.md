@@ -323,10 +323,11 @@ Per-template limitations and evidence levels are single-sourced in
   users who manage the solver themselves.
 - Simulation runs are stored in the project, including raw solver text. Project
   files are losslessly gzip-compressed JSON; the 64 MB limit applies to the
-  compressed file, with a warning above 32 MB. Decompression is bounded to
-  256 MB of expanded JSON. Use
-  **Tools → Compact Simulation History** to keep only the latest run per
-  variant. High-resolution patterns and long sweeps multiply runtime and stored
+  compressed file, with a warning above 32 MB. Saving also rejects a project
+  that would expand above 256 MB before writing, and decompression is bounded
+  to the same 256 MB. Use **Tools → Compact Simulation History** to keep only
+  the latest run per variant; the save flow offers compaction and retry when a
+  project exceeds a limit. High-resolution patterns and long sweeps multiply runtime and stored
   points.
 - The segmentation policy is a documented heuristic; explicit counts are used
   for reference cases. The UI derives per-wire counts and aligns the feed wire

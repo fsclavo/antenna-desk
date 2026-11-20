@@ -55,6 +55,7 @@ from PySide6.QtWidgets import (
 from .. import __version__
 from ..application.cancellation import EventCancelToken
 from ..application.discretization import resolve_model_quality
+from ..application.errors import ProjectPayloadTooLargeError
 from ..application.pattern_planning import (
     fit_band_specs_to_budget,
     fit_spec_to_budget,
@@ -5747,14 +5748,12 @@ class MainWindow(QMainWindow):
             payload = self._project_io.prepare_payload(project)
             size = len(payload)
             if size > MAX_PROJECT_SIZE_BYTES:
-                self._show_error(
-                    self._translator.t(
-                        "dialog.project_too_large",
-                        size=size / (1024 * 1024),
-                        limit=MAX_PROJECT_SIZE_BYTES / (1024 * 1024),
-                    )
+                return self._handle_oversized_project(
+                    size,
+                    MAX_PROJECT_SIZE_BYTES,
+                    expanded=False,
+                    path=path,
                 )
-                return False
             if size > PROJECT_SIZE_WARNING_BYTES:
                 answer = QMessageBox.warning(
                     self,
@@ -5769,6 +5768,13 @@ class MainWindow(QMainWindow):
                 if answer != QMessageBox.StandardButton.Save:
                     return False
             self._project_io.write(path, payload)
+        except ProjectPayloadTooLargeError as exc:
+            return self._handle_oversized_project(
+                exc.size,
+                exc.limit,
+                expanded=exc.expanded,
+                path=path,
+            )
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False
@@ -5790,6 +5796,46 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.saved"
         self._update_status_text()
         return True
+
+    def _handle_oversized_project(
+        self,
+        size: int,
+        limit: int,
+        *,
+        expanded: bool,
+        path: Path,
+    ) -> bool:
+        """Offer history compaction before giving up on an oversized save."""
+
+        if self._project is not None and self._project.has_compactable_simulation_history():
+            answer = QMessageBox.question(
+                self,
+                self._translator.t("app.title"),
+                self._translator.t(
+                    "dialog.compact_for_save",
+                    size=size / (1024 * 1024),
+                    limit=limit / (1024 * 1024),
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer == QMessageBox.StandardButton.Yes:
+                self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
+                self._mark_project_dirty(design=False)
+                self._update_title()
+                self._update_actions()
+                self._last_status_key = "status.compacted"
+                self._update_status_text()
+                return self._save_to(path)
+        key = "dialog.project_expanded_too_large" if expanded else "dialog.project_too_large"
+        self._show_error(
+            self._translator.t(
+                key,
+                size=size / (1024 * 1024),
+                limit=limit / (1024 * 1024),
+            )
+        )
+        return False
 
     def _maybe_save_changes(self) -> bool:
         if not self._dirty:

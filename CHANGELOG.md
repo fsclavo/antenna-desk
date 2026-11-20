@@ -355,6 +355,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Save/load size invariant.** Saving a project now checks the expanded JSON
+  size before touching the destination file, re-checks it in the write path,
+  and refuses to create a file that could not be reopened. The save flow
+  reports compressed and expanded limits separately and offers to compact the
+  simulation history and retry. A new invariant test asserts that `save()`
+  either raises or produces a file `load()` accepts. No schema or solver
+  change; the ZIP container remains PF1. See
+  [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Bounded project decompression.** Loading a gzip-compressed project now
   stops at 256 MB of expanded JSON and reports a size error instead of
   materializing an unbounded payload. Normal project files are unchanged.

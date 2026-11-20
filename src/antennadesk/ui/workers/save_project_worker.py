@@ -14,7 +14,7 @@ class SaveProjectWorker(QObject):
     """Serialize and compress a project in a worker thread."""
 
     prepared = Signal(object)
-    failed = Signal(str)
+    failed = Signal(object)
 
     def __init__(
         self,
@@ -31,6 +31,8 @@ class SaveProjectWorker(QObject):
         try:
             payload = self._save_project.prepare(self._project)
         except Exception as exc:
-            self.failed.emit(str(exc))
+            # Keep the exception instance so callers can react to structured
+            # failures such as a project that would exceed the reopen limit.
+            self.failed.emit(exc)
             return
         self.prepared.emit(payload)

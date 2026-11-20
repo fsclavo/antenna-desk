@@ -146,6 +146,8 @@ class ProjectIO:
             thread.quit()
             thread.wait()
         error = result.get("error")
+        if isinstance(error, BaseException):
+            raise error
         if isinstance(error, str):
             raise ValueError(error)
         return result.get("value")

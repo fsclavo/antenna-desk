@@ -2586,10 +2586,12 @@ project-level feed line or matching network is listed as post-processed and is
 not inserted into the NEC deck.
 Simulation runs are stored when you save the project, including raw solver
 text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
-to the compressed file. Decompression is bounded to 256 MB of expanded JSON.
-Saving above 32 MB compressed shows a warning, and
+to the compressed file, and a project that would expand above 256 MB is refused
+before anything is written. Decompression is bounded to the same 256 MB of
+expanded JSON. Saving above 32 MB compressed shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
-design.
+design. If a save would exceed a limit, the application offers to compact the
+history and retry instead of writing an unopenable file.
 
 ## Cancel and errors
 
@@ -2607,8 +2609,9 @@ Project serialization and gzip compression run in a worker thread. For a large
 project, a modal **Preparing project...** progress dialog appears while the
 payload is prepared; the window remains responsive and the operating system
 does not report the application as unresponsive. The payload is serialized once
-and then written atomically; the 32 MB warning and 64 MB hard limit still
-apply.
+and then written atomically; the 32 MB warning, the 64 MB compressed hard
+limit, and the 256 MB expanded reopen limit still apply. A project that would
+exceed either hard limit is rejected before the destination file is touched.
 
 Opening a project also runs decompression, migration, and validation in a
 worker thread. A modal **Opening project...** dialog appears for large files and

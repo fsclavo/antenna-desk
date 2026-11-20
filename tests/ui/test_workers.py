@@ -361,14 +361,16 @@ def test_save_project_worker_emits_failure(qtbot: QtBot) -> None:
 
     worker = save_project_worker.SaveProjectWorker(FailingSaveProject(), object())
     prepared: list[object] = []
-    failed: list[str] = []
+    failed: list[BaseException] = []
     worker.prepared.connect(prepared.append)
     worker.failed.connect(failed.append)
 
     worker.run()
 
     assert prepared == []
-    assert failed == ["boom"]
+    assert len(failed) == 1
+    assert isinstance(failed[0], RuntimeError)
+    assert str(failed[0]) == "boom"
 
 
 def test_open_project_worker_emits_project(qtbot: QtBot) -> None:

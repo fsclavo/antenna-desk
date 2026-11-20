@@ -56,23 +56,61 @@ class JsonProjectRepository:
         if len(payload) > MAX_PROJECT_UNCOMPRESSED_BYTES:
             raise ProjectTooLargeError(
                 "project is too large (uncompressed payload exceeds "
-                f"{MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)"
+                f"{MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
+                size=len(payload),
+                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                expanded=True,
             )
         return payload
 
     def prepare_payload(self, project: Project) -> bytes:
         """Serialize and compress a project without writing it to disk."""
 
-        return self._compress(self._serialize(project).encode("utf-8"))
+        data = self._serialize(project).encode("utf-8")
+        if len(data) > MAX_PROJECT_UNCOMPRESSED_BYTES:
+            raise ProjectTooLargeError(
+                "project is too large when expanded "
+                f"({len(data)} bytes; limit is {MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
+                size=len(data),
+                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                expanded=True,
+            )
+        payload = self._compress(data)
+        if len(payload) > MAX_PROJECT_SIZE_BYTES:
+            raise ProjectTooLargeError(
+                "project is too large when compressed "
+                f"({len(payload)} bytes; limit is {MAX_PROJECT_SIZE_BYTES} bytes)",
+                size=len(payload),
+                limit=MAX_PROJECT_SIZE_BYTES,
+                expanded=False,
+            )
+        return payload
 
     def write_payload(self, path: Path, payload: bytes) -> None:
-        """Write a prepared payload atomically, enforcing the size limit."""
+        """Write a prepared payload atomically, enforcing both size limits.
+
+        The expanded check repeats the one in ``prepare_payload`` so a caller
+        cannot bypass it with a hand-built payload. A successful write must
+        always produce a file ``load()`` accepts.
+        """
 
         size = len(payload)
         if size > MAX_PROJECT_SIZE_BYTES:
             raise ProjectTooLargeError(
                 f"project is too large ({size} bytes compressed; "
-                f"limit is {MAX_PROJECT_SIZE_BYTES} bytes)"
+                f"limit is {MAX_PROJECT_SIZE_BYTES} bytes)",
+                size=size,
+                limit=MAX_PROJECT_SIZE_BYTES,
+                expanded=False,
+            )
+        expanded = self._decompress(payload)
+        if len(expanded) > MAX_PROJECT_UNCOMPRESSED_BYTES:
+            raise ProjectTooLargeError(
+                "project is too large when expanded "
+                f"({len(expanded)} bytes; limit is {MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
+                size=len(expanded),
+                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                expanded=True,
             )
         self._atomic_write(path, payload)
 
@@ -94,7 +132,11 @@ class JsonProjectRepository:
             raise ProjectFormatError(f"could not read project file: {exc}") from exc
         if size > MAX_PROJECT_SIZE_BYTES:
             raise ProjectTooLargeError(
-                f"project file is too large ({size} bytes; limit is {MAX_PROJECT_SIZE_BYTES} bytes)"
+                "project file is too large "
+                f"({size} bytes; limit is {MAX_PROJECT_SIZE_BYTES} bytes)",
+                size=size,
+                limit=MAX_PROJECT_SIZE_BYTES,
+                expanded=False,
             )
 
         try:

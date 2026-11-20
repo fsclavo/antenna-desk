@@ -356,8 +356,12 @@ Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored with the normalized result. Project files are compact JSON compressed with
 gzip; plain JSON files from older versions still load. The UI warns at 32 MB
 compressed, blocks files above the 64 MB compressed limit, and offers
-simulation-history compaction. Loading also stops above 256 MB of expanded
-JSON so a gzip bomb cannot allocate an unbounded payload.
+simulation-history compaction. Saving checks the 256 MB expanded limit before
+touching the destination file, and the write path repeats the check, so a
+successful save always produces a file `load()` accepts. Loading also stops
+above 256 MB of expanded JSON so a gzip bomb cannot allocate an unbounded
+payload. [ADR-0050](ADR/0050-zip-project-container.md) replaces this gzip
+envelope with a validated ZIP container (PF1, schema 59); that work is pending.
 
 Multiband analysis is an application-level batch over the existing single-band
 solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,

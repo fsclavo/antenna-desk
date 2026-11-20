@@ -207,6 +207,83 @@ def test_oversized_uncompressed_payload_is_rejected(
         repository.load(path)
 
 
+def test_prepare_rejects_an_expanded_project_before_compressing(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_UNCOMPRESSED_BYTES", 256)
+
+    with pytest.raises(ProjectTooLargeError, match="expanded") as error:
+        repository.prepare_payload(sample_project)
+
+    assert error.value.expanded is True
+    assert error.value.size > 256
+
+
+def test_prepare_rejects_a_compressed_project_above_the_limit(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_SIZE_BYTES", 16)
+
+    with pytest.raises(ProjectTooLargeError, match="compressed") as error:
+        repository.prepare_payload(sample_project)
+
+    assert error.value.expanded is False
+
+
+def test_write_rejects_a_compressed_payload_without_touching_the_file(
+    repository: JsonProjectRepository,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_SIZE_BYTES", 16)
+    path = tmp_path / "compressed.antennadesk"
+
+    with pytest.raises(ProjectTooLargeError, match="compressed"):
+        repository.write_payload(path, b"x" * 17)
+
+    assert not path.exists()
+
+
+def test_write_rejects_an_expanded_payload_without_touching_the_file(
+    repository: JsonProjectRepository,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_UNCOMPRESSED_BYTES", 256)
+    path = tmp_path / "expanded.antennadesk"
+    payload = gzip.compress(b"{" + b" " * 1024 + b"}")
+
+    with pytest.raises(ProjectTooLargeError, match="uncompressed payload"):
+        repository.write_payload(path, payload)
+
+    assert not path.exists()
+
+
+def test_save_never_writes_a_project_that_load_would_reject(
+    repository: JsonProjectRepository,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The save/load invariant: a successful save always reopens."""
+
+    path = tmp_path / "invariant.antennadesk"
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_UNCOMPRESSED_BYTES", 256)
+
+    with pytest.raises(ProjectTooLargeError):
+        repository.save(sample_project, path)
+    assert not path.exists()
+
+    monkeypatch.setattr(json_repository, "MAX_PROJECT_UNCOMPRESSED_BYTES", 256 * 1024 * 1024)
+    repository.save(sample_project, path)
+
+    assert repository.load(path) == sample_project
+
+
 def test_unknown_format_is_rejected(
     repository: JsonProjectRepository,
     sample_project: Project,

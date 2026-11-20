@@ -34,10 +34,14 @@ next, and DL8 remains post-1.2. DL3 and DL6 are partial, and DL7 has a completed
 spike but no implementation. Its rows are in the table; scope, acceptance,
 evidence, and risk are in §Product trust and station wave below.
 
+PF1 is a P0 reliability insertion outside the antenna wave; it must land before
+any further project-format change.
+
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
+| PF1 | ZIP project container and honest size contract | L | none | **P0 reliability.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. See §PF1. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
@@ -53,6 +57,212 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
 
+
+## PF1 — ZIP project container and honest size contract
+
+**Status:** accepted 2026-11-20 (ADR-0050); implementation pending. **Priority:**
+P0 reliability, independent of the antenna waves. Do this before any further
+project-format change.
+
+**Motivation:** On 2026-11-20 a 56.9 MB compressed project (409.1 MB expanded)
+was written successfully but could not be reopened. `JsonProjectRepository`
+rejected the expanded payload at 256 MiB, while `write_payload()` checked only
+the 64 MiB compressed limit. The project held six 68 MB runs: each had five 1°
+patterns (47.7 MB) and 20.2 MB of raw NEC output; the design itself was 3.5 KB.
+At the observed 7.19:1 compression ratio the effective compressed limit was
+about 35.6 MB, so the 64 MB check was not a safe proxy for the expanded limit.
+This is a save/load contract violation, not a solver or validation failure.
+
+**Hotfix landed 2026-11-20:** `prepare_payload()` now rejects a project whose
+expanded JSON exceeds 256 MiB before writing, `write_payload()` re-checks the
+expanded size, the save flow offers compaction and retry, and a save/load
+invariant test covers the contract. PF1 remains the structural fix: the gzip
+envelope still has no per-entry limits, no lazy run loading, and no physical
+compaction. See [ADR-0050](ADR/0050-zip-project-container.md).
+
+**Goal:** replace the single gzip JSON envelope with a versioned ZIP container
+whose entries can be validated, loaded, and pruned independently; enforce one
+set of limits on both save and load; never write a project the application
+cannot reopen; keep one portable `.antennadesk` file and atomic saves.
+
+**Non-goals:** no backward compatibility with the gzip/plain-JSON project
+format or schema 58; no solver, antenna-model, or numerical-reference change;
+no binary pattern store or sidecar database in this item. Open a separate item
+if those are still needed after the container lands.
+
+### Container format (container version 1, schema version 59)
+
+```text
+manifest.json
+project.json
+designs/<design-id>.json
+runs/<run-id>.json
+runs/<run-id>.raw-input.txt        (optional)
+runs/<run-id>.raw-output.txt       (optional)
+optimizations/<design-id>.json
+```
+
+- `project.json`: project metadata, shared feed/matching/balun settings, band
+  plans, measurements, journal, installation profiles, construction/BOM
+  records. Small.
+- `designs/<id>.json`: one `DesignVariant` payload per design: parameters,
+  canonical antenna snapshot, provenance, band plan, and optimization summary.
+  This lets the UI open the selected design without touching run payloads.
+- `runs/<id>.json`: one `SimulationRunPayload` with normalized
+  frequencies/currents/patterns and **no raw solver text**. One entry per
+  retained run.
+- `runs/<id>.raw-input.txt` and `.raw-output.txt`: optional raw solver text as
+  separate entries, so it can be pruned or omitted without rewriting the
+  normalized result. Persist raw output only when explicitly requested or for
+  the latest run; default it off for older runs.
+- `optimizations/<design-id>.json`: optimization summaries/history per design.
+- `manifest.json` holds `format: "antennadesk.project"`, `container_version`,
+  `schema_version`, `project_id`, `application_version`, timestamps, an entry
+  table (`path`, `kind`, `uncompressed_bytes`, `compressed_bytes`, `crc32`,
+  `sha256`), and retention metadata (latest single run, latest batch id/runs).
+  Use `extra="forbid"`.
+- Entry paths are relative POSIX names: no leading slash, no `..`, no
+  backslash, no drive/colon, no NUL, maximum 255 bytes. Reject duplicate names
+  and case-insensitive collisions. Reject directories not listed in the
+  manifest, symlinks, encrypted entries, unsupported compression, and unknown
+  entries.
+- Write deterministically: sorted entry order, fixed ZIP timestamps, compact
+  JSON, `ZIP_DEFLATED` level 6. An entry that is already compressed may use
+  `ZIP_STORED`; do not double-compress.
+
+### Limits and validation
+
+Keep one source of truth in `application/project_limits.py`:
+
+```text
+MAX_CONTAINER_BYTES              = 64 MiB   # compressed on-disk
+PROJECT_SIZE_WARNING_BYTES       = 32 MiB
+MAX_PROJECT_UNCOMPRESSED_BYTES   = 256 MiB  # sum of entry payloads
+MAX_MANIFEST_BYTES               = 1 MiB
+MAX_ENTRY_BYTES                  = 64 MiB   # one JSON entry
+MAX_ENTRIES                      = 10_000
+MAX_PATH_BYTES                   = 255
+```
+
+- `MAX_ENTRY_BYTES` fits the current normalized run (~47.7 MB); raw text is a
+  separate ~20.2 MB entry. If a future run exceeds it, split pattern snapshots
+  into `runs/<id>/patterns/<n>.json`; never raise the total silently.
+- Do not trust the manifest's declared sizes. Read each entry through a bounded
+  stream, stop at the limit + 1, and verify the actual uncompressed byte count
+  and CRC32/SHA-256. Reject early if the manifest totals exceed the limits.
+  This is also the zip-bomb guard.
+- A manifest with more than `MAX_ENTRIES`, an entry path outside the
+  whitelist, or a manifest/ZIP entry mismatch is invalid.
+
+### Save/load contract
+
+- Introduce an immutable `PreparedProject`: `payload`, `compressed_bytes`,
+  `uncompressed_bytes`, `entry_count`, and `limits`.
+  `ProjectRepository.prepare_payload()` returns it; `write_payload(path,
+  prepared)` writes it atomically.
+- `prepare_payload()` builds every entry, sums the uncompressed bytes, and
+  raises `ProjectTooLargeError` **before** the final replace if any compressed,
+  expanded, entry, count, or path limit is exceeded. A successful `save()` must
+  always produce a file that `load()` accepts; add a round-trip invariant test.
+- Write to a temporary file in the destination directory, `fsync`, then
+  `os.replace`; never leave a partial `.antennadesk`. Keep the previous file
+  intact on failure.
+- `load()` reads `manifest.json`, `project.json`, and the latest retained run
+  (or the selected design's latest run) for the initial session. Older runs
+  and optimizations are loaded on demand through a `ProjectResultStore` or
+  application-level `ProjectSession`. The domain `Project` remains immutable;
+  the session caches materialized runs by id and releases them when no longer
+  needed.
+- Opening a project with N large runs must not materialize N far-field arrays.
+  Acceptance: peak memory scales with the project plus the selected run, not
+  with total history; a generated 6 × 68 MB project opens under the existing
+  256 MiB expanded limit after compaction and within a documented memory
+  budget.
+- Update every `prepare_payload`/`serialized_size` call site together:
+  `SaveProject`, `ProjectIO`, bundle export/import, and recovery. No caller may
+  write raw bytes that bypass the limit check.
+- Legacy input: `load()` rejects gzip/plain JSON and schema < 59 with a clear
+  `ProjectFormatError("unsupported legacy project format")`. Do not add a
+  58→59 migration. Delete the gzip/plain-JSON branches and their tests. The one
+  pre-container file from the incident is recovered out-of-band; it is not a
+  supported input.
+
+### Retention, UI, and recovery
+
+- Reuse `Project._retained_simulation_runs()` as the default retention policy:
+  latest single run per design plus all runs of the latest batch. If the
+  container exceeds a limit on save, offer “Compact history and save”, compact
+  to that policy, and retry. If it still does not fit, offer “Save design only”
+  (no `runs/` or `optimizations/`) or cancel. Never write an unopenable file.
+- Before a simulation or band batch, estimate the existing container plus the
+  new run (reuse `pattern_planning.py`/`budget.py`). If over budget, compact or
+  coarsen/disable patterns before running. The per-run 24 MiB planner is
+  retained but is no longer the only budget.
+- `MainWindow._save_to` shows compressed and expanded sizes and the open limit.
+  The 32 MiB warning remains a warning; the 64 MiB compressed and 256 MiB
+  expanded limits are hard blocks handled by the repository. The save dialog
+  needs “Compact and save” and “Save design only” paths.
+- On `ProjectTooLargeError` during open, offer “Open design only”: read only
+  `project.json`/`designs`, discard run entries, and open a repaired copy.
+  Never overwrite the original; keep a hard temporary cap for this recovery
+  path.
+- Autosave remains a design-only sidecar. `AutosaveRecovery` already excludes
+  simulation runs; it should use the new container with no runs and keep the
+  existing 2 MiB recovery limit. The recovery metadata file stays JSON.
+- Reconcile with `.antennadesk-bundle`: preferred bundle is a ZIP containing
+  `manifest.json`, the native project entries under `project/`, and
+  `assets/...`; import validates both manifests and reconstructs the native
+  container. Do not nest a compressed project inside another ZIP unless the
+  implementation cost is prohibitive; if nested, document the double
+  compression and update `PROJECT_BUNDLE.md`.
+
+### Tests
+
+- New `tests/integration/persistence/test_project_container.py`:
+  - round trip project/design/runs/optimizations; lazy loading; missing or
+    extra entries; duplicate and case-colliding names; traversal, absolute, and
+    backslash names; symlink, encrypted, and unsupported compression; CRC and
+    size mismatch; manifest total over limit; per-entry over limit; max
+    entries; atomic replace failure; deterministic output.
+  - save/load invariant: for generated projects under and over each limit,
+    `save()` either raises `ProjectTooLargeError` or produces a file that
+    `load()` accepts. No “saved but unopenable” state.
+  - generated large project (no committed 409 MB fixture) exercising
+    compaction; manual validation with the reported 40 m loaded dipole
+    project.
+- UI tests with `pytest-qt` and the offscreen platform: save dialog shows both
+  sizes; compact-and-save; design-only save; oversized-open recovery; EN/ES
+  strings and help coverage for every new dialog or field.
+- Replace `tests/integration/persistence/test_json_repository.py` with the
+  container tests and remove gzip/plain-JSON compatibility tests. Keep
+  round-trip fixtures for the current schema only.
+- Real NEC2C is not required for the container tests; keep the existing full
+  gate and solver tests green.
+
+### Documentation and acceptance
+
+- New ADR-0050 “ZIP project container and size contract” supersedes ADR-0021.
+  Update `ARCHITECTURE.md`, `DOMAIN_MODEL.md`, `PROJECT_BUNDLE.md`,
+  `USER_GUIDE.md`, `STATUS.md` (schema 59), and `CHANGELOG.md`.
+- Acceptance:
+  - Saving the reported six-run project either compacts to a reopenable
+    container or refuses with an actionable message; it never writes another
+    unopenable file.
+  - A container with the latest retained runs opens without materializing all
+    patterns; the design is available even if every run entry is absent.
+  - Per-entry and total caps are enforced on save and load; crafted ZIP bombs,
+    traversal, duplicate entries, and symlinks are rejected.
+  - `compact_simulation_history` physically removes entries and reduces both
+    compressed and expanded size.
+  - Project bundle export/import round-trips the new container and assets
+    without a double-compression regression.
+  - Full gate: `ruff`, `ruff format --check`, both `mypy` passes, and
+    `NEC2C=... uv run pytest`.
+
+**Effort:** L (1–2 weeks). **Release:** 1.1, before the next public release.
+**Risk:** medium–high because the repository port and lazy-loading path change;
+mitigate with the ADR, atomic writes, the save/load invariant test, and a
+manual recovery of the one existing pre-container project.
 
 ## Product trust and station wave
 
@@ -889,8 +1099,9 @@ decision:
 ## Current baseline
 
 - Schema: **58**.
-- Full gate: **4,282 passed, 1 skipped** on 2026-11-20 after the full QA and
-  technical-debt sweep and the main-window extractions (typed simulation specs,
+- Full gate: **4,289 passed, 1 skipped** on 2026-11-20 after the full QA,
+  technical-debt sweep, main-window extractions, and the save/load size
+  invariant fix (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,

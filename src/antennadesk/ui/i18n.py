@@ -10775,6 +10775,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Project is {size:.1f} MB and exceeds the {limit:.0f} MB limit. Compact Simulation History or remove designs.",
         Language.SPANISH: "El proyecto pesa {size:.1f} MB y supera el límite de {limit:.0f} MB. Compactá el historial o eliminá diseños.",
     },
+    "dialog.project_expanded_too_large": {
+        Language.ENGLISH: "Project expands to {size:.1f} MB and exceeds the {limit:.0f} MB reopen limit. Remove simulation runs or designs, then save.",
+        Language.SPANISH: "El proyecto se expande a {size:.1f} MB y supera el límite de reapertura de {limit:.0f} MB. Eliminá corridas de simulación o diseños y volvé a guardar.",
+    },
+    "dialog.compact_for_save": {
+        Language.ENGLISH: "The project is too large to save and reopen ({size:.1f} MB against a {limit:.0f} MB limit). Compact the simulation history and try again?",
+        Language.SPANISH: "El proyecto es demasiado grande para guardarlo y reabrirlo ({size:.1f} MB frente a un límite de {limit:.0f} MB). ¿Compactar el historial de simulaciones y volver a intentar?",
+    },
     "dialog.compact_history": {
         Language.ENGLISH: "Remove older simulation runs? {count} runs will be reduced to the latest run per design ({keep} kept).",
         Language.SPANISH: "¿Eliminar corridas antiguas? {count} corridas se reducirán a la última por diseño ({keep} conservadas).",
