@@ -18,6 +18,57 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _markdown_files() -> list[Path]:
+    return sorted(
+        [
+            *DOCS.rglob("*.md"),
+            ROOT / "README.md",
+            ROOT / "CHANGELOG.md",
+            ROOT / "AGENTS.md",
+        ]
+    )
+
+
+def _without_fenced_code(text: str) -> str:
+    return re.sub(r"(?ms)^```.*?^```\s*$", "", text)
+
+
+def test_local_markdown_links_resolve() -> None:
+    broken: list[str] = []
+    for path in _markdown_files():
+        text = _without_fenced_code(_read(path))
+        for raw_target in re.findall(r"\]\(([^)]+)\)", text):
+            target = raw_target.strip()
+            if target.startswith(("http://", "https://", "mailto:", "#")):
+                continue
+            file_target = target.split("#", 1)[0].strip()
+            if not file_target:
+                continue
+            if file_target.startswith("<") and file_target.endswith(">"):
+                file_target = file_target[1:-1]
+            if not (path.parent / file_target).resolve().exists():
+                broken.append(f"{path.relative_to(ROOT)} -> {raw_target}")
+
+    assert not broken, "Broken local Markdown links:\n" + "\n".join(broken)
+
+
+def test_changelog_sections_do_not_repeat_entries() -> None:
+    text = _read(ROOT / "CHANGELOG.md")
+    parts = re.split(r"(?m)^## ", text)
+
+    for part in parts[1:]:
+        release = part.splitlines()[0]
+        for subsection in re.split(r"(?m)^### ", part)[1:]:
+            subheader = subsection.splitlines()[0]
+            entries = re.findall(
+                r"(?ms)^- \*\*(.+?)\*\*(.*?)(?=^- \*\*|^### |^## |\Z)",
+                subsection,
+            )
+            keys = [(title, " ".join(body.split())) for title, body in entries]
+            duplicated = sorted({key[0] for key in keys if keys.count(key) > 1})
+            assert not duplicated, f"{release} / {subheader} repeats entries: {duplicated}"
+
+
 def test_readme_status_and_gain_claims_match_the_shipped_application() -> None:
     text = _read(README)
 

@@ -890,10 +890,10 @@ decision:
 ## Current baseline
 
 - Schema: **58**.
-- Full gate: **4,212 passed, 1 skipped** on 2026-11-20 after the documentation
-  truth pass, CHANGELOG repair, and support-structure guards, with `NEC2C`
-  auto-detected by the test configuration; the skip is the Windows-only
-  console-hiding test on Linux.
+- Full gate: **4,214 passed, 1 skipped** on 2026-11-20 after the documentation
+  truth pass, CHANGELOG repair, support-structure guards, and documentation
+  link/duplicate guards, with `NEC2C` auto-detected by the test configuration;
+  the skip is the Windows-only console-hiding test on Linux.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run
