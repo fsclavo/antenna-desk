@@ -189,7 +189,7 @@ evidence, and risk are in §Product trust and station wave below.
 | ~~TS6~~ | ~~Recent projects and start-page examples~~ | S | none | **Done 2026-11-19:** QSettings recent list (file name only, ten entries, missing-file removal), start-page dipole/Yagi/vertical examples, reference-library route, and optional restore-last-project preference. No schema change. Full gate 4,120 passed, 1 skipped. |
 | ~~TS7~~ | ~~Documentation truth pass and status review~~ | S | none | **Done 2026-11-19:** stale claims were corrected in README, USER_GUIDE, SOLVER_ADAPTER, ARCHITECTURE, DOMAIN_MODEL, and the evidence text; the pre-alpha label became pre-1.0; schema 56 and the template-limitation source are documented; `tests/unit/test_documentation_truth.py` guards the known strings. Full gate 4,098 passed, 1 skipped. |
 | ~~DL1~~ | ~~Smith chart and matching workbench~~ | M–L | matching network, feed line | **Done 2026-11-19:** Smith tab, normalized locus, reference planes, measured overlay, hover, marker, editable feed-line preview, automatic L/Pi/T matching preview, and PNG/SVG/CSV export. Manual matching-component entry and network optimization remain follow-ups. See §DL1. |
-| DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Partially done 2026-11-19.** Bounded L/Pi/T design, C/L ranges, ideal/E12/E24 values, Q loss, per-frequency table, SWR, and limiting part. Best effort/bypass, voltage/current, and a dedicated per-band sweep remain. See §DL2. |
+| DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Partially done 2026-11-19.** Bounded L/Pi/T design, C/L ranges, ideal/E12/E24 values, Q loss, per-frequency table, SWR, limiting part, bounded L best effort, and bypass. Pi/T best effort, voltage/current, and a dedicated per-band sweep remain. See §DL2. |
 | DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Wave 1.** Boom, mast, tower, and guy wires as conductors with scene, BOM, report, and warnings. See §DL5. |
@@ -624,9 +624,10 @@ the risks; a point cap and pure-domain tests mitigate them.
 **Status:** **Partially done 2026-11-19.** **Tools → Tuner
 Matchability...** designs a bounded L/Pi/T network at each simulated frequency,
 snaps components to ideal/E12/E24, applies the optional Q loss, and reports
-matched/out-of-range/no solution, SWR, loss, and the limiting part. Best-effort
-matching, bypass, per-part voltage/current ratings, and a dedicated per-band
-sweep remain follow-ups.
+matched/out-of-range/no solution, SWR, loss, and the limiting part. Out-of-
+range L designs try a bounded best-effort search and bypass when they do not
+improve the raw SWR. Pi/T best effort, per-part voltage/current ratings, and a
+dedicated per-band sweep remain follow-ups.
 
 **Goal:** answer "will my ATU match this, and what real parts do I need?"
 

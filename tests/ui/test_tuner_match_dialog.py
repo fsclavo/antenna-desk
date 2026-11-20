@@ -52,6 +52,9 @@ def test_tuner_dialog_recomputes_a_narrow_range(qtbot: QtBot) -> None:
 
     dialog._c_min.setValue(1.0)
     dialog._c_max.setValue(2.0)
+    pi_index = dialog._topology.findData("pi")
+    assert pi_index >= 0
+    dialog._topology.setCurrentIndex(pi_index)
     dialog._recompute()
 
     assert dialog._table.item(0, 4).text() == "Out of range"

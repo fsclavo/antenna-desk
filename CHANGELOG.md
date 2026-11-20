@@ -13,10 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   L, Pi, or T tuner at the simulated frequencies. It accepts capacitance and
   inductance ranges, ideal/E12/E24 component values, and a Pi/T design Q; the
   read-only table reports frequency, band, load R/X, matched/out-of-range/no
-  solution, SWR, loss, and the limiting part. Ranges are operator inputs, not a
-  specific commercial ATU model, and the check does not run a solver. Manual
-  best-effort/bypass and per-part voltage/current ratings remain follow-ups.
-  No solver or schema change.
+  solution, SWR, loss, and the limiting part. Out-of-range L designs try a
+  bounded best-effort search and fall back to bypass when they do not improve
+  the raw SWR. Ranges are operator inputs, not a specific commercial ATU model,
+  and the check does not run a solver. Pi/T best effort, per-part voltage/current
+  ratings, and a dedicated per-band sweep remain follow-ups. No solver or
+  schema change.
 - **Smith chart and matching workbench.** The results area now has a
   **Smith** tab with a normalized impedance locus, constant-resistance circles
   and reactance arcs, a hover readout, and a frequency marker. A reference-plane

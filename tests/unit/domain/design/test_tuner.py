@@ -60,7 +60,7 @@ def test_wide_tuner_matches_and_narrow_tuner_reports_the_limiting_part() -> None
         load,
         frequency,
         _limits(capacitance_min_f=0.0, capacitance_max_f=1e-12),
-        MatchingPreviewTopology.L,
+        MatchingPreviewTopology.PI,
     )
 
     assert matched.status is TunerStatus.MATCHED
@@ -87,6 +87,27 @@ def test_realized_network_uses_e24_values_and_keeps_a_valid_match() -> None:
     # The realized network is still a valid passive matching network.
     input_impedance = realized.input_impedance(load, frequency)
     assert input_impedance.real > 0.0
+
+
+def test_out_of_range_l_returns_best_effort_or_bypass() -> None:
+    load = complex(100.0, 0.0)
+    frequency = 14_000_000.0
+    evaluation = evaluate_tuner_match(
+        load,
+        frequency,
+        _limits(capacitance_min_f=0.0, capacitance_max_f=1e-12),
+        MatchingPreviewTopology.L,
+    )
+
+    assert evaluation.status in {TunerStatus.BEST_EFFORT, TunerStatus.BYPASS}
+    raw_swr = 2.0
+    if evaluation.status is TunerStatus.BYPASS:
+        assert evaluation.network is None
+        assert evaluation.swr == pytest.approx(raw_swr, abs=0.01)
+    else:
+        assert evaluation.network is not None
+        assert evaluation.swr is not None
+        assert evaluation.swr < raw_swr
 
 
 def test_unmatchable_load_returns_no_solution() -> None:

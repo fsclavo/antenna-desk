@@ -541,7 +541,7 @@ and new catalog presets) waits until this track closes.
 | 1.0 Confidence | TS6 | Recent projects and start examples | Faster launch-to-design path | S | n/a | done 2026-11-19 |
 | 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
-| 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part; best-effort and ratings remain | M–L | B/C | partial 2026-11-19 |
+| 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part, L best effort and bypass; Pi/T best effort and ratings remain | M–L | B/C | partial 2026-11-19 |
 | 1.1 Station | DL5 | Support structures | Boom, mast, tower, and guy wires in the model | M–L | B/C | queued 2026-11-19 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Coarse drag-to-preview, commit to full run | M–L | n/a | queued 2026-11-19 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | E/H grid and compliance distance, with limits | L | B/C | queued after ADR/spike |
@@ -577,9 +577,9 @@ Product track:
    1.0 Confidence (TS1–TS7, DL9) is done. Wave 1 Station (DL1, DL2, DL5) is
    active: DL1 (Smith chart, reference planes, measured overlay, editable
    feed-line preview, automatic L/Pi/T preview, and export) is done. DL2's
-   first slice (bounded tuner check, E12/E24, Q loss, limiting part) is
-   implemented; best-effort/bypass and part ratings remain. DL5 is also
-   pending. Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays post-1.2
+   first slice (bounded tuner check, E12/E24, Q loss, limiting part, L best
+   effort and bypass) is implemented; Pi/T best effort, part ratings, and the
+   per-band sweep remain. DL5 is also pending. Wave 2 (DL3, DL4, DL6, DL7) remains queued, and DL8 stays post-1.2
    until a validated terrain ADR exists. Execution and acceptance criteria are
    in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave-queued-2026-11-19).

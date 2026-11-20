@@ -56,6 +56,8 @@ E24 = (
 
 class TunerStatus(StrEnum):
     MATCHED = "matched"
+    BEST_EFFORT = "best_effort"
+    BYPASS = "bypass"
     OUT_OF_RANGE = "out_of_range"
     NO_SOLUTION = "no_solution"
 
@@ -215,6 +217,33 @@ def evaluate_tuner_match(
     if series != "ideal":
         network = realize_network(network, series)
     limiting = _limiting_component(network, limits)
+    if limiting is not None and MatchingPreviewTopology(topology) is MatchingPreviewTopology.L:
+        best = _best_effort_l(
+            load_impedance_ohm,
+            frequency_hz,
+            limits,
+            source_impedance_ohm,
+            q_factor=loaded_q if loaded_q is not None and loaded_q > 0.0 else None,
+        )
+        raw_swr = calculate_swr(load_impedance_ohm, source_impedance_ohm)
+        if best is not None and best[1] < raw_swr - 0.05:
+            best_network, best_swr, best_loss = best
+            return TunerEvaluation(
+                TunerStatus.BEST_EFFORT,
+                best_network,
+                best_network.input_impedance(load_impedance_ohm, frequency_hz),
+                best_swr,
+                best_loss,
+                None,
+            )
+        return TunerEvaluation(
+            TunerStatus.BYPASS,
+            None,
+            load_impedance_ohm,
+            raw_swr,
+            0.0,
+            None,
+        )
     input_impedance = network.input_impedance(load_impedance_ohm, frequency_hz)
     loss_db = dissipative_loss_db(
         network.abcd(frequency_hz),
@@ -229,6 +258,64 @@ def evaluate_tuner_match(
         loss_db=loss_db if math.isfinite(loss_db) else None,
         limiting=limiting,
     )
+
+
+def _best_effort_l(
+    load_impedance_ohm: complex,
+    frequency_hz: float,
+    limits: TunerLimits,
+    source_impedance_ohm: float,
+    *,
+    q_factor: float | None,
+) -> tuple[LNetwork, float, float] | None:
+    series_l = _range_values(limits.inductance_min_h, limits.inductance_max_h)
+    series_c = _range_values(limits.capacitance_min_f, limits.capacitance_max_f)
+    shunt_l = series_l
+    shunt_c = series_c
+    if not (series_l or series_c) or not (shunt_l or shunt_c):
+        return None
+    best: tuple[LNetwork, float, float] | None = None
+    for series_kind, series_values in (("l", series_l), ("c", series_c)):
+        for series_value in series_values:
+            for shunt_kind, shunt_values in (("l", shunt_l), ("c", shunt_c)):
+                for shunt_value in shunt_values:
+                    for shunt_at_input in (True, False):
+                        network = LNetwork(
+                            series_inductance_h=(series_value if series_kind == "l" else 0.0),
+                            series_capacitance_f=(series_value if series_kind == "c" else 0.0),
+                            shunt_inductance_h=(shunt_value if shunt_kind == "l" else 0.0),
+                            shunt_capacitance_f=(shunt_value if shunt_kind == "c" else 0.0),
+                            shunt_at_input=shunt_at_input,
+                            q_factor=q_factor,
+                        )
+                        swr = calculate_swr(
+                            network.input_impedance(load_impedance_ohm, frequency_hz),
+                            source_impedance_ohm,
+                        )
+                        if best is None or swr < best[1]:
+                            loss = dissipative_loss_db(
+                                network.abcd(frequency_hz),
+                                source_impedance_ohm,
+                                load_impedance_ohm,
+                            )
+                            best = (
+                                network,
+                                swr,
+                                loss if math.isfinite(loss) else 0.0,
+                            )
+    return best
+
+
+def _range_values(minimum: float, maximum: float) -> tuple[float, ...]:
+    if maximum <= 0.0:
+        return ()
+    lower = max(minimum, maximum * 1e-6)
+    if lower > maximum:
+        return ()
+    if lower == maximum:
+        return (maximum,)
+    ratio = (maximum / lower) ** (1.0 / 8.0)
+    return tuple(lower * ratio**index for index in range(9))
 
 
 def _nearest_branch(
