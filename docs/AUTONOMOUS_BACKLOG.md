@@ -902,6 +902,11 @@ decision:
   configuration; the skip is the Windows-only console-hiding test on Linux.
   See
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
+- Main-window decomposition: **closed 2026-11-20** after the high-value
+  extractions. `_build_ui`, `_build_actions`, and `retranslate` stay in the
+  window deliberately; future work extracts a component only when a feature or
+  defect touches it. The duplicated `QThread` lifecycles and `results_view.py`
+  are likewise feature-driven, not an active standalone refactor.
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults
   (UX30), and the chart-cursor teardown fix. The tag-triggered CI run

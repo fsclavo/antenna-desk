@@ -27,7 +27,9 @@
   `ui/recovery_actions.py`, element-optimizer dialogs into
   `ui/element_optimization_actions.py`, family/length/synthesis dialogs into
   `ui/optimization_actions.py`, and recent-list behavior into
-  `ui/recent_actions.py`.
+  `ui/recent_actions.py`. The standalone main-window decomposition is
+  **closed**; the remaining UI-construction debt is left for extract-on-touch
+  work, not another standalone refactor.
 
 ## Next
 
