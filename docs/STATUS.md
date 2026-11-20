@@ -25,8 +25,9 @@
   into `ui/import_actions.py`, project open/save workers into
   `ui/project_io.py`, autosave/recovery cadence into
   `ui/recovery_actions.py`, element-optimizer dialogs into
-  `ui/element_optimization_actions.py`, and family/length/synthesis dialogs
-  into `ui/optimization_actions.py`.
+  `ui/element_optimization_actions.py`, family/length/synthesis dialogs into
+  `ui/optimization_actions.py`, and recent-list behavior into
+  `ui/recent_actions.py`.
 
 ## Next
 

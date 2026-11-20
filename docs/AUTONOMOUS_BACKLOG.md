@@ -896,8 +896,9 @@ decision:
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
   project open/save workers in `ui/project_io.py`, autosave/recovery in
   `ui/recovery_actions.py`, element-optimizer dialogs in
-  `ui/element_optimization_actions.py`, and family/length/synthesis dialogs in
-  `ui/optimization_actions.py`), with `NEC2C` auto-detected by the test
+  `ui/element_optimization_actions.py`, family/length/synthesis dialogs in
+  `ui/optimization_actions.py`, and recent-list behavior in
+  `ui/recent_actions.py`), with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
   See
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).

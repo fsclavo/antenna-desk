@@ -348,6 +348,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   NEC deck exporter are injected by `ui/app.py`. `ui/main_window.py` no longer
   imports persistence or solver details, and the architecture allowlist now
   contains only composition-root entries. No behavior change.
+- **Recent-project actions moved out of the main window.**
+  `ui/recent_actions.py` owns recent-list refresh, missing-file removal, and
+  restore-last-project behavior; the main window keeps the save prompt and the
+  status update. No behavior change.
 
 ### Fixed
 

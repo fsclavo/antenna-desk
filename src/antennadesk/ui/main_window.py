@@ -338,6 +338,7 @@ from .preferences import (
     resolve_language,
 )
 from .project_io import ProjectIO
+from .recent_actions import RecentProjectActions
 from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
 from .recovery import AutosaveRecovery
 from .recovery_actions import RecoveryController
@@ -514,6 +515,17 @@ class MainWindow(QMainWindow):
 
         self._build_actions()
         self._build_ui()
+        self._recent_actions = RecentProjectActions(
+            self._recent_projects,
+            self._start_page,
+            self,
+            translator,
+            lambda path, show_error: self._open_project_path(
+                path,
+                show_error=show_error,
+            ),
+            lambda message: self._show_error(message),
+        )
         self._sync_workflow_controls()
         self._apply_workflow_mode()
         self._show_empty_state()
@@ -5462,7 +5474,7 @@ class MainWindow(QMainWindow):
         self.new_antenna()
 
     def _refresh_start_page_recents(self) -> None:
-        self._start_page.set_recent_projects(self._recent_projects.load())
+        self._recent_actions.refresh()
 
     def _open_project_path(self, path: Path, *, show_error: bool = True) -> bool:
         try:
@@ -5494,42 +5506,19 @@ class MainWindow(QMainWindow):
     def open_recent_project(self, path: str) -> None:
         if not self._maybe_save_changes():
             return
-        target = Path(path)
-        if not target.is_file():
-            self._show_error(
-                self._translator.t(
-                    "error.open",
-                    message=self._translator.t("error.file_missing", name=target.name),
-                )
-            )
-            self._recent_projects.remove(target)
-            self._refresh_start_page_recents()
-            return
-        self._open_project_path(target)
+        self._recent_actions.open(Path(path))
 
     def remove_recent_project(self, path: str) -> None:
-        self._recent_projects.remove(Path(path))
-        self._refresh_start_page_recents()
+        self._recent_actions.remove(Path(path))
         self._last_status_key = "status.recent_removed"
         self._update_status_text()
 
     def _restore_last_project(self) -> None:
-        if self._project is not None:
-            return
-        entries = self._recent_projects.load()
-        if not entries:
-            return
-        path = entries[0].path
-        if not path.is_file():
-            self._recent_projects.remove(path)
-            self._refresh_start_page_recents()
-            self._last_status_key = "status.recent_missing"
-            self._update_status_text()
-            return
-        if not self._open_project_path(path, show_error=False):
-            self._recent_projects.remove(path)
-            self._refresh_start_page_recents()
-            self._last_status_key = "status.recent_missing"
+        status_key = self._recent_actions.restore_last(
+            has_project=self._project is not None,
+        )
+        if status_key is not None:
+            self._last_status_key = status_key
             self._update_status_text()
 
     def _autosave_now(self) -> bool:
