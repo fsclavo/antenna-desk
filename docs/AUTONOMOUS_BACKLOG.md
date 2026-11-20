@@ -894,9 +894,10 @@ decision:
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
-  and project open/save workers in `ui/project_io.py`), with `NEC2C`
-  auto-detected by the test configuration; the skip is the Windows-only
-  console-hiding test on Linux. See
+  project open/save workers in `ui/project_io.py`, and autosave/recovery in
+  `ui/recovery_actions.py`), with `NEC2C` auto-detected by the test
+  configuration; the skip is the Windows-only console-hiding test on Linux.
+  See
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
 - Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
   round-trip, coaxial feed schematic (UX31), per-template material defaults

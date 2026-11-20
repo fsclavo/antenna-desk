@@ -22,8 +22,9 @@
   far-field pattern presets, and pattern-budget planning into the Qt-free
   application layer, catalog/template routing into `ui/catalog.py`, export
   dialogs/writer dispatch into `ui/exporters.py`, VNA/NEC/MMANA import parsing
-  into `ui/import_actions.py`, and project open/save workers into
-  `ui/project_io.py`.
+  into `ui/import_actions.py`, project open/save workers into
+  `ui/project_io.py`, and autosave/recovery cadence into
+  `ui/recovery_actions.py`.
 
 ## Next
 

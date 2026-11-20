@@ -327,6 +327,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   progress dialogs, payload preparation, and bundle-worker execution. The main
   window keeps project state, history, size warnings, recent files, and
   recovery policy. No behavior change.
+- **Autosave and recovery cadence moved out of the main window.**
+  `ui/recovery_actions.py` owns the 30-second autosave timer, the 2-second
+  debounce, recovery-file clear/load/save, the corrupt-file warning, and the
+  startup restore/discard prompt. The main window supplies the current project
+  and policy callbacks. No behavior change.
 
 ### Fixed
 

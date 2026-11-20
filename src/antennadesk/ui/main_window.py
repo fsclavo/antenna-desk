@@ -335,7 +335,8 @@ from .preferences import (
 )
 from .project_io import ProjectIO
 from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
-from .recovery import AutosaveRecovery, RecoverySnapshot, RecoveryTooLargeError
+from .recovery import AutosaveRecovery
+from .recovery_actions import RecoveryController
 from .template_identity import catalog_key_for, label_key_for
 from .theme import ThemeController
 from .units import DisplayUnits, UnitSystem, length_from_m, length_unit_key
@@ -489,13 +490,12 @@ class MainWindow(QMainWindow):
         self._progress_timer = QTimer(self)
         self._progress_timer.setInterval(1000)
         self._progress_timer.timeout.connect(self._update_progress_elapsed)
-        self._autosave_timer = QTimer(self)
-        self._autosave_timer.setInterval(30_000)
-        self._autosave_timer.timeout.connect(self._autosave_now)
-        self._autosave_debounce = QTimer(self)
-        self._autosave_debounce.setSingleShot(True)
-        self._autosave_debounce.setInterval(2_000)
-        self._autosave_debounce.timeout.connect(self._autosave_now)
+        self._recovery_controller = RecoveryController(
+            self,
+            translator,
+            lambda: self._recovery,
+            self._autosave_now,
+        )
         self._undo_stack = QUndoStack(self)
         self._undo_stack.setUndoLimit(50)
         self._history_restoring = False
@@ -510,8 +510,8 @@ class MainWindow(QMainWindow):
         self._show_empty_state()
         self.retranslate()
         self._refresh_start_page_recents()
-        if self._recovery is not None and self._autosave_enabled:
-            self._autosave_timer.start()
+        if self._autosave_enabled and self._recovery_controller.available:
+            self._recovery_controller.set_enabled(True)
         if self._recovery is not None or self._restore_last_project_preference:
             QTimer.singleShot(0, self._startup_recovery)
 
@@ -2809,7 +2809,7 @@ class MainWindow(QMainWindow):
         path: Path | None,
         dirty: bool,
     ) -> None:
-        self._clear_recovery()
+        self._recovery_controller.clear()
         self._project = project
         self._design_id = design_id
         self._feed_line = project.feed_line
@@ -2867,7 +2867,7 @@ class MainWindow(QMainWindow):
         self._design_dirty = dirty
         self._autosave_pending = dirty
         if dirty and self._autosave_enabled and self._recovery is not None:
-            self._autosave_debounce.start()
+            self._recovery_controller.schedule()
         self._refresh_installation_summary()
         self._update_title()
         self._update_actions()
@@ -4024,7 +4024,7 @@ class MainWindow(QMainWindow):
             self._design_dirty = design_dirty_before
             self._autosave_pending = autosave_pending_before
             if not design_dirty_before:
-                self._autosave_debounce.stop()
+                self._recovery_controller.stop_debounce()
             if self._design_id is None:
                 raise ValueError(self._translator.t("error.no_project"))
             design = project.design_by_id(self._design_id)
@@ -5523,18 +5523,10 @@ class MainWindow(QMainWindow):
             self._last_status_key = "status.recent_missing"
             self._update_status_text()
 
-    def _clear_recovery(self) -> None:
-        if self._recovery is None:
-            return
-        try:
-            self._recovery.clear()
-        except OSError:
-            return
-
     def _autosave_now(self) -> bool:
         if (
             not self._autosave_enabled
-            or self._recovery is None
+            or not self._recovery_controller.available
             or self._project is None
             or not self._design_dirty
             or not self._autosave_pending
@@ -5546,16 +5538,7 @@ class MainWindow(QMainWindow):
                 self._apply_fields()
             except Exception:
                 return False
-        try:
-            self._recovery.save(
-                self._project,
-                original_path=self._current_path,
-                dirty=True,
-            )
-        except RecoveryTooLargeError:
-            self._autosave_pending = False
-            return False
-        except Exception:
+        if not self._recovery_controller.save(self._project, self._current_path):
             return False
         self._autosave_pending = False
         return True
@@ -5564,48 +5547,22 @@ class MainWindow(QMainWindow):
         if self._project is not None:
             return
         if self._recovery is not None and self._autosave_enabled:
-            try:
-                snapshot = self._recovery.load()
-            except Exception:
-                self._clear_recovery()
-                QMessageBox.warning(
-                    self,
-                    self._translator.t("dialog.recovery_title"),
-                    self._translator.t("dialog.recovery_corrupt"),
-                )
-                snapshot = None
+            snapshot = self._recovery_controller.load()
             if snapshot is not None:
-                self._offer_recovery(snapshot)
+                decision = self._recovery_controller.offer(snapshot)
+                if decision.restore:
+                    self._set_project(
+                        snapshot.project,
+                        snapshot.project.designs[0].id,
+                        path=decision.path,
+                        dirty=True,
+                    )
+                    self._last_status_key = "status.recovered"
+                    self._update_status_text()
         elif self._recovery is not None:
-            self._clear_recovery()
+            self._recovery_controller.clear()
         if self._project is None and self._restore_last_project_preference:
             self._restore_last_project()
-
-    def _offer_recovery(self, snapshot: RecoverySnapshot) -> None:
-        if not snapshot.project.designs:
-            self._clear_recovery()
-            return
-        path = snapshot.original_path
-        if path is not None and not path.is_file():
-            path = None
-        name = path.name if path is not None else self._translator.t("recovery.untitled")
-        answer = QMessageBox.question(
-            self,
-            self._translator.t("dialog.recovery_title"),
-            self._translator.t("dialog.recovery_message", name=name),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.Yes,
-        )
-        if answer == QMessageBox.StandardButton.Yes:
-            self._set_project(
-                snapshot.project,
-                snapshot.project.designs[0].id,
-                path=path,
-                dirty=True,
-            )
-            self._last_status_key = "status.recovered"
-            self._update_status_text()
-        self._clear_recovery()
 
     def open_example(self, kind: str) -> None:
         if not self._maybe_save_changes():
@@ -5821,12 +5778,12 @@ class MainWindow(QMainWindow):
         if self._project is not None:
             self._recent_projects.add(path, self._project.name)
             self._refresh_start_page_recents()
-        self._clear_recovery()
+        self._recovery_controller.clear()
         self._dirty = False
         self._design_dirty = False
         self._autosave_pending = False
         self._form_dirty = False
-        self._autosave_debounce.stop()
+        self._recovery_controller.stop_debounce()
         self._clean_signature = self._current_project_signature()
         self._clean_run_ids = self._current_run_ids()
         self._undo_stack.setClean()
@@ -7746,16 +7703,14 @@ class MainWindow(QMainWindow):
         self._report_include_band_3d = preferences.report_include_band_3d
         self._restore_last_project_preference = preferences.restore_last_project
         self._autosave_enabled = preferences.autosave_enabled
-        if self._autosave_enabled and self._recovery is not None:
-            self._autosave_timer.start()
+        if self._autosave_enabled:
             if self._design_dirty:
                 self._autosave_pending = True
-                self._autosave_debounce.start()
+            self._recovery_controller.set_enabled(True, pending=self._design_dirty)
         else:
-            self._autosave_timer.stop()
-            self._autosave_debounce.stop()
+            self._recovery_controller.stop()
             self._autosave_pending = False
-            self._clear_recovery()
+            self._recovery_controller.clear()
         self._sync_workflow_controls()
         self._apply_workflow_mode()
         self._apply_unit_system_to_forms(preferences.unit_system)
@@ -7898,8 +7853,8 @@ class MainWindow(QMainWindow):
         if design:
             self._design_dirty = True
             self._autosave_pending = True
-            if self._autosave_enabled and self._recovery is not None:
-                self._autosave_debounce.start()
+            if self._autosave_enabled:
+                self._recovery_controller.schedule()
 
     def _on_form_changed(self) -> None:
         if self._project is None or self._simulating:
@@ -8032,9 +7987,8 @@ class MainWindow(QMainWindow):
             self._thread = None
             self._worker = None
         if self._maybe_save_changes():
-            self._autosave_timer.stop()
-            self._autosave_debounce.stop()
-            self._clear_recovery()
+            self._recovery_controller.stop()
+            self._recovery_controller.clear()
             self._undo_stack.clear()
             event.accept()
         else:
