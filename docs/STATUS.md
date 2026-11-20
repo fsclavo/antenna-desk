@@ -21,8 +21,9 @@
   The follow-up extractions moved typed-family simulation-spec assembly,
   far-field pattern presets, and pattern-budget planning into the Qt-free
   application layer, catalog/template routing into `ui/catalog.py`, export
-  dialogs/writer dispatch into `ui/exporters.py`, and VNA/NEC/MMANA import
-  parsing into `ui/import_actions.py`.
+  dialogs/writer dispatch into `ui/exporters.py`, VNA/NEC/MMANA import parsing
+  into `ui/import_actions.py`, and project open/save workers into
+  `ui/project_io.py`.
 
 ## Next
 

@@ -322,6 +322,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the NEC-2/MMANA parse-and-create flow. The main window keeps save prompts,
   project application, dirty state, and measurement refresh. No behavior
   change.
+- **Project file workers and progress moved out of the main window.**
+  `ui/project_io.py` owns the open/save file pickers, worker threads, modal
+  progress dialogs, payload preparation, and bundle-worker execution. The main
+  window keeps project state, history, size warnings, recent files, and
+  recovery policy. No behavior change.
 
 ### Fixed
 

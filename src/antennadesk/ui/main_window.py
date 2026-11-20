@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 from uuid import UUID
 
-from PySide6.QtCore import QEventLoop, Qt, QThread, QTimer
+from PySide6.QtCore import Qt, QThread, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -39,7 +39,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
-    QProgressDialog,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -91,7 +90,6 @@ from ..application.use_cases.delete_design_variant import (
     DeleteDesignVariant,
     DeleteDesignVariantCommand,
 )
-from ..application.use_cases.open_project import OpenProject
 from ..application.use_cases.optimize_elements import ElementOptimizationObjective
 from ..application.use_cases.project_bundle import (
     BUNDLE_EXTENSION,
@@ -108,7 +106,6 @@ from ..application.use_cases.rename_design_variant import (
     RenameDesignVariant,
     RenameDesignVariantCommand,
 )
-from ..application.use_cases.save_project import SaveProject
 from ..application.use_cases.update_dipole_design import (
     UpdateDipoleDesign,
     UpdateDipoleDesignCommand,
@@ -336,6 +333,7 @@ from .preferences import (
     UiPreferences,
     resolve_language,
 )
+from .project_io import ProjectIO
 from .recent_projects import InMemoryRecentProjectsStore, RecentProjectsStore
 from .recovery import AutosaveRecovery, RecoverySnapshot, RecoveryTooLargeError
 from .template_identity import catalog_key_for, label_key_for
@@ -375,12 +373,10 @@ from .widgets.yagi_form import YagiForm
 from .widgets.zepp_form import ZeppForm
 from .workers.band_analysis_worker import BandAnalysisWorker
 from .workers.comparison_worker import ComparisonWorker
-from .workers.open_project_worker import OpenProjectWorker
 from .workers.project_bundle_worker import (
     ProjectBundleExportWorker,
     ProjectBundleImportWorker,
 )
-from .workers.save_project_worker import SaveProjectWorker
 from .workers.simulation_worker import SimulationWorker
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
@@ -419,6 +415,7 @@ class MainWindow(QMainWindow):
         self._repository = repository
         self._solver = solver
         self._translator = translator
+        self._project_io = ProjectIO(self, translator, repository)
         self._unit_system = unit_system
         self._language_preference = (
             language_preference if language_preference is not None else LanguagePreference.SYSTEM
@@ -5459,17 +5456,14 @@ class MainWindow(QMainWindow):
         self._start_page.set_recent_projects(self._recent_projects.load())
 
     def _open_project_path(self, path: Path, *, show_error: bool = True) -> bool:
-        progress = self._open_progress_dialog()
         try:
-            project = self._load_project(path)
+            project = self._project_io.load(path)
             if not project.designs:
                 raise ValueError("project has no designs")
         except Exception as exc:
             if show_error:
                 self._show_error(self._translator.t("error.open", message=str(exc)))
             return False
-        finally:
-            progress.close()
         self._set_project(
             project,
             project.designs[0].id,
@@ -5483,18 +5477,10 @@ class MainWindow(QMainWindow):
     def open_project(self) -> None:
         if not self._maybe_save_changes():
             return
-        start = (
-            str(self._current_path.parent) if self._current_path is not None else str(Path.home())
-        )
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            self._translator.t("dialog.open_title"),
-            start,
-            self._translator.t("dialog.project_filter"),
-        )
-        if not filename:
-            return
-        self._open_project_path(Path(filename))
+        start = self._current_path.parent if self._current_path is not None else Path.home()
+        path = self._project_io.choose_open_path(start)
+        if path is not None:
+            self._open_project_path(path)
 
     def open_recent_project(self, path: str) -> None:
         if not self._maybe_save_changes():
@@ -5666,19 +5652,9 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return False
-        safe_name = self._project.name.replace("/", "-").replace("\\", "-")
-        suggested = f"{safe_name}.antennadesk"
-        filename, _ = QFileDialog.getSaveFileName(
-            self,
-            self._translator.t("dialog.save_title"),
-            str(Path.home() / suggested),
-            self._translator.t("dialog.project_filter"),
-        )
-        if not filename:
+        path = self._project_io.choose_save_path(self._project.name)
+        if path is None:
             return False
-        path = Path(filename)
-        if path.suffix.lower() != ".antennadesk":
-            path = path.with_suffix(".antennadesk")
         return self._save_to(path)
 
     def _bundle_suggested_path(self) -> Path:
@@ -5709,14 +5685,11 @@ class MainWindow(QMainWindow):
         path = Path(filename)
         if path.suffix.lower() != BUNDLE_EXTENSION:
             path = path.with_suffix(BUNDLE_EXTENSION)
-        progress = self._bundle_progress_dialog("status.exporting_bundle")
         try:
             result = self._run_export_bundle(path)
         except Exception as exc:
             self._show_error(self._translator.t("error.export_bundle", message=str(exc)))
             return
-        finally:
-            progress.close()
         self._last_status_key = "status.bundle_exported"
         self._update_status_text()
         if result.missing_assets:
@@ -5743,14 +5716,11 @@ class MainWindow(QMainWindow):
         )
         if not destination:
             return
-        progress = self._bundle_progress_dialog("status.importing_bundle")
         try:
             result = self._run_import_bundle(Path(filename), Path(destination))
         except Exception as exc:
             self._show_error(self._translator.t("error.import_bundle", message=str(exc)))
             return
-        finally:
-            progress.close()
         if not result.project.designs:
             self._show_error(
                 self._translator.t(
@@ -5779,7 +5749,7 @@ class MainWindow(QMainWindow):
             path,
             base_dir=self._current_path.parent if self._current_path is not None else None,
         )
-        result = self._run_bundle_worker(worker)
+        result = self._project_io.run_bundle_worker(worker, "status.exporting_bundle")
         if not isinstance(result, BundleExportResult):
             raise RuntimeError("bundle export worker produced no result")
         return result
@@ -5794,57 +5764,10 @@ class MainWindow(QMainWindow):
             bundle_path,
             destination_parent,
         )
-        result = self._run_bundle_worker(worker)
+        result = self._project_io.run_bundle_worker(worker, "status.importing_bundle")
         if not isinstance(result, BundleImportResult):
             raise RuntimeError("bundle import worker produced no result")
         return result
-
-    def _run_bundle_worker(
-        self,
-        worker: ProjectBundleExportWorker | ProjectBundleImportWorker,
-    ) -> object:
-        thread = QThread(self)
-        worker.moveToThread(thread)
-        result: dict[str, object] = {}
-        loop = QEventLoop()
-
-        def finished(value: object) -> None:
-            result["value"] = value
-            loop.quit()
-
-        def failed(message: str) -> None:
-            result["error"] = message
-            loop.quit()
-
-        worker.finished.connect(finished)
-        worker.failed.connect(failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.started.connect(worker.run)
-        thread.finished.connect(loop.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
-        try:
-            loop.exec()
-        finally:
-            thread.quit()
-            thread.wait()
-        error = result.get("error")
-        if isinstance(error, str):
-            raise ValueError(error)
-        return result.get("value")
-
-    def _bundle_progress_dialog(self, text_key: str) -> QProgressDialog:
-        dialog = QProgressDialog(self._translator.t(text_key), "", 0, 0, self)
-        dialog.setWindowTitle(self._translator.t("app.title"))
-        dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        dialog.setCancelButton(None)
-        dialog.setMinimumDuration(250)
-        dialog.setAutoClose(False)
-        dialog.setAutoReset(False)
-        dialog.setValue(0)
-        return dialog
 
     def _show_bundle_missing_assets(self, assets: tuple[str, ...]) -> None:
         shown = "\n".join(assets[:10])
@@ -5860,132 +5783,13 @@ class MainWindow(QMainWindow):
             ),
         )
 
-    def _open_progress_dialog(self) -> QProgressDialog:
-        dialog = QProgressDialog(
-            self._translator.t("status.opening"),
-            "",
-            0,
-            0,
-            self,
-        )
-        dialog.setWindowTitle(self._translator.t("dialog.open_title"))
-        dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        dialog.setCancelButton(None)
-        dialog.setMinimumDuration(250)
-        dialog.setAutoClose(False)
-        dialog.setAutoReset(False)
-        dialog.setValue(0)
-        return dialog
-
-    def _load_project(self, path: Path) -> Project:
-        """Read, migrate, and validate a project without blocking the event loop."""
-
-        thread = QThread(self)
-        worker = OpenProjectWorker(OpenProject(self._repository), path)
-        worker.moveToThread(thread)
-        result: dict[str, object] = {}
-        loop = QEventLoop()
-
-        def finished(project: object) -> None:
-            result["project"] = project
-            loop.quit()
-
-        def failed(message: str) -> None:
-            result["error"] = message
-            loop.quit()
-
-        worker.finished.connect(finished)
-        worker.failed.connect(failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.started.connect(worker.run)
-        thread.finished.connect(loop.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
-        try:
-            loop.exec()
-        finally:
-            thread.quit()
-            thread.wait()
-
-        error = result.get("error")
-        if isinstance(error, str):
-            raise ValueError(error)
-        project = result.get("project")
-        if not isinstance(project, Project):
-            raise RuntimeError("open worker produced no project")
-        return project
-
-    def _save_progress_dialog(self) -> QProgressDialog:
-        dialog = QProgressDialog(
-            self._translator.t("status.preparing_save"),
-            "",
-            0,
-            0,
-            self,
-        )
-        dialog.setWindowTitle(self._translator.t("dialog.save_title"))
-        dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        dialog.setCancelButton(None)
-        dialog.setMinimumDuration(250)
-        dialog.setAutoClose(False)
-        dialog.setAutoReset(False)
-        dialog.setValue(0)
-        return dialog
-
-    def _prepare_project_payload(self, save_project: SaveProject, project: Project) -> bytes:
-        """Serialize and compress the project without blocking the event loop."""
-
-        thread = QThread(self)
-        worker = SaveProjectWorker(save_project, project)
-        worker.moveToThread(thread)
-        result: dict[str, object] = {}
-        loop = QEventLoop()
-
-        def prepared(payload: object) -> None:
-            result["payload"] = payload
-            loop.quit()
-
-        def failed(message: str) -> None:
-            result["error"] = message
-            loop.quit()
-
-        worker.prepared.connect(prepared)
-        worker.failed.connect(failed)
-        worker.prepared.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.started.connect(worker.run)
-        thread.finished.connect(loop.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
-        try:
-            loop.exec()
-        finally:
-            thread.quit()
-            thread.wait()
-
-        error = result.get("error")
-        if isinstance(error, str):
-            raise ValueError(error)
-        payload = result.get("payload")
-        if not isinstance(payload, bytes):
-            raise RuntimeError("save worker produced no payload")
-        return payload
-
     def _save_to(self, path: Path) -> bool:
         before = self._history_snapshot()
         try:
             project = self._apply_fields()
             after = self._history_snapshot()
             self._record_history("history.save", before, after)
-            save_project = SaveProject(self._repository)
-            progress = self._save_progress_dialog()
-            try:
-                payload = self._prepare_project_payload(save_project, project)
-            finally:
-                progress.close()
+            payload = self._project_io.prepare_payload(project)
             size = len(payload)
             if size > MAX_PROJECT_SIZE_BYTES:
                 self._show_error(
@@ -6009,11 +5813,7 @@ class MainWindow(QMainWindow):
                 )
                 if answer != QMessageBox.StandardButton.Save:
                     return False
-            QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-            try:
-                save_project.write(path, payload)
-            finally:
-                QApplication.restoreOverrideCursor()
+            self._project_io.write(path, payload)
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False
