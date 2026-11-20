@@ -1617,6 +1617,28 @@ simulated, measured, and preview points. The Smith chart is a presentation of
 the stored impedance and the preview transforms; it does not add
 electromagnetic accuracy or replace a full simulation.
 
+### Tuner matchability
+
+Use **Tools → Tuner Matchability...** to check whether a bounded L, Pi, or T
+tuner can match the simulated frequencies. The check is read-only: it does not
+run a new solver pass or change the project.
+
+- **Topology** selects L, Pi, or T.
+- **Component series** keeps ideal values or snaps every active L/C branch to
+  E12 or E24 before the range check.
+- **Design Q** applies to Pi and T; zero lets the domain choose a practical
+  value. A positive Q adds the component-loss model.
+- **Minimum/maximum capacitance and inductance** describe the operator's tuner.
+  They are generic inputs, not a specific commercial ATU model.
+- The table shows frequency, band, load R/X, status, SWR, loss, and the limiting
+  part. The load is the raw primary-source impedance when available; otherwise
+  it is the post-chain result impedance.
+
+The check runs at the simulated frequencies, not at every point of a full band
+sweep. Use **Analyze Bands** for denser coverage. An out-of-range result does
+not mean the antenna is unusable; it means the designed network needs a part
+outside the entered ranges.
+
 ## Import VNA measurements
 
 Use **File → Import → VNA Data...** to add measured sweeps. The file dialog

@@ -189,7 +189,7 @@ evidence, and risk are in §Product trust and station wave below.
 | ~~TS6~~ | ~~Recent projects and start-page examples~~ | S | none | **Done 2026-11-19:** QSettings recent list (file name only, ten entries, missing-file removal), start-page dipole/Yagi/vertical examples, reference-library route, and optional restore-last-project preference. No schema change. Full gate 4,120 passed, 1 skipped. |
 | ~~TS7~~ | ~~Documentation truth pass and status review~~ | S | none | **Done 2026-11-19:** stale claims were corrected in README, USER_GUIDE, SOLVER_ADAPTER, ARCHITECTURE, DOMAIN_MODEL, and the evidence text; the pre-alpha label became pre-1.0; schema 56 and the template-limitation source are documented; `tests/unit/test_documentation_truth.py` guards the known strings. Full gate 4,098 passed, 1 skipped. |
 | ~~DL1~~ | ~~Smith chart and matching workbench~~ | M–L | matching network, feed line | **Done 2026-11-19:** Smith tab, normalized locus, reference planes, measured overlay, hover, marker, editable feed-line preview, automatic L/Pi/T matching preview, and PNG/SVG/CSV export. Manual matching-component entry and network optimization remain follow-ups. See §DL1. |
-| DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Wave 1.** Tuner C/L ranges, best effort/bypass, loss, voltage/current, E-series values, and per-band table. See §DL2. |
+| DL2 | Tuner matchability and realizable components | M–L | DL1 (soft), component data | **Partially done 2026-11-19.** Bounded L/Pi/T design, C/L ranges, ideal/E12/E24 values, Q loss, per-frequency table, SWR, and limiting part. Best effort/bypass, voltage/current, and a dedicated per-band sweep remain. See §DL2. |
 | DL3 | Live tuning preview | M–L | none | **Wave 2.** Drag a dimension, coarse single-frequency solve, debounce/cancel, preview badge, commit to full run. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Wave 1.** Boom, mast, tower, and guy wires as conductors with scene, BOM, report, and warnings. See §DL5. |
@@ -231,7 +231,7 @@ content tracks and must not be smuggled into 1.0.
 | Wave | Release | IDs | Exit criterion |
 |---|---|---|---|
 | 0 | 1.0 Confidence | TS1–TS7, DL9 | **Done 2026-11-19.** Trust and interoperability green; documentation truthful; no new family work |
-| 1 | 1.1 Station | DL1, DL2, DL5 | **DL1 done 2026-11-19.** Smith, tuner/components, and support structures usable end to end; DL2/DL5 next |
+| 1 | 1.1 Station | DL1, DL2, DL5 | **DL1 done; DL2 partial 2026-11-19.** Smith and the bounded tuner check are usable; DL2 follow-up and DL5 next |
 | 2 | 1.2 Site and exploration | DL3, DL4, DL6, DL7 | Live preview, near-field, stacking, and native ground screen/cliff with visible limits |
 | 3 | post-1.2 | DL8 | Only after a validated terrain ADR; otherwise explicitly unavailable |
 
@@ -239,8 +239,9 @@ content tracks and must not be smuggled into 1.0.
 DL9 → TS5. The quick wins made the application feel 1.0; convergence and
 metrics followed; VNA import closed the interoperability side.
 
-**Wave 1 order:** DL1 is done. DL2 and DL5 are next; DL5 can run in parallel,
-and DL2 follows DL1 for the best UX.
+**Wave 1 order:** DL1 is done and DL2's first slice is implemented. DL2's
+follow-up (best-effort/bypass and ratings) and DL5 are next; DL5 can run in
+parallel.
 
 **Wave 2 order:** start the DL4 and DL7 spikes early; implement DL7 before
 DL8. DL6 can start without DL5, but the mast/support integration is better
@@ -619,6 +620,13 @@ the risks; a point cap and pure-domain tests mitigate them.
 **Effort:** M–L (3–6 weeks). **Release:** 1.1.
 
 ### DL2 — Tuner matchability and realizable components
+
+**Status:** **Partially done 2026-11-19.** **Tools → Tuner
+Matchability...** designs a bounded L/Pi/T network at each simulated frequency,
+snaps components to ideal/E12/E24, applies the optional Q loss, and reports
+matched/out-of-range/no solution, SWR, loss, and the limiting part. Best-effort
+matching, bypass, per-part voltage/current ratings, and a dedicated per-band
+sweep remain follow-ups.
 
 **Goal:** answer "will my ATU match this, and what real parts do I need?"
 
@@ -4596,10 +4604,10 @@ model and solver contract must land first.
 
 **Active product sequence (2026-11-19):** wave 0 of the product trust and
 station track (TS1–TS7 and DL9) is **done 2026-11-19**. Wave 1 (DL1, DL2,
-DL5) is active; DL1 is done, and DL2/DL5 are next. Waves 2 and post-1.2 remain
-queued. The numbered items below are historical context for completed or
-blocked work; the queue table and §Product trust and station wave above are the
-executable order.
+DL5) is active; DL1 is done, DL2's first slice is implemented, and DL2's
+follow-up plus DL5 are next. Waves 2 and post-1.2 remain queued. The numbered
+items below are historical context for completed or blocked work; the queue
+table and §Product trust and station wave above are the executable order.
 
 1. The shortened-EFHW correctness work (G24, G25, G26, G28) is done.
    **G27** is split: transformer loss (EF7b), feedpoint choke (EF8), and

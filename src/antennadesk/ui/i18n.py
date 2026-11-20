@@ -16801,6 +16801,162 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Preview",
         Language.SPANISH: "Vista previa",
     },
+    "action.tuner_match": {
+        Language.ENGLISH: "Tuner Matchability...",
+        Language.SPANISH: "Compatibilidad del sintonizador...",
+    },
+    "help.action.tuner_match": {
+        Language.ENGLISH: "Check whether a bounded L, Pi, or T tuner can match the simulated points.",
+        Language.SPANISH: "Verificá si un sintonizador L, Pi o T con rangos puede adaptar los puntos simulados.",
+    },
+    "tuner.title": {
+        Language.ENGLISH: "Tuner matchability",
+        Language.SPANISH: "Compatibilidad del sintonizador",
+    },
+    "tuner.topology": {
+        Language.ENGLISH: "Topology",
+        Language.SPANISH: "Topología",
+    },
+    "tuner.series": {
+        Language.ENGLISH: "Component series",
+        Language.SPANISH: "Serie de componentes",
+    },
+    "tuner.series_ideal": {
+        Language.ENGLISH: "Ideal values",
+        Language.SPANISH: "Valores ideales",
+    },
+    "tuner.series_e12": {
+        Language.ENGLISH: "E12",
+        Language.SPANISH: "E12",
+    },
+    "tuner.series_e24": {
+        Language.ENGLISH: "E24",
+        Language.SPANISH: "E24",
+    },
+    "tuner.q": {
+        Language.ENGLISH: "Design Q (0 = auto)",
+        Language.SPANISH: "Q de diseño (0 = automática)",
+    },
+    "tuner.c_min": {
+        Language.ENGLISH: "Minimum capacitance",
+        Language.SPANISH: "Capacidad mínima",
+    },
+    "tuner.c_max": {
+        Language.ENGLISH: "Maximum capacitance",
+        Language.SPANISH: "Capacidad máxima",
+    },
+    "tuner.l_min": {
+        Language.ENGLISH: "Minimum inductance",
+        Language.SPANISH: "Inductancia mínima",
+    },
+    "tuner.l_max": {
+        Language.ENGLISH: "Maximum inductance",
+        Language.SPANISH: "Inductancia máxima",
+    },
+    "tuner.note": {
+        Language.ENGLISH: (
+            "Read-only check at the simulated frequencies. Generic ranges are "
+            "operator input, not a specific commercial tuner model; losses are "
+            "computed from the designed network and component Q."
+        ),
+        Language.SPANISH: (
+            "Chequeo de solo lectura en las frecuencias simuladas. Los rangos "
+            "son datos del operador, no un modelo de un sintonizador comercial; "
+            "las pérdidas se calculan con la red diseñada y el Q de componentes."
+        ),
+    },
+    "tuner.recompute": {
+        Language.ENGLISH: "Recompute",
+        Language.SPANISH: "Recalcular",
+    },
+    "tuner.status.matched": {
+        Language.ENGLISH: "Matched",
+        Language.SPANISH: "Adaptable",
+    },
+    "tuner.status.out_of_range": {
+        Language.ENGLISH: "Out of range",
+        Language.SPANISH: "Fuera de rango",
+    },
+    "tuner.status.no_solution": {
+        Language.ENGLISH: "No solution",
+        Language.SPANISH: "Sin solución",
+    },
+    "tuner.limit.capacitance_min": {
+        Language.ENGLISH: "C below range",
+        Language.SPANISH: "C por debajo del rango",
+    },
+    "tuner.limit.capacitance_max": {
+        Language.ENGLISH: "C above range",
+        Language.SPANISH: "C por encima del rango",
+    },
+    "tuner.limit.inductance_min": {
+        Language.ENGLISH: "L below range",
+        Language.SPANISH: "L por debajo del rango",
+    },
+    "tuner.limit.inductance_max": {
+        Language.ENGLISH: "L above range",
+        Language.SPANISH: "L por encima del rango",
+    },
+    "tuner.column.frequency": {
+        Language.ENGLISH: "Frequency (MHz)",
+        Language.SPANISH: "Frecuencia (MHz)",
+    },
+    "tuner.column.band": {
+        Language.ENGLISH: "Band",
+        Language.SPANISH: "Banda",
+    },
+    "tuner.column.resistance": {
+        Language.ENGLISH: "R (Ω)",
+        Language.SPANISH: "R (Ω)",
+    },
+    "tuner.column.reactance": {
+        Language.ENGLISH: "X (Ω)",
+        Language.SPANISH: "X (Ω)",
+    },
+    "tuner.column.status": {
+        Language.ENGLISH: "Status",
+        Language.SPANISH: "Estado",
+    },
+    "tuner.column.swr": {
+        Language.ENGLISH: "SWR",
+        Language.SPANISH: "ROE",
+    },
+    "tuner.column.loss": {
+        Language.ENGLISH: "Loss (dB)",
+        Language.SPANISH: "Pérdida (dB)",
+    },
+    "tuner.column.limiting": {
+        Language.ENGLISH: "Limiting part",
+        Language.SPANISH: "Componente limitante",
+    },
+    "help.tuner.topology": {
+        Language.ENGLISH: "Tuner topology being checked: L, Pi, or T.",
+        Language.SPANISH: "Topología del sintonizador a verificar: L, Pi o T.",
+    },
+    "help.tuner.series": {
+        Language.ENGLISH: "Use ideal values or snap components to E12/E24.",
+        Language.SPANISH: "Usá valores ideales o ajustá los componentes a E12/E24.",
+    },
+    "help.tuner.q": {
+        Language.ENGLISH: "Design Q for Pi/T; zero lets the domain choose a practical value.",
+        Language.SPANISH: "Q de diseño para Pi/T; cero deja que el dominio elija un valor práctico.",
+    },
+    "help.tuner.c_min": {
+        Language.ENGLISH: "Lowest capacitance the tuner can present.",
+        Language.SPANISH: "Capacidad mínima que puede presentar el sintonizador.",
+    },
+    "help.tuner.c_max": {
+        Language.ENGLISH: "Highest capacitance the tuner can present.",
+        Language.SPANISH: "Capacidad máxima que puede presentar el sintonizador.",
+    },
+    "help.tuner.l_min": {
+        Language.ENGLISH: "Lowest inductance the tuner can present.",
+        Language.SPANISH: "Inductancia mínima que puede presentar el sintonizador.",
+    },
+    "help.tuner.l_max": {
+        Language.ENGLISH: "Highest inductance the tuner can present.",
+        Language.SPANISH: "Inductancia máxima que puede presentar el sintonizador.",
+    },
     "plot.pattern": {
         Language.ENGLISH: "Power gain pattern",
         Language.SPANISH: "Patrón de ganancia de potencia",

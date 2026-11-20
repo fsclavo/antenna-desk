@@ -359,6 +359,7 @@ from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.trap_yagi_dialog import TrapYagiDialog
+from .dialogs.tuner_match_dialog import TunerMatchDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
 from .dialogs.vertical_dialog import VerticalDialog
 from .dialogs.vna_mapping_dialog import VnaMappingDialog
@@ -731,6 +732,8 @@ class MainWindow(QMainWindow):
         self._calculator_action.triggered.connect(lambda: self.show_component_calculators())
         self._materials_action = QAction(self)
         self._materials_action.triggered.connect(lambda: self.show_materials_reference())
+        self._tuner_match_action = QAction(self)
+        self._tuner_match_action.triggered.connect(lambda: self.show_tuner_matchability())
         self._measurement_sessions_action = QAction(self)
         self._measurement_sessions_action.triggered.connect(
             lambda: self.edit_measurement_sessions()
@@ -1524,6 +1527,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._materials_action)
+        self._tools_menu.addAction(self._tuner_match_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
         self._tools_menu.addAction(self._journal_action)
         self._tools_menu.addAction(self._tuning_action)
@@ -1625,6 +1629,9 @@ class MainWindow(QMainWindow):
         self._materials_action.setText(self._translator.t("action.materials_reference"))
         self._materials_action.setToolTip(self._translator.t("help.action.materials_reference"))
         self._materials_action.setWhatsThis(self._translator.t("help.action.materials_reference"))
+        self._tuner_match_action.setText(self._translator.t("action.tuner_match"))
+        self._tuner_match_action.setToolTip(self._translator.t("help.action.tuner_match"))
+        self._tuner_match_action.setWhatsThis(self._translator.t("help.action.tuner_match"))
         self._journal_action.setText(self._translator.t("action.project_journal"))
         self._journal_action.setToolTip(self._translator.t("help.action.project_journal"))
         self._journal_action.setWhatsThis(self._translator.t("help.action.project_journal"))
@@ -2080,6 +2087,7 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
         self._materials_action.setEnabled(idle)
+        self._tuner_match_action.setEnabled(idle and has_result)
         self._measurement_sessions_action.setEnabled(idle and has_project)
         self._journal_action.setEnabled(idle and has_project)
         self._feed_line_action.setEnabled(idle)
@@ -2291,6 +2299,7 @@ class MainWindow(QMainWindow):
             self._compact_history_action,
             self._calculator_action,
             self._materials_action,
+            self._tuner_match_action,
             self._measurement_sessions_action,
             self._journal_action,
             self._tuning_action,
@@ -10214,6 +10223,13 @@ class MainWindow(QMainWindow):
         self._mark_project_dirty()
         self._update_title()
         self._update_actions()
+
+    def show_tuner_matchability(self) -> None:
+        if self._last_result is None:
+            self._show_error(self._translator.t("error.no_result"))
+            return
+        dialog = TunerMatchDialog(self._translator, self._last_result, self)
+        dialog.exec()
 
     def show_about(self) -> None:
         QMessageBox.about(
