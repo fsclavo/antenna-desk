@@ -7,12 +7,13 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from main_window_support import FakeSolver
+from main_window_support import FakeSolver, export_nec_deck
 from PySide6.QtGui import QFont, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
 from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.simulation.preflight import run_preflight
 from antennadesk.ui.fonts import current_font_scale, set_current_font_scale
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -46,6 +47,8 @@ def window(qtbot: QtBot, sample_project) -> Iterator[MainWindow]:
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
+        preflight_runner=run_preflight,
+        nec_deck_exporter=export_nec_deck,
     )
     qtbot.addWidget(main_window)
     main_window._set_project(

@@ -4,10 +4,12 @@
 
 from __future__ import annotations
 
+from antennadesk import __version__
 from antennadesk.application.ports.antenna_solver import ProgressCallback
 from antennadesk.application.ports.cancellation import CancelToken
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.common.validation import Diagnostic
+from antennadesk.domain.projects.project import DesignVariant, Project
 from antennadesk.domain.simulation.result import (
     FrequencyResult,
     SimulationResult,
@@ -15,6 +17,7 @@ from antennadesk.domain.simulation.result import (
 )
 from antennadesk.domain.simulation.solver import SolverCapabilities, SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from antennadesk.ui.main_window import MainWindow
 
 
@@ -76,3 +79,20 @@ def use_parameters(window: MainWindow, parameters) -> None:
         updated_at=window._project.updated_at,
     )
     window._select_design(current.id)
+
+
+def export_nec_deck(
+    project: Project,
+    design: DesignVariant,
+    spec: SimulationSpec,
+    solver: SolverMetadata | None,
+) -> str:
+    metadata = NecDeckExportMetadata(
+        project_name=project.name,
+        design_name=design.name,
+        antenna_type=design.antenna_type,
+        app_version=__version__,
+        solver_name=solver.name if solver is not None else None,
+        solver_version=solver.version if solver is not None else None,
+    )
+    return render_nec_deck(design.antenna, spec, metadata)

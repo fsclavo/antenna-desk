@@ -12,8 +12,13 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from .. import __version__
+from ..domain.projects.project import DesignVariant, Project
+from ..domain.simulation.solver import SolverMetadata
+from ..domain.simulation.spec import SimulationSpec
 from ..persistence.json_repository import JsonProjectRepository
+from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
+from ..simulation.preflight import run_preflight
 from .i18n import Translator
 from .main_window import MainWindow
 from .preferences import (
@@ -25,6 +30,23 @@ from .recent_projects import QSettingsRecentProjectsStore
 from .recovery import AutosaveRecovery
 from .solver_locator import find_nec2c
 from .theme import ThemeController
+
+
+def _export_nec_deck(
+    project: Project,
+    design: DesignVariant,
+    spec: SimulationSpec,
+    solver: SolverMetadata | None,
+) -> str:
+    metadata = NecDeckExportMetadata(
+        project_name=project.name,
+        design_name=design.name,
+        antenna_type=design.antenna_type,
+        app_version=__version__,
+        solver_name=solver.name if solver is not None else None,
+        solver_version=solver.version if solver is not None else None,
+    )
+    return render_nec_deck(design.antenna, spec, metadata)
 
 
 def main() -> int:
@@ -79,6 +101,9 @@ def main() -> int:
         font_size_controller=font_size_controller,
         language_preference=preferences.language,
         theme_controller=theme_controller,
+        solver_factory=Nec2cSolver,
+        preflight_runner=run_preflight,
+        nec_deck_exporter=_export_nec_deck,
     )
     window.show()
     return app.exec()

@@ -425,7 +425,7 @@ def test_locate_solver_uses_the_selected_executable(
         def version(self) -> SolverMetadata:
             return SolverMetadata(name="fake", version="1.0", executable=str(self.path))
 
-    monkeypatch.setattr(main_window_module, "Nec2cSolver", FakeNec2cSolver)
+    monkeypatch.setattr(window, "_solver_factory", FakeNec2cSolver)
     monkeypatch.setattr(
         QFileDialog,
         "getOpenFileName",
@@ -456,7 +456,7 @@ def test_locate_solver_reports_an_invalid_executable(
             raise RuntimeError("not executable")
 
     errors: list[str] = []
-    monkeypatch.setattr(main_window_module, "Nec2cSolver", FailingNec2cSolver)
+    monkeypatch.setattr(window, "_solver_factory", FailingNec2cSolver)
     monkeypatch.setattr(window, "_show_error", errors.append)
     monkeypatch.setattr(
         QFileDialog,

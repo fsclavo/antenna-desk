@@ -343,6 +343,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   synthesis. The main window keeps band-plan/context assembly, parameter
   application, optimization-summary persistence, and the final simulation. No
   behavior change.
+- **UI adapter boundary closed.** Project-size limits moved to
+  `application/project_limits.py`; the solver factory, pre-flight runner, and
+  NEC deck exporter are injected by `ui/app.py`. `ui/main_window.py` no longer
+  imports persistence or solver details, and the architecture allowlist now
+  contains only composition-root entries. No behavior change.
 
 ### Fixed
 

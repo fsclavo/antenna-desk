@@ -59,10 +59,10 @@ project bundles. The domain is no longer dipole-only.
 - `simulation/nec2/` implements the `AntennaSolver` port. It imports the
   domain and application-layer ports and simulation services, but the domain
   and application do not import it.
-- The GUI depends on application use cases and ports. `main_window.py` still
-  has four allowlisted concrete imports (project-size constants, NEC deck
-  export, solver construction, and preflight); the architecture guard lists
-  them, and new adapter imports must go through a use case or port instead.
+- The GUI depends on application use cases and ports. `ui/app.py` is the
+  composition root and builds the concrete repository, solver, NEC exporter,
+  and pre-flight runner; `main_window.py` no longer imports solver or
+  persistence details. New adapter imports must stay in the composition root.
 - UI widgets never perform electromagnetic calculations. Simulation runs in a
   `QThread` worker and returns a normalized `SimulationResult`.
 

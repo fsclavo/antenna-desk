@@ -66,7 +66,12 @@ from ..application.pattern_resolution import (
     PATTERN_STEPS_DEG,
 )
 from ..application.ports.antenna_solver import AntennaSolver
+from ..application.ports.nec_export import NecDeckExporter, PreflightRunner
 from ..application.ports.project_repository import ProjectRepository
+from ..application.project_limits import (
+    MAX_PROJECT_SIZE_BYTES,
+    PROJECT_SIZE_WARNING_BYTES,
+)
 from ..application.simulation_specs import (
     DEFAULT_GENERATED_SWEEP_POINTS,
     CustomSweepOptions,
@@ -227,11 +232,7 @@ from ..domain.simulation.segmentation import (
 )
 from ..domain.simulation.spec import DEFAULT_TIMEOUT_S, MAX_TIMEOUT_S, SimulationSpec
 from ..importers.vna_csv import VnaColumnMapping
-from ..persistence.constants import MAX_PROJECT_SIZE_BYTES, PROJECT_SIZE_WARNING_BYTES
 from ..reporting.design_summary import installation_profile_rows
-from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
-from ..simulation.nec2.solver import Nec2cSolver
-from ..simulation.preflight import run_preflight
 from .catalog import CatalogContext, change_template_selection, new_antenna_selection
 from .dialogs.antenna_advisor_dialog import AntennaAdvisorDialog
 from .dialogs.antenna_catalog_dialog import (
@@ -412,11 +413,17 @@ class MainWindow(QMainWindow):
         font_size_controller: FontSizeController | None = None,
         language_preference: LanguagePreference | None = None,
         theme_controller: ThemeController | None = None,
+        solver_factory: Callable[[Path], AntennaSolver] | None = None,
+        preflight_runner: PreflightRunner | None = None,
+        nec_deck_exporter: NecDeckExporter | None = None,
     ) -> None:
         super().__init__(parent)
         self.setAcceptDrops(True)
         self._repository = repository
         self._solver = solver
+        self._solver_factory = solver_factory
+        self._preflight_runner = preflight_runner
+        self._nec_deck_exporter = nec_deck_exporter
         self._translator = translator
         self._project_io = ProjectIO(self, translator, repository)
         self._unit_system = unit_system
@@ -6608,6 +6615,8 @@ class MainWindow(QMainWindow):
         self._update_status_text()
 
     def _preflight_report_for_current_design(self) -> PreflightReport | None:
+        if self._preflight_runner is None:
+            return None
         if self._project is None or self._design_id is None:
             return None
         design = self._project.design_by_id(self._design_id)
@@ -6615,7 +6624,7 @@ class MainWindow(QMainWindow):
             design.parameters,
             self._base_simulation_spec(design),
         )
-        return run_preflight(
+        return self._preflight_runner(
             self._project,
             design,
             spec,
@@ -7133,25 +7142,25 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
             return None
-        solver_name: str | None = None
-        solver_version: str | None = None
+        solver_metadata = None
         if self._solver is not None:
             try:
                 solver_metadata = self._solver.version()
             except Exception:
                 solver_metadata = None
-            if solver_metadata is not None:
-                solver_name = solver_metadata.name
-                solver_version = solver_metadata.version
-        metadata = NecDeckExportMetadata(
-            project_name=project.name,
-            design_name=design.name,
-            antenna_type=design.antenna_type,
-            app_version=__version__,
-            solver_name=solver_name,
-            solver_version=solver_version,
+        if self._nec_deck_exporter is None:
+            self._show_error(
+                self._translator.t(
+                    "error.export",
+                    message="NEC deck export is not configured",
+                )
+            )
+            return None
+        return (
+            project,
+            design,
+            self._nec_deck_exporter(project, design, spec, solver_metadata),
         )
-        return project, design, render_nec_deck(design.antenna, spec, metadata)
 
     def copy_nec_deck(self) -> None:
         data = self._current_nec_deck()
@@ -7208,8 +7217,16 @@ class MainWindow(QMainWindow):
         )
         if not filename:
             return
+        if self._solver_factory is None:
+            self._show_error(
+                self._translator.t(
+                    "error.solver_start",
+                    message="solver factory is not configured",
+                )
+            )
+            return
         try:
-            solver = Nec2cSolver(Path(filename))
+            solver = self._solver_factory(Path(filename))
             solver.version()
         except Exception as exc:
             self._show_error(self._translator.t("error.solver_start", message=str(exc)))
