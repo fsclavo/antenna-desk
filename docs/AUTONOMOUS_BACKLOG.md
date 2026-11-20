@@ -194,7 +194,7 @@ evidence, and risk are in §Product trust and station wave below.
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Partially done 2026-11-20.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom is **deferred 2026-11-20** pending ADR/spike; tower, attachments, and structural hardware remain. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Wave 2.** 2–4 Yagis, spacing, phasing lines, feed split, mutual coupling, optimization, and per-port results. See §DL6. |
-| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Wave 2.** Expose NEC-2 `GN` radial screen and second-medium/edge fields; validate against the manual and the dense-wire screen. See §DL7. |
+| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Spike complete 2026-11-20; implementation pending.** Cliff/second-medium is far-field-only and the safest bounded slice; native radial screen disagrees with dense wires and stays unvalidated for SWR. See `spikes/dl7-ground-gn-spike.md` and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | ~~DL9~~ | ~~Circular-polarization metrics~~ | S–M | TS2 | **Done 2026-11-19 with TS2:** axial ratio, polarization sense, co-pol CP gain, cross-pol discrimination, and explicit descriptive/heuristic labels. Tests cover perfect-circular and linear cases. See §TS2 and `docs/RESULT_METRICS.md`. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -817,6 +817,15 @@ with a published stack mitigates it.
 **Effort:** L (6–8 weeks). **Release:** 1.2.
 
 ### DL7 — Native ground screen and cliff ground
+
+**Spike result (2026-11-20):** see
+[`spikes/dl7-ground-gn-spike.md`](spikes/dl7-ground-gn-spike.md). The cliff and
+second-medium path changes far-field patterns only and leaves impedance
+unchanged. The native radial screen is a reflection-coefficient approximation;
+it disagrees strongly with the current dense-wire screen for input impedance and
+must not be presented as validated SWR. A bounded cliff-only far-field slice is
+the recommended first implementation; the native screen remains experimental
+until a measurement or published reference exists.
 
 **Goal:** use the ground information the engine already supports before building
 a full terrain model.

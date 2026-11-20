@@ -60,6 +60,8 @@ of truth before adding another planning document.
   NEC-4 reference.
 - [`spikes/c6-hexbeam-geometry.md`](spikes/c6-hexbeam-geometry.md) — HexBeam
   single-band frame reconstruction, source reconciliation, and C6 test matrix.
+- [`spikes/dl7-ground-gn-spike.md`](spikes/dl7-ground-gn-spike.md) — NEC-2
+  radial-screen and cliff ground spike; decision and limits.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,
