@@ -160,6 +160,7 @@ of truth before adding another planning document.
 - [ADR-0046 — Frequency-aware optimizer bounds and high-frequency family validity](ADR/0046-frequency-aware-optimizer-bounds.md)
 - [ADR-0047 — Beverage feed transformer and grounded stubs](ADR/0047-beverage-feed-transformer-and-grounded-stubs.md)
 - [ADR-0048 — Yagi mast conductor](ADR/0048-yagi-mast-conductor.md)
+- [ADR-0049 — Stacked Yagi as a composed family](ADR/0049-stacked-yagi-composed-family.md)
 
 ## Archive
 

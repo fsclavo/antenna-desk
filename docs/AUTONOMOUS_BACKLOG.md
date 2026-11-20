@@ -193,7 +193,7 @@ evidence, and risk are in §Product trust and station wave below.
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Partially done 2026-11-20.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom is **deferred 2026-11-20** pending ADR/spike; tower, attachments, and structural hardware remain. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Design note 2026-11-20; not implemented.** Composed family, ideal two-source first slice, per-port results; real splitter/phase lines and optimizer remain. See `spikes/dl6-stacked-yagi-spike.md` and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Spike complete 2026-11-20; implementation pending.** Cliff/second-medium is far-field-only and the safest bounded slice; native radial screen disagrees with dense wires and stays unvalidated for SWR. See `spikes/dl7-ground-gn-spike.md` and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | ~~DL9~~ | ~~Circular-polarization metrics~~ | S–M | TS2 | **Done 2026-11-19 with TS2:** axial ratio, polarization sense, co-pol CP gain, cross-pol discrimination, and explicit descriptive/heuristic labels. Tests cover perfect-circular and linear cases. See §TS2 and `docs/RESULT_METRICS.md`. |
@@ -784,11 +784,10 @@ narrow MVP (straight cylinders) mitigate it.
 
 ### DL6 — Stacked Yagi arrays
 
-**Architecture note (2026-11-20):** see
-[`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md). Do not
-add `stack_count` to `YagiParameters`; use a composed family with an ideal
-two-source first slice, per-port results, and no optimizer until the feed model
-is stable.
+**Domain prototype (2026-11-20):** [`ADR-0049`](ADR/0049-stacked-yagi-composed-family.md)
+and `StackedYagiParameters` build 2–4 levels with an ideal source progression.
+Form, schema, per-port UI, splitter/phase lines, and optimizer remain
+follow-ups. See also [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
 
 **Goal:** answer "two stacked Yagis or one bigger one?"
 
