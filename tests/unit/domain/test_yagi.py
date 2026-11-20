@@ -516,3 +516,35 @@ def test_yagi_mast_requires_a_positive_offset() -> None:
 
     with pytest.raises(ValueError):
         replace(base, mast_diameter_m=0.05, mast_offset_m=0.0)
+
+
+def test_yagi_guy_wires_share_the_mast_top_and_reach_ground() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    with_guys = replace(
+        base,
+        mast_diameter_m=0.05,
+        mast_offset_m=1.5,
+        guy_count=3,
+        guy_anchor_radius_m=2.0,
+        guy_diameter_m=0.003,
+    )
+
+    wires = with_guys.to_custom_parameters().wires
+    guys = [wire for wire in wires if wire.id.startswith("guy-")]
+
+    assert len(guys) == 3
+    assert all(wire.start.z_m == 8.0 for wire in guys)
+    assert all(wire.end.z_m == 0.0 for wire in guys)
+    assert all(wire.radius_m == pytest.approx(0.0015) for wire in guys)
+
+
+def test_yagi_guy_wires_require_a_mast() -> None:
+    base = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+
+    with pytest.raises(ValueError):
+        replace(
+            base,
+            guy_count=3,
+            guy_anchor_radius_m=2.0,
+            guy_diameter_m=0.003,
+        )

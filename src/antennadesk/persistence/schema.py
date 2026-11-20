@@ -777,6 +777,9 @@ class YagiParametersPayload(StrictModel):
     transformer_ratio: float = Field(default=1.0, gt=0.0)
     mast_diameter_m: float = Field(default=0.0, ge=0.0)
     mast_offset_m: float = Field(default=0.0, ge=0.0)
+    guy_count: int = Field(default=0, ge=0, le=4)
+    guy_anchor_radius_m: float = Field(default=0.0, ge=0.0)
+    guy_diameter_m: float = Field(default=0.0, ge=0.0)
 
 
 class CustomParametersPayload(StrictModel):
@@ -2108,6 +2111,9 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         transformer_ratio=value.transformer_ratio,
         mast_diameter_m=value.mast_diameter_m,
         mast_offset_m=value.mast_offset_m,
+        guy_count=value.guy_count,
+        guy_anchor_radius_m=value.guy_anchor_radius_m,
+        guy_diameter_m=value.guy_diameter_m,
     )
 
 
@@ -3445,6 +3451,9 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
         transformer_ratio=value.transformer_ratio,
         mast_diameter_m=value.mast_diameter_m,
         mast_offset_m=value.mast_offset_m,
+        guy_count=value.guy_count,
+        guy_anchor_radius_m=value.guy_anchor_radius_m,
+        guy_diameter_m=value.guy_diameter_m,
     )
 
 

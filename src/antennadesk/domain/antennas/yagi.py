@@ -81,6 +81,9 @@ class YagiParameters:
     transformer_ratio: float = 1.0
     mast_diameter_m: float = 0.0
     mast_offset_m: float = 0.0
+    guy_count: int = 0
+    guy_anchor_radius_m: float = 0.0
+    guy_diameter_m: float = 0.0
 
     def __post_init__(self) -> None:
         ensure_positive(self.frequency_hz, name="frequency_hz")
@@ -92,6 +95,17 @@ class YagiParameters:
             ensure_positive(self.mast_offset_m, name="mast_offset_m")
             if self.height_m <= 0.0:
                 raise ValueError("a modeled mast requires a positive boom height")
+        if self.guy_count not in {0, 2, 3, 4}:
+            raise ValueError("guy_count must be 0, 2, 3, or 4")
+        ensure_non_negative(self.guy_anchor_radius_m, name="guy_anchor_radius_m")
+        ensure_non_negative(self.guy_diameter_m, name="guy_diameter_m")
+        if self.guy_count > 0:
+            if self.mast_diameter_m <= 0.0:
+                raise ValueError("guy wires require a modeled mast")
+            ensure_positive(self.guy_anchor_radius_m, name="guy_anchor_radius_m")
+            ensure_positive(self.guy_diameter_m, name="guy_diameter_m")
+        elif self.guy_anchor_radius_m > 0.0 or self.guy_diameter_m > 0.0:
+            raise ValueError("guy dimensions require guy_count > 0")
         ensure_non_negative(self.taper_tip_length_m, name="taper_tip_length_m")
         ensure_non_negative(self.taper_tip_radius_m, name="taper_tip_radius_m")
         if (self.taper_tip_length_m > 0.0) != (self.taper_tip_radius_m > 0.0):
@@ -738,6 +752,24 @@ class YagiParameters:
                     self.mast_diameter_m / 2.0,
                 )
             )
+        if self.guy_count > 0:
+            mast_x = min(element.position_m for element in self.elements) - self.mast_offset_m
+            top = Point3D(mast_x, 0.0, self.height_m)
+            for index in range(self.guy_count):
+                angle = math.tau * index / self.guy_count
+                anchor = Point3D(
+                    mast_x + self.guy_anchor_radius_m * math.cos(angle),
+                    self.guy_anchor_radius_m * math.sin(angle),
+                    0.0,
+                )
+                wires.append(
+                    wire(
+                        f"guy-{index + 1}",
+                        top,
+                        anchor,
+                        self.guy_diameter_m / 2.0,
+                    )
+                )
         driven = next(wire for wire in wires if wire.id == driven_wire_id)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,

@@ -568,9 +568,11 @@ Choose **File → New Antenna... → Yagi** to generate a Yagi as a first-class
 template. The table contains each element's boom position, total length, and
 radius. Add or remove elements, edit the values, and select the driven element.
 **Mast diameter** and **Mast offset** add an optional vertical mast conductor
-behind the reflector. Zero diameter disables it. The mast uses the element
-material, is drawn and included in the BOM, and is not connected to the
-elements; boom mounting, towers, and guy wires are not modeled.
+behind the reflector. Zero diameter disables it. **Guy wires** adds 0, 2, 3, or
+4 wires from the mast top to ground anchors, with an anchor radius and wire
+diameter. The mast and guys use the element material, are drawn and included in
+the BOM, and are not connected to the elements; boom mounting, towers, and
+structural hardware are not modeled.
 
 **Polarization** selects horizontal or vertical elements. In both cases the
 boom stays horizontal; vertical polarization rotates each element around the

@@ -816,6 +816,25 @@ def _migrate_v54_to_v55(document: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
+def _migrate_v57_to_v58(document: dict[str, Any]) -> dict[str, Any]:
+    """Add optional Yagi guy-wire fields."""
+
+    migrated = copy.deepcopy(document)
+    project = migrated.get("project")
+    designs = project.get("designs") if isinstance(project, dict) else None
+    if not isinstance(designs, list):
+        return migrated
+    for design in designs:
+        if not isinstance(design, dict) or design.get("antenna_type") != "yagi":
+            continue
+        parameters = design.get("parameters")
+        if isinstance(parameters, dict):
+            parameters.setdefault("guy_count", 0)
+            parameters.setdefault("guy_anchor_radius_m", 0.0)
+            parameters.setdefault("guy_diameter_m", 0.0)
+    return migrated
+
+
 def _migrate_v56_to_v57(document: dict[str, Any]) -> dict[str, Any]:
     """Add optional Yagi mast conductor fields."""
 
@@ -1010,6 +1029,7 @@ MIGRATIONS: dict[int, Migration] = {
     54: _migrate_v54_to_v55,
     55: _migrate_v55_to_v56,
     56: _migrate_v56_to_v57,
+    57: _migrate_v57_to_v58,
 }
 
 

@@ -873,7 +873,7 @@ the application writes version 56.
 
 ## Schema policy
 
-- Current version: `57`.
+- Current version: `58`.
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.

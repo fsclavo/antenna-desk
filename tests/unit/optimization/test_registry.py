@@ -484,6 +484,9 @@ _CONTEXT_FIELDS = {
     "bend_vertical_length_m",
     "mast_diameter_m",
     "mast_offset_m",
+    "guy_count",
+    "guy_anchor_radius_m",
+    "guy_diameter_m",
 }
 
 

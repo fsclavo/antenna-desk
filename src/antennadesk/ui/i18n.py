@@ -4494,6 +4494,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Horizontal distance from the reflector to the modeled mast.",
         Language.SPANISH: "Distancia horizontal desde el reflector hasta el mástil modelado.",
     },
+    "help.yagi.guy_count": {
+        Language.ENGLISH: "Number of guy wires from the mast top to ground anchors; zero disables.",
+        Language.SPANISH: "Cantidad de vientos desde la punta del mástil a anclajes en tierra; cero desactiva.",
+    },
+    "help.yagi.guy_anchor": {
+        Language.ENGLISH: "Horizontal radius from the mast to each ground anchor.",
+        Language.SPANISH: "Radio horizontal desde el mástil hasta cada anclaje en tierra.",
+    },
+    "help.yagi.guy_diameter": {
+        Language.ENGLISH: "Diameter of the modeled guy wires.",
+        Language.SPANISH: "Diámetro de los vientos modelados.",
+    },
     "help.yagi.taper_radius": {
         Language.ENGLISH: "Radius at the tapered tip.",
         Language.SPANISH: "Radio en la punta cónica.",
@@ -13871,6 +13883,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.mast_offset": {
         Language.ENGLISH: "Mast offset",
         Language.SPANISH: "Separación del mástil",
+    },
+    "yagi.guy_count": {
+        Language.ENGLISH: "Guy wires",
+        Language.SPANISH: "Vientos",
+    },
+    "yagi.guy_anchor": {
+        Language.ENGLISH: "Guy anchor radius",
+        Language.SPANISH: "Radio de anclaje de vientos",
+    },
+    "yagi.guy_diameter": {
+        Language.ENGLISH: "Guy wire diameter",
+        Language.SPANISH: "Diámetro de vientos",
     },
     "yagi.taper_radius": {
         Language.ENGLISH: "Tapered tip radius",

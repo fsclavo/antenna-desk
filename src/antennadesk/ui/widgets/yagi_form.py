@@ -124,6 +124,15 @@ class YagiForm(QWidget):
         self._mast_offset = QDoubleSpinBox(self)
         self._mast_offset.setDecimals(3)
         self._mast_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._guy_count = QComboBox(self)
+        for count in (0, 2, 3, 4):
+            self._guy_count.addItem(str(count), count)
+        self._guy_anchor = QDoubleSpinBox(self)
+        self._guy_anchor.setDecimals(3)
+        self._guy_anchor.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._guy_diameter = QDoubleSpinBox(self)
+        self._guy_diameter.setDecimals(4)
+        self._guy_diameter.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
         self._material = QComboBox(self)
         populate_template_material_combo(self._material, translator, "yagi")
@@ -227,6 +236,18 @@ class YagiForm(QWidget):
             translator,
             self._display_units,
         )
+        self._guy_anchor_field = LengthField(
+            self._guy_anchor,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._guy_diameter_field = LengthField(
+            self._guy_diameter,
+            LengthFieldSpec(0.0, 10.0, scale_hint="mm"),
+            translator,
+            self._display_units,
+        )
         self._driven_fold_spacing_field = LengthField(
             self._driven_fold_spacing,
             LengthFieldSpec(0.0001, 10_000.0, scale_hint="mm"),
@@ -249,6 +270,8 @@ class YagiForm(QWidget):
         self._taper_length_field.configure(0.0)
         self._mast_diameter_field.configure(0.0)
         self._mast_offset_field.configure(1.0)
+        self._guy_anchor_field.configure(0.0)
+        self._guy_diameter_field.configure(0.0)
         self._driven_fold_spacing_field.configure(0.1)
         self._match_length_field.configure(0.2)
         self._match_spacing_field.configure(0.1)
@@ -283,6 +306,9 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("yagi.taper_radius"), self._taper_radius)
         form.addRow(self._labels.label("yagi.mast_diameter"), self._mast_diameter)
         form.addRow(self._labels.label("yagi.mast_offset"), self._mast_offset)
+        form.addRow(self._labels.label("yagi.guy_count"), self._guy_count)
+        form.addRow(self._labels.label("yagi.guy_anchor"), self._guy_anchor)
+        form.addRow(self._labels.label("yagi.guy_diameter"), self._guy_diameter)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
@@ -324,6 +350,8 @@ class YagiForm(QWidget):
             self._taper_radius,
             self._mast_diameter,
             self._mast_offset,
+            self._guy_anchor,
+            self._guy_diameter,
             self._driven_fold_spacing,
             self._transformer,
             self._match_length,
@@ -334,6 +362,7 @@ class YagiForm(QWidget):
             widget.valueChanged.connect(self._emit_changed)
         self._polarization.currentIndexChanged.connect(self._emit_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
+        self._guy_count.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
         self._driven.currentIndexChanged.connect(self._emit_changed)
         self._driven_folded.toggled.connect(self._folded_changed)
@@ -666,6 +695,8 @@ class YagiForm(QWidget):
             self._taper_length_field,
             self._mast_diameter_field,
             self._mast_offset_field,
+            self._guy_anchor_field,
+            self._guy_diameter_field,
             self._driven_fold_spacing_field,
             self._match_length_field,
             self._match_spacing_field,
@@ -696,6 +727,11 @@ class YagiForm(QWidget):
             )
             self._mast_diameter_field.configure(parameters.mast_diameter_m)
             self._mast_offset_field.configure(parameters.mast_offset_m)
+            guy_index = self._guy_count.findData(parameters.guy_count)
+            if guy_index >= 0:
+                self._guy_count.setCurrentIndex(guy_index)
+            self._guy_anchor_field.configure(parameters.guy_anchor_radius_m)
+            self._guy_diameter_field.configure(parameters.guy_diameter_m)
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
                 self._material.setCurrentIndex(material_index)
@@ -843,6 +879,9 @@ class YagiForm(QWidget):
             ),
             mast_diameter_m=self._mast_diameter_field.value_m(),
             mast_offset_m=self._mast_offset_field.value_m(),
+            guy_count=int(self._guy_count.currentData() or 0),
+            guy_anchor_radius_m=self._guy_anchor_field.value_m(),
+            guy_diameter_m=self._guy_diameter_field.value_m(),
             driven_index=driven_index,
             driven_folded=self._driven_folded.isChecked(),
             driven_fold_spacing_m=self._driven_fold_spacing_field.value_m(),
