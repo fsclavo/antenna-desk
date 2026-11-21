@@ -10792,8 +10792,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Archivos PDF (*.pdf)",
     },
     "dialog.large_project": {
-        Language.ENGLISH: "Project is {size:.1f} MB. Save anyway? Use Compact Simulation History to reduce it.",
-        Language.SPANISH: "El proyecto pesa {size:.1f} MB. ¿Guardar igualmente? Usá Compactar historial para reducirlo.",
+        Language.ENGLISH: "Project is {size:.1f} MB compressed ({expanded:.1f} MB expanded). Save anyway? Use Compact Simulation History to reduce it.",
+        Language.SPANISH: "El proyecto pesa {size:.1f} MB comprimido ({expanded:.1f} MB expandido). ¿Guardar igualmente? Usá Compactar historial para reducirlo.",
     },
     "dialog.project_too_large_choose": {
         Language.ENGLISH: "The project is too large to save and reopen ({size:.1f} MB against a {limit:.0f} MB limit). Compact the history, or save only metadata and designs (without runs or optimization summaries).",

@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..application.ports.project_repository import ProjectRepository
+from ..application.project_payload import PreparedProject
 from ..application.project_session import ProjectSession
 from ..application.use_cases.open_project import OpenProjectSession
 from ..application.use_cases.save_project import SaveProject
@@ -78,7 +79,7 @@ class ProjectIO:
         finally:
             QApplication.restoreOverrideCursor()
 
-    def prepare_payload(self, project: Project) -> bytes:
+    def prepare_payload(self, project: Project) -> PreparedProject:
         progress = self._progress_dialog("status.preparing_save", "dialog.save_title")
         try:
             value = self._run_worker(
@@ -87,11 +88,11 @@ class ProjectIO:
             )
         finally:
             progress.close()
-        if not isinstance(value, bytes):
+        if not isinstance(value, PreparedProject):
             raise RuntimeError("save worker produced no payload")
         return value
 
-    def write(self, path: Path, payload: bytes) -> None:
+    def write(self, path: Path, payload: PreparedProject) -> None:
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             SaveProject(self.repository).write(path, payload)

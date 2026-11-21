@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.errors import ProjectPayloadTooLargeError
+from antennadesk.application.project_payload import PreparedProject, ProjectLimits
 from antennadesk.application.project_session import ProjectSession
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
@@ -196,7 +197,7 @@ def test_save_serializes_the_project_once(
     original = window._repository.prepare_payload
     calls: list[int] = []
 
-    def counted(project: Project) -> bytes:
+    def counted(project: Project) -> PreparedProject:
         calls.append(1)
         return original(project)
 
@@ -216,7 +217,7 @@ def test_save_processes_events_while_preparing_the_payload(
     original = window._repository.prepare_payload
     events: list[str] = []
 
-    def slow(project: Project) -> bytes:
+    def slow(project: Project) -> PreparedProject:
         time.sleep(0.2)
         return original(project)
 
@@ -697,7 +698,11 @@ def test_save_warns_and_can_cancel_a_large_project(
     monkeypatch.setattr(
         window._repository,
         "prepare_payload",
-        lambda project: b"x" * (33 * 1024 * 1024),
+        lambda project: PreparedProject(
+            b"x" * (33 * 1024 * 1024),
+            entry_count=1,
+            expanded_bytes=33 * 1024 * 1024,
+        ),
     )
     monkeypatch.setattr(
         QMessageBox,
@@ -719,7 +724,12 @@ def test_save_blocks_a_project_above_the_hard_limit(
     monkeypatch.setattr(
         window._repository,
         "prepare_payload",
-        lambda project: b"x" * (65 * 1024 * 1024),
+        lambda project: PreparedProject(
+            b"x" * (65 * 1024 * 1024),
+            entry_count=1,
+            expanded_bytes=65 * 1024 * 1024,
+            limits=ProjectLimits(container_bytes=128 * 1024 * 1024),
+        ),
     )
     monkeypatch.setattr(window, "_ask_oversized_project", lambda *args: "cancel")
 
@@ -741,7 +751,7 @@ def test_save_can_choose_design_only_for_an_oversized_project(
     path = tmp_path / "design-only.antennadesk"
     original = window._repository.prepare_payload
 
-    def fail_with_runs(project: Project) -> bytes:
+    def fail_with_runs(project: Project) -> PreparedProject:
         if project.simulation_runs:
             raise ProjectPayloadTooLargeError(
                 "project is too large when expanded",
@@ -782,7 +792,7 @@ def test_save_offers_compaction_for_an_oversized_expanded_project(
     original = window._repository.prepare_payload
     calls: list[int] = []
 
-    def fail_once(project: Project) -> bytes:
+    def fail_once(project: Project) -> PreparedProject:
         calls.append(1)
         if len(calls) == 1:
             raise ProjectPayloadTooLargeError(

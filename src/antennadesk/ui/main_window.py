@@ -5897,8 +5897,8 @@ class MainWindow(QMainWindow):
                 project = self._apply_fields()
             after = self._history_snapshot()
             self._record_history("history.save", before, after)
-            payload = self._project_io.prepare_payload(project)
-            size = len(payload)
+            prepared = self._project_io.prepare_payload(project)
+            size = prepared.compressed_bytes
             if size > MAX_PROJECT_SIZE_BYTES:
                 if design_only:
                     self._show_error(
@@ -5920,13 +5920,14 @@ class MainWindow(QMainWindow):
                     self._translator.t(
                         "dialog.large_project",
                         size=size / (1024 * 1024),
+                        expanded=prepared.expanded_bytes / (1024 * 1024),
                     ),
                     QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Cancel,
                     QMessageBox.StandardButton.Save,
                 )
                 if answer != QMessageBox.StandardButton.Save:
                     return False
-            self._project_io.write(path, payload)
+            self._project_io.write(path, prepared)
         except ProjectPayloadTooLargeError as exc:
             if design_only:
                 self._show_error(self._translator.t("error.save", message=str(exc)))

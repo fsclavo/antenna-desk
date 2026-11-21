@@ -158,10 +158,10 @@ class ExportProjectBundle:
 
         bundled_project = _project_with_references(project, mapping)
         raise_if_errors(bundled_project.validate())
-        payload = self.repository.prepare_payload(bundled_project)
-        if len(payload) > MAX_PROJECT_PAYLOAD_BYTES:
+        prepared = self.repository.prepare_payload(bundled_project)
+        if prepared.compressed_bytes > MAX_PROJECT_PAYLOAD_BYTES:
             raise ProjectBundleError(
-                f"project payload is too large ({len(payload)} bytes; "
+                f"project payload is too large ({prepared.compressed_bytes} bytes; "
                 f"limit is {MAX_PROJECT_PAYLOAD_BYTES} bytes)"
             )
 
@@ -183,12 +183,15 @@ class ExportProjectBundle:
         ).encode("utf-8")
         if len(manifest_bytes) > MAX_MANIFEST_BYTES:
             raise ProjectBundleError("bundle manifest is too large")
-        if total_asset_bytes + len(payload) + len(manifest_bytes) > MAX_UNCOMPRESSED_BYTES:
+        if (
+            total_asset_bytes + prepared.compressed_bytes + len(manifest_bytes)
+            > MAX_UNCOMPRESSED_BYTES
+        ):
             raise ProjectBundleError(
                 f"bundle exceeds the {MAX_UNCOMPRESSED_BYTES}-byte uncompressed limit"
             )
 
-        _write_bundle(bundle_path, manifest_bytes, payload, assets)
+        _write_bundle(bundle_path, manifest_bytes, prepared.payload, assets)
         return BundleExportResult(
             bundle_path=bundle_path,
             asset_count=len(assets) - len(missing),

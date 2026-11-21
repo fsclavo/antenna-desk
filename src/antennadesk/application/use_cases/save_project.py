@@ -10,19 +10,20 @@ from pathlib import Path
 from ...domain.common.validation import raise_if_errors
 from ...domain.projects.project import Project
 from ..ports.project_repository import ProjectRepository
+from ..project_payload import PreparedProject
 
 
 @dataclass(frozen=True, slots=True)
 class SaveProject:
     repository: ProjectRepository
 
-    def prepare(self, project: Project) -> bytes:
+    def prepare(self, project: Project) -> PreparedProject:
         """Validate and serialize a project without writing it to disk."""
 
         raise_if_errors(project.validate())
         return self.repository.prepare_payload(project)
 
-    def write(self, path: Path, payload: bytes) -> None:
+    def write(self, path: Path, payload: PreparedProject) -> None:
         """Write an already prepared payload atomically."""
 
         self.repository.write_payload(path, payload)

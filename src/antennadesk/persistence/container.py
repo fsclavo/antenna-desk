@@ -35,6 +35,7 @@ from ..application.project_limits import (
     MAX_PATH_BYTES,
     MAX_PROJECT_UNCOMPRESSED_BYTES,
 )
+from ..application.project_payload import PreparedProject, ProjectLimits
 from ..application.project_session import (
     ProjectSession,
 )
@@ -234,10 +235,19 @@ class ProjectContainerRepository:
     def save(self, project: Project, path: Path) -> None:
         self.write_payload(path, self.prepare_payload(project))
 
-    def prepare_payload(self, project: Project) -> bytes:
+    def prepare_payload(self, project: Project) -> PreparedProject:
         entries = self._build_entries(project)
         self._check_entry_limits(entries)
-        payload = self._build_container(project, entries)
+        payload, manifest_bytes = self._build_container(project, entries)
+        expanded = sum(len(entry.data) for entry in entries.values()) + manifest_bytes
+        if expanded > MAX_PROJECT_UNCOMPRESSED_BYTES:
+            raise ProjectTooLargeError(
+                "project entries are too large when expanded "
+                f"({expanded} bytes; limit is {MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
+                size=expanded,
+                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                expanded=True,
+            )
         if len(payload) > MAX_CONTAINER_BYTES:
             raise ProjectTooLargeError(
                 "project container is too large "
@@ -246,20 +256,32 @@ class ProjectContainerRepository:
                 limit=MAX_CONTAINER_BYTES,
                 expanded=False,
             )
-        return payload
+        return PreparedProject(
+            payload=payload,
+            entry_count=len(entries) + 1,
+            expanded_bytes=expanded,
+            limits=ProjectLimits(
+                container_bytes=MAX_CONTAINER_BYTES,
+                expanded_bytes=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                manifest_bytes=MAX_MANIFEST_BYTES,
+                entry_bytes=MAX_ENTRY_BYTES,
+                entries=MAX_ENTRIES,
+                path_bytes=MAX_PATH_BYTES,
+            ),
+        )
 
-    def write_payload(self, path: Path, payload: bytes) -> None:
-        if len(payload) > MAX_CONTAINER_BYTES:
+    def write_payload(self, path: Path, payload: PreparedProject) -> None:
+        if payload.compressed_bytes > MAX_CONTAINER_BYTES:
             raise ProjectTooLargeError(
                 "project container is too large "
-                f"({len(payload)} bytes; limit is {MAX_CONTAINER_BYTES} bytes)",
-                size=len(payload),
+                f"({payload.compressed_bytes} bytes; limit is {MAX_CONTAINER_BYTES} bytes)",
+                size=payload.compressed_bytes,
                 limit=MAX_CONTAINER_BYTES,
                 expanded=False,
             )
-        if not zipfile.is_zipfile(io.BytesIO(payload)):
+        if not zipfile.is_zipfile(io.BytesIO(payload.payload)):
             raise ProjectFormatError("prepared project payload is not a valid ZIP container")
-        self._atomic_write(Path(path), payload)
+        self._atomic_write(Path(path), payload.payload)
 
     def load(self, path: Path) -> Project:
         return self.open_session(path).materialize()
@@ -427,7 +449,7 @@ class ProjectContainerRepository:
             raise ProjectFormatError(f"invalid project data: {exc}") from exc
 
     def serialized_size(self, project: Project) -> int:
-        return len(self.prepare_payload(project))
+        return self.prepare_payload(project).compressed_bytes
 
     # -- write ----------------------------------------------------------------
 
@@ -491,7 +513,7 @@ class ProjectContainerRepository:
                 )
         return entries
 
-    def _build_container(self, project: Project, entries: dict[str, _Entry]) -> bytes:
+    def _build_container(self, project: Project, entries: dict[str, _Entry]) -> tuple[bytes, int]:
         preliminary = _zip_bytes(entries)
         with zipfile.ZipFile(io.BytesIO(preliminary)) as archive:
             compressed = {info.filename: info.compress_size for info in archive.infolist()}
@@ -532,7 +554,16 @@ class ProjectContainerRepository:
                 retained_run_ids=[run.id for run in project.retained_simulation_runs()],
             ),
         )
-        return _zip_bytes(entries, _json_bytes(manifest))
+        manifest_bytes = _json_bytes(manifest)
+        if len(manifest_bytes) > MAX_MANIFEST_BYTES:
+            raise ProjectTooLargeError(
+                "project manifest is too large "
+                f"({len(manifest_bytes)} bytes; limit is {MAX_MANIFEST_BYTES} bytes)",
+                size=len(manifest_bytes),
+                limit=MAX_MANIFEST_BYTES,
+                expanded=True,
+            )
+        return _zip_bytes(entries, manifest_bytes), len(manifest_bytes)
 
     def _check_entry_limits(self, entries: dict[str, _Entry]) -> None:
         if len(entries) + 1 > MAX_ENTRIES:

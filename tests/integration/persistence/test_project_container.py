@@ -16,6 +16,7 @@ from typing import Any
 
 import pytest
 
+from antennadesk.application.project_payload import PreparedProject
 from antennadesk.domain.antennas.feed_line import FeedLine
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.result import SimulationResult
@@ -323,7 +324,7 @@ def test_write_rejects_container_over_limit(
     path = tmp_path / "compressed.antennadesk"
 
     with pytest.raises(ProjectTooLargeError, match="container is too large"):
-        repository.write_payload(path, b"x" * 17)
+        repository.write_payload(path, PreparedProject(b"x" * 17, entry_count=1, expanded_bytes=17))
 
     assert not path.exists()
 
@@ -335,7 +336,9 @@ def test_write_rejects_a_non_container_payload(
     path = tmp_path / "not-a-container.antennadesk"
 
     with pytest.raises(ProjectFormatError, match="not a valid ZIP"):
-        repository.write_payload(path, b"not a zip")
+        repository.write_payload(
+            path, PreparedProject(b"not a zip", entry_count=1, expanded_bytes=11)
+        )
 
     assert not path.exists()
 
@@ -877,8 +880,8 @@ def test_prepared_payload_can_be_written_without_recompression(
     payload = repository.prepare_payload(sample_project)
     repository.write_payload(path, payload)
 
-    assert path.read_bytes() == payload
-    assert repository.serialized_size(sample_project) == len(payload)
+    assert path.read_bytes() == payload.payload
+    assert repository.serialized_size(sample_project) == payload.compressed_bytes
 
 
 def test_round_trip_with_a_project_feed_line(
@@ -1954,3 +1957,22 @@ def test_session_surfaces_a_corrupt_run_only_when_requested(
 
     with pytest.raises(ProjectFormatError, match="invalid project entry"):
         session.latest_run(sample_project.designs[0].id)
+
+
+def test_prepared_project_reports_compressed_and_expanded_sizes(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    prepared = repository.prepare_payload(sample_project)
+    path = tmp_path / "sizes.antennadesk"
+    repository.write_payload(path, prepared)
+
+    with zipfile.ZipFile(path) as archive:
+        expanded = sum(info.file_size for info in archive.infolist())
+        entries = len(archive.infolist())
+
+    assert prepared.compressed_bytes == path.stat().st_size
+    assert prepared.expanded_bytes == expanded
+    assert prepared.entry_count == entries
+    assert prepared.limits.container_bytes == MAX_PROJECT_SIZE_BYTES

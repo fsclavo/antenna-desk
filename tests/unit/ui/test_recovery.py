@@ -12,6 +12,7 @@ from uuid import uuid4
 
 import pytest
 
+from antennadesk.application.project_payload import PreparedProject
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -103,11 +104,15 @@ def test_oversized_design_snapshot_is_rejected_without_writing(
     tmp_path: Path,
 ) -> None:
     class OversizeRepository:
-        def prepare_payload(self, project: Project) -> bytes:
+        def prepare_payload(self, project: Project) -> PreparedProject:
             del project
-            return b"x" * (MAX_RECOVERY_PAYLOAD_BYTES + 1)
+            return PreparedProject(
+                b"x" * (MAX_RECOVERY_PAYLOAD_BYTES + 1),
+                entry_count=1,
+                expanded_bytes=MAX_RECOVERY_PAYLOAD_BYTES + 1,
+            )
 
-        def write_payload(self, path: Path, payload: bytes) -> None:
+        def write_payload(self, path: Path, payload: PreparedProject) -> None:
             del path, payload
             raise AssertionError("oversized payload must not be written")
 

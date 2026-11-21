@@ -68,10 +68,11 @@ class AutosaveRecovery:
 
         compact = replace(project, simulation_runs=())
         payload = self._repository.prepare_payload(compact)
-        if len(payload) > MAX_RECOVERY_PAYLOAD_BYTES:
+        if payload.compressed_bytes > MAX_RECOVERY_PAYLOAD_BYTES:
             raise RecoveryTooLargeError(
                 "the design-only recovery snapshot is too large "
-                f"({len(payload)} bytes; limit is {MAX_RECOVERY_PAYLOAD_BYTES})"
+                f"({payload.compressed_bytes} bytes; "
+                f"limit is {MAX_RECOVERY_PAYLOAD_BYTES})"
             )
         self._directory.mkdir(parents=True, exist_ok=True)
         self._repository.write_payload(self.project_path, payload)

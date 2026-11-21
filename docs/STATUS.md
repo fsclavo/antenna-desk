@@ -38,9 +38,10 @@
   indexed in the manifest and load only when the selected design or a report
   asks for them. An oversized/failed open offers design-only recovery, and
   **File → Save Design Only...** writes metadata and designs without runs or
-  optimization summaries. Normal saving and compaction still materialize every
-  run. Remaining PF1 work is the `PreparedProject` API and save/report paths
-  that do not materialize the full run tuple. See
+  optimization summaries. `prepare_payload()` returns a `PreparedProject` with
+  the exact compressed and expanded sizes, entry count, and limits. Normal
+  saving and compaction still materialize every run; remaining PF1 work is the
+  save/report path that avoids that full run tuple. See
   [`ADR-0050`](ADR/0050-zip-project-container.md).
 
 ## Next

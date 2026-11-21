@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from ...domain.projects.project import Project
+from ..project_payload import PreparedProject
 from ..project_session import ProjectSession
 
 
@@ -23,15 +24,15 @@ class ProjectRepository(Protocol):
     def open_design_only(self, path: Path) -> Project:
         """Open *path* without its simulation runs, for recovery."""
 
-    def prepare_payload(self, project: Project) -> bytes:
+    def prepare_payload(self, project: Project) -> PreparedProject:
         """Serialize and compress *project* without writing it to disk.
 
         Raises ``ProjectPayloadTooLargeError`` when the payload exceeds a
         storage or reopen limit.
         """
 
-    def write_payload(self, path: Path, payload: bytes) -> None:
-        """Write a prepared payload atomically, enforcing the size limits."""
+    def write_payload(self, path: Path, payload: PreparedProject) -> None:
+        """Write a prepared payload atomically."""
 
     def load(self, path: Path) -> Project:
         """Read and validate a project from *path*."""

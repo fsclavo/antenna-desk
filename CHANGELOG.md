@@ -306,8 +306,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   metadata and designs load eagerly, while runs load only for the selected
   design or a report. A failed oversized open offers design-only recovery, and
   **File → Save Design Only...** writes metadata and designs without runs or
-  optimization summaries. Normal saving and compaction still materialize every
-  run; avoiding that remains PF1 slice 2. See
+  optimization summaries. `prepare_payload()` now returns a `PreparedProject`
+  with the exact compressed and expanded sizes, entry count, and limits, and
+  the large-project warning reports both sizes. Normal saving and compaction
+  still materialize every run; avoiding that remains PF1 slice 2. See
   [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Typed simulation-spec assembly moved out of the main window.** The
   per-family `SimulationSpec` builders and far-field pattern presets now live

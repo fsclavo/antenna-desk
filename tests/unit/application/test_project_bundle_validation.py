@@ -485,7 +485,7 @@ def test_import_rejects_a_project_without_designs(
     tmp_path: Path,
 ) -> None:
     project = replace(sample_project, designs=())
-    payload = JsonProjectRepository().prepare_payload(project)
+    payload = JsonProjectRepository().prepare_payload(project).payload
     manifest = {
         "format": "antennadesk.project_bundle",
         "format_version": 1,

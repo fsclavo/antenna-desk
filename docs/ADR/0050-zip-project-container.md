@@ -35,10 +35,9 @@ to be supported.
    expanded bytes, manifest bytes, per-entry bytes, entry count, and path
    bytes. Do not trust manifest-declared sizes; read bounded streams and
    verify CRC32/SHA-256.
-4. Slice 2 will make `prepare_payload()` return an immutable `PreparedProject`
-   with payload, compressed bytes, expanded bytes, entry count, and limits. A
-   successful save must always produce a file `load()` accepts. Slice 1 keeps
-   the existing bytes API and already enforces the limits.
+4. `prepare_payload()` returns an immutable `PreparedProject` with payload,
+   compressed bytes, expanded bytes, entry count, and limits. A successful save
+   must always produce a file `load()` accepts.
 5. Load the project, the selected design, and the latest retained run at open
    time. Load older runs and optimizations on demand through an application
    `ProjectSession`/`ProjectResultStore`; keep the domain `Project` immutable.
@@ -91,6 +90,7 @@ Slice 1 is implemented:
 Slice 2 has started: opening uses a manifest-indexed `ProjectSession`; only
 the selected design's latest run or batch is materialized, a failed oversized
 open offers design-only recovery, and **File → Save Design Only...** writes
-metadata and designs without runs or optimization summaries. Remaining:
-`PreparedProject` in the repository API, save/report paths that do not
-materialize every run, and physical compaction through entry removal.
+metadata and designs without runs or optimization summaries. `PreparedProject`
+is now the repository return type and carries the payload, compressed and
+expanded sizes, entry count, and limits. Remaining: save/report paths that do
+not materialize every run, and physical compaction through entry removal.
