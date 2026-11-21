@@ -308,8 +308,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   **File → Save Design Only...** writes metadata and designs without runs or
   optimization summaries. `prepare_payload()` now returns a `PreparedProject`
   with the exact compressed and expanded sizes, entry count, and limits, and
-  the large-project warning reports both sizes. Normal saving and compaction
-  still materialize every run; avoiding that remains PF1 slice 2. See
+  the large-project warning reports both sizes. Saving and compaction now copy
+  unchanged run entries from the source container, serialize only new runs, and
+  reopen the session after writing; the fallback is a full materialization for
+  custom stores or new runs plus retention. See
   [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Typed simulation-spec assembly moved out of the main window.** The
   per-family `SimulationSpec` builders and far-field pattern presets now live

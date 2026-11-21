@@ -92,5 +92,8 @@ the selected design's latest run or batch is materialized, a failed oversized
 open offers design-only recovery, and **File → Save Design Only...** writes
 metadata and designs without runs or optimization summaries. `PreparedProject`
 is now the repository return type and carries the payload, compressed and
-expanded sizes, entry count, and limits. Remaining: save/report paths that do
-not materialize every run, and physical compaction through entry removal.
+expanded sizes, entry count, and limits. Saving and compaction copy unchanged
+run entries from the source container, serialize only new runs, and reopen the
+session after writing. The remaining optimization is streaming the container
+write instead of holding its bytes in memory, plus any pattern-level lazy
+loading needed by reports or visualization.

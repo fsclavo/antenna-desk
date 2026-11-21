@@ -480,6 +480,7 @@ class MainWindow(QMainWindow):
         self._workflow_measurement_compared: set[UUID] = set()
         self._vna_column_mappings: dict[tuple[str, ...], VnaColumnMapping] = {}
         self._reported_run_errors: set[UUID] = set()
+        self._retained_only_on_save = False
         self._loads: tuple[LumpedLoad, ...] = ()
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
@@ -1963,7 +1964,7 @@ class MainWindow(QMainWindow):
         self._session = None
 
     def _has_compactable_history(self) -> bool:
-        if self._project is None:
+        if self._project is None or self._retained_only_on_save:
             return False
         if self._project.has_compactable_simulation_history():
             return True
@@ -5880,7 +5881,15 @@ class MainWindow(QMainWindow):
             ),
         )
 
-    def _save_to(self, path: Path, *, design_only: bool = False) -> bool:
+    def _save_to(
+        self,
+        path: Path,
+        *,
+        design_only: bool = False,
+        retained_only: bool | None = None,
+    ) -> bool:
+        if retained_only is None:
+            retained_only = self._retained_only_on_save
         before = self._history_snapshot()
         try:
             if design_only:
@@ -5893,11 +5902,19 @@ class MainWindow(QMainWindow):
                     ),
                 )
             else:
-                self._materialize_session()
                 project = self._apply_fields()
             after = self._history_snapshot()
             self._record_history("history.save", before, after)
-            prepared = self._project_io.prepare_payload(project)
+            if design_only:
+                prepared = self._project_io.prepare_payload(project)
+            elif self._session is not None:
+                prepared = self._project_io.prepare_session_payload(
+                    self._session,
+                    project,
+                    retained_only=retained_only,
+                )
+            else:
+                prepared = self._project_io.prepare_payload(project)
             size = prepared.compressed_bytes
             if size > MAX_PROJECT_SIZE_BYTES:
                 if design_only:
@@ -5949,6 +5966,11 @@ class MainWindow(QMainWindow):
             self._results.set_band_analysis(None)
             self._results.set_result(None)
             self._last_result = None
+        elif self._session is not None:
+            session = self._repository.open_session(path)
+            self._project = session.project
+            self._session = session
+        self._retained_only_on_save = False
         if self._project is not None:
             self._recent_projects.add(path, self._project.name)
             self._refresh_start_page_recents()
@@ -6010,8 +6032,11 @@ class MainWindow(QMainWindow):
         if choice == "compact":
             if self._project is None:
                 return False
-            self._materialize_session()
-            self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
+            if self._session is not None:
+                self._project = replace(self._project, updated_at=utc_now())
+                self._retained_only_on_save = True
+            else:
+                self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
             self._mark_project_dirty(design=False)
             self._update_title()
             self._update_actions()
@@ -7406,23 +7431,32 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
-        self._materialize_session()
-        if not self._project.has_compactable_simulation_history():
+        if not self._has_compactable_history():
             return
+        if self._session is not None:
+            count = self._session.run_count()
+            keep = self._session.retained_run_count()
+        else:
+            count = len(self._project.simulation_runs)
+            keep = self._project.retained_simulation_run_count()
         answer = QMessageBox.question(
             self,
             self._translator.t("app.title"),
             self._translator.t(
                 "dialog.compact_history",
-                count=len(self._project.simulation_runs),
-                keep=self._project.retained_simulation_run_count(),
+                count=count,
+                keep=keep,
             ),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
-        self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
+        if self._session is not None:
+            self._project = replace(self._project, updated_at=utc_now())
+            self._retained_only_on_save = True
+        else:
+            self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
         self._mark_project_dirty(design=False)
         self._last_status_key = "status.compacted"
         self._update_title()

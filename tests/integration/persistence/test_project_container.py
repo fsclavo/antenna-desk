@@ -1976,3 +1976,120 @@ def test_prepared_project_reports_compressed_and_expanded_sizes(
     assert prepared.expanded_bytes == expanded
     assert prepared.entry_count == entries
     assert prepared.limits.container_bytes == MAX_PROJECT_SIZE_BYTES
+
+
+def test_prepare_session_payload_copies_runs_without_materializing(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = _project_with_runs(sample_project, count=3)
+    source = tmp_path / "source.antennadesk"
+    repository.save(project, source)
+    session = repository.open_session(source)
+    original = repository._read_runs
+
+    def fail(data: dict[str, bytes]) -> object:
+        del data
+        raise AssertionError("lazy save must not parse run payloads")
+
+    monkeypatch.setattr(repository, "_read_runs", fail)
+    prepared = repository.prepare_session_payload(session, session.project)
+    target = tmp_path / "lazy-saved.antennadesk"
+    repository.write_payload(target, prepared)
+
+    monkeypatch.setattr(repository, "_read_runs", original)
+    assert repository.load(target) == project
+
+
+def test_prepare_session_payload_adds_new_runs(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    source_project = _project_with_runs(sample_project, count=1)
+    source = tmp_path / "source.antennadesk"
+    repository.save(source_project, source)
+    session = repository.open_session(source)
+    updated = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=session.project,
+            design_id=session.project.designs[0].id,
+            result=_rich_result(),
+            created_at=source_project.updated_at + timedelta(minutes=10),
+        )
+    )
+    prepared = repository.prepare_session_payload(session, updated)
+    target = tmp_path / "with-new-run.antennadesk"
+    repository.write_payload(target, prepared)
+
+    loaded = repository.load(target)
+    assert len(loaded.simulation_runs) == 2
+    assert {run.id for run in loaded.simulation_runs} == {
+        *[run.id for run in source_project.simulation_runs],
+        updated.simulation_runs[-1].id,
+    }
+
+
+def test_prepare_session_payload_can_keep_only_retained_runs(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=3)
+    source = tmp_path / "source.antennadesk"
+    repository.save(project, source)
+    session = repository.open_session(source)
+    compacted_project = replace(project, simulation_runs=(), updated_at=project.updated_at)
+    prepared = repository.prepare_session_payload(
+        session,
+        compacted_project,
+        retained_only=True,
+    )
+    target = tmp_path / "retained.antennadesk"
+    repository.write_payload(target, prepared)
+
+    loaded = repository.load(target)
+    assert len(loaded.simulation_runs) == 1
+    assert loaded.simulation_runs[0].id in {run.id for run in project.simulation_runs}
+
+
+def test_prepare_session_payload_with_new_runs_and_retention_falls_back(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    source_project = _project_with_runs(sample_project, count=2)
+    source = tmp_path / "source.antennadesk"
+    repository.save(source_project, source)
+    session = repository.open_session(source)
+    updated = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=session.project,
+            design_id=session.project.designs[0].id,
+            result=_rich_result(),
+            created_at=source_project.updated_at + timedelta(minutes=10),
+        )
+    )
+    prepared = repository.prepare_session_payload(
+        session,
+        updated,
+        retained_only=True,
+    )
+    target = tmp_path / "retained-with-new.antennadesk"
+    repository.write_payload(target, prepared)
+
+    loaded = repository.load(target)
+    assert len(loaded.simulation_runs) == 1
+    assert loaded.simulation_runs[0].id == updated.simulation_runs[-1].id

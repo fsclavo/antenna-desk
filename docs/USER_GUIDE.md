@@ -2621,9 +2621,11 @@ limit is rejected before the destination file is touched.
 Opening a project validates the manifest, metadata, and designs in a worker
 thread. A modal **Opening project...** dialog appears for large files. Saved
 simulation runs stay on disk and load only when the selected design or a report
-needs them, so a long history does not make opening slow. If a saved run
-cannot be read or a size limit blocks the normal open, the application offers a
-design-only recovery that discards the saved runs. Gzip, plain JSON, and schema
+needs them, so a long history does not make opening slow. Saving and compaction
+also reuse the stored run entries instead of loading every run into memory;
+only new runs are serialized. If a saved run cannot be read or a size limit
+blocks the normal open, the application offers a design-only recovery that
+discards the saved runs. Gzip, plain JSON, and schema
 58 and older files are rejected with an explicit unsupported-format message.
 
 ## Portable project bundles

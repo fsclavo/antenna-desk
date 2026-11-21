@@ -842,6 +842,7 @@ def test_compacting_simulation_history_keeps_the_latest_run(
 def test_open_project_keeps_runs_lazy(
     window: MainWindow,
     qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     window.simulate()
@@ -868,14 +869,18 @@ def test_open_project_keeps_runs_lazy(
     assert loaded._project.simulation_runs == ()
     assert loaded._last_result is not None
 
+    def fail_materialize(session: ProjectSession) -> object:
+        del session
+        raise AssertionError("lazy save must not materialize runs")
+
+    monkeypatch.setattr(ProjectSession, "materialize", fail_materialize)
     saved_again = tmp_path / "lazy-resaved.antennadesk"
     assert loaded._save_to(saved_again) is True
-    assert loaded._session is None
+    assert loaded._session is not None
+    assert loaded._session.run_count() == 2
     assert loaded._project is not None
-    assert len(loaded._project.simulation_runs) == 2
-    assert JsonProjectRepository().load(saved_again).simulation_runs == (
-        loaded._project.simulation_runs
-    )
+    assert loaded._project.simulation_runs == ()
+    assert JsonProjectRepository().open_session(saved_again).run_count() == 2
     loaded._dirty = False
     loaded.close()
 
@@ -953,3 +958,49 @@ def test_save_design_only_action_drops_runs_and_optimizations(
     assert window._project.simulation_runs == ()
     assert window._status_label.text() == "Project saved without simulation history."
     window._dirty = False
+
+
+def test_compaction_with_a_lazy_session_does_not_materialize(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    source = tmp_path / "compact-lazy.antennadesk"
+    assert window._save_to(source) is True
+
+    loaded = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(loaded)
+    assert loaded._open_project_path(source) is True
+    assert loaded._session is not None
+    assert loaded._session.run_count() == 2
+
+    def fail_materialize(session: ProjectSession) -> object:
+        del session
+        raise AssertionError("lazy compaction must not materialize runs")
+
+    monkeypatch.setattr(ProjectSession, "materialize", fail_materialize)
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    loaded.compact_simulation_history()
+    assert loaded._retained_only_on_save is True
+    saved = tmp_path / "compacted-lazy.antennadesk"
+    assert loaded._save_to(saved) is True
+    assert loaded._session is not None
+    assert loaded._session.run_count() == 1
+    assert JsonProjectRepository().open_session(saved).run_count() == 1
+    loaded._dirty = False
+    loaded.close()

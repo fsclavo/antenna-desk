@@ -80,12 +80,28 @@ class ProjectIO:
             QApplication.restoreOverrideCursor()
 
     def prepare_payload(self, project: Project) -> PreparedProject:
+        return self._prepare_worker(SaveProjectWorker(SaveProject(self.repository), project))
+
+    def prepare_session_payload(
+        self,
+        session: ProjectSession,
+        project: Project,
+        *,
+        retained_only: bool = False,
+    ) -> PreparedProject:
+        return self._prepare_worker(
+            SaveProjectWorker(
+                SaveProject(self.repository),
+                project,
+                session,
+                retained_only=retained_only,
+            )
+        )
+
+    def _prepare_worker(self, worker: SaveProjectWorker) -> PreparedProject:
         progress = self._progress_dialog("status.preparing_save", "dialog.save_title")
         try:
-            value = self._run_worker(
-                SaveProjectWorker(SaveProject(self.repository), project),
-                "prepared",
-            )
+            value = self._run_worker(worker, "prepared")
         finally:
             progress.close()
         if not isinstance(value, PreparedProject):

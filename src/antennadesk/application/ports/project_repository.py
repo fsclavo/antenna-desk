@@ -31,6 +31,15 @@ class ProjectRepository(Protocol):
         storage or reopen limit.
         """
 
+    def prepare_session_payload(
+        self,
+        session: ProjectSession,
+        project: Project,
+        *,
+        retained_only: bool = False,
+    ) -> PreparedProject:
+        """Prepare a save that copies unloaded runs from the session source."""
+
     def write_payload(self, path: Path, payload: PreparedProject) -> None:
         """Write a prepared payload atomically."""
 

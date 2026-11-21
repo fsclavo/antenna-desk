@@ -61,6 +61,10 @@ class ProjectSession:
         self._cache: dict[UUID, SimulationRun] = {}
 
     @property
+    def run_store(self) -> ProjectRunStore:
+        return self._store
+
+    @property
     def run_index(self) -> tuple[RunIndexEntry, ...]:
         return self._store.run_index
 

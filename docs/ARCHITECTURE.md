@@ -365,8 +365,11 @@ size, CRC32, and SHA-256 against the manifest through a bounded stream, so a
 zip bomb or a manifest mismatch is rejected before the domain model is built.
 `prepare_payload()` returns a `PreparedProject` with the exact payload,
 compressed and expanded sizes, entry count, and limits; the UI reports both
-sizes. Saving and compaction still materialize the complete run tuple on the
-domain side; avoiding that is the remaining slice-2 work. Gzip, plain
+sizes. Saving a `ProjectSession` copies unchanged run entries directly from the
+source container, serializes only new runs, and reopens the session from the
+saved file. Compaction uses the same path with the retained run ids. If a custom
+run store or new in-memory runs make the copy ambiguous, the repository falls
+back to materializing the run tuple. Gzip, plain
 JSON, and schema 58 and older are rejected; the project has not shipped to
 users. See [ADR-0050](ADR/0050-zip-project-container.md).
 

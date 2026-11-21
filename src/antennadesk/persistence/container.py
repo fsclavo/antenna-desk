@@ -18,7 +18,8 @@ import re
 import tempfile
 import zipfile
 import zlib
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 from typing import Literal, TypeVar
@@ -239,6 +240,89 @@ class ProjectContainerRepository:
         entries = self._build_entries(project)
         self._check_entry_limits(entries)
         payload, manifest_bytes = self._build_container(project, entries)
+        return self._prepared(entries, payload, manifest_bytes)
+
+    def prepare_session_payload(
+        self,
+        session: ProjectSession,
+        project: Project,
+        *,
+        retained_only: bool = False,
+    ) -> PreparedProject:
+        """Prepare a save that copies unloaded runs instead of materializing them.
+
+        Runs already present in ``project.simulation_runs`` are serialized
+        normally. Unchanged runs are copied as validated container entries from
+        the session's source container. If a custom store or a compaction with
+        new in-memory runs makes that impossible, the call falls back to a full
+        materialization.
+        """
+
+        store = session.run_store
+        if not isinstance(store, ContainerRunStore) or (retained_only and project.simulation_runs):
+            full = session.materialize()
+            if project.simulation_runs:
+                merged = {run.id: run for run in full.simulation_runs}
+                merged.update({run.id: run for run in project.simulation_runs})
+                full = replace(full, simulation_runs=tuple(merged.values()))
+            if retained_only:
+                full = full.with_latest_simulation_runs_only(updated_at=project.updated_at)
+            return self.prepare_payload(full)
+
+        entries = self._build_entries(project)
+        design_ids = {design.id for design in project.designs}
+        existing_ids = {run.id for run in project.simulation_runs}
+        retained_ids = set(session.retained_run_ids())
+        source_runs = [
+            index
+            for index in store.run_index
+            if index.design_id in design_ids
+            and index.id not in existing_ids
+            and (not retained_only or index.id in retained_ids)
+        ]
+        copied = store.copy_entries([index.id for index in source_runs])
+        for path, data in copied.items():
+            kind = _kind_for_path(path)
+            if kind is None:
+                raise ProjectFormatError(f"unexpected copied run entry: {path}")
+            entries[path] = _Entry(kind, data)
+        runs = [
+            RunIndexEntry(
+                id=index.id,
+                design_id=index.design_id,
+                created_at=index.created_at,
+                band_id=index.band_id,
+                batch_id=index.batch_id,
+            )
+            for index in source_runs
+        ] + [
+            RunIndexEntry(
+                id=run.id,
+                design_id=run.design_id,
+                created_at=run.created_at,
+                band_id=run.band_id,
+                batch_id=run.batch_id,
+            )
+            for run in project.simulation_runs
+        ]
+        retained = [index.id for index in source_runs if index.id in retained_ids] + [
+            run.id for run in project.simulation_runs
+        ]
+        self._check_entry_limits(entries)
+        payload, manifest_bytes = self._build_container(
+            project,
+            entries,
+            runs=runs,
+            retained_run_ids=retained,
+        )
+        return self._prepared(entries, payload, manifest_bytes)
+
+    def _prepared(
+        self,
+        entries: dict[str, _Entry],
+        payload: bytes,
+        manifest_bytes: int,
+    ) -> PreparedProject:
         expanded = sum(len(entry.data) for entry in entries.values()) + manifest_bytes
         if expanded > MAX_PROJECT_UNCOMPRESSED_BYTES:
             raise ProjectTooLargeError(
@@ -513,7 +597,14 @@ class ProjectContainerRepository:
                 )
         return entries
 
-    def _build_container(self, project: Project, entries: dict[str, _Entry]) -> tuple[bytes, int]:
+    def _build_container(
+        self,
+        project: Project,
+        entries: dict[str, _Entry],
+        *,
+        runs: list[RunIndexEntry] | None = None,
+        retained_run_ids: list[UUID] | None = None,
+    ) -> tuple[bytes, int]:
         preliminary = _zip_bytes(entries)
         with zipfile.ZipFile(io.BytesIO(preliminary)) as archive:
             compressed = {info.filename: info.compress_size for info in archive.infolist()}
@@ -529,6 +620,19 @@ class ProjectContainerRepository:
                     sha256=hashlib.sha256(entry.data).hexdigest(),
                 )
             )
+        if runs is None:
+            runs = [
+                RunIndexEntry(
+                    id=run.id,
+                    design_id=run.design_id,
+                    created_at=run.created_at,
+                    band_id=run.band_id,
+                    batch_id=run.batch_id,
+                )
+                for run in project.simulation_runs
+            ]
+        if retained_run_ids is None:
+            retained_run_ids = [run.id for run in project.retained_simulation_runs()]
         manifest = ProjectManifest(
             format=CONTAINER_FORMAT,
             container_version=CONTAINER_VERSION,
@@ -539,20 +643,9 @@ class ProjectContainerRepository:
             created_at=project.created_at,
             updated_at=project.updated_at,
             design_ids=[design.id for design in project.designs],
-            runs=[
-                RunIndexEntry(
-                    id=run.id,
-                    design_id=run.design_id,
-                    created_at=run.created_at,
-                    band_id=run.band_id,
-                    batch_id=run.batch_id,
-                )
-                for run in project.simulation_runs
-            ],
+            runs=runs,
             entries=manifest_entries,
-            retention=RetentionPayload(
-                retained_run_ids=[run.id for run in project.retained_simulation_runs()],
-            ),
+            retention=RetentionPayload(retained_run_ids=retained_run_ids),
         )
         manifest_bytes = _json_bytes(manifest)
         if len(manifest_bytes) > MAX_MANIFEST_BYTES:
@@ -896,6 +989,26 @@ class ContainerRunStore:
         if payloads[0].design_id != index.design_id:
             raise ProjectFormatError(f"run design id does not match the manifest: {run_id}")
         return simulation_run_from_payload(payloads[0])
+
+    def copy_entries(self, run_ids: Iterable[UUID]) -> dict[str, bytes]:
+        """Copy the serialized entries for these runs without parsing them."""
+
+        paths: set[str] = set()
+        for run_id in run_ids:
+            paths.update(
+                {
+                    f"{RUN_DIR}/{run_id}.json",
+                    f"{RUN_DIR}/{run_id}{RAW_INPUT_SUFFIX}",
+                    f"{RUN_DIR}/{run_id}{RAW_OUTPUT_SUFFIX}",
+                }
+            )
+        listed = {entry.path: entry for entry in self.manifest.entries if entry.path in paths}
+        if not listed:
+            return {}
+        with zipfile.ZipFile(self.path) as archive:
+            infos = archive.infolist()
+            self.repository._validate_archive_entries(infos)
+            return self.repository._read_entries(archive, infos, listed)
 
     def load_all_runs(self) -> tuple[SimulationRun, ...]:
         listed = {entry.path: entry for entry in self.manifest.entries if _is_run_entry(entry.path)}

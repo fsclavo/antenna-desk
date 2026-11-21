@@ -39,10 +39,11 @@
   asks for them. An oversized/failed open offers design-only recovery, and
   **File → Save Design Only...** writes metadata and designs without runs or
   optimization summaries. `prepare_payload()` returns a `PreparedProject` with
-  the exact compressed and expanded sizes, entry count, and limits. Normal
-  saving and compaction still materialize every run; remaining PF1 work is the
-  save/report path that avoids that full run tuple. See
-  [`ADR-0050`](ADR/0050-zip-project-container.md).
+  the exact compressed and expanded sizes, entry count, and limits. Saving and
+  compaction now copy unchanged run entries directly from the source container
+  instead of materializing them; only new runs are serialized. The fallback is
+  a full materialization when a custom store or new runs plus retention make
+  the copy unsafe. See [`ADR-0050`](ADR/0050-zip-project-container.md).
 
 ## Next
 

@@ -83,9 +83,30 @@ manifest-indexed `ProjectSession` that loads metadata/designs eagerly and runs
 on demand, a failed oversized open offers design-only recovery, and
 “Save design only” writes metadata/designs without runs or optimizations.
 `PreparedProject` now carries the payload, compressed/expanded sizes, entry
-count, and limits. Normal saving and compaction still materialize all runs.
-Remaining: save/report paths without full run materialization. See
+count, and limits. Saving and compaction copy unchanged run entries from the
+source container and serialize only new runs; they reopen the session after
+writing. Remaining: stream the container write instead of holding its bytes in
+memory, and add pattern-level lazy loading if reports need it. See
 [ADR-0050](ADR/0050-zip-project-container.md).
+
+**Scale benchmark (2026-11-21):** `scripts/benchmark_project_io.py` generated
+four runs with five 2° patterns and 8 MB of raw text each (118 MB expanded,
+1.1 MB container). Each operation ran in its own process:
+
+| Step | Time | Peak RSS |
+|---|---:|---:|
+| open (lazy) | 0.00 s | 41 MB |
+| select one run | 3.75 s | 682 MB |
+| save (materialized) | 32.8 s | 1,614 MB |
+| save (copy entries) | 1.25 s | 174 MB |
+| compact (materialized) | 19.3 s | 1,524 MB |
+| compact (copy entries) | 0.33 s | 84 MB |
+| save design only | 0.01 s | 40 MB |
+
+The remaining cost is the selected run itself: one 2° run with five patterns
+still allocates about 400 MB of domain objects. Pattern-level lazy loading is a
+separate future decision; the save/compact path no longer multiplies that cost
+by the full history.
 
 **Goal:** replace the single gzip JSON envelope with a versioned ZIP container
 whose entries can be validated, loaded, and pruned independently; enforce one
@@ -1106,9 +1127,9 @@ decision:
 ## Current baseline
 
 - Schema: **59**; container version 1.
-- Full gate: **4,267 passed, 1 skipped** on 2026-11-20 after the full QA,
+- Full gate: **4,272 passed, 1 skipped** on 2026-11-20 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
-  PF1 container slice 1, lazy-open session, design-only save, and PreparedProject (typed simulation specs,
+  PF1 container slice 1, lazy-open session, design-only save, and PreparedProject, and lazy save/compact (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
