@@ -73,6 +73,7 @@ from ..application.project_limits import (
     MAX_PROJECT_SIZE_BYTES,
     PROJECT_SIZE_WARNING_BYTES,
 )
+from ..application.project_session import ProjectSession
 from ..application.simulation_specs import (
     DEFAULT_GENERATED_SWEEP_POINTS,
     CustomSweepOptions,
@@ -226,6 +227,7 @@ from ..domain.simulation.budget import (
 )
 from ..domain.simulation.frequency import FrequencyPlan
 from ..domain.simulation.result import SimulationResult, SimulationStatus
+from ..domain.simulation.run import SimulationRun
 from ..domain.simulation.segmentation import (
     SegmentationPolicy,
     aligned_policy_for_model,
@@ -456,6 +458,7 @@ class MainWindow(QMainWindow):
         self._font_size_controller = font_size_controller
 
         self._project: Project | None = None
+        self._session: ProjectSession | None = None
         self._design_id: UUID | None = None
         self._current_path: Path | None = None
         self._dirty = False
@@ -476,6 +479,7 @@ class MainWindow(QMainWindow):
         self._workflow_construction_viewed: set[UUID] = set()
         self._workflow_measurement_compared: set[UUID] = set()
         self._vna_column_mappings: dict[tuple[str, ...], VnaColumnMapping] = {}
+        self._reported_run_errors: set[UUID] = set()
         self._loads: tuple[LumpedLoad, ...] = ()
         self._transmission_lines: tuple[TransmissionLine, ...] = ()
         self._feed_line: FeedLine | None = None
@@ -571,6 +575,9 @@ class MainWindow(QMainWindow):
         self._save_as_action = QAction(self)
         self._save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
         self._save_as_action.triggered.connect(lambda: self.save_project_as())
+
+        self._save_design_only_action = QAction(self)
+        self._save_design_only_action.triggered.connect(lambda: self.save_design_only())
 
         self._export_bundle_action = QAction(self)
         self._export_bundle_action.triggered.connect(lambda: self.export_project_bundle())
@@ -1415,6 +1422,7 @@ class MainWindow(QMainWindow):
         self._file_menu.addAction(self._open_action)
         self._file_menu.addAction(self._save_action)
         self._file_menu.addAction(self._save_as_action)
+        self._file_menu.addAction(self._save_design_only_action)
         self._file_menu.addAction(self._export_bundle_action)
         self._file_menu.addAction(self._import_bundle_action)
         self._file_menu.addSeparator()
@@ -1567,6 +1575,11 @@ class MainWindow(QMainWindow):
         self._open_action.setText(self._translator.t("action.open"))
         self._save_action.setText(self._translator.t("action.save"))
         self._save_as_action.setText(self._translator.t("action.save_as"))
+        self._save_design_only_action.setText(self._translator.t("action.save_design_only"))
+        self._save_design_only_action.setToolTip(self._translator.t("help.action.save_design_only"))
+        self._save_design_only_action.setWhatsThis(
+            self._translator.t("help.action.save_design_only")
+        )
         self._export_bundle_action.setText(self._translator.t("action.export_project_bundle"))
         self._export_bundle_action.setToolTip(
             self._translator.t("help.action.export_project_bundle")
@@ -1900,18 +1913,67 @@ class MainWindow(QMainWindow):
         )
         self._provenance_label.setVisible(True)
 
+    def _latest_run_for(self, design_id: UUID) -> SimulationRun | None:
+        if self._project is not None:
+            run = self._project.latest_simulation_run(design_id)
+            if run is not None:
+                return run
+        if self._session is not None:
+            return self._session.latest_run(design_id)
+        return None
+
     def _latest_band_analysis_for(
         self,
         project: Project,
         design_id: UUID,
     ) -> BandAnalysisResult | None:
-        analysis = project.latest_band_analysis(design_id)
-        if analysis is None:
+        analyses: list[BandAnalysisResult] = []
+        in_memory = project.latest_band_analysis(design_id)
+        if in_memory is not None:
+            analyses.append(in_memory)
+        if self._session is not None:
+            stored = self._session.latest_band_analysis(design_id)
+            if stored is not None:
+                analyses.append(stored)
+        if not analyses:
             return None
-        latest_single = project.latest_simulation_run(design_id)
-        if latest_single is not None and latest_single.created_at > analysis.created_at:
+        analysis = max(analyses, key=lambda value: value.created_at)
+        latest_runs = [
+            run
+            for run in (
+                project.latest_simulation_run(design_id),
+                self._session.latest_run(design_id) if self._session is not None else None,
+            )
+            if run is not None
+        ]
+        if latest_runs and max(run.created_at for run in latest_runs) > analysis.created_at:
             return None
         return analysis
+
+    def _materialize_session(self) -> None:
+        if self._session is None or self._project is None:
+            return
+        runs = {run.id: run for run in self._session.load_all_runs()}
+        runs.update({run.id: run for run in self._project.simulation_runs})
+        valid_designs = {design.id for design in self._project.designs}
+        self._project = replace(
+            self._project,
+            simulation_runs=tuple(run for run in runs.values() if run.design_id in valid_designs),
+        )
+        self._session = None
+
+    def _has_compactable_history(self) -> bool:
+        if self._project is None:
+            return False
+        if self._project.has_compactable_simulation_history():
+            return True
+        return self._session is not None and self._session.has_compactable_history()
+
+    def _report_run_error(self, design_id: UUID, error: Exception) -> None:
+        if design_id in self._reported_run_errors:
+            return
+        self._reported_run_errors.add(design_id)
+        self._show_error(self._translator.t("error.read_run", message=str(error)))
 
     def _remember_band_plan(self, analysis: BandAnalysisResult) -> None:
         selections = tuple(
@@ -2054,6 +2116,7 @@ class MainWindow(QMainWindow):
         self._open_action.setEnabled(idle)
         self._save_action.setEnabled(idle and has_project)
         self._save_as_action.setEnabled(idle and has_project)
+        self._save_design_only_action.setEnabled(idle and has_project)
         self._export_bundle_action.setEnabled(idle and has_project)
         self._import_bundle_action.setEnabled(idle)
         self._locate_solver_action.setEnabled(idle)
@@ -2166,9 +2229,7 @@ class MainWindow(QMainWindow):
         self._export_geometry_dxf_action.setEnabled(idle and has_project)
         self._export_html_action.setEnabled(idle and has_result)
         self._export_pdf_action.setEnabled(idle and has_result)
-        has_history = (
-            self._project is not None and self._project.has_compactable_simulation_history()
-        )
+        has_history = self._has_compactable_history()
         self._compact_history_action.setEnabled(idle and has_history)
         self._simulate_action.setEnabled(idle and has_project and self._solver is not None)
         self._cancel_action.setEnabled(self._simulating and self._cancel_token is not None)
@@ -2404,7 +2465,10 @@ class MainWindow(QMainWindow):
     def _current_run_ids(self) -> frozenset[UUID]:
         if self._project is None:
             return frozenset()
-        return frozenset(run.id for run in self._project.simulation_runs)
+        ids = {run.id for run in self._project.simulation_runs}
+        if self._session is not None:
+            ids.update(self._session.run_ids())
+        return frozenset(ids)
 
     def _update_dirty_from_signature(self) -> None:
         self._dirty = (
@@ -2479,7 +2543,7 @@ class MainWindow(QMainWindow):
                     self._remember_band_plan(analysis)
                     self._simulation_results[project_design.id] = analysis.bands[0].result
                     continue
-                latest_run = project.latest_simulation_run(project_design.id)
+                latest_run = self._latest_run_for(project_design.id)
                 if latest_run is not None:
                     self._simulation_results[project_design.id] = latest_run.result
             self._results.set_band_analysis(None)
@@ -2719,7 +2783,11 @@ class MainWindow(QMainWindow):
         self._set_variant_combo(design_id)
         analysis = self._band_analysis_results.get(design_id)
         if analysis is None and self._project is not None:
-            analysis = self._latest_band_analysis_for(self._project, design_id)
+            try:
+                analysis = self._latest_band_analysis_for(self._project, design_id)
+            except Exception as exc:
+                self._report_run_error(design_id, exc)
+                analysis = None
             if analysis is not None:
                 self._band_analysis_results[design_id] = analysis
                 self._remember_band_plan(analysis)
@@ -2736,7 +2804,11 @@ class MainWindow(QMainWindow):
         else:
             self._results.set_band_analysis(None)
             if result is None and self._project is not None:
-                latest_run = self._project.latest_simulation_run(design_id)
+                try:
+                    latest_run = self._latest_run_for(design_id)
+                except Exception as exc:
+                    self._report_run_error(design_id, exc)
+                    latest_run = None
                 if latest_run is not None:
                     result = latest_run.result
                     self._simulation_results[design_id] = result
@@ -2830,9 +2902,12 @@ class MainWindow(QMainWindow):
         *,
         path: Path | None,
         dirty: bool,
+        session: ProjectSession | None = None,
     ) -> None:
         self._recovery_controller.clear()
         self._project = project
+        self._session = session
+        self._reported_run_errors.clear()
         self._design_id = design_id
         self._feed_line = project.feed_line
         self._matching_network = project.matching_network
@@ -2856,6 +2931,8 @@ class MainWindow(QMainWindow):
         for project_design in project.designs:
             if project_design.band_plan is not None:
                 self._band_plans[project_design.id] = project_design.band_plan
+            if session is not None:
+                continue
             analysis = self._latest_band_analysis_for(project, project_design.id)
             if analysis is not None and analysis.bands:
                 self._band_analysis_results[project_design.id] = analysis
@@ -5478,11 +5555,25 @@ class MainWindow(QMainWindow):
         self._recent_actions.refresh()
 
     def _open_project_path(self, path: Path, *, show_error: bool = True) -> bool:
+        session_loaded = False
         try:
-            project = self._project_io.load(path)
+            session = self._project_io.load_session(path)
+            session_loaded = True
+            project = session.project
             if not project.designs:
                 raise ValueError("project has no designs")
+            selected = project.designs[0].id
+            session.latest_band_analysis(selected)
+            session.latest_run(selected)
+        except ProjectPayloadTooLargeError as exc:
+            if show_error and session_loaded and self._offer_design_only_open(path, str(exc)):
+                return True
+            if show_error:
+                self._show_error(self._translator.t("error.open", message=str(exc)))
+            return False
         except Exception as exc:
+            if show_error and session_loaded and self._offer_design_only_open(path, str(exc)):
+                return True
             if show_error:
                 self._show_error(self._translator.t("error.open", message=str(exc)))
             return False
@@ -5491,8 +5582,36 @@ class MainWindow(QMainWindow):
             project.designs[0].id,
             path=path,
             dirty=False,
+            session=session,
         )
         self._last_status_key = "status.opened"
+        self._update_status_text()
+        return True
+
+    def _offer_design_only_open(self, path: Path, message: str) -> bool:
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("app.title"),
+            self._translator.t("dialog.open_design_only", message=message),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return False
+        try:
+            project = self._project_io.open_design_only(path)
+            if not project.designs:
+                raise ValueError("project has no designs")
+        except Exception as exc:
+            self._show_error(self._translator.t("error.open", message=str(exc)))
+            return False
+        self._set_project(
+            project,
+            project.designs[0].id,
+            path=path,
+            dirty=False,
+        )
+        self._last_status_key = "status.opened_design_only"
         self._update_status_text()
         return True
 
@@ -5612,6 +5731,28 @@ class MainWindow(QMainWindow):
         if path is None:
             return False
         return self._save_to(path)
+
+    def save_design_only(self) -> bool:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return False
+        path = (
+            self._current_path
+            if self._current_path is not None
+            else self._project_io.choose_save_path(self._project.name)
+        )
+        if path is None:
+            return False
+        answer = QMessageBox.question(
+            self,
+            self._translator.t("app.title"),
+            self._translator.t("dialog.save_design_only_warning"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return False
+        return self._save_to(path, design_only=True)
 
     def _bundle_suggested_path(self) -> Path:
         name = self._project.name if self._project is not None else "project"
@@ -5739,19 +5880,37 @@ class MainWindow(QMainWindow):
             ),
         )
 
-    def _save_to(self, path: Path) -> bool:
+    def _save_to(self, path: Path, *, design_only: bool = False) -> bool:
         before = self._history_snapshot()
         try:
-            project = self._apply_fields()
+            if design_only:
+                project = self._apply_fields()
+                project = replace(
+                    project,
+                    simulation_runs=(),
+                    designs=tuple(
+                        replace(design, optimization_summary=None) for design in project.designs
+                    ),
+                )
+            else:
+                self._materialize_session()
+                project = self._apply_fields()
             after = self._history_snapshot()
             self._record_history("history.save", before, after)
             payload = self._project_io.prepare_payload(project)
             size = len(payload)
             if size > MAX_PROJECT_SIZE_BYTES:
+                if design_only:
+                    self._show_error(
+                        self._translator.t(
+                            "error.save",
+                            message=("the design-only project still exceeds the container limit"),
+                        )
+                    )
+                    return False
                 return self._handle_oversized_project(
                     size,
                     MAX_PROJECT_SIZE_BYTES,
-                    expanded=False,
                     path=path,
                 )
             if size > PROJECT_SIZE_WARNING_BYTES:
@@ -5769,16 +5928,26 @@ class MainWindow(QMainWindow):
                     return False
             self._project_io.write(path, payload)
         except ProjectPayloadTooLargeError as exc:
+            if design_only:
+                self._show_error(self._translator.t("error.save", message=str(exc)))
+                return False
             return self._handle_oversized_project(
                 exc.size,
                 exc.limit,
-                expanded=exc.expanded,
                 path=path,
             )
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False
         self._current_path = path
+        if design_only:
+            self._project = project
+            self._session = None
+            self._simulation_results = {}
+            self._band_analysis_results = {}
+            self._results.set_band_analysis(None)
+            self._results.set_result(None)
+            self._last_result = None
         if self._project is not None:
             self._recent_projects.add(path, self._project.name)
             self._refresh_start_page_recents()
@@ -5793,48 +5962,63 @@ class MainWindow(QMainWindow):
         self._undo_stack.setClean()
         self._update_title()
         self._update_actions()
-        self._last_status_key = "status.saved"
+        self._last_status_key = "status.saved_design_only" if design_only else "status.saved"
         self._update_status_text()
         return True
+
+    def _ask_oversized_project(self, size: int, limit: int) -> str:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle(self._translator.t("app.title"))
+        box.setText(
+            self._translator.t(
+                "dialog.project_too_large_choose",
+                size=size / (1024 * 1024),
+                limit=limit / (1024 * 1024),
+            )
+        )
+        compact_button = None
+        if self._project is not None and self._has_compactable_history():
+            compact_button = box.addButton(
+                self._translator.t("dialog.compact_and_save"),
+                QMessageBox.ButtonRole.AcceptRole,
+            )
+        design_button = box.addButton(
+            self._translator.t("dialog.save_design_only"),
+            QMessageBox.ButtonRole.DestructiveRole,
+        )
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        if compact_button is not None and clicked is compact_button:
+            return "compact"
+        if clicked is design_button:
+            return "design"
+        return "cancel"
 
     def _handle_oversized_project(
         self,
         size: int,
         limit: int,
         *,
-        expanded: bool,
         path: Path,
     ) -> bool:
-        """Offer history compaction before giving up on an oversized save."""
+        """Offer compaction or a design-only save for an oversized project."""
 
-        if self._project is not None and self._project.has_compactable_simulation_history():
-            answer = QMessageBox.question(
-                self,
-                self._translator.t("app.title"),
-                self._translator.t(
-                    "dialog.compact_for_save",
-                    size=size / (1024 * 1024),
-                    limit=limit / (1024 * 1024),
-                ),
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-            if answer == QMessageBox.StandardButton.Yes:
-                self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
-                self._mark_project_dirty(design=False)
-                self._update_title()
-                self._update_actions()
-                self._last_status_key = "status.compacted"
-                self._update_status_text()
-                return self._save_to(path)
-        key = "dialog.project_expanded_too_large" if expanded else "dialog.project_too_large"
-        self._show_error(
-            self._translator.t(
-                key,
-                size=size / (1024 * 1024),
-                limit=limit / (1024 * 1024),
-            )
-        )
+        choice = self._ask_oversized_project(size, limit)
+        if choice == "compact":
+            if self._project is None:
+                return False
+            self._materialize_session()
+            self._project = self._project.with_latest_simulation_runs_only(updated_at=utc_now())
+            self._mark_project_dirty(design=False)
+            self._update_title()
+            self._update_actions()
+            self._last_status_key = "status.compacted"
+            self._update_status_text()
+            return self._save_to(path)
+        if choice == "design":
+            return self._save_to(path, design_only=True)
         return False
 
     def _maybe_save_changes(self) -> bool:
@@ -7221,6 +7405,7 @@ class MainWindow(QMainWindow):
         if self._project is None:
             self._show_error(self._translator.t("error.no_project"))
             return
+        self._materialize_session()
         if not self._project.has_compactable_simulation_history():
             return
         answer = QMessageBox.question(

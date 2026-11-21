@@ -9,6 +9,7 @@ or a value the user cannot infer from the label alone.
 
 from __future__ import annotations
 
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFormLayout, QLabel, QWidget
 
 from .i18n import Translator
@@ -71,6 +72,20 @@ def apply_help(
         explicit_key=explicit_key,
     )
     _set_widget_help(widget, text)
+
+
+def apply_action_help(
+    action: QAction,
+    translator: Translator,
+    key: str,
+    *,
+    explicit_key: str | None = None,
+) -> None:
+    """Set action tooltip and What's This text from the shared help keys."""
+
+    text = help_text(translator, key, explicit_key=explicit_key) or ""
+    action.setToolTip(text)
+    action.setWhatsThis(text)
 
 
 def apply_form_help(

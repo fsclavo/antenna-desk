@@ -8,7 +8,8 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from ...application.use_cases.open_project import OpenProject
+from ...application.project_session import ProjectSession
+from ...application.use_cases.open_project import OpenProject, OpenProjectSession
 from ...domain.projects.project import Project
 
 
@@ -16,11 +17,11 @@ class OpenProjectWorker(QObject):
     """Read and validate a project container in a worker thread."""
 
     finished = Signal(object)
-    failed = Signal(str)
+    failed = Signal(object)
 
     def __init__(
         self,
-        open_project: OpenProject,
+        open_project: OpenProject | OpenProjectSession,
         path: Path,
         parent: QObject | None = None,
     ) -> None:
@@ -31,8 +32,8 @@ class OpenProjectWorker(QObject):
     @Slot()
     def run(self) -> None:
         try:
-            project: Project = self._open_project.execute(self._path)
+            project: Project | ProjectSession = self._open_project.execute(self._path)
         except Exception as exc:
-            self.failed.emit(str(exc))
+            self.failed.emit(exc)
             return
         self.finished.emit(project)

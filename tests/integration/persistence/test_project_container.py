@@ -1730,3 +1730,227 @@ def test_duplicate_zip_entry_name_is_rejected(
 
     with pytest.raises(ProjectFormatError, match="duplicate project entry name"):
         repository.load(path)
+
+
+def _project_with_runs(
+    sample_project: Project,
+    count: int = 3,
+) -> Project:
+    from datetime import timedelta
+
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    project = sample_project
+    for index in range(count):
+        project = RecordSimulationRun().execute(
+            RecordSimulationRunCommand(
+                project=project,
+                design_id=sample_project.designs[0].id,
+                result=_rich_result(),
+                created_at=sample_project.updated_at + timedelta(minutes=index),
+            )
+        )
+    return project
+
+
+def test_open_session_keeps_runs_lazy(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = _project_with_runs(sample_project)
+    path = tmp_path / "lazy.antennadesk"
+    repository.save(project, path)
+    calls: list[dict[str, bytes]] = []
+
+    def fail_if_run_payloads_are_read(data: dict[str, bytes]) -> object:
+        calls.append(data)
+        raise AssertionError("open_session must not read run payloads")
+
+    monkeypatch.setattr(repository, "_read_runs", fail_if_run_payloads_are_read)
+
+    session = repository.open_session(path)
+
+    assert session.project.simulation_runs == ()
+    assert session.run_count() == 3
+    assert calls == []
+
+
+def test_session_loads_only_the_requested_run(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = _project_with_runs(sample_project)
+    path = tmp_path / "lazy-one.antennadesk"
+    repository.save(project, path)
+    original = repository._read_runs
+    calls: list[set[str]] = []
+
+    def counted(data: dict[str, bytes]) -> object:
+        calls.append(set(data))
+        return original(data)
+
+    monkeypatch.setattr(repository, "_read_runs", counted)
+    session = repository.open_session(path)
+
+    latest = session.latest_run(sample_project.designs[0].id)
+
+    assert latest == project.simulation_runs[-1]
+    assert len(calls) == 1
+    run_id = latest.id if latest is not None else None
+    assert f"runs/{run_id}.json" in calls[0]
+    assert len(session.cached_runs()) == 1
+
+
+def test_session_materializes_every_run_on_demand(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project)
+    path = tmp_path / "materialize.antennadesk"
+    repository.save(project, path)
+
+    session = repository.open_session(path)
+    materialized = session.materialize()
+
+    assert materialized == project
+    assert len(materialized.simulation_runs) == 3
+
+
+def test_session_latest_band_analysis_uses_the_manifest_index(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from datetime import timedelta
+    from uuid import uuid4
+
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    batch_id = uuid4()
+    project = sample_project
+    for index, band_id in enumerate(("40m", "20m")):
+        project = RecordSimulationRun().execute(
+            RecordSimulationRunCommand(
+                project=project,
+                design_id=sample_project.designs[0].id,
+                result=_rich_result(),
+                created_at=sample_project.updated_at + timedelta(minutes=index),
+                band_id=band_id,
+                batch_id=batch_id,
+            )
+        )
+    path = tmp_path / "band-session.antennadesk"
+    repository.save(project, path)
+
+    session = repository.open_session(path)
+    analysis = session.latest_band_analysis(sample_project.designs[0].id)
+
+    assert analysis is not None
+    assert analysis.batch_id == batch_id
+    assert [band.band.name for band in analysis.bands] == ["40m", "20m"]
+    assert analysis.bands[0].result == project.simulation_runs[0].result
+
+
+def test_open_design_only_ignores_run_entries(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project)
+    path = tmp_path / "design-only.antennadesk"
+    repository.save(project, path)
+    entries = _read_entries(path)
+    run_name = next(name for name in entries if name.startswith("runs/") and name.endswith(".json"))
+    entries[run_name] = b"{not a run"
+    _write_container(path, entries)
+
+    recovered = repository.open_design_only(path)
+
+    assert recovered.designs == project.designs
+    assert recovered.simulation_runs == ()
+    assert recovered.name == project.name
+
+
+def test_manifest_run_index_must_match_the_entries(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=1)
+    path = tmp_path / "bad-index.antennadesk"
+    repository.save(project, path)
+    manifest = _manifest(path)
+    manifest["runs"] = []
+    _write_manifest(path, manifest)
+
+    with pytest.raises(ProjectFormatError, match="run index"):
+        repository.open_session(path)
+
+
+def test_manifest_design_index_must_match_the_entries(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "bad-design-index.antennadesk"
+    repository.save(sample_project, path)
+    manifest = _manifest(path)
+    manifest["design_ids"] = []
+    _write_manifest(path, manifest)
+
+    with pytest.raises(ProjectFormatError, match="design index"):
+        repository.open_session(path)
+
+
+def test_open_design_only_ignores_missing_run_entries(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=1)
+    path = tmp_path / "missing-run.antennadesk"
+    repository.save(project, path)
+    entries = _read_entries(path)
+    entries.pop(
+        next(name for name in entries if name.startswith("runs/") and name.endswith(".json"))
+    )
+    _write_entries(path, entries)
+
+    with pytest.raises(ProjectFormatError, match="mismatch"):
+        repository.open_session(path)
+
+    recovered = repository.open_design_only(path)
+
+    assert recovered.designs == project.designs
+    assert recovered.simulation_runs == ()
+
+
+def test_session_surfaces_a_corrupt_run_only_when_requested(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=1)
+    path = tmp_path / "corrupt-run.antennadesk"
+    repository.save(project, path)
+    entries = _read_entries(path)
+    run_name = next(name for name in entries if name.startswith("runs/") and name.endswith(".json"))
+    entries[run_name] = b"{not a run"
+    _write_container(path, entries)
+
+    session = repository.open_session(path)
+    assert session.project.simulation_runs == ()
+
+    with pytest.raises(ProjectFormatError, match="invalid project entry"):
+        session.latest_run(sample_project.designs[0].id)

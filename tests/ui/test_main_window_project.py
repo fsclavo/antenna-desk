@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QDialog, QFileDialog, QInputDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.application.errors import ProjectPayloadTooLargeError
+from antennadesk.application.project_session import ProjectSession
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.persistence.json_repository import JsonProjectRepository
@@ -342,14 +343,14 @@ def test_open_project_processes_events_while_loading(
         UnitSystem.METRIC,
     )
     qtbot.addWidget(loaded)
-    original = loaded._repository.load
+    original = loaded._repository.open_session
     events: list[str] = []
 
-    def slow(path: Path) -> Project:
+    def slow(path: Path) -> ProjectSession:
         time.sleep(0.2)
         return original(path)
 
-    monkeypatch.setattr(loaded._repository, "load", slow)
+    monkeypatch.setattr(loaded._repository, "open_session", slow)
     monkeypatch.setattr(
         QFileDialog,
         "getOpenFileName",
@@ -720,48 +721,47 @@ def test_save_blocks_a_project_above_the_hard_limit(
         "prepare_payload",
         lambda project: b"x" * (65 * 1024 * 1024),
     )
-    messages: list[str] = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "critical",
-        lambda *args, **kwargs: messages.append(args[2]) or QMessageBox.StandardButton.Ok,
-    )
+    monkeypatch.setattr(window, "_ask_oversized_project", lambda *args: "cancel")
 
     assert window._save_to(path) is False
     assert path.exists() is False
-    assert messages
-    assert "64 MB" in messages[0]
     window._dirty = False
 
 
-def test_save_reports_an_oversized_expanded_project_without_history(
+def test_save_can_choose_design_only_for_an_oversized_project(
     window: MainWindow,
+    qtbot: QtBot,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    path = tmp_path / "blocked.antennadesk"
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 1
+    path = tmp_path / "design-only.antennadesk"
+    original = window._repository.prepare_payload
 
-    def blocked(project: Project) -> bytes:
-        del project
-        raise ProjectPayloadTooLargeError(
-            "project is too large when expanded",
-            size=300 * 1024 * 1024,
-            limit=256 * 1024 * 1024,
-            expanded=True,
-        )
+    def fail_with_runs(project: Project) -> bytes:
+        if project.simulation_runs:
+            raise ProjectPayloadTooLargeError(
+                "project is too large when expanded",
+                size=300 * 1024 * 1024,
+                limit=256 * 1024 * 1024,
+                expanded=True,
+            )
+        return original(project)
 
-    monkeypatch.setattr(window._repository, "prepare_payload", blocked)
-    messages: list[str] = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "critical",
-        lambda *args, **kwargs: messages.append(args[2]) or QMessageBox.StandardButton.Ok,
-    )
+    monkeypatch.setattr(window._repository, "prepare_payload", fail_with_runs)
+    monkeypatch.setattr(window, "_ask_oversized_project", lambda *args: "design")
 
-    assert window._save_to(path) is False
-    assert not path.exists()
-    assert messages
-    assert "reopen limit" in messages[0]
+    assert window._save_to(path) is True
+    assert path.is_file()
+    assert window._project is not None
+    assert window._project.simulation_runs == ()
+    assert window._status_label.text() == "Project saved without simulation history."
+    loaded = JsonProjectRepository().load(path)
+    assert loaded.simulation_runs == ()
+    assert all(design.optimization_summary is None for design in loaded.designs)
     window._dirty = False
 
 
@@ -794,11 +794,7 @@ def test_save_offers_compaction_for_an_oversized_expanded_project(
         return original(project)
 
     monkeypatch.setattr(window._repository, "prepare_payload", fail_once)
-    monkeypatch.setattr(
-        QMessageBox,
-        "question",
-        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
-    )
+    monkeypatch.setattr(window, "_ask_oversized_project", lambda *args: "compact")
 
     assert window._save_to(path) is True
     assert path.is_file()
@@ -830,4 +826,120 @@ def test_compacting_simulation_history_keeps_the_latest_run(
     assert len(window._project.simulation_runs) == 1
     assert window._dirty is True
     assert window._status_label.text() == "Simulation history compacted."
+    window._dirty = False
+
+
+def test_open_project_keeps_runs_lazy(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 2
+    source = tmp_path / "lazy-open.antennadesk"
+    assert window._save_to(source) is True
+
+    loaded = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(loaded)
+    assert loaded._open_project_path(source) is True
+
+    assert loaded._session is not None
+    assert loaded._session.run_count() == 2
+    assert loaded._project is not None
+    assert loaded._project.simulation_runs == ()
+    assert loaded._last_result is not None
+
+    saved_again = tmp_path / "lazy-resaved.antennadesk"
+    assert loaded._save_to(saved_again) is True
+    assert loaded._session is None
+    assert loaded._project is not None
+    assert len(loaded._project.simulation_runs) == 2
+    assert JsonProjectRepository().load(saved_again).simulation_runs == (
+        loaded._project.simulation_runs
+    )
+    loaded._dirty = False
+    loaded.close()
+
+
+def test_open_offers_design_only_recovery(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "design-only.antennadesk"
+    assert window._save_to(source) is True
+    loaded = MainWindow(
+        JsonProjectRepository(),
+        FakeSolver(),
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+    )
+    qtbot.addWidget(loaded)
+
+    def fail_run(session: ProjectSession, design_id: object) -> object:
+        del session, design_id
+        raise ProjectPayloadTooLargeError(
+            "project run is too large",
+            size=300 * 1024 * 1024,
+            limit=256 * 1024 * 1024,
+            expanded=True,
+        )
+
+    monkeypatch.setattr(ProjectSession, "latest_run", fail_run)
+    monkeypatch.setattr(
+        loaded._repository,
+        "open_design_only",
+        lambda path: window._project,
+    )
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    assert loaded._open_project_path(source) is True
+
+    assert loaded._session is None
+    assert loaded._project is not None
+    assert loaded._status_label.text() == "Project opened without simulation history."
+    loaded._dirty = False
+    loaded.close()
+
+
+def test_save_design_only_action_drops_runs_and_optimizations(
+    window: MainWindow,
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    assert window._project is not None
+    assert len(window._project.simulation_runs) == 1
+    path = tmp_path / "explicit-design-only.antennadesk"
+    window._current_path = path
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Yes,
+    )
+
+    assert window.save_design_only() is True
+
+    loaded = JsonProjectRepository().load(path)
+    assert loaded.simulation_runs == ()
+    assert all(design.optimization_summary is None for design in loaded.designs)
+    assert window._project is not None
+    assert window._project.simulation_runs == ()
+    assert window._status_label.text() == "Project saved without simulation history."
     window._dirty = False

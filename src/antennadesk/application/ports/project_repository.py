@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from ...domain.projects.project import Project
+from ..project_session import ProjectSession
 
 
 class ProjectRepository(Protocol):
@@ -15,6 +16,12 @@ class ProjectRepository(Protocol):
 
     def save(self, project: Project, path: Path) -> None:
         """Write *project* to *path*, replacing any existing file atomically."""
+
+    def open_session(self, path: Path) -> ProjectSession:
+        """Open *path* with lazy simulation runs."""
+
+    def open_design_only(self, path: Path) -> Project:
+        """Open *path* without its simulation runs, for recovery."""
 
     def prepare_payload(self, project: Project) -> bytes:
         """Serialize and compress *project* without writing it to disk.

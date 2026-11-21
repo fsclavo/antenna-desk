@@ -30,16 +30,22 @@
   `ui/recent_actions.py`. The standalone main-window decomposition is
   **closed**; the remaining UI-construction debt is left for extract-on-touch
   work, not another standalone refactor.
-- PF1 container slice 1 is implemented: `.antennadesk` is now a deterministic
-  ZIP container (container 1, schema 59) with separate project, design, run,
+- PF1 container slice 1 is implemented: `.antennadesk` is a deterministic ZIP
+  container (container 1, schema 59) with separate project, design, run,
   raw-text, and optimization entries; per-entry limits, CRC32/SHA-256 checks,
-  atomic writes, and no gzip/plain-JSON/migration reader. `load()` still
-  materializes every run and the UI has no design-only recovery yet; those are
-  PF1 slice 2. See [`ADR-0050`](ADR/0050-zip-project-container.md).
+  atomic writes, and no gzip/plain-JSON/migration reader. Opening now uses a
+  lazy `ProjectSession`: metadata and designs load eagerly, while runs stay
+  indexed in the manifest and load only when the selected design or a report
+  asks for them. An oversized/failed open offers design-only recovery, and
+  **File → Save Design Only...** writes metadata and designs without runs or
+  optimization summaries. Normal saving and compaction still materialize every
+  run. Remaining PF1 work is the `PreparedProject` API and save/report paths
+  that do not materialize the full run tuple. See
+  [`ADR-0050`](ADR/0050-zip-project-container.md).
 
 ## Next
 
-1. Finish PF1 slice 2: lazy run loading/session and design-only recovery.
+1. Finish PF1 slice 2: save/report paths without full run materialization and “Save design only”.
 2. Close the remaining DL5 slice or explicitly narrow it.
 3. Decide the DL7 bounded cliff slice after a reproducible evidence check.
 4. Continue DL4 and the remaining 1.2 items.

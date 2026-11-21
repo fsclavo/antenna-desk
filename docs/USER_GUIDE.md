@@ -2605,7 +2605,10 @@ Invalid designs are rejected before the solver runs.
 
 Use **File → Save** / **Save As...** to write a versioned `.antennadesk`
 container, and **File → Open Project...** to reopen it. The application prompts
-before discarding unsaved changes.
+before discarding unsaved changes. **File → Save Design Only...** writes the
+metadata and designs without simulation runs or optimization summaries; use it
+when the full history is too large, accepting that the saved file loses that
+history.
 
 Container serialization and compression run in a worker thread. For a large
 project, a modal **Preparing project...** progress dialog appears while the
@@ -2615,10 +2618,13 @@ atomically; the 32 MB warning, the 64 MB container limit, the 64 MB per-entry
 limit, and the 256 MB total expanded limit apply. A project that would exceed a
 limit is rejected before the destination file is touched.
 
-Opening a project validates the manifest and every entry in a worker thread. A
-modal **Opening project...** dialog appears for large files and the project is
-applied only after validation succeeds. Gzip, plain JSON, and schema 58 and
-older files are rejected with an explicit unsupported-format message.
+Opening a project validates the manifest, metadata, and designs in a worker
+thread. A modal **Opening project...** dialog appears for large files. Saved
+simulation runs stay on disk and load only when the selected design or a report
+needs them, so a long history does not make opening slow. If a saved run
+cannot be read or a size limit blocks the normal open, the application offers a
+design-only recovery that discards the saved runs. Gzip, plain JSON, and schema
+58 and older files are rejected with an explicit unsupported-format message.
 
 ## Portable project bundles
 

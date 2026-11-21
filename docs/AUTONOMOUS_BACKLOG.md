@@ -78,9 +78,13 @@ ZIP container (container 1, schema 59) with separate project, design, run,
 raw-text, and optimization entries; per-entry, total, manifest, path, and
 entry-count limits are enforced on save and load; CRC32/SHA-256 are verified
 through bounded reads; writes are atomic; gzip, plain JSON, and schema < 59 are
-rejected; and the example is regenerated. `load()` still materializes every
-run, and the UI has no design-only recovery or save-design-only path yet. Those
-are slice 2. See [ADR-0050](ADR/0050-zip-project-container.md).
+rejected; and the example is regenerated. **Slice 2 started:** opening uses a
+manifest-indexed `ProjectSession` that loads metadata/designs eagerly and runs
+on demand, a failed oversized open offers design-only recovery, and
+“Save design only” writes metadata/designs without runs or optimizations.
+Normal saving and compaction still materialize all runs. Remaining:
+`PreparedProject` and save/report paths without full run materialization. See
+[ADR-0050](ADR/0050-zip-project-container.md).
 
 **Goal:** replace the single gzip JSON envelope with a versioned ZIP container
 whose entries can be validated, loaded, and pruned independently; enforce one
@@ -1101,9 +1105,9 @@ decision:
 ## Current baseline
 
 - Schema: **59**; container version 1.
-- Full gate: **4,248 passed, 1 skipped** on 2026-11-20 after the full QA,
+- Full gate: **4,260 passed, 1 skipped** on 2026-11-20 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
-  and PF1 container slice 1 (typed simulation specs,
+  PF1 container slice 1, lazy-open session, and design-only save (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,

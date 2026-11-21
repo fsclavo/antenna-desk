@@ -3781,6 +3781,12 @@ def _simulation_run_to_domain(value: SimulationRunPayload) -> SimulationRun:
     )
 
 
+def simulation_run_from_payload(value: SimulationRunPayload) -> SimulationRun:
+    """Convert one validated run payload into the immutable domain object."""
+
+    return _simulation_run_to_domain(value)
+
+
 def _band_plan_to_domain(value: BandPlanPayload) -> BandPlan:
     selections = []
     for selection in value.selections:

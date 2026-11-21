@@ -302,8 +302,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   bounded and verified. Container, total, manifest, per-entry, entry-count, and
   path limits are enforced on save and load. Writes remain atomic. Gzip, plain
   JSON, and schema 58 and older are rejected deliberately; there is no legacy
-  reader or migration. `load()` still materializes every run, and the UI has no
-  design-only recovery yet; those remain PF1 slice 2. See
+  reader or migration. Opening now uses a manifest-indexed `ProjectSession`:
+  metadata and designs load eagerly, while runs load only for the selected
+  design or a report. A failed oversized open offers design-only recovery, and
+  **File → Save Design Only...** writes metadata and designs without runs or
+  optimization summaries. Normal saving and compaction still materialize every
+  run; avoiding that remains PF1 slice 2. See
   [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Typed simulation-spec assembly moved out of the main window.** The
   per-family `SimulationSpec` builders and far-field pattern presets now live

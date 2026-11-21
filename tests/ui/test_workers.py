@@ -403,14 +403,16 @@ def test_open_project_worker_emits_failure(qtbot: QtBot) -> None:
 
     worker = open_project_worker.OpenProjectWorker(FailingOpenProject(), object())
     finished: list[object] = []
-    failed: list[str] = []
+    failed: list[BaseException] = []
     worker.finished.connect(finished.append)
     worker.failed.connect(failed.append)
 
     worker.run()
 
     assert finished == []
-    assert failed == ["boom"]
+    assert len(failed) == 1
+    assert isinstance(failed[0], RuntimeError)
+    assert str(failed[0]) == "boom"
 
 
 def test_endfed_convergence_worker_emits_result(qtbot: QtBot) -> None:

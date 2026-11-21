@@ -358,9 +358,13 @@ rewriting the normalized result. Project files are versioned ZIP containers
 designs, runs, raw text, and optimization summaries as separate validated
 entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
 container above 64 MB, blocks total expanded entries above 256 MB, and offers
-simulation-history compaction. The reader verifies every entry's size, CRC32,
-and SHA-256 against the manifest through a bounded stream, so a zip bomb or a
-manifest mismatch is rejected before the domain model is built. Gzip, plain
+simulation-history compaction. Opening reads the manifest, metadata, and
+designs, then exposes runs through a `ProjectSession` that loads only the
+selected design's latest run or batch. The reader verifies every loaded entry's
+size, CRC32, and SHA-256 against the manifest through a bounded stream, so a
+zip bomb or a manifest mismatch is rejected before the domain model is built.
+Saving and compaction still materialize the complete run tuple; avoiding that
+is the remaining slice-2 work. Gzip, plain
 JSON, and schema 58 and older are rejected; the project has not shipped to
 users. See [ADR-0050](ADR/0050-zip-project-container.md).
 

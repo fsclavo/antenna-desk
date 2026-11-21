@@ -17,7 +17,8 @@ from PySide6.QtWidgets import (
 )
 
 from ..application.ports.project_repository import ProjectRepository
-from ..application.use_cases.open_project import OpenProject
+from ..application.project_session import ProjectSession
+from ..application.use_cases.open_project import OpenProjectSession
 from ..application.use_cases.save_project import SaveProject
 from ..domain.projects.project import Project
 from .i18n import Translator
@@ -57,18 +58,25 @@ class ProjectIO:
             path = path.with_suffix(".antennadesk")
         return path
 
-    def load(self, path: Path) -> Project:
+    def load_session(self, path: Path) -> ProjectSession:
         progress = self._progress_dialog("status.opening", "dialog.open_title")
         try:
             value = self._run_worker(
-                OpenProjectWorker(OpenProject(self.repository), path),
+                OpenProjectWorker(OpenProjectSession(self.repository), path),
                 "finished",
             )
         finally:
             progress.close()
-        if not isinstance(value, Project):
-            raise RuntimeError("open worker produced no project")
+        if not isinstance(value, ProjectSession):
+            raise RuntimeError("open worker produced no project session")
         return value
+
+    def open_design_only(self, path: Path) -> Project:
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            return self.repository.open_design_only(path)
+        finally:
+            QApplication.restoreOverrideCursor()
 
     def prepare_payload(self, project: Project) -> bytes:
         progress = self._progress_dialog("status.preparing_save", "dialog.save_title")

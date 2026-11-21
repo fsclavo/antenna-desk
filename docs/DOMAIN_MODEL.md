@@ -829,7 +829,9 @@ optimizations/<design-id>.json
   separate `optimizations/<id>.json` entry.
 - `runs/<id>.json` holds one normalized simulation run without raw solver text.
   Raw NEC input and output are optional separate text entries, so they can be
-  omitted or pruned without rewriting the normalized result.
+  omitted or pruned without rewriting the normalized result. The manifest run
+  index carries each run's design, timestamp, band, and batch, so opening a
+  project can defer run payloads until the selected design needs them.
 - Entry paths are relative POSIX names; duplicates, case-insensitive
   collisions, traversal, absolute paths, symlinks, encrypted entries, and
   unsupported compression are rejected.

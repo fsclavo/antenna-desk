@@ -150,7 +150,8 @@ truth for each topic, every ADR, and the archived plans.
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` ZIP containers with multiple design
-  variants. The current development schema is `59`; gzip, plain JSON, and older
+  variants, lazy run loading, design-only recovery, and a save-design-only
+  action. The current development schema is `59`; gzip, plain JSON, and older
   schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.

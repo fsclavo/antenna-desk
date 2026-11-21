@@ -88,5 +88,9 @@ Slice 1 is implemented:
   and retry;
 - example project regenerated in the current container.
 
-Remaining for slice 2: lazy run loading/`ProjectSession`, design-only recovery,
-save-design-only UI, and physical compaction through entry removal.
+Slice 2 has started: opening uses a manifest-indexed `ProjectSession`; only
+the selected design's latest run or batch is materialized, a failed oversized
+open offers design-only recovery, and **File → Save Design Only...** writes
+metadata and designs without runs or optimization summaries. Remaining:
+`PreparedProject` in the repository API, save/report paths that do not
+materialize every run, and physical compaction through entry removal.

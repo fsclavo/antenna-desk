@@ -35,7 +35,14 @@ from ..application.project_limits import (
     MAX_PATH_BYTES,
     MAX_PROJECT_UNCOMPRESSED_BYTES,
 )
+from ..application.project_session import (
+    ProjectSession,
+)
+from ..application.project_session import (
+    RunIndexEntry as ApplicationRunIndexEntry,
+)
 from ..domain.projects.project import Project
+from ..domain.simulation.run import SimulationRun
 from .constants import (
     CONTAINER_FORMAT,
     CONTAINER_VERSION,
@@ -53,6 +60,7 @@ from .schema import (
     SimulationRunPayload,
     document_from_project,
     project_from_document,
+    simulation_run_from_payload,
 )
 
 MANIFEST_NAME = "manifest.json"
@@ -100,6 +108,24 @@ class ManifestEntry(ContainerModel):
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
+class RunIndexEntry(ContainerModel):
+    id: UUID
+    design_id: UUID
+    created_at: datetime
+    band_id: str | None = None
+    batch_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def _validate(self) -> RunIndexEntry:
+        if self.created_at.tzinfo is None or self.created_at.utcoffset() is None:
+            raise ValueError("run created_at must be timezone-aware")
+        if self.band_id is None and self.batch_id is not None:
+            raise ValueError("a band-analysis run requires a band_id")
+        if self.band_id is not None and self.batch_id is None:
+            raise ValueError("a band run requires a batch_id")
+        return self
+
+
 class RetentionPayload(ContainerModel):
     retained_run_ids: list[UUID] = Field(default_factory=list)
 
@@ -113,6 +139,8 @@ class ProjectManifest(ContainerModel):
     application_version: str = Field(min_length=1)
     created_at: datetime
     updated_at: datetime
+    design_ids: list[UUID] = Field(default_factory=list)
+    runs: list[RunIndexEntry] = Field(default_factory=list)
     entries: list[ManifestEntry] = Field(default_factory=list)
     retention: RetentionPayload = Field(default_factory=RetentionPayload)
 
@@ -128,6 +156,15 @@ class ProjectManifest(ContainerModel):
             raise ValueError("manifest.json must not list itself")
         if PROJECT_NAME not in paths:
             raise ValueError("manifest is missing the project metadata entry")
+        if len(self.design_ids) != len(set(self.design_ids)):
+            raise ValueError("duplicate manifest design id")
+        run_ids = [run.id for run in self.runs]
+        if len(run_ids) != len(set(run_ids)):
+            raise ValueError("duplicate manifest run id")
+        known_designs = set(self.design_ids)
+        for run in self.runs:
+            if run.design_id not in known_designs:
+                raise ValueError("manifest run references an unknown design")
         for name, value in (
             ("created_at", self.created_at),
             ("updated_at", self.updated_at),
@@ -225,6 +262,77 @@ class ProjectContainerRepository:
         self._atomic_write(Path(path), payload)
 
     def load(self, path: Path) -> Project:
+        return self.open_session(path).materialize()
+
+    def open_session(self, path: Path) -> ProjectSession:
+        path = self._check_path(path)
+        try:
+            with zipfile.ZipFile(path) as archive:
+                infos = archive.infolist()
+                self._validate_archive_entries(infos)
+                manifest = self._require_manifest(archive, infos)
+                listed = {entry.path: entry for entry in manifest.entries}
+                self._check_entry_set(infos, listed)
+                metadata_entries = {
+                    entry_path: entry
+                    for entry_path, entry in listed.items()
+                    if not _is_run_entry(entry_path)
+                }
+                data = self._read_entries(archive, infos, metadata_entries)
+                metadata = self._parse_document(
+                    ProjectMetadataDocument,
+                    data[PROJECT_NAME],
+                    PROJECT_NAME,
+                )
+                designs = self._read_designs(data)
+                self._check_manifest_index(manifest, designs)
+                project = self._project_from_parts(metadata, designs, [])
+                return ProjectSession(project, ContainerRunStore(path, manifest, self))
+        except zipfile.BadZipFile as exc:
+            with path.open("rb") as handle:
+                first = handle.read(1)
+            if first in (b"{", b"\x1f"):
+                raise ProjectFormatError(
+                    "unsupported legacy project format; resave the project with this version"
+                ) from exc
+            raise ProjectFormatError(f"project container is not a valid ZIP file: {exc}") from exc
+        except OSError as exc:
+            raise ProjectFormatError(f"could not read project file: {exc}") from exc
+
+    def open_design_only(self, path: Path) -> Project:
+        """Recover the metadata and designs while ignoring every run entry."""
+
+        path = self._check_path(path)
+        try:
+            with zipfile.ZipFile(path) as archive:
+                infos = archive.infolist()
+                self._validate_archive_entries(infos)
+                manifest = self._require_manifest(archive, infos)
+                listed = {entry.path: entry for entry in manifest.entries}
+                actual = {info.filename for info in infos}
+                metadata_entries = {
+                    entry_path: entry
+                    for entry_path, entry in listed.items()
+                    if not _is_run_entry(entry_path) and entry_path in actual
+                }
+                if PROJECT_NAME not in metadata_entries:
+                    raise ProjectFormatError(
+                        "project container is missing the metadata entry for recovery"
+                    )
+                data = self._read_entries(archive, infos, metadata_entries)
+                metadata = self._parse_document(
+                    ProjectMetadataDocument,
+                    data[PROJECT_NAME],
+                    PROJECT_NAME,
+                )
+                designs = self._read_designs(data)
+                return self._project_from_parts(metadata, designs, [])
+        except zipfile.BadZipFile as exc:
+            raise ProjectFormatError(f"project container is not a valid ZIP file: {exc}") from exc
+        except OSError as exc:
+            raise ProjectFormatError(f"could not read project file: {exc}") from exc
+
+    def _check_path(self, path: Path) -> Path:
         path = Path(path)
         if not path.is_file():
             raise ProjectFormatError(f"project file not found: {path}")
@@ -240,20 +348,83 @@ class ProjectContainerRepository:
                 limit=MAX_CONTAINER_BYTES,
                 expanded=False,
             )
+        return path
+
+    def _require_manifest(
+        self,
+        archive: zipfile.ZipFile,
+        infos: list[zipfile.ZipInfo],
+    ) -> ProjectManifest:
+        manifest_info = next(
+            (info for info in infos if info.filename == MANIFEST_NAME),
+            None,
+        )
+        if manifest_info is None:
+            raise ProjectFormatError("project container is missing manifest.json")
+        manifest = self._read_manifest(archive, manifest_info)
+        if manifest.container_version != CONTAINER_VERSION:
+            raise ProjectFormatError(
+                f"unsupported project container version {manifest.container_version}"
+            )
+        if manifest.schema_version != SCHEMA_VERSION:
+            raise UnsupportedSchemaVersion(
+                found=manifest.schema_version,
+                supported=SCHEMA_VERSION,
+            )
+        return manifest
+
+    @staticmethod
+    def _check_entry_set(
+        infos: list[zipfile.ZipInfo],
+        listed: dict[str, ManifestEntry],
+    ) -> None:
+        actual = {info.filename for info in infos if info.filename != MANIFEST_NAME}
+        if set(listed) != actual:
+            missing = sorted(set(listed) - actual)
+            extra = sorted(actual - set(listed))
+            raise ProjectFormatError(
+                f"manifest/ZIP entry mismatch (missing={missing}, extra={extra})"
+            )
+
+    def _check_manifest_index(
+        self,
+        manifest: ProjectManifest,
+        designs: list[DesignPayload],
+    ) -> None:
+        design_ids = {design.id for design in designs}
+        if set(manifest.design_ids) != design_ids:
+            raise ProjectFormatError("manifest design index does not match the design entries")
+        run_ids = {entry.id for entry in manifest.runs}
+        zip_run_ids = {
+            _uuid_from_path(entry.path, RUN_DIR, ".json")
+            for entry in manifest.entries
+            if entry.path.startswith(f"{RUN_DIR}/") and entry.path.endswith(".json")
+        }
+        if run_ids != zip_run_ids:
+            raise ProjectFormatError("manifest run index does not match the run entries")
+
+    def _project_from_parts(
+        self,
+        metadata: ProjectMetadataDocument,
+        designs: list[DesignPayload],
+        runs: list[SimulationRunPayload],
+    ) -> Project:
         try:
-            with zipfile.ZipFile(path) as archive:
-                return self._read_container(archive)
-        except zipfile.BadZipFile as exc:
-            with path.open("rb") as handle:
-                first = handle.read(1)
-            legacy = first in (b"{", b"\x1f")
-            if legacy:
-                raise ProjectFormatError(
-                    "unsupported legacy project format; resave the project with this version"
-                ) from exc
-            raise ProjectFormatError(f"project container is not a valid ZIP file: {exc}") from exc
-        except OSError as exc:
-            raise ProjectFormatError(f"could not read project file: {exc}") from exc
+            payload = ProjectPayload(
+                **metadata.project.model_dump(mode="json"),
+                designs=designs,
+                simulation_runs=runs,
+            )
+            document = ProjectDocument(
+                format=PROJECT_FORMAT,
+                schema_version=SCHEMA_VERSION,
+                project=payload,
+            )
+            return project_from_document(document)
+        except ValidationError as exc:
+            raise ProjectFormatError(f"invalid project data: {exc}") from exc
+        except ValueError as exc:
+            raise ProjectFormatError(f"invalid project data: {exc}") from exc
 
     def serialized_size(self, project: Project) -> int:
         return len(self.prepare_payload(project))
@@ -345,6 +516,17 @@ class ProjectContainerRepository:
             application_version=__version__,
             created_at=project.created_at,
             updated_at=project.updated_at,
+            design_ids=[design.id for design in project.designs],
+            runs=[
+                RunIndexEntry(
+                    id=run.id,
+                    design_id=run.design_id,
+                    created_at=run.created_at,
+                    band_id=run.band_id,
+                    batch_id=run.batch_id,
+                )
+                for run in project.simulation_runs
+            ],
             entries=manifest_entries,
             retention=RetentionPayload(
                 retained_run_ids=[run.id for run in project.retained_simulation_runs()],
@@ -389,58 +571,6 @@ class ProjectContainerRepository:
             )
 
     # -- read -----------------------------------------------------------------
-
-    def _read_container(self, archive: zipfile.ZipFile) -> Project:
-        infos = archive.infolist()
-        self._validate_archive_entries(infos)
-        manifest_info = next(
-            (info for info in infos if info.filename == MANIFEST_NAME),
-            None,
-        )
-        if manifest_info is None:
-            raise ProjectFormatError("project container is missing manifest.json")
-        manifest = self._read_manifest(archive, manifest_info)
-        if manifest.container_version != CONTAINER_VERSION:
-            raise ProjectFormatError(
-                f"unsupported project container version {manifest.container_version}"
-            )
-        if manifest.schema_version != SCHEMA_VERSION:
-            raise UnsupportedSchemaVersion(
-                found=manifest.schema_version,
-                supported=SCHEMA_VERSION,
-            )
-        listed = {entry.path: entry for entry in manifest.entries}
-        actual = {info.filename for info in infos if info.filename != MANIFEST_NAME}
-        if set(listed) != actual:
-            missing = sorted(set(listed) - actual)
-            extra = sorted(actual - set(listed))
-            raise ProjectFormatError(
-                f"manifest/ZIP entry mismatch (missing={missing}, extra={extra})"
-            )
-        data = self._read_entries(archive, infos, listed)
-        metadata = self._parse_document(
-            ProjectMetadataDocument,
-            data[PROJECT_NAME],
-            PROJECT_NAME,
-        )
-        designs = self._read_designs(data)
-        runs = self._read_runs(data)
-        try:
-            payload = ProjectPayload(
-                **metadata.project.model_dump(mode="json"),
-                designs=designs,
-                simulation_runs=runs,
-            )
-            document = ProjectDocument(
-                format=PROJECT_FORMAT,
-                schema_version=SCHEMA_VERSION,
-                project=payload,
-            )
-            return project_from_document(document)
-        except ValidationError as exc:
-            raise ProjectFormatError(f"invalid project data: {exc}") from exc
-        except ValueError as exc:
-            raise ProjectFormatError(f"invalid project data: {exc}") from exc
 
     def _validate_archive_entries(self, infos: list[zipfile.ZipInfo]) -> None:
         if len(infos) > MAX_ENTRIES:
@@ -692,6 +822,68 @@ class ProjectContainerRepository:
             raise
 
 
+@dataclass(frozen=True, slots=True)
+class ContainerRunStore:
+    """Load runs from one validated container without materializing the rest."""
+
+    path: Path
+    manifest: ProjectManifest
+    repository: ProjectContainerRepository
+
+    @property
+    def run_index(self) -> tuple[ApplicationRunIndexEntry, ...]:
+        return tuple(
+            ApplicationRunIndexEntry(
+                id=run.id,
+                design_id=run.design_id,
+                created_at=run.created_at,
+                band_id=run.band_id,
+                batch_id=run.batch_id,
+            )
+            for run in self.manifest.runs
+        )
+
+    def load_run(self, run_id: UUID) -> SimulationRun:
+        index = next((run for run in self.manifest.runs if run.id == run_id), None)
+        if index is None:
+            raise ProjectFormatError(f"run is not indexed in the manifest: {run_id}")
+        paths = {
+            f"{RUN_DIR}/{run_id}.json",
+            f"{RUN_DIR}/{run_id}{RAW_INPUT_SUFFIX}",
+            f"{RUN_DIR}/{run_id}{RAW_OUTPUT_SUFFIX}",
+        }
+        listed = {entry.path: entry for entry in self.manifest.entries if entry.path in paths}
+        if f"{RUN_DIR}/{run_id}.json" not in listed:
+            raise ProjectFormatError(f"run entry is missing from the container: {run_id}")
+        with zipfile.ZipFile(self.path) as archive:
+            infos = archive.infolist()
+            self.repository._validate_archive_entries(infos)
+            data = self.repository._read_entries(archive, infos, listed)
+        payloads = self.repository._read_runs(data)
+        if len(payloads) != 1 or payloads[0].id != run_id:
+            raise ProjectFormatError(f"run entry does not match its manifest id: {run_id}")
+        if payloads[0].design_id != index.design_id:
+            raise ProjectFormatError(f"run design id does not match the manifest: {run_id}")
+        return simulation_run_from_payload(payloads[0])
+
+    def load_all_runs(self) -> tuple[SimulationRun, ...]:
+        listed = {entry.path: entry for entry in self.manifest.entries if _is_run_entry(entry.path)}
+        with zipfile.ZipFile(self.path) as archive:
+            infos = archive.infolist()
+            self.repository._validate_archive_entries(infos)
+            data = self.repository._read_entries(archive, infos, listed)
+        payloads = {payload.id: payload for payload in self.repository._read_runs(data)}
+        runs: list[SimulationRun] = []
+        for index in self.manifest.runs:
+            payload = payloads.get(index.id)
+            if payload is None:
+                raise ProjectFormatError(f"indexed run is missing from the container: {index.id}")
+            if payload.design_id != index.design_id:
+                raise ProjectFormatError(f"run design id does not match the manifest: {index.id}")
+            runs.append(simulation_run_from_payload(payload))
+        return tuple(runs)
+
+
 # -- helpers ------------------------------------------------------------------
 
 
@@ -722,6 +914,12 @@ def _writestr(archive: zipfile.ZipFile, path: str, data: bytes) -> None:
     info.create_system = 3
     info.external_attr = 0o644 << 16
     archive.writestr(info, data)
+
+
+def _is_run_entry(path: str) -> bool:
+    return path.startswith(f"{RUN_DIR}/") and path.endswith(
+        (".json", RAW_INPUT_SUFFIX, RAW_OUTPUT_SUFFIX)
+    )
 
 
 def _kind_for_path(path: str) -> EntryKind | None:

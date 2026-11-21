@@ -2218,6 +2218,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "action.open": {Language.ENGLISH: "Open Project...", Language.SPANISH: "Abrir proyecto..."},
     "action.save": {Language.ENGLISH: "Save", Language.SPANISH: "Guardar"},
     "action.save_as": {Language.ENGLISH: "Save As...", Language.SPANISH: "Guardar como..."},
+    "action.save_design_only": {
+        Language.ENGLISH: "Save Design Only...",
+        Language.SPANISH: "Guardar solo el diseño...",
+    },
     "action.export_project_bundle": {
         Language.ENGLISH: "Export Project Bundle...",
         Language.SPANISH: "Exportar bundle del proyecto...",
@@ -5692,6 +5696,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open the source-backed reference design library.",
         Language.SPANISH: "Abrí la biblioteca de diseños de referencia con fuentes.",
     },
+    "help.action.save_design_only": {
+        Language.ENGLISH: (
+            "Save the project metadata and designs without simulation runs or "
+            "optimization summaries. The saved file is smaller but loses the "
+            "stored history."
+        ),
+        Language.SPANISH: (
+            "Guarda los metadatos y diseños del proyecto sin corridas de "
+            "simulación ni resúmenes de optimización. El archivo es más chico "
+            "pero pierde el historial guardado."
+        ),
+    },
     "help.action.export_project_bundle": {
         Language.ENGLISH: (
             "Save the project and its referenced images as one portable ZIP bundle."
@@ -7353,6 +7369,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "status.saved": {Language.ENGLISH: "Project saved.", Language.SPANISH: "Proyecto guardado."},
     "status.opened": {Language.ENGLISH: "Project opened.", Language.SPANISH: "Proyecto abierto."},
+    "status.opened_design_only": {
+        Language.ENGLISH: "Project opened without simulation history.",
+        Language.SPANISH: "Proyecto abierto sin historial de simulaciones.",
+    },
+    "status.saved_design_only": {
+        Language.ENGLISH: "Project saved without simulation history.",
+        Language.SPANISH: "Proyecto guardado sin historial de simulaciones.",
+    },
     "status.recent_removed": {
         Language.ENGLISH: "Removed from recent projects.",
         Language.SPANISH: "Quitado de proyectos recientes.",
@@ -10771,17 +10795,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Project is {size:.1f} MB. Save anyway? Use Compact Simulation History to reduce it.",
         Language.SPANISH: "El proyecto pesa {size:.1f} MB. ¿Guardar igualmente? Usá Compactar historial para reducirlo.",
     },
-    "dialog.project_too_large": {
-        Language.ENGLISH: "Project is {size:.1f} MB and exceeds the {limit:.0f} MB limit. Compact Simulation History or remove designs.",
-        Language.SPANISH: "El proyecto pesa {size:.1f} MB y supera el límite de {limit:.0f} MB. Compactá el historial o eliminá diseños.",
+    "dialog.project_too_large_choose": {
+        Language.ENGLISH: "The project is too large to save and reopen ({size:.1f} MB against a {limit:.0f} MB limit). Compact the history, or save only metadata and designs (without runs or optimization summaries).",
+        Language.SPANISH: "El proyecto es demasiado grande para guardarlo y reabrirlo ({size:.1f} MB frente a un límite de {limit:.0f} MB). Compactá el historial o guardá solo metadatos y diseños (sin corridas ni resúmenes de optimización).",
     },
-    "dialog.project_expanded_too_large": {
-        Language.ENGLISH: "Project expands to {size:.1f} MB and exceeds the {limit:.0f} MB reopen limit. Remove simulation runs or designs, then save.",
-        Language.SPANISH: "El proyecto se expande a {size:.1f} MB y supera el límite de reapertura de {limit:.0f} MB. Eliminá corridas de simulación o diseños y volvé a guardar.",
+    "dialog.compact_and_save": {
+        Language.ENGLISH: "Compact history and save",
+        Language.SPANISH: "Compactar historial y guardar",
     },
-    "dialog.compact_for_save": {
-        Language.ENGLISH: "The project is too large to save and reopen ({size:.1f} MB against a {limit:.0f} MB limit). Compact the simulation history and try again?",
-        Language.SPANISH: "El proyecto es demasiado grande para guardarlo y reabrirlo ({size:.1f} MB frente a un límite de {limit:.0f} MB). ¿Compactar el historial de simulaciones y volver a intentar?",
+    "dialog.save_design_only": {
+        Language.ENGLISH: "Save design only",
+        Language.SPANISH: "Guardar solo el diseño",
+    },
+    "dialog.save_design_only_warning": {
+        Language.ENGLISH: "Save only the project metadata and designs? Simulation runs and optimization summaries will not be saved.",
+        Language.SPANISH: "¿Guardar solo los metadatos y diseños del proyecto? No se guardarán las corridas de simulación ni los resúmenes de optimización.",
     },
     "dialog.compact_history": {
         Language.ENGLISH: "Remove older simulation runs? {count} runs will be reduced to the latest run per design ({keep} kept).",
@@ -17734,6 +17762,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Open AntennaDesk project",
         Language.SPANISH: "Abrir proyecto AntennaDesk",
     },
+    "dialog.open_design_only": {
+        Language.ENGLISH: "The project cannot be opened with its simulation runs ({message}). Open the design only and discard the saved runs?",
+        Language.SPANISH: "El proyecto no se puede abrir con sus corridas de simulación ({message}). ¿Abrir solo el diseño y descartar las corridas guardadas?",
+    },
     "dialog.recovery_title": {
         Language.ENGLISH: "Recover unsaved project",
         Language.SPANISH: "Recuperar proyecto sin guardar",
@@ -17817,6 +17849,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "error.open": {
         Language.ENGLISH: "Could not open project: {message}",
         Language.SPANISH: "No se pudo abrir el proyecto: {message}",
+    },
+    "error.read_run": {
+        Language.ENGLISH: "Could not read the saved simulation run: {message}",
+        Language.SPANISH: "No se pudo leer la corrida de simulación guardada: {message}",
     },
     "error.file_missing": {
         Language.ENGLISH: "file not found: {name}",
