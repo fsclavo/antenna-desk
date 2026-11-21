@@ -1,6 +1,6 @@
 # ADR-0050 — ZIP project container and honest size contract
 
-- **Status:** accepted 2026-11-20; implementation pending (PF1)
+- **Status:** accepted 2026-11-20; slice 1 implemented 2026-11-20 (PF1)
 - **Date:** 2026-11-20
 - **Supersedes:** [ADR-0021](0021-compressed-project-files.md)
 - **Related:** `docs/AUTONOMOUS_BACKLOG.md` §PF1
@@ -35,9 +35,10 @@ to be supported.
    expanded bytes, manifest bytes, per-entry bytes, entry count, and path
    bytes. Do not trust manifest-declared sizes; read bounded streams and
    verify CRC32/SHA-256.
-4. `prepare_payload()` returns an immutable `PreparedProject` with payload,
-   compressed bytes, expanded bytes, entry count, and limits. A successful
-   save must always produce a file `load()` accepts.
+4. Slice 2 will make `prepare_payload()` return an immutable `PreparedProject`
+   with payload, compressed bytes, expanded bytes, entry count, and limits. A
+   successful save must always produce a file `load()` accepts. Slice 1 keeps
+   the existing bytes API and already enforces the limits.
 5. Load the project, the selected design, and the latest retained run at open
    time. Load older runs and optimizations on demand through an application
    `ProjectSession`/`ProjectResultStore`; keep the domain `Project` immutable.
@@ -70,17 +71,22 @@ Limitations and costs:
   schema 59.
 - Lazy loading adds a session/cache layer above the immutable domain model.
 
-## Hotfix already landed
+## Implementation status (2026-11-20)
 
-Before the container work, the gzip repository now:
+Slice 1 is implemented:
 
-- rejects a project whose expanded JSON exceeds 256 MiB inside
-  `prepare_payload()`, before any file is touched;
-- re-checks the expanded size in `write_payload()`;
-- raises a structured `ProjectPayloadTooLargeError` so the save flow can offer
-  compaction and retry;
-- has a save/load invariant test: `save()` either raises or produces a file
-  that `load()` accepts.
+- deterministic ZIP container v1 with `manifest.json`, `project.json`,
+  `designs/`, `runs/`, optional raw text entries, and `optimizations/`;
+- schema 59, no gzip/plain-JSON reader, no migrations;
+- container, total, manifest, per-entry, entry-count, and path limits on save
+  and load;
+- bounded entry reads with manifest size, CRC32, and SHA-256 verification;
+- path, duplicate, case-collision, symlink, encryption, and compression
+  validation;
+- atomic writes and a save/load invariant test;
+- structured `ProjectPayloadTooLargeError` so the save flow offers compaction
+  and retry;
+- example project regenerated in the current container.
 
-This closes the immediate "saved but unopenable" defect. It does not provide
-per-entry limits, lazy loading, or physical compaction; those remain PF1.
+Remaining for slice 2: lazy run loading/`ProjectSession`, design-only recovery,
+save-design-only UI, and physical compaction through entry removal.

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Property-based checks for project persistence and schema migrations."""
+"""Property-based checks for project persistence."""
 
 from __future__ import annotations
 
@@ -21,9 +21,7 @@ from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.constants import SCHEMA_VERSION
 from antennadesk.persistence.json_repository import JsonProjectRepository
-from antennadesk.persistence.migrations import migrate_document
 from antennadesk.persistence.schema import (
-    ProjectDocument,
     document_from_project,
     project_from_document,
 )
@@ -308,94 +306,3 @@ def test_journal_entries_round_trip() -> None:
         path = Path(directory) / "journal.antennadesk"
         repository.save(project, path)
         assert repository.load(path) == project
-
-
-@settings(max_examples=50, deadline=None)
-@given(
-    project_name=NAME,
-    description=DESCRIPTION,
-    design_name=NAME,
-    frequency_hz=FREQUENCY_HZ,
-    total_length_m=LENGTH_M,
-    height_m=HEIGHT_M,
-    azimuth_deg=AZIMUTH_DEG,
-    wire_radius_m=RADIUS_M,
-    orientation=ORIENTATION,
-    ground=GROUND,
-)
-def test_current_document_migration_is_an_identity(
-    project_name: str,
-    description: str,
-    design_name: str,
-    frequency_hz: float,
-    total_length_m: float,
-    height_m: float,
-    azimuth_deg: float,
-    wire_radius_m: float,
-    orientation: DipoleOrientation,
-    ground: GroundModel,
-) -> None:
-    project = _project(
-        project_name=project_name,
-        description=description,
-        design_name=design_name,
-        frequency_hz=frequency_hz,
-        total_length_m=total_length_m,
-        height_m=height_m,
-        azimuth_deg=azimuth_deg,
-        wire_radius_m=wire_radius_m,
-        orientation=orientation,
-        ground=ground,
-    )
-    data = document_from_project(project).model_dump(mode="json")
-
-    assert migrate_document(data) == data
-
-
-@settings(max_examples=50, deadline=None)
-@given(
-    project_name=NAME,
-    description=DESCRIPTION,
-    design_name=NAME,
-    frequency_hz=FREQUENCY_HZ,
-    total_length_m=LENGTH_M,
-    height_m=HEIGHT_M,
-    azimuth_deg=AZIMUTH_DEG,
-    wire_radius_m=RADIUS_M,
-    ground=GROUND,
-)
-def test_v1_dipole_document_migrates_to_the_current_project(
-    project_name: str,
-    description: str,
-    design_name: str,
-    frequency_hz: float,
-    total_length_m: float,
-    height_m: float,
-    azimuth_deg: float,
-    wire_radius_m: float,
-    ground: GroundModel,
-) -> None:
-    project = _project(
-        project_name=project_name,
-        description=description,
-        design_name=design_name,
-        frequency_hz=frequency_hz,
-        total_length_m=total_length_m,
-        height_m=height_m,
-        azimuth_deg=azimuth_deg,
-        wire_radius_m=wire_radius_m,
-        orientation=DipoleOrientation.HORIZONTAL,
-        ground=ground,
-    )
-    data = document_from_project(project).model_dump(mode="json")
-    data["schema_version"] = 1
-    design = data["project"]["designs"][0]
-    design["parameters"].pop("orientation", None)
-    design.pop("band_plan", None)
-    data["project"].pop("simulation_runs", None)
-
-    migrated = migrate_document(data)
-    restored = project_from_document(ProjectDocument.model_validate(migrated))
-
-    assert migrated["schema_version"] == SCHEMA_VERSION
-    assert restored == project

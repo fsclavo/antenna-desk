@@ -1297,14 +1297,14 @@ class DesignPayload(StrictModel):
         return self
 
 
-class ProjectPayload(StrictModel):
+class ProjectMetadataPayload(StrictModel):
+    """Project fields shared by the metadata entry and the full document."""
+
     id: UUID
     name: str = Field(min_length=1)
     description: str = ""
     created_at: datetime
     updated_at: datetime
-    designs: list[DesignPayload] = Field(default_factory=list)
-    simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
     measurements: list[MeasurementPayload] = Field(default_factory=list)
     measurement_sessions: list[MeasurementSessionPayload] = Field(default_factory=list)
     journal_entries: list[JournalEntryPayload] = Field(default_factory=list)
@@ -1335,6 +1335,25 @@ class ProjectPayload(StrictModel):
         return self
 
     @model_validator(mode="after")
+    def _validate_timestamps(self) -> Self:
+        for name, value in (
+            ("created_at", self.created_at),
+            ("updated_at", self.updated_at),
+        ):
+            if value.tzinfo is None or value.utcoffset() is None:
+                raise ValueError(f"{name} must be timezone-aware")
+        if self.updated_at < self.created_at:
+            raise ValueError("updated_at must not be earlier than created_at")
+        return self
+
+
+class ProjectPayload(ProjectMetadataPayload):
+    """Full project payload used when every entry is materialized."""
+
+    designs: list[DesignPayload] = Field(default_factory=list)
+    simulation_runs: list[SimulationRunPayload] = Field(default_factory=list)
+
+    @model_validator(mode="after")
     def _validate_measurements(self) -> Self:
         design_ids = {design.id for design in self.designs}
         session_ids = [session.id for session in self.measurement_sessions]
@@ -1358,23 +1377,27 @@ class ProjectPayload(StrictModel):
                 raise ValueError("journal entry references an unknown design")
         return self
 
-    @model_validator(mode="after")
-    def _validate_timestamps(self) -> Self:
-        for name, value in (
-            ("created_at", self.created_at),
-            ("updated_at", self.updated_at),
-        ):
-            if value.tzinfo is None or value.utcoffset() is None:
-                raise ValueError(f"{name} must be timezone-aware")
-        if self.updated_at < self.created_at:
-            raise ValueError("updated_at must not be earlier than created_at")
-        return self
-
 
 class ProjectDocument(StrictModel):
     format: str = Field(min_length=1)
     schema_version: int = Field(ge=1)
     project: ProjectPayload
+
+    @model_validator(mode="after")
+    def _validate_format(self) -> Self:
+        if self.format != PROJECT_FORMAT:
+            raise ValueError(f"unsupported project format: {self.format!r}")
+        if self.schema_version != SCHEMA_VERSION:
+            raise ValueError(f"unsupported project schema version: {self.schema_version}")
+        return self
+
+
+class ProjectMetadataDocument(StrictModel):
+    """The small metadata entry of a project container."""
+
+    format: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    project: ProjectMetadataPayload
 
     @model_validator(mode="after")
     def _validate_format(self) -> Self:

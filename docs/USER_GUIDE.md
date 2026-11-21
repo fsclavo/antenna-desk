@@ -2585,10 +2585,12 @@ versions; it never contains raw solver output or local executable paths. A
 project-level feed line or matching network is listed as post-processed and is
 not inserted into the NEC deck.
 Simulation runs are stored when you save the project, including raw solver
-text. Project files are losslessly gzip-compressed JSON; the 64 MB limit applies
-to the compressed file, and a project that would expand above 256 MB is refused
-before anything is written. Decompression is bounded to the same 256 MB of
-expanded JSON. Saving above 32 MB compressed shows a warning, and
+text. A `.antennadesk` file is a versioned ZIP container: project metadata,
+designs, normalized runs, raw solver text, and optimization summaries are
+separate validated entries. The container is limited to 64 MB, the total
+expanded entries to 256 MB, and each entry to 64 MB. The reader verifies each
+entry's size, CRC32, and SHA-256 before using it; gzip, plain JSON, and older
+schemas are rejected. Saving above 32 MB shows a warning, and
 **Tools → Compact Simulation History...** keeps only the latest run per
 design. If a save would exceed a limit, the application offers to compact the
 history and retry instead of writing an unopenable file.
@@ -2601,21 +2603,22 @@ Invalid designs are rejected before the solver runs.
 
 ## Save and open
 
-Use **File → Save** / **Save As...** to write a versioned `.antennadesk` JSON
-project, and **File → Open Project...** to reopen it. The application prompts
+Use **File → Save** / **Save As...** to write a versioned `.antennadesk`
+container, and **File → Open Project...** to reopen it. The application prompts
 before discarding unsaved changes.
 
-Project serialization and gzip compression run in a worker thread. For a large
+Container serialization and compression run in a worker thread. For a large
 project, a modal **Preparing project...** progress dialog appears while the
 payload is prepared; the window remains responsive and the operating system
-does not report the application as unresponsive. The payload is serialized once
-and then written atomically; the 32 MB warning, the 64 MB compressed hard
-limit, and the 256 MB expanded reopen limit still apply. A project that would
-exceed either hard limit is rejected before the destination file is touched.
+does not report the application as unresponsive. The container is written
+atomically; the 32 MB warning, the 64 MB container limit, the 64 MB per-entry
+limit, and the 256 MB total expanded limit apply. A project that would exceed a
+limit is rejected before the destination file is touched.
 
-Opening a project also runs decompression, migration, and validation in a
-worker thread. A modal **Opening project...** dialog appears for large files and
-the project is applied only after validation succeeds.
+Opening a project validates the manifest and every entry in a worker thread. A
+modal **Opening project...** dialog appears for large files and the project is
+applied only after validation succeeds. Gzip, plain JSON, and schema 58 and
+older files are rejected with an explicit unsupported-format message.
 
 ## Portable project bundles
 
@@ -2714,7 +2717,7 @@ limitations are recorded in [ADR](ADR/).
   Pareto, persisted-summary, and recommendation support is implemented; the
   Pareto front is descriptive and is not itself optimized.
 - Project files store normalized results and raw solver text; many long runs
-  can reach the 64 MB project limit.
+  can reach the 64 MB container limit.
 - The feed line is a uniform-line post-processing model. It reports impedance
   and SWR at the transmitter and its loss is included in the transmitter-side
   realized gain and mismatch budget. It does not change the antenna pattern or

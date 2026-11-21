@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-20
 **Latest published release:** `0.9.0` (2026-11-17)
-**Development schema:** `58`
+**Development schema:** `59`
 **Current product track:** 1.1 Station
 
 ## Where we are
@@ -30,15 +30,16 @@
   `ui/recent_actions.py`. The standalone main-window decomposition is
   **closed**; the remaining UI-construction debt is left for extract-on-touch
   work, not another standalone refactor.
-- The save/load size invariant is fixed: a project that saves always reopens
-  under the current gzip format. The save flow checks the expanded size before
-  writing and offers compaction on failure. The structural ZIP container
-  (PF1, schema 59, no legacy reader) remains the next persistence milestone;
-  see [`ADR-0050`](ADR/0050-zip-project-container.md).
+- PF1 container slice 1 is implemented: `.antennadesk` is now a deterministic
+  ZIP container (container 1, schema 59) with separate project, design, run,
+  raw-text, and optimization entries; per-entry limits, CRC32/SHA-256 checks,
+  atomic writes, and no gzip/plain-JSON/migration reader. `load()` still
+  materializes every run and the UI has no design-only recovery yet; those are
+  PF1 slice 2. See [`ADR-0050`](ADR/0050-zip-project-container.md).
 
 ## Next
 
-1. Implement PF1, the ZIP project container and size contract.
+1. Finish PF1 slice 2: lazy run loading/session and design-only recovery.
 2. Close the remaining DL5 slice or explicitly narrow it.
 3. Decide the DL7 bounded cliff slice after a reproducible evidence check.
 4. Continue DL4 and the remaining 1.2 items.

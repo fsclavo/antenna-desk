@@ -543,8 +543,8 @@ reference plane of the lowest band, and each band adds its vertical offset.
 band while the other bands remain passive conductors; this avoids driving
 several separated ideal voltage sources at once. The coax harness, jumper
 lengths, inter-band coupling, and balun are not modeled. Schema 55 adds the
-optional band list; old single-band documents migrate with an empty list and
-keep their stored scalar values.
+optional band list; the current payload keeps the stored scalar values and
+rejects schema 54 and older.
 
 ### TrapYagiParameters
 
@@ -804,85 +804,57 @@ and SWR at the target. The result is an explicit `TuningProposal` with
 
 ## Project file
 
-The native format is versioned JSON, stored losslessly gzip-compressed.
-Plain JSON files from older versions are still accepted. Loading is bounded to
-64 MB compressed and 256 MB expanded so an untrusted file cannot decompress
-without limit. The envelope is:
+The native `.antennadesk` file is a versioned ZIP container (container version
+1, schema version 59). It is one portable file written atomically. The
+container separates the small project metadata from designs, runs, raw solver
+text, and optimization summaries:
 
-```json
-{
-  "format": "antennadesk-project",
-  "schema_version": 1,
-  "project": {
-    "id": "11111111-1111-4111-8111-111111111111",
-    "name": "40 m dipole",
-    "description": "Half-wave dipole for the 40 m band.",
-    "created_at": "2026-10-29T12:00:00Z",
-    "updated_at": "2026-10-29T12:00:00Z",
-    "designs": [
-      {
-        "id": "22222222-2222-4222-8222-222222222222",
-        "name": "Initial",
-        "antenna_type": "wire_dipole",
-        "parameters": {
-          "frequency_hz": 7100000.0,
-          "total_length_m": 20.0,
-          "height_m": 8.0,
-          "orientation": "horizontal",
-          "azimuth_deg": 0.0,
-          "wire_radius_m": 0.001,
-          "material": {
-            "name": "copper",
-            "conductivity_s_per_m": 58000000.0,
-            "relative_permeability": 1.0
-          },
-          "ground": {
-            "kind": "finite",
-            "relative_permittivity": 13.0,
-            "conductivity_s_per_m": 0.005
-          }
-        },
-        "antenna": {
-          "name": "Initial",
-          "design_frequency_hz": 7100000.0,
-          "wires": [
-            {
-              "id": "radiator",
-              "start": {"x_m": -10.0, "y_m": 0.0, "z_m": 8.0},
-              "end": {"x_m": 10.0, "y_m": 0.0, "z_m": 8.0},
-              "radius_m": 0.001,
-              "material": {
-                "name": "copper",
-                "conductivity_s_per_m": 58000000.0,
-                "relative_permeability": 1.0
-              }
-            }
-          ],
-          "feed": {"wire_id": "radiator", "offset_m": 10.0},
-          "environment": {
-            "ground": {
-              "kind": "finite",
-              "relative_permittivity": 13.0,
-              "conductivity_s_per_m": 0.005
-            }
-          }
-        }
-      }
-    ],
-    "simulation_runs": []
-  }
-}
+```text
+manifest.json
+project.json
+designs/<design-id>.json
+runs/<run-id>.json
+runs/<run-id>.raw-input.txt        (optional)
+runs/<run-id>.raw-output.txt       (optional)
+optimizations/<design-id>.json
 ```
 
-The snippet above is the version 1 envelope, not the current serialization.
-The complete example lives in
-[`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk). It is
-kept as a version 1 fixture so the migration path is exercised; saving it from
-the application writes version 58.
+- `manifest.json` declares the container and schema versions, project identity,
+  application version, timestamps, retention metadata, and one entry per file
+  with its kind, uncompressed size, compressed size, CRC32, and SHA-256.
+- `project.json` holds project metadata, shared feed/matching/balun settings,
+  band plans, measurements, journal, installation profiles, and construction
+  and BOM records. It does not hold designs or runs.
+- `designs/<id>.json` holds one design variant. The optimization summary is a
+  separate `optimizations/<id>.json` entry.
+- `runs/<id>.json` holds one normalized simulation run without raw solver text.
+  Raw NEC input and output are optional separate text entries, so they can be
+  omitted or pruned without rewriting the normalized result.
+- Entry paths are relative POSIX names; duplicates, case-insensitive
+  collisions, traversal, absolute paths, symlinks, encrypted entries, and
+  unsupported compression are rejected.
+- The writer sorts ZIP entries, fixes timestamps, and uses `ZIP_DEFLATED` level
+  6, so the same project produces the same bytes.
+
+Limits are enforced on both save and load: 64 MiB container, 256 MiB total
+expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
+path. The reader reads each entry through a bounded stream and verifies the
+actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
+trusted. The current schema is `59`; the application writes version 59 and
+rejects gzip, plain JSON, and every schema below 59. The project has not shipped
+to users, so no legacy reader or migration is retained. The complete example
+lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
+and is written in the current container format.
 
 ## Schema policy
 
-- Current version: `58`.
+- Current version: `59`.
+- Only container version 1 / schema version 59 is accepted. The list below is a
+  historical record of earlier development schemas; those readers and
+  migrations were removed on 2026-11-20.
+
+### Historical schema changes (not readable by the current build)
+
 - Version 1 files are migrated by adding the dipole `orientation` field with a
   default of `horizontal`.
 - Version 2 files are migrated by adding an empty `simulation_runs` list.
@@ -1019,8 +991,8 @@ the application writes version 58.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
-- Older versions are migrated through an explicit registry.
-- Saves are atomic and files are size-limited.
+- Only the current schema is accepted; older versions are rejected.
+- Saves are atomic and deterministic, with per-entry and total size limits.
 
 ## Current limitations
 

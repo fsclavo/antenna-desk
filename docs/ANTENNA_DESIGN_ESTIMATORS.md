@@ -173,8 +173,11 @@ and azimuth. The tolerance is 2% of the driver half-length.
 
 This creates one scaled band. The result carries a warning that the remaining
 published bands must be added in the HexBeam editor; it does not invent a
-frequency-first multi-band layout. The estimator does not claim validated gain,
-front-to-back ratio, impedance, feed harness, or coupling between bands.
+frequency-first multi-band layout. Because the tip gap scales with frequency,
+a conductor radius that would leave less than one diameter of clearance is
+rejected by `HexbeamParameters` instead of being silently clamped. The
+estimator does not claim validated gain, front-to-back ratio, impedance, feed
+harness, or coupling between bands.
 
 A general multi-band estimator is not provided. The G3TXQ rows are
 band-specific and a single frequency-first input does not define which bands

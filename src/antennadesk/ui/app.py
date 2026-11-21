@@ -15,7 +15,7 @@ from .. import __version__
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.solver import SolverMetadata
 from ..domain.simulation.spec import SimulationSpec
-from ..persistence.json_repository import JsonProjectRepository
+from ..persistence.container import ProjectContainerRepository
 from ..simulation.nec2.export import NecDeckExportMetadata, render_nec_deck
 from ..simulation.nec2.solver import Nec2cSolver
 from ..simulation.preflight import run_preflight
@@ -85,7 +85,7 @@ def main() -> int:
     translator = Translator(resolve_language(preferences.language))
     executable = find_nec2c()
     solver = Nec2cSolver(executable) if executable is not None else None
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     app_data = QStandardPaths.writableLocation(
         QStandardPaths.StandardLocation.AppDataLocation
     ) or str(Path.home() / ".antennadesk")

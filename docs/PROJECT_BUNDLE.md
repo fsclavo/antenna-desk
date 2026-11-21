@@ -18,9 +18,9 @@ Use **File → Export Project Bundle...** to write a
   export;
 - writes the ZIP atomically through a temporary file next to the destination.
 
-The project payload keeps the normal schema, migrations, simulation runs, the
-64 MB compressed limit, and the 256 MB expanded reopen limit. The bundle adds
-no project schema field.
+The project payload keeps the normal schema 59, simulation runs, the 64 MB
+container limit, and the 256 MB total expanded limit. The bundle adds no
+project schema field.
 
 ## Bundle contents
 
@@ -31,7 +31,9 @@ assets/0001-site-photo.jpg
 assets/0002-plan.png
 ```
 
-`project.antennadesk` is the normal gzip-compressed project payload. The
+`project.antennadesk` is the normal ZIP container. It is stored as one file
+inside the bundle ZIP, so its bytes are compressed twice; the bundle validates
+the native container after extraction. The
 manifest has this shape:
 
 ```json
@@ -103,4 +105,4 @@ runs bundle content, and never reads a manifest path outside the validated
 - The bundle does not include the solver binary, build reports, or external
   measurement CSVs. Measurements are already stored inside the project.
 - Project bundles do not change the native `.antennadesk` format and do not add
-  a schema migration.
+  a project schema field or a legacy reader.

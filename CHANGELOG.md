@@ -295,6 +295,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **ZIP project container (PF1 slice 1).** `.antennadesk` is now a
+  deterministic ZIP container (container version 1, schema 59) with separate
+  metadata, design, run, raw-solver-text, and optimization entries. The
+  manifest records each entry's kind, sizes, CRC32, and SHA-256; reads are
+  bounded and verified. Container, total, manifest, per-entry, entry-count, and
+  path limits are enforced on save and load. Writes remain atomic. Gzip, plain
+  JSON, and schema 58 and older are rejected deliberately; there is no legacy
+  reader or migration. `load()` still materializes every run, and the UI has no
+  design-only recovery yet; those remain PF1 slice 2. See
+  [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Typed simulation-spec assembly moved out of the main window.** The
   per-family `SimulationSpec` builders and far-field pattern presets now live
   in the Qt-free application layer (`application/simulation_specs.py` and

@@ -13,7 +13,7 @@ from ...domain.projects.project import Project
 
 
 class OpenProjectWorker(QObject):
-    """Read, migrate, and validate a project in a worker thread."""
+    """Read and validate a project container in a worker thread."""
 
     finished = Signal(object)
     failed = Signal(str)

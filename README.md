@@ -10,7 +10,7 @@ amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
 **Status:** pre-1.0. Latest published release: `0.9.0` (2026-11-17). The
-current development schema is `58`; unreleased work is tracked in
+current development schema is `59`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
@@ -25,8 +25,8 @@ Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
 a transposed phase-line feed; its starting design is the published Cebik 10 m
-reference. Projects use versioned JSON persistence, lossless gzip
-compression, and explicit migrations. VNA CSV import
+reference. Projects use a versioned ZIP container with schema 59, per-entry
+validation, deterministic writes, and no legacy reader. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
 initialize the project feed line. Portable project bundles move a project and
@@ -149,9 +149,9 @@ truth for each topic, every ADR, and the archived plans.
   angle at the maximum-gain marker. Sweeps use 100
   points by default, and pattern resolution defaults to 5° and can be set to
   10°, 5°, 2°, or 1°.
-- Save/open of versioned `.antennadesk` projects with multiple design variants.
-  The current development schema is `58`; older files migrate explicitly. The
-  full migration history is in
+- Save/open of versioned `.antennadesk` ZIP containers with multiple design
+  variants. The current development schema is `59`; gzip, plain JSON, and older
+  schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
 - VNA CSV import with measured impedance/SWR records and a measured/simulated

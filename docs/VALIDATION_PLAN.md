@@ -30,7 +30,8 @@ and current sections. Detailed evidence is in
 Phase 1 tests are organized as follows:
 
 - **Unit tests:** units and conversions, geometry, materials, ground models,
-  dipole generation, antenna invariants, project invariants, and migrations.
+  dipole generation, antenna invariants, project invariants, and container
+  validation.
 - **Integration tests:** JSON round trips, envelope validation, atomic save
   failure, unknown formats, future schema versions, extra fields, invalid
   geometry, non-finite values, oversized files, invalid JSON, and invalid
@@ -389,13 +390,13 @@ Phase 6 adds tests for:
 - Vertical dipole template geometry and center feed.
 - Vertical dipole over perfect ground against the NEC-2 User's Guide Example 3
   value (`106.437 + j9.90578 Ω`).
-- Version 1 to version 2 project migration adding horizontal orientation.
+- Current-container round trip for the dipole and vertical designs.
 - Vertical project save/open round trip.
 - Orientation controls in the form and dialog, vertical geometry rendering,
   and orientation-aware construction-sheet dimensions and feed height.
-- Simulation-run domain invariants, recording use case, schema v2 to v3
-  migration, rich result round trip (currents, pattern, diagnostics, raw text,
-  infinite SWR), and save/reopen in the UI.
+- Simulation-run domain invariants, recording use case, rich result round trip
+  (currents, pattern, diagnostics, raw text, infinite SWR), and save/reopen in
+  the UI.
 - Folded dipole and loop topology, parameters, azimuth, validation, and
   type/geometry consistency.
 - Schema round trips and rejection of mismatched payloads for the new
@@ -458,8 +459,8 @@ Phase 6 adds tests for:
   40/20/10 m with an explicit 0.3 SWR tolerance.
 - Run-size budget: fitted pattern resolution, project-size estimate, pattern
   disabled fallback, and a specific `solver.output_too_large` diagnostic.
-- Lossless project compression: gzip round trip, compressed-size accounting,
-  deterministic output, and plain-JSON backward compatibility.
+- Deterministic ZIP container round trip, per-entry CRC/SHA verification, size
+  accounting, and rejection of gzip/plain-JSON legacy files.
 - Ground-mounted vertical: a freshly estimated quarter-wave vertical with
   finite ground and four radials completes instead of failing with nec2c exit
   code 255; the NEC deck clearance and the below-ground diagnostic are tested.

@@ -10,16 +10,12 @@ from antennadesk.application.use_cases.create_dipole_project import (
 )
 from antennadesk.domain.antennas.design import AntennaDesignParameters
 from antennadesk.domain.antennas.log_periodic import (
-    LogPeriodicParameters,
     cebik_10m_log_periodic_parameters,
 )
 from antennadesk.domain.antennas.transmission_line import TransmissionLine
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.constants import SCHEMA_VERSION
-from antennadesk.persistence.migrations import migrate_document
 from antennadesk.persistence.schema import (
     LogPeriodicParametersPayload,
-    ProjectDocument,
     document_from_project,
     project_from_document,
 )
@@ -77,30 +73,3 @@ def test_phase_reversal_round_trips_through_the_design_payload() -> None:
 
     assert not restored.designs[0].antenna.transmission_lines[0].phase_reversal
     assert restored.designs[0].antenna.transmission_lines[1].phase_reversal
-
-
-def test_v51_document_gains_a_false_phase_reversal_flag() -> None:
-    parameters: LogPeriodicParameters = cebik_10m_log_periodic_parameters()
-    document = document_from_project(_project(parameters, "Migration")).model_dump(mode="json")
-    document["schema_version"] = 51
-    for design in document["project"]["designs"]:
-        for line in design["antenna"]["transmission_lines"]:
-            line.pop("phase_reversal", None)
-
-    migrated = migrate_document(document)
-
-    assert migrated["schema_version"] == SCHEMA_VERSION
-    for design in migrated["project"]["designs"]:
-        for line in design["antenna"]["transmission_lines"]:
-            assert line["phase_reversal"] is False
-
-
-def test_v51_log_periodic_payload_is_not_required() -> None:
-    # A schema-51 project cannot contain a log-periodic payload; adding the
-    # field to existing transmission lines must not make old documents fail.
-    parameters = cebik_10m_log_periodic_parameters()
-    document = document_from_project(_project(parameters, "Old")).model_dump(mode="json")
-    document["schema_version"] = 51
-    migrated = migrate_document(document)
-    restored = ProjectDocument.model_validate(migrated).project.designs[0].parameters
-    assert isinstance(restored, LogPeriodicParametersPayload)

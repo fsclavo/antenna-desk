@@ -36,7 +36,7 @@ domain
               SimulationResult, FrequencyResult
         │
 adapters
-  persistence: JsonProjectRepository, Pydantic schema, migrations, atomic writes
+  persistence: ProjectContainerRepository, Pydantic schema, atomic ZIP writes
   simulation/nec2: input writer, parser, process runner, normalization
   simulation: SWR normalization, fingerprint, assumptions, preflight
   optimization: family descriptors and hybrid deterministic engine
@@ -233,9 +233,8 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 58 is
-current: parameter payloads are additive, and old `wire_dipole` documents are
-unchanged. A design may also store an optional analysis band plan; it is
+solver adapter does not need geometry-specific branches. Schema version 59 is
+current: parameter payloads are additive within the current container. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
 optional antenna payloads and are emitted as `LD 0` cards by the solver
 adapter. The canonical model also carries optional additional sources with
@@ -339,29 +338,31 @@ The domain uses dataclasses. Pydantic v2 models live only in
 keeps schema concerns out of the domain while still rejecting malformed or
 untrusted files.
 
-Project files use the `antennadesk-project` format with a schema version.
-Saves are atomic: write a temporary file in the target directory, flush and
-`fsync`, then replace the destination with `os.replace`. Autosave uses the
-application-data recovery folder: it writes a design-only project payload
+Project files use the `antennadesk.project` ZIP container with container
+version 1 and schema version 59. Saves are atomic: build the container in
+memory, write a temporary file in the target directory, flush and `fsync`,
+then replace the destination with `os.replace`. Autosave uses the
+application-data recovery folder: it writes a design-only project container
 (without completed simulation runs or raw solver output) atomically, then a
-small JSON metadata sidecar, and never replaces the project file. It is debounced
-after design edits and skipped above 2 MB. A normal save or close removes both;
-startup offers recover or discard. Recording a simulation result alone does not
-trigger autosave. The current schema is version 58; the complete migration
-history is single-sourced in
-[`DOMAIN_MODEL.md`](DOMAIN_MODEL.md#schema-policy). Older documents are migrated
-explicitly.
+small JSON metadata sidecar, and never replaces the project file. It is
+debounced after design edits and skipped above 2 MB. A normal save or close
+removes both; startup offers recover or discard. Recording a simulation result
+alone does not trigger autosave. The schema and container history is
+single-sourced in [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md#schema-policy); the
+current build has no legacy reader or migration.
 
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
-solver text is stored with the normalized result. Project files are compact JSON compressed with
-gzip; plain JSON files from older versions still load. The UI warns at 32 MB
-compressed, blocks files above the 64 MB compressed limit, and offers
-simulation-history compaction. Saving checks the 256 MB expanded limit before
-touching the destination file, and the write path repeats the check, so a
-successful save always produces a file `load()` accepts. Loading also stops
-above 256 MB of expanded JSON so a gzip bomb cannot allocate an unbounded
-payload. [ADR-0050](ADR/0050-zip-project-container.md) replaces this gzip
-envelope with a validated ZIP container (PF1, schema 59); that work is pending.
+solver text is stored in optional separate entries so it can be omitted without
+rewriting the normalized result. Project files are versioned ZIP containers
+(container version 1, schema version 59) with a manifest, project metadata,
+designs, runs, raw text, and optimization summaries as separate validated
+entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
+container above 64 MB, blocks total expanded entries above 256 MB, and offers
+simulation-history compaction. The reader verifies every entry's size, CRC32,
+and SHA-256 against the manifest through a bounded stream, so a zip bomb or a
+manifest mismatch is rejected before the domain model is built. Gzip, plain
+JSON, and schema 58 and older are rejected; the project has not shipped to
+users. See [ADR-0050](ADR/0050-zip-project-container.md).
 
 Multiband analysis is an application-level batch over the existing single-band
 solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,

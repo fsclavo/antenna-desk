@@ -137,7 +137,7 @@ def test_layer_imports_follow_the_declared_direction() -> None:
 # adapters. The main-window entries are known debt; remove an entry when the
 # corresponding use case or port replaces the direct adapter import.
 ALLOWED_UI_ADAPTER_IMPORTS = {
-    ("app.py", "antennadesk.persistence.json_repository"),
+    ("app.py", "antennadesk.persistence.container"),
     ("app.py", "antennadesk.simulation.nec2.export"),
     ("app.py", "antennadesk.simulation.nec2.solver"),
     ("app.py", "antennadesk.simulation.preflight"),

@@ -161,11 +161,16 @@ def test_docs_index_lists_every_adr_without_dead_entries() -> None:
     assert not linked - current, f"dead ADR index entries: {sorted(linked - current)}"
 
 
-def test_version_one_example_stays_a_migration_fixture() -> None:
-    raw = (ROOT / "examples" / "dipole_40m.antennadesk").read_bytes()
-    document = json.loads(raw)
-    domain_model = _read(DOCS / "DOMAIN_MODEL.md")
+def test_example_project_is_a_current_container() -> None:
+    import zipfile
 
-    assert document["schema_version"] == 1
-    assert '"schema_version": 1' in domain_model
-    assert "kept as a version 1 fixture" in domain_model
+    path = ROOT / "examples" / "dipole_40m.antennadesk"
+    with zipfile.ZipFile(path) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        names = archive.namelist()
+
+    assert manifest["container_version"] == 1
+    assert manifest["schema_version"] == SCHEMA_VERSION
+    assert "project.json" in names
+    domain_model = _read(DOCS / "DOMAIN_MODEL.md")
+    assert "examples/dipole_40m.antennadesk" in domain_model

@@ -798,6 +798,11 @@ class Project:
                 retained_ids.update(run.id for run in runs)
         return tuple(run for run in self.simulation_runs if run.id in retained_ids)
 
+    def retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
+        """Return the runs kept by the default compaction policy."""
+
+        return self._retained_simulation_runs()
+
     def has_compactable_simulation_history(self) -> bool:
         return len(self.simulation_runs) > len(self._retained_simulation_runs())
 

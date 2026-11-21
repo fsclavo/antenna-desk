@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""BOM cost persistence and schema migration."""
+"""BOM cost persistence."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from antennadesk.persistence.json_repository import JsonProjectRepository
 
 
 def test_schema_version_is_current() -> None:
-    assert SCHEMA_VERSION == 58
+    assert SCHEMA_VERSION == 59
 
 
 def test_bom_costs_round_trip(
@@ -35,14 +35,3 @@ def test_bom_costs_round_trip(
     loaded = repository.load(path)
 
     assert loaded.bom_costs == record
-
-
-def test_v44_project_migrates_without_bom_costs(tmp_path: Path) -> None:
-    from antennadesk.persistence.migrations import migrate_document
-
-    document = {"format": "antennadesk-project", "schema_version": 44, "project": {}}
-    migrated = migrate_document(document)
-
-    assert migrated["schema_version"] == SCHEMA_VERSION
-    assert migrated["project"]["bom_costs"] is None
-    assert document["project"] == {}

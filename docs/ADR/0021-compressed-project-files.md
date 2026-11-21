@@ -1,6 +1,6 @@
 # ADR-0021 — Lossless compressed project files
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0050](0050-zip-project-container.md)
 - **Date:** 2026-11-03
 - **Supersedes:** none
 - **Updates:** [ADR-0020](0020-higher-pattern-storage-budget.md)

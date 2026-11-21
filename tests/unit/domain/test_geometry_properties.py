@@ -138,7 +138,11 @@ def test_estimated_family_geometry_satisfies_model_invariants(
     # radius-aware. Keep this invariant test inside the currently supported
     # thin-wire envelope; the dedicated estimator tests cover the explicit
     # conductor-clearance rejection.
-    if family == "moxon":
+    if family in {"hexbeam", "moxon"}:
+        # The scaled hexbeam tip gap and the Cebik Moxon gap are not
+        # radius-aware at the high-frequency end. Keep this invariant test
+        # inside the supported thin-wire envelope; the dedicated family tests
+        # cover the explicit conductor-clearance rejection.
         wire_radius_m = data.draw(
             st.floats(
                 min_value=1e-4,

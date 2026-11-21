@@ -21,7 +21,7 @@ external service and must not be invented or simulated into existence.
 - One coherent milestone per change set.
 - Run `ruff check`, `ruff format --check`, both `mypy` passes, and the full
   `NEC2C=... uv run pytest` before declaring an item complete.
-- Add domain, persistence, UI, scene, reporting, optimizer, migration, and
+- Add domain, persistence/container, UI, scene, reporting, optimizer, and
   documentation coverage proportional to the item.
 - No new numerical reference without a traceable source.
 - Do not commit or push unless explicitly requested.
@@ -60,9 +60,9 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 
 ## PF1 — ZIP project container and honest size contract
 
-**Status:** accepted 2026-11-20 (ADR-0050); implementation pending. **Priority:**
-P0 reliability, independent of the antenna waves. Do this before any further
-project-format change.
+**Status:** accepted 2026-11-20 (ADR-0050); slice 1 implemented 2026-11-20,
+slice 2 pending. **Priority:** P0 reliability, independent of the antenna
+waves. Do this before any further project-format change.
 
 **Motivation:** On 2026-11-20 a 56.9 MB compressed project (409.1 MB expanded)
 was written successfully but could not be reopened. `JsonProjectRepository`
@@ -73,12 +73,14 @@ At the observed 7.19:1 compression ratio the effective compressed limit was
 about 35.6 MB, so the 64 MB check was not a safe proxy for the expanded limit.
 This is a save/load contract violation, not a solver or validation failure.
 
-**Hotfix landed 2026-11-20:** `prepare_payload()` now rejects a project whose
-expanded JSON exceeds 256 MiB before writing, `write_payload()` re-checks the
-expanded size, the save flow offers compaction and retry, and a save/load
-invariant test covers the contract. PF1 remains the structural fix: the gzip
-envelope still has no per-entry limits, no lazy run loading, and no physical
-compaction. See [ADR-0050](ADR/0050-zip-project-container.md).
+**Slice 1 landed 2026-11-20:** the gzip envelope is replaced by a deterministic
+ZIP container (container 1, schema 59) with separate project, design, run,
+raw-text, and optimization entries; per-entry, total, manifest, path, and
+entry-count limits are enforced on save and load; CRC32/SHA-256 are verified
+through bounded reads; writes are atomic; gzip, plain JSON, and schema < 59 are
+rejected; and the example is regenerated. `load()` still materializes every
+run, and the UI has no design-only recovery or save-design-only path yet. Those
+are slice 2. See [ADR-0050](ADR/0050-zip-project-container.md).
 
 **Goal:** replace the single gzip JSON envelope with a versioned ZIP container
 whose entries can be validated, loaded, and pruned independently; enforce one
@@ -1098,10 +1100,10 @@ decision:
 
 ## Current baseline
 
-- Schema: **58**.
-- Full gate: **4,289 passed, 1 skipped** on 2026-11-20 after the full QA,
-  technical-debt sweep, main-window extractions, and the save/load size
-  invariant fix (typed simulation specs,
+- Schema: **59**; container version 1.
+- Full gate: **4,248 passed, 1 skipped** on 2026-11-20 after the full QA,
+  technical-debt sweep, main-window extractions, save/load size invariant fix,
+  and PF1 container slice 1 (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
