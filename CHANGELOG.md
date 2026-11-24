@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   through the normal design/undo path before the full run. Apply keeps the
   dialog open, resets the preview baseline to the applied design, and re-enables
   tuning when the full simulation finishes; closing it preserves the last
-  applied design. Only the primary dimension is exposed in this slice. No
-  schema or solver change.
+  applied design. A dimension selector exposes family-specific length
+  dimensions such as height, spacing, radial length, feed height, and reflector
+  spacing, not only the primary dimension. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire

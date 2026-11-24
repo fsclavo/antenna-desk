@@ -10,6 +10,7 @@ from dataclasses import replace
 from PySide6.QtCore import Qt, QThread, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -21,11 +22,8 @@ from PySide6.QtWidgets import (
 
 from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
-from ...domain.antennas.design import (
-    AntennaDesignParameters,
-    primary_dimension_m,
-    with_primary_dimension,
-)
+from ...domain.antennas.design import AntennaDesignParameters
+from ...domain.antennas.dimensions import ManagedDimension, managed_dimensions
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.result import SimulationResult
@@ -48,6 +46,7 @@ class LiveTuningDialog(QDialog):
         solver: AntennaSolver,
         on_apply: Callable[[AntennaDesignParameters], None],
         *,
+        dimensions: tuple[ManagedDimension, ...] | None = None,
         display_units: DisplayUnits | None = None,
         is_simulation_running: Callable[[], bool] | None = None,
         parent: QWidget | None = None,
@@ -60,7 +59,11 @@ class LiveTuningDialog(QDialog):
         self._on_apply = on_apply
         self._display_units = display_units or DisplayUnits()
         self._is_simulation_running = is_simulation_running or (lambda: False)
-        self._dimension_m = primary_dimension_m(parameters)
+        self._dimensions = dimensions or managed_dimensions(parameters)
+        if not self._dimensions:
+            raise ValueError("the family has no managed live-tuning dimension")
+        self._dimension = self._dimensions[0]
+        self._dimension_m = self._dimension.read(parameters)
         self._applying = False
         self._request_id = 0
         self._busy = False
@@ -77,6 +80,14 @@ class LiveTuningDialog(QDialog):
         self._apply_timer = QTimer(self)
         self._apply_timer.setInterval(200)
         self._apply_timer.timeout.connect(self._poll_apply)
+        self._dimension_selector_label = QLabel(self)
+        self._dimension_combo = QComboBox(self)
+        for dimension in self._dimensions:
+            self._dimension_combo.addItem(
+                translator.t(dimension.label_key),
+                dimension.key,
+            )
+        self._dimension_combo.currentIndexChanged.connect(self._on_dimension_changed)
         self._slider = QSlider(Qt.Orientation.Horizontal, self)
         self._slider.setRange(0, 200)
         self._slider.setValue(100)
@@ -98,13 +109,19 @@ class LiveTuningDialog(QDialog):
         controls.addWidget(self._apply)
         controls.addWidget(self._close)
         controls.addStretch(1)
+        dimension_row = QHBoxLayout()
+        dimension_row.addWidget(self._dimension_selector_label)
+        dimension_row.addWidget(self._dimension_combo, 1)
         layout = QVBoxLayout(self)
+        layout.addLayout(dimension_row)
         layout.addWidget(self._dimension_label)
         layout.addWidget(self._slider)
         layout.addWidget(self._result_label, 1)
         layout.addWidget(self._progress)
         layout.addWidget(self._preview_label)
         layout.addLayout(controls)
+        self._dimension_selector_label.setText(translator.t("live.dimension_selector"))
+        apply_help(self._dimension_combo, translator, "live.dimension")
         apply_help(self._slider, translator, "live.dimension")
         apply_help(self, translator, "live.title")
         self._update_dimension_label()
@@ -112,7 +129,29 @@ class LiveTuningDialog(QDialog):
         self._debounce.start()
 
     def _dimension_for_slider(self, value: int) -> float:
-        return self._dimension_m * (0.80 + 0.40 * value / 200.0)
+        candidate = self._dimension_m * (0.80 + 0.40 * value / 200.0)
+        return min(max(candidate, self._dimension.minimum_m), self._dimension.maximum_m)
+
+    def _on_dimension_changed(self, _index: int) -> None:
+        key = self._dimension_combo.currentData()
+        dimension = next(
+            (item for item in self._dimensions if item.key == key),
+            None,
+        )
+        if dimension is None or dimension.key == self._dimension.key:
+            return
+        self._dimension = dimension
+        self._dimension_m = dimension.read(self._parameters)
+        self._slider.blockSignals(True)
+        try:
+            self._slider.setValue(100)
+        finally:
+            self._slider.blockSignals(False)
+        self._result_label.clear()
+        self._progress.setText(self._translator.t("live.waiting"))
+        self._update_dimension_label()
+        if not self._applying:
+            self._debounce.start()
 
     def _on_slider(self, _value: int) -> None:
         self._update_dimension_label()
@@ -123,13 +162,14 @@ class LiveTuningDialog(QDialog):
         dimension = self._dimension_for_slider(self._slider.value())
         self._dimension_label.setText(
             self._translator.t(
-                "live.dimension_label",
+                "live.dimension_value",
+                dimension=self._translator.t(self._dimension.label_key),
                 value=self._display_units.format_length(dimension),
             )
         )
 
     def _current_parameters(self) -> AntennaDesignParameters:
-        return with_primary_dimension(
+        return self._dimension.write(
             self._parameters,
             self._dimension_for_slider(self._slider.value()),
         )
@@ -231,6 +271,7 @@ class LiveTuningDialog(QDialog):
         ready = not self._busy and not self._applying
         self._apply.setEnabled(ready)
         self._slider.setEnabled(not self._applying)
+        self._dimension_combo.setEnabled(not self._applying)
 
     def _apply_clicked(self) -> None:
         if self._busy or self._applying:
@@ -243,7 +284,7 @@ class LiveTuningDialog(QDialog):
             return
         # Keep the dialog open: the operator can keep tuning without reopening.
         self._parameters = parameters
-        self._dimension_m = primary_dimension_m(parameters)
+        self._dimension_m = self._dimension.read(parameters)
         self._slider.blockSignals(True)
         try:
             self._slider.setValue(100)

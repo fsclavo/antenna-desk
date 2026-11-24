@@ -130,6 +130,7 @@ from ..domain.antennas.design import (
     template_load_ids,
     with_primary_dimension,
 )
+from ..domain.antennas.dimensions import managed_dimensions
 from ..domain.antennas.dipole import DipoleOrientation, DipoleParameters
 from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import (
@@ -7789,9 +7790,8 @@ class MainWindow(QMainWindow):
                 self._show_error(self._translator.t("error.invalid_design", message=str(exc)))
                 return
         design = self._project.design_by_id(self._design_id)
-        try:
-            primary_dimension_m(design.parameters)
-        except TypeError:
+        dimensions = managed_dimensions(design.parameters)
+        if not dimensions:
             self._show_error(self._translator.t("live.unsupported"))
             return
         dialog = LiveTuningDialog(
@@ -7800,6 +7800,7 @@ class MainWindow(QMainWindow):
             self._base_simulation_spec(design),
             self._solver,
             lambda parameters: self._apply_live_tuning(design, parameters),
+            dimensions=dimensions,
             display_units=DisplayUnits(self._unit_system, self._length_policy),
             is_simulation_running=lambda: self._simulating,
             parent=self,

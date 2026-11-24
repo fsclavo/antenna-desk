@@ -1656,8 +1656,10 @@ sweep. Use **Analyze Bands** for denser coverage.
 
 ### Live tuning
 
-Use **Tools → Live Tuning...** to explore the design's primary dimension
-without waiting for a full sweep. Drag the slider; after a short debounce,
+Use **Tools → Live Tuning...** to explore a managed design dimension without
+waiting for a full sweep. Pick a dimension in the selector when the family
+exposes more than one (for example, total length, height, spacing, radial
+length, or feed height). Drag the slider; after a short debounce,
 AntennaDesk runs a coarse single-frequency solve with the pattern disabled and
 shows SWR, R, X, and |Z|. The preview badge and note make clear that this is not
 a saved simulation.
@@ -1666,8 +1668,9 @@ a saved simulation.
 enters undo history, and starts the full simulation. The dialog stays open and
 resets its baseline to the applied design, so you can keep tuning and apply
 again without reopening it. Closing the dialog cancels only the preview; the
-full simulation continues and the last applied design is kept. Only the primary
-dimension is exposed in this slice.
+full simulation continues and the last applied design is kept. The selector
+covers length dimensions; non-length managed values and pattern preview are not
+in this slice.
 
 ## Import VNA measurements
 

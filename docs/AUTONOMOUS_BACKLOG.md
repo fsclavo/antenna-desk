@@ -758,18 +758,20 @@ labels and a visible limitation.
 
 ### DL3 — Live tuning preview
 
-**Status:** **Partially done 2026-11-24.** The primary-dimension slider, coarse
+**Status:** **Partially done 2026-11-24.** A managed-dimension selector covers
+the primary dimension plus family-specific length dimensions such as height,
+spacing, radial length, feed height, and reflector spacing. The coarse
 single-frequency preview, debounce/cancel, stale-result guard, preview badge,
-and apply/full-run path are implemented. Apply now keeps the dialog open,
-resets the baseline to the applied design, and re-enables tuning after the full
-simulation finishes. Other managed dimensions (height, spacing) and pattern
-preview remain follow-ups.
+and apply/full-run path are implemented. Apply keeps the dialog open, resets the
+baseline to the applied design, and re-enables tuning after the full simulation
+finishes. Pattern preview and non-length managed values remain follow-ups.
 
 **Goal:** make geometry exploration immediate without replacing the full
 simulation.
 
 **Scope (MVP):**
-- Drag a managed dimension (length, height, spacing) and run a coarse
+- Select and drag a managed length dimension (primary, height, spacing, radial
+  length, feed height, reflector spacing, and similar) and run a coarse
   single-frequency solve with pattern disabled; debounce and cancel.
 - Preview badge and "preview" label in the status bar; no reports or saved
   results from preview.
@@ -1109,7 +1111,7 @@ decision:
 ## Current baseline
 
 - Schema: **60**; container version 1.
-- Full gate: **4,295 passed, 1 skipped** on 2026-11-24 after the full QA,
+- Full gate: **4,301 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
   PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
   (typed simulation specs,

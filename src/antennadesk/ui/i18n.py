@@ -6213,6 +6213,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "T2FD",
     },
     "field.height": {Language.ENGLISH: "Height", Language.SPANISH: "Altura"},
+    "field.apex_height": {
+        Language.ENGLISH: "Apex height",
+        Language.SPANISH: "Altura del vértice",
+    },
+    "field.feed_height": {
+        Language.ENGLISH: "Feed height",
+        Language.SPANISH: "Altura del punto de alimentación",
+    },
+    "field.end_height": {
+        Language.ENGLISH: "End height",
+        Language.SPANISH: "Altura del extremo",
+    },
+    "field.vertical_height": {
+        Language.ENGLISH: "Vertical height",
+        Language.SPANISH: "Altura vertical",
+    },
+    "field.radial_length": {
+        Language.ENGLISH: "Radial length",
+        Language.SPANISH: "Longitud de radiales",
+    },
+    "field.reflector_spacing": {
+        Language.ENGLISH: "Reflector spacing",
+        Language.SPANISH: "Separación del reflector",
+    },
+    "field.director_spacing": {
+        Language.ENGLISH: "Director spacing",
+        Language.SPANISH: "Separación del director",
+    },
+    "field.top_hat_radius": {
+        Language.ENGLISH: "Top-hat radius",
+        Language.SPANISH: "Radio del sombrero capacitivo",
+    },
+    "field.loading_coil_offset": {
+        Language.ENGLISH: "Loading-coil offset",
+        Language.SPANISH: "Posición de la bobina de carga",
+    },
     "field.sag": {
         Language.ENGLISH: "Wire sag",
         Language.SPANISH: "Flecha del hilo",
@@ -16901,9 +16937,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Live tuning",
         Language.SPANISH: "Ajuste en vivo",
     },
-    "live.dimension_label": {
-        Language.ENGLISH: "Primary dimension: {value}",
-        Language.SPANISH: "Dimensión primaria: {value}",
+    "live.dimension_selector": {
+        Language.ENGLISH: "Dimension",
+        Language.SPANISH: "Dimensión",
+    },
+    "live.dimension_value": {
+        Language.ENGLISH: "{dimension}: {value}",
+        Language.SPANISH: "{dimension}: {value}",
     },
     "live.preview_note": {
         Language.ENGLISH: "Preview only: pattern disabled, coarse segmentation, not saved. Apply runs the full simulation.",
