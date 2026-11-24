@@ -9,7 +9,7 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** pre-1.0. Latest published release: `0.9.0` (2026-11-17). The
+**Status:** pre-1.0. Latest published release: `0.10.0` (2026-11-24). The
 current development schema is `61`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.

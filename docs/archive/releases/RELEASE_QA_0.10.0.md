@@ -4,7 +4,9 @@
 - **Date:** 2026-11-24
 - **Tag:** `v0.10.0`
 - **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.0>
-- **Status:** tagged; CI publication in progress; Linux artifacts built and smoke-tested; Windows artifacts pending CI
+- **Release workflow:** <https://github.com/fsclavo/antenna-desk/actions/runs/45508172449>
+- **Tag CI:** <https://github.com/fsclavo/antenna-desk/actions/runs/45508172452>
+- **Status:** published with unsigned, checksum-verified artifacts
 - **Schema:** 61 (from 52 in 0.9.0)
 - **Previous release:** `0.9.0` (2026-11-17)
 
@@ -61,6 +63,8 @@ changelog, ADRs, and evidence audit.
   units/CSV/DXF exceptions were checked with no blocking findings.
 - Real `nec2c` coverage includes the vertical, phased-vertical, Yagi, HexBeam,
   and drooped-radial cases.
+- CI smoke tests passed for the wheel, AppImage, Debian package, Windows
+  portable executable, and Windows installer.
 
 ## Candidate artifacts
 
@@ -94,7 +98,35 @@ CI rebuilds every artifact from the tag. Windows artifacts are built by CI.
 | Debian `--check-solver` | found bundled `nec2c` |
 | Debian `sha256sum -c` | OK |
 | Debian offscreen launch, 10 s timeout | exited 124, no crash |
-| Windows smoke tests | pending CI |
+| Windows portable `--version` / `--check-solver` | pass |
+| Windows installer install, launch, and uninstall | pass |
+
+## Published assets
+
+All six artifacts have a companion `.sha256` file. Every published checksum was
+verified after downloading the release assets with `sha256sum -c`.
+
+| Asset | Size | SHA-256 |
+|---|---:|---|
+| `antennadesk-0.10.0-py3-none-any.whl` | 1.2 M | `260af79b6986a8f85e8e808ff9d25f6405370ad237cb5ac94cf6b07035c25241` |
+| `antennadesk-0.10.0.tar.gz` | 1.8 M | `cd648621c91fce7a45a62cb292ac0f8de4f300b1e70c1bfe78ff653b2f5c04b7` |
+| `AntennaDesk-0.10.0-x86_64.AppImage` | 129 M | `5f4ee211b12aed5a67d9185d52cd9902165442388e3858804fca6d1e4fb4c0ba` |
+| `antennadesk_0.10.0_amd64.deb` | 110 M | `7f75273795a225f70e21e1e7ec7fdf39e14cde21c2e23cd3681b5fce9753d2a6` |
+| `AntennaDesk-0.10.0-windows-x86_64.zip` | 103 M | `3f0d63872661f7da45e26a7e5229ddca097e1cdf315f20e848ca5c7e39e5660c` |
+| `AntennaDesk-0.10.0-windows-x86_64-setup.exe` | 71 M | `d7ecd440027254d81ad147cd4c758b023f99375490c5463e3d49e470028ba537` |
+
+The published wheel checksum matches the local candidate. The sdist and native
+artifacts were rebuilt independently by CI.
+
+## CI note
+
+The tag CI workflow's Windows jobs did not go green: Python 3.13 and the 3.11
+non-UI job failed during collection because the U6 QA pass added a Unix-only
+`os.geteuid()` guard to a directory-permission test, and Python 3.12 was
+canceled after a long UI stall. The Release workflow independently built,
+smoke-tested, and published the Windows artifacts successfully. The guard was
+fixed on main after publication and a CI rerun is pending; the 0.10.0
+artifacts themselves are unaffected.
 
 ## Known limitations
 

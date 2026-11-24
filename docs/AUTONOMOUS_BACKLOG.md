@@ -1636,19 +1636,19 @@ decision:
   window deliberately; future work extracts a component only when a feature or
   defect touches it. The duplicated `QThread` lifecycles and `results_view.py`
   are likewise feature-driven, not an active standalone refactor.
-- Release: **0.9.0** published on 2026-11-17 with the Touchstone `.s1p`
-  round-trip, coaxial feed schematic (UX31), per-template material defaults
-  (UX30), and the chart-cursor teardown fix. The tag-triggered CI run
-  [`44103244393`](https://github.com/fsclavo/antenna-desk/actions/runs/44103244393)
+- Release: **0.10.0** published on 2026-11-24 with adaptive length units
+  U1–U6, live tuning (DL3), uniform radial droop (VR1), cliff site ground
+  (DL7), the PF1 ZIP container, and the 1.1 station tools. The tag-triggered CI
+  run [`45508172449`](https://github.com/fsclavo/antenna-desk/actions/runs/45508172449)
   completed the wheel/sdist, Linux, Windows, and publish jobs; all six published
-  assets and checksums were verified. See
-  [`RELEASE_QA_0.9.0.md`](archive/releases/RELEASE_QA_0.9.0.md). **0.8.2** remains the previous
-  release (2026-11-16, element-table header sizing fix). See
-  [`RELEASE_QA_0.8.2.md`](archive/releases/RELEASE_QA_0.8.2.md).
-- Release candidate: **0.10.0** prepared on 2026-11-24; the local wheel/sdist,
-  AppImage, and Debian package are built and smoke-tested. Windows artifacts
-  and the final tag remain pending. See
-  [`RELEASE_QA_0.10.0.md`](archive/releases/RELEASE_QA_0.10.0.md).
+  assets and checksums were verified. The tag CI Windows jobs did not go
+  green: two failed on a Unix-only `os.geteuid()` guard in a test added by the
+  U6 QA pass, and Python 3.12 was canceled after a UI stall. The Release
+  workflow still built and smoke-tested the Windows artifacts, and the guard
+  was fixed on main. See
+  [`RELEASE_QA_0.10.0.md`](archive/releases/RELEASE_QA_0.10.0.md). **0.9.0**
+  remains the previous release (2026-11-17, Touchstone/UX31/UX30). See
+  [`RELEASE_QA_0.9.0.md`](archive/releases/RELEASE_QA_0.9.0.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
   the native heap during view teardown; Windows 3.12/3.13 and Linux
