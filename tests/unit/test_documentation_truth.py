@@ -139,7 +139,6 @@ def test_changelog_does_not_repeat_unreleased_entries_in_release_sections() -> N
     )
     titles = set(re.findall(r"(?m)^- \*\*(.+?)\*\*", unreleased))
 
-    assert titles
     for header, body in sections.items():
         if header.startswith("[Unreleased]"):
             continue

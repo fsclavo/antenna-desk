@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-24
+
 ### Added
 
 - **Uniform radial droop for verticals (VR1).** The vertical template adds one
@@ -2497,7 +2499,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project documentation: blueprint, ADR-0001, project decisions, and solver
   evaluation.
 
-[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.0
 [0.2.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.2.0
 [0.1.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0
 [0.1.0.dev0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0.dev0

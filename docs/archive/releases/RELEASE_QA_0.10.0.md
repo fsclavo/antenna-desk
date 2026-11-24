@@ -2,9 +2,9 @@
 
 - **Version:** `0.10.0`
 - **Date:** 2026-11-24
-- **Tag:** pending
-- **Release:** pending
-- **Status:** release candidate prepared; Linux artifacts built and smoke-tested; Windows artifacts pending CI
+- **Tag:** `v0.10.0`
+- **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.0>
+- **Status:** tagged; CI publication in progress; Linux artifacts built and smoke-tested; Windows artifacts pending CI
 - **Schema:** 61 (from 52 in 0.9.0)
 - **Previous release:** `0.9.0` (2026-11-17)
 
