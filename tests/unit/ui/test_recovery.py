@@ -151,7 +151,10 @@ def test_corrupt_project_payload_raises(
         recovery.load()
 
 
-@pytest.mark.skipif(os.geteuid() == 0, reason="root bypasses directory permissions")
+@pytest.mark.skipif(
+    os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+    reason="directory permissions are not enforced on Windows or as root",
+)
 def test_read_only_recovery_directory_is_reported(
     sample_project: Project,
     tmp_path: Path,
