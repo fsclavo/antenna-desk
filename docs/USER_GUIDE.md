@@ -2601,6 +2601,19 @@ While a simulation runs, the interface stays responsive. Press **Cancel** to
 terminate the solver. The status bar and diagnostics tab explain failures.
 Invalid designs are rejected before the solver runs.
 
+## Site ground
+
+Use **Tools → Site Ground...** to add an optional second-medium/cliff profile
+to the project. The dialog sets the second-medium permittivity and conductivity,
+the edge shape (straight or circular), the edge distance, and the height
+difference. It uses the design's existing ground as the first medium.
+
+This is a **far-field-only** model: it can change the radiation pattern, but it
+does not change antenna impedance, currents, or SWR. The report and NEC export
+state this limitation. It is one straight or circular edge, not full terrain.
+The native NEC radial-screen approximation is not exposed; the ordinary
+dense-wire radial model remains the current screen model.
+
 ## Save and open
 
 Use **File → Save** / **Save As...** to write a versioned `.antennadesk`

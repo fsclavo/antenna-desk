@@ -7,6 +7,7 @@ from __future__ import annotations
 from antennadesk.domain.antennas.beverage import beverage_parameters
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.environment.ground import GroundModel
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
@@ -112,3 +113,33 @@ def test_export_includes_the_beverage_transformer_and_omits_private_paths() -> N
     assert "/usr/" not in text
     assert "raw_output" not in text
     assert "NEC-2 output" not in text
+
+
+def test_export_header_labels_the_cliff_profile_as_far_field_only() -> None:
+    from dataclasses import replace
+
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    ).to_antenna(name="40 m dipole")
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=25.0,
+        edge_shape=EdgeShape.CIRCULAR,
+    )
+
+    text = render_nec_deck(
+        model,
+        replace(_spec(), site_ground=site),
+        _metadata(),
+    )
+
+    assert "CM Site ground: second-medium/cliff profile; far-field only" in text
+    assert "SWR and currents unchanged" in text
+    assert "GN 0 0 0 0 13.000000000 0.005000000 81.000000000 5.000000000" in text

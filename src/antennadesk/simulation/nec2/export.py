@@ -40,7 +40,7 @@ def _frequency_text(spec: SimulationSpec) -> str:
     )
 
 
-def _ground_text(model: AntennaModel) -> str:
+def _ground_text(model: AntennaModel, spec: SimulationSpec) -> str:
     ground = model.environment.ground
     if ground.kind is GroundKind.FREE_SPACE:
         return "free space"
@@ -50,7 +50,16 @@ def _ground_text(model: AntennaModel) -> str:
     conductivity = ground.conductivity_s_per_m
     if permittivity is None or conductivity is None:
         raise ValueError("finite ground requires permittivity and conductivity")
-    return f"finite ground, epsilon_r={permittivity:g}, sigma={conductivity:g} S/m"
+    text = f"finite ground, epsilon_r={permittivity:g}, sigma={conductivity:g} S/m"
+    site = spec.site_ground
+    if site is not None:
+        text += (
+            f"; second medium epsilon_r={site.second_medium_relative_permittivity:g}, "
+            f"sigma={site.second_medium_conductivity_s_per_m:g} S/m, "
+            f"{site.edge_shape.value} edge at {site.edge_distance_m:g} m, "
+            f"height {site.edge_height_m:g} m (far-field only)"
+        )
+    return text
 
 
 def _segmentation_text(spec: SimulationSpec) -> str:
@@ -97,9 +106,14 @@ def render_nec_deck(
         f"CM Solver: {_comment(_solver_text(metadata))}",
         f"CM Frequency plan: {_comment(_frequency_text(spec))}",
         f"CM Reference impedance: {spec.reference_impedance_ohm:g} ohm",
-        f"CM Ground: {_comment(_ground_text(model))}",
+        f"CM Ground: {_comment(_ground_text(model, spec))}",
         f"CM Segmentation: {_comment(_segmentation_text(spec))}",
     ]
+    if spec.site_ground is not None:
+        header.append(
+            "CM Site ground: second-medium/cliff profile; far-field only; "
+            "SWR and currents unchanged"
+        )
     if spec.feed_transformer_ratio != 1.0:
         header.append(f"CM Feed transformer: {spec.feed_transformer_ratio:g}:1")
     if spec.feed_line is not None:

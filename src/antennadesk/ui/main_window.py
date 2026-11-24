@@ -281,6 +281,7 @@ from .dialogs.reference_library_dialog import ReferenceLibraryDialog
 from .dialogs.robustness_dialog import RobustnessDialog
 from .dialogs.scale_frequency_dialog import ScaleFrequencyDialog
 from .dialogs.scv_dialog import ScvDialog
+from .dialogs.site_ground_dialog import SiteGroundDialog
 from .dialogs.transmission_lines_dialog import TransmissionLinesDialog
 from .dialogs.tuner_match_dialog import TunerMatchDialog
 from .dialogs.tuning_assistant_dialog import TuningAssistantDialog
@@ -643,6 +644,9 @@ class MainWindow(QMainWindow):
         self._change_template_action = QAction(self)
         self._change_template_action.setShortcut(QKeySequence("Ctrl+Shift+T"))
         self._change_template_action.triggered.connect(lambda: self.change_template())
+        self._site_ground_action = QAction(self)
+        self._site_ground_action.triggered.connect(lambda: self.show_site_ground())
+
         self._installation_profile_action = QAction(self)
         self._installation_profile_action.triggered.connect(
             lambda: self.edit_installation_profile()
@@ -1504,6 +1508,7 @@ class MainWindow(QMainWindow):
         self._tools_menu.addAction(self._locate_solver_action)
         self._tools_menu.addAction(self._calculator_action)
         self._tools_menu.addAction(self._materials_action)
+        self._tools_menu.addAction(self._site_ground_action)
         self._tools_menu.addAction(self._tuner_match_action)
         self._tools_menu.addAction(self._live_tuning_action)
         self._tools_menu.addAction(self._measurement_sessions_action)
@@ -1669,6 +1674,9 @@ class MainWindow(QMainWindow):
         self._compare_action.setText(self._translator.t("action.compare"))
         self._optimize_action.setText(self._translator.t("action.optimize"))
         self._change_template_action.setText(self._translator.t("action.change_template"))
+        self._site_ground_action.setText(self._translator.t("action.site_ground"))
+        self._site_ground_action.setToolTip(self._translator.t("help.action.site_ground"))
+        self._site_ground_action.setWhatsThis(self._translator.t("help.action.site_ground"))
         self._installation_profile_action.setText(self._translator.t("action.installation_profile"))
         self._installation_profile_action.setToolTip(
             self._translator.t("help.action.installation_profile")
@@ -1914,13 +1922,20 @@ class MainWindow(QMainWindow):
         )
         self._provenance_label.setVisible(True)
 
+    def _result_site_ground_matches(self, result: SimulationResult) -> bool:
+        expected = self._project.site_ground if self._project is not None else None
+        return result.spec.site_ground == expected
+
     def _latest_run_for(self, design_id: UUID) -> SimulationRun | None:
         if self._project is not None:
             run = self._project.latest_simulation_run(design_id)
             if run is not None:
-                return run
+                return run if self._result_site_ground_matches(run.result) else None
         if self._session is not None:
-            return self._session.latest_run(design_id)
+            run = self._session.latest_run(design_id)
+            if run is not None and not self._result_site_ground_matches(run.result):
+                return None
+            return run
         return None
 
     def _latest_band_analysis_for(
@@ -1948,6 +1963,8 @@ class MainWindow(QMainWindow):
             if run is not None
         ]
         if latest_runs and max(run.created_at for run in latest_runs) > analysis.created_at:
+            return None
+        if any(not self._result_site_ground_matches(band.result) for band in analysis.bands):
             return None
         return analysis
 
@@ -2123,6 +2140,7 @@ class MainWindow(QMainWindow):
         self._locate_solver_action.setEnabled(idle)
         self._calculator_action.setEnabled(idle)
         self._materials_action.setEnabled(idle)
+        self._site_ground_action.setEnabled(idle and has_project)
         self._tuner_match_action.setEnabled(idle and has_result)
         self._live_tuning_action.setEnabled(idle and has_project and self._solver is not None)
         self._measurement_sessions_action.setEnabled(idle and has_project)
@@ -3938,6 +3956,38 @@ class MainWindow(QMainWindow):
         self._last_status_key = "status.installation_profile"
         self._update_status_text()
 
+    @history_action("history.site_ground")
+    def show_site_ground(self) -> None:
+        if self._project is None:
+            self._show_error(self._translator.t("error.no_project"))
+            return
+        dialog = SiteGroundDialog(
+            self._translator,
+            DisplayUnits(self._unit_system, self._length_policy),
+            self._project.site_ground,
+            self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        profile = dialog.profile()
+        if profile == self._project.site_ground:
+            return
+        self._project = self._project.with_site_ground(
+            profile,
+            updated_at=utc_now(),
+        )
+        self._simulation_results = {}
+        self._band_analysis_results = {}
+        self._selected_band_ids = {}
+        self._last_result = None
+        self._results.set_band_analysis(None)
+        self._results.set_result(None)
+        self._mark_project_dirty()
+        self._update_title()
+        self._update_actions()
+        self._last_status_key = "status.site_ground_updated"
+        self._update_status_text()
+
     def _refresh_installation_summary(self) -> None:
         label = getattr(self, "_installation_label", None)
         button = getattr(self, "_installation_edit", None)
@@ -4000,6 +4050,9 @@ class MainWindow(QMainWindow):
             matching_network_override=resolution.override_active,
             matching_network_origin=resolution.origin,
             balun_loss=self._balun_loss,
+            site_ground=(
+                self._project.site_ground if self._project is not None else spec.site_ground
+            ),
         )
 
     def _family_simulation_spec(self, design: DesignVariant) -> SimulationSpec:

@@ -805,7 +805,7 @@ and SWR at the target. The result is an explicit `TuningProposal` with
 ## Project file
 
 The native `.antennadesk` file is a versioned ZIP container (container version
-1, schema version 59). It is one portable file written atomically. The
+1, schema version 60). It is one portable file written atomically. The
 container separates the small project metadata from designs, runs, raw solver
 text, and optimization summaries:
 
@@ -842,16 +842,29 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `59`; the application writes version 59 and
-rejects gzip, plain JSON, and every schema below 59. The project has not shipped
+trusted. The current schema is `60`; the application writes version 60 and
+rejects gzip, plain JSON, and every schema below 59; a 59 container migrates its metadata to 60 on open. The project has not shipped
 to users, so no legacy reader or migration is retained. The complete example
 lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
 and is written in the current container format.
 
+### Site ground profile
+
+The optional project-level `SiteGroundProfile` stores a second-medium/cliff
+profile: second-medium relative permittivity and conductivity, edge shape
+(linear or circular), edge distance, edge height, and short label/notes. It is
+not part of the per-design `GroundModel`. The simulation specification carries
+the profile; NEC emits the design's first medium plus the second-medium and edge
+fields, and selects `RP 2` (linear) or `RP 3` (circular). The second medium
+changes only the far-field pattern; impedance, currents, and SWR stay on the
+first medium. Schema 60 adds the optional field with a 59→60 metadata-only
+migration.
+
 ## Schema policy
 
-- Current version: `59`.
-- Only container version 1 / schema version 59 is accepted. The list below is a
+- Current version: `60`.
+- Only container version 1 / schema version 60 is accepted; schema 59 is migrated
+  on open by adding `project.site_ground: null`. The list below is a
   historical record of earlier development schemas; those readers and
   migrations were removed on 2026-11-20.
 

@@ -8,6 +8,7 @@ from dataclasses import replace
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.matching_network import MatchingNetworkOrigin
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
@@ -81,3 +82,16 @@ def test_matching_network_origin_does_not_change_the_fingerprint() -> None:
     )
 
     assert first == model_fingerprint(_model(), changed)
+
+
+def test_site_ground_changes_the_fingerprint() -> None:
+    first = model_fingerprint(_model(), _spec())
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=10.0,
+        edge_shape=EdgeShape.CIRCULAR,
+    )
+    changed = replace(_spec(), site_ground=site)
+
+    assert first != model_fingerprint(_model(), changed)

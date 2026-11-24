@@ -1,6 +1,8 @@
 # ADR-0050 — ZIP project container and honest size contract
 
 - **Status:** accepted 2026-11-20; slice 1 implemented 2026-11-20 (PF1)
+- **Schema note:** original container used schema 59; ADR-0051 adds schema 60
+  with the optional project-level `site_ground` field.
 - **Date:** 2026-11-20
 - **Supersedes:** [ADR-0021](0021-compressed-project-files.md)
 - **Related:** `docs/AUTONOMOUS_BACKLOG.md` §PF1

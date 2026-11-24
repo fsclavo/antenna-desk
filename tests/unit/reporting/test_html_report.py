@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -395,3 +396,26 @@ def test_spanish_report_translates_geometry_and_pattern_headings(
     assert "Corte de azimut" in report
     assert "Corte de elevación" in report
     assert "Patrón 3D de campo lejano" in report
+
+
+def test_html_report_states_the_site_ground_is_far_field_only(
+    sample_project: Project,
+) -> None:
+    profile = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=10.0,
+        edge_shape=EdgeShape.CIRCULAR,
+    )
+    project = sample_project.with_site_ground(
+        profile,
+        updated_at=sample_project.updated_at,
+    )
+    result = make_result(project)
+    result = replace(result, spec=replace(result.spec, site_ground=profile))
+
+    report = render_html_report(project, project.designs[0], result)
+
+    assert "Site ground" in report
+    assert "far-field only" in report
+    assert "SWR and currents unchanged" in report

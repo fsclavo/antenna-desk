@@ -18,6 +18,7 @@ import pytest
 
 from antennadesk.application.project_payload import PreparedProject
 from antennadesk.domain.antennas.feed_line import FeedLine
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.result import SimulationResult
 from antennadesk.persistence import container as container_module
@@ -2093,3 +2094,96 @@ def test_prepare_session_payload_with_new_runs_and_retention_falls_back(
     loaded = repository.load(target)
     assert len(loaded.simulation_runs) == 1
     assert loaded.simulation_runs[0].id == updated.simulation_runs[-1].id
+
+
+def test_round_trip_with_site_ground(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    profile = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=50.0,
+        edge_shape=EdgeShape.CIRCULAR,
+        edge_height_m=0.0,
+        label="Coastal cliff",
+        notes="Far-field only.",
+    )
+    project = sample_project.with_site_ground(
+        profile,
+        updated_at=sample_project.updated_at,
+    )
+    path = tmp_path / "site-ground.antennadesk"
+    repository.save(project, path)
+
+    loaded = repository.load(path)
+
+    assert loaded == project
+    assert loaded.site_ground == profile
+    document = _load_json(path)
+    assert document["project"]["site_ground"]["edge_shape"] == "circular"
+
+
+def test_schema_59_container_migrates_to_60(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "schema-59.antennadesk"
+    repository.save(sample_project, source)
+    entries = _read_entries(source)
+    manifest = json.loads(entries["manifest.json"])
+    manifest["schema_version"] = 59
+    project_document = json.loads(entries["project.json"])
+    project_document["schema_version"] = 59
+    project_document["project"].pop("site_ground", None)
+    entries["project.json"] = json.dumps(project_document, separators=(",", ":")).encode("utf-8")
+    for name in entries:
+        if name.startswith(("designs/", "optimizations/", "runs/")) and name.endswith(".json"):
+            document = json.loads(entries[name])
+            document["schema_version"] = 59
+            entries[name] = json.dumps(document, separators=(",", ":")).encode("utf-8")
+    entries["manifest.json"] = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+    _write_container(source, entries)
+
+    loaded = repository.load(source)
+    assert loaded.site_ground is None
+
+    target = tmp_path / "schema-60.antennadesk"
+    repository.save(loaded, target)
+    assert _manifest(target)["schema_version"] == 60
+
+
+def test_round_trip_preserves_run_site_ground(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from antennadesk.application.use_cases.record_simulation_run import (
+        RecordSimulationRun,
+        RecordSimulationRunCommand,
+    )
+
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=25.0,
+        edge_shape=EdgeShape.LINEAR,
+    )
+    base = _rich_result()
+    result = replace(base, spec=replace(base.spec, site_ground=site))
+    project = RecordSimulationRun().execute(
+        RecordSimulationRunCommand(
+            project=sample_project,
+            design_id=sample_project.designs[0].id,
+            result=result,
+            created_at=sample_project.updated_at,
+        )
+    )
+    path = tmp_path / "run-site.antennadesk"
+
+    repository.save(project, path)
+    loaded = repository.load(path)
+
+    assert loaded.simulation_runs[0].result.spec.site_ground == site

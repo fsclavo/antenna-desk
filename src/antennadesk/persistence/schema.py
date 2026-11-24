@@ -133,6 +133,12 @@ from ..domain.design.band_plan import BandPlan, BandSelection
 from ..domain.design.matching_design import MatchingNetworkDesign
 from ..domain.environment.environment import Environment
 from ..domain.environment.ground import GroundKind, GroundModel
+from ..domain.environment.site_ground import (
+    MAX_SITE_LABEL_LENGTH,
+    MAX_SITE_NOTES_LENGTH,
+    EdgeShape,
+    SiteGroundProfile,
+)
 from ..domain.measurement import Measurement, MeasurementPoint, MeasurementSession
 from ..domain.optimization.summary import (
     OptimizationMode,
@@ -886,6 +892,7 @@ class SimulationSpecPayload(StrictModel):
     balun_loss: BalunLossPayload | None = None
     transformer_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
+    site_ground: SiteGroundPayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
 
@@ -1297,6 +1304,16 @@ class DesignPayload(StrictModel):
         return self
 
 
+class SiteGroundPayload(StrictModel):
+    second_medium_relative_permittivity: float = Field(ge=1.0)
+    second_medium_conductivity_s_per_m: float = Field(gt=0.0)
+    edge_distance_m: float = Field(ge=0.0)
+    edge_shape: EdgeShape = EdgeShape.LINEAR
+    edge_height_m: float = Field(default=0.0, ge=0.0)
+    label: str = Field(default="", max_length=MAX_SITE_LABEL_LENGTH)
+    notes: str = Field(default="", max_length=MAX_SITE_NOTES_LENGTH)
+
+
 class ProjectMetadataPayload(StrictModel):
     """Project fields shared by the metadata entry and the full document."""
 
@@ -1316,6 +1333,7 @@ class ProjectMetadataPayload(StrictModel):
     current_balun: bool = False
     installation_profiles: list[InstallationProfilePayload] = Field(default_factory=list)
     active_installation_profile_id: UUID | None = None
+    site_ground: SiteGroundPayload | None = None
     construction_record: ConstructionRecordPayload | None = None
     bom_costs: BomCostPayload | None = None
 
@@ -2302,6 +2320,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
             _balun_loss_from_domain(value.transformer_loss) if value.transformer_loss else None
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
+        site_ground=(_site_ground_from_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )
 
@@ -2688,6 +2707,7 @@ def _project_from_domain(value: Project) -> ProjectPayload:
             _installation_profile_from_domain(profile) for profile in value.installation_profiles
         ],
         active_installation_profile_id=value.active_installation_profile_id,
+        site_ground=(_site_ground_from_domain(value.site_ground) if value.site_ground else None),
         construction_record=(
             _construction_record_from_domain(value.construction_record)
             if value.construction_record is not None
@@ -3606,6 +3626,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
             _balun_loss_to_domain(value.transformer_loss) if value.transformer_loss else None
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
+        site_ground=(_site_ground_to_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )
 
@@ -3855,6 +3876,30 @@ def _bom_costs_to_domain(value: BomCostPayload) -> BomCostRecord:
     )
 
 
+def _site_ground_from_domain(value: SiteGroundProfile) -> SiteGroundPayload:
+    return SiteGroundPayload(
+        second_medium_relative_permittivity=value.second_medium_relative_permittivity,
+        second_medium_conductivity_s_per_m=value.second_medium_conductivity_s_per_m,
+        edge_distance_m=value.edge_distance_m,
+        edge_shape=value.edge_shape,
+        edge_height_m=value.edge_height_m,
+        label=value.label,
+        notes=value.notes,
+    )
+
+
+def _site_ground_to_domain(value: SiteGroundPayload) -> SiteGroundProfile:
+    return SiteGroundProfile(
+        second_medium_relative_permittivity=value.second_medium_relative_permittivity,
+        second_medium_conductivity_s_per_m=value.second_medium_conductivity_s_per_m,
+        edge_distance_m=value.edge_distance_m,
+        edge_shape=value.edge_shape,
+        edge_height_m=value.edge_height_m,
+        label=value.label,
+        notes=value.notes,
+    )
+
+
 def project_from_document(document: ProjectDocument) -> Project:
     return Project(
         id=document.project.id,
@@ -3901,6 +3946,11 @@ def project_from_document(document: ProjectDocument) -> Project:
             for profile in document.project.installation_profiles
         ),
         active_installation_profile_id=document.project.active_installation_profile_id,
+        site_ground=(
+            _site_ground_to_domain(document.project.site_ground)
+            if document.project.site_ground
+            else None
+        ),
         construction_record=(
             _construction_record_to_domain(document.project.construction_record)
             if document.project.construction_record is not None

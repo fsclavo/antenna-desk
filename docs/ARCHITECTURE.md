@@ -233,7 +233,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 59 is
+solver adapter does not need geometry-specific branches. Schema version 60 is
 current: parameter payloads are additive within the current container. A design may also store an optional analysis band plan; it is
 intent metadata and never changes the canonical geometry. Series RLC loads are
 optional antenna payloads and are emitted as `LD 0` cards by the solver
@@ -339,7 +339,7 @@ keeps schema concerns out of the domain while still rejecting malformed or
 untrusted files.
 
 Project files use the `antennadesk.project` ZIP container with container
-version 1 and schema version 59. Saves are atomic: build the container in
+version 1 and schema version 60. Saves are atomic: build the container in
 memory, write a temporary file in the target directory, flush and `fsync`,
 then replace the destination with `os.replace`. Autosave uses the
 application-data recovery folder: it writes a design-only project container
@@ -354,7 +354,7 @@ current build has no legacy reader or migration.
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored in optional separate entries so it can be omitted without
 rewriting the normalized result. Project files are versioned ZIP containers
-(container version 1, schema version 59) with a manifest, project metadata,
+(container version 1, schema version 60) with a manifest, project metadata,
 designs, runs, raw text, and optimization summaries as separate validated
 entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
 container above 64 MB, blocks total expanded entries above 256 MB, and offers
@@ -363,6 +363,9 @@ designs, then exposes runs through a `ProjectSession` that loads only the
 selected design's latest run or batch. The reader verifies every loaded entry's
 size, CRC32, and SHA-256 against the manifest through a bounded stream, so a
 zip bomb or a manifest mismatch is rejected before the domain model is built.
+An optional project-level `SiteGroundProfile` is carried by the simulation
+specification; the NEC adapter emits the second-medium/cliff fields and
+`RP 2`/`RP 3`, with the explicit far-field-only limitation.
 `prepare_payload()` returns a `PreparedProject` with the exact payload,
 compressed and expanded sizes, entry count, and limits; the UI reports both
 sizes. Saving a `ProjectSession` copies unchanged run entries directly from the

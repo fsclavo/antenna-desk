@@ -53,7 +53,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
-| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **ADR accepted 2026-11-24; implementation pending.** Cliff/second-medium is far-field-only and the selected bounded slice; native radial screen disagrees with dense wires and stays unvalidated for SWR. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
+| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter; native radial screen still unvalidated for SWR and not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -117,11 +117,11 @@ set of limits on both save and load; never write a project the application
 cannot reopen; keep one portable `.antennadesk` file and atomic saves.
 
 **Non-goals:** no backward compatibility with the gzip/plain-JSON project
-format or schema 58; no solver, antenna-model, or numerical-reference change;
+format or schema 59; no solver, antenna-model, or numerical-reference change;
 no binary pattern store or sidecar database in this item. Open a separate item
 if those are still needed after the container lands.
 
-### Container format (container version 1, schema version 59)
+### Container format (container version 1, schema version 60)
 
 ```text
 manifest.json
@@ -274,7 +274,7 @@ MAX_PATH_BYTES                   = 255
 
 - New ADR-0050 “ZIP project container and size contract” supersedes ADR-0021.
   Update `ARCHITECTURE.md`, `DOMAIN_MODEL.md`, `PROJECT_BUNDLE.md`,
-  `USER_GUIDE.md`, `STATUS.md` (schema 59), and `CHANGELOG.md`.
+  `USER_GUIDE.md`, `STATUS.md` (schema 60), and `CHANGELOG.md`.
 - Acceptance:
   - Saving the reported six-run project either compacts to a reopenable
     container or refuses with an actionable message; it never writes another
@@ -919,12 +919,14 @@ with a published stack mitigates it.
 
 ### DL7 — Native ground screen and cliff ground
 
-**Decision (2026-11-24):** [ADR-0051](ADR/0051-bounded-cliff-site-ground.md)
-accepts only the cliff/second-medium far-field profile. It adds one optional
-project-level `SiteGroundProfile`, applies it at simulation/export time, emits
-`RP 2`/`RP 3`, and states that SWR and currents are unchanged. The native
-radial screen remains unavailable until a measurement or published reference
-exists. Schema 60 adds `site_ground` with a metadata-only 59→60 migration.
+**Decision and implementation (2026-11-24):**
+[ADR-0051](ADR/0051-bounded-cliff-site-ground.md) implements only the
+cliff/second-medium far-field profile. It adds one optional project-level
+`SiteGroundProfile`, applies it at simulation/export time, emits `RP 2`/`RP 3`,
+and states that SWR and currents are unchanged. The native radial screen remains
+unavailable until a measurement or published reference exists. Schema 60 adds
+`site_ground` with a metadata-only 59→60 migration. A real nec2c test confirms
+the impedance is unchanged while the far-field pattern differs.
 
 **Goal:** use the ground information the engine already supports before building
 a full terrain model.
@@ -1128,10 +1130,11 @@ decision:
 
 ## Current baseline
 
-- Schema: **59**; container version 1.
-- Full gate: **4,272 passed, 1 skipped** on 2026-11-20 after the full QA,
+- Schema: **60**; container version 1.
+- Full gate: **4,294 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
-  PF1 container slice 1, lazy-open session, design-only save, and PreparedProject, and lazy save/compact (typed simulation specs,
+  PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
+  (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,

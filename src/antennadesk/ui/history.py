@@ -39,6 +39,7 @@ class ProjectSnapshot:
             self.project.current_balun,
             self.project.installation_profiles,
             self.project.active_installation_profile_id,
+            self.project.site_ground,
             self.project.construction_record,
             self.project.bom_costs,
         )

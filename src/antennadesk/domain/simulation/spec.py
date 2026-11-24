@@ -14,6 +14,7 @@ from ..antennas.matching_network import (
     MatchingNetworkPosition,
 )
 from ..common.units import ensure_positive
+from ..environment.site_ground import SiteGroundProfile
 from .far_field import FarFieldRequest
 from .frequency import FrequencyPlan
 from .segmentation import SegmentationPolicy
@@ -44,6 +45,7 @@ class SimulationSpec:
     balun_loss: BalunLoss | None = None
     transformer_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
+    site_ground: SiteGroundProfile | None = None
     timeout_s: float = DEFAULT_TIMEOUT_S
 
     def __post_init__(self) -> None:

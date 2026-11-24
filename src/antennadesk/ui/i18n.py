@@ -1074,6 +1074,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Installation profile...",
         Language.SPANISH: "Perfil de instalación...",
     },
+    "action.site_ground": {
+        Language.ENGLISH: "Site Ground...",
+        Language.SPANISH: "Suelo del sitio...",
+    },
     "action.reference_library": {
         Language.ENGLISH: "Reference Design Library...",
         Language.SPANISH: "Biblioteca de diseños de referencia...",
@@ -5024,6 +5028,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.action.installation_profile": {
         Language.ENGLISH: "Create, edit, duplicate, or activate an installation profile.",
         Language.SPANISH: "Creá, editá, duplicá o activá un perfil de instalación.",
+    },
+    "help.action.site_ground": {
+        Language.ENGLISH: "Edit the project-level second-medium/cliff profile. It changes far-field patterns only; SWR and currents stay on the design ground.",
+        Language.SPANISH: "Editá el perfil de segundo medio/acantilado del proyecto. Solo cambia el patrón de campo lejano; la ROE y las corrientes quedan en el suelo del diseño.",
     },
     "help.action.feed_chain": {
         Language.ENGLISH: "Show the feed-chain stages and their dissipative losses.",
@@ -10152,6 +10160,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "history.installation_profile": {
         Language.ENGLISH: "installation profile",
         Language.SPANISH: "perfil de instalación",
+    },
+    "history.site_ground": {
+        Language.ENGLISH: "site ground",
+        Language.SPANISH: "suelo del sitio",
     },
     "history.construction_record": {
         Language.ENGLISH: "as-built record",
@@ -17758,6 +17770,90 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "raw.input": {Language.ENGLISH: "Input deck", Language.SPANISH: "Deck de entrada"},
     "raw.output": {Language.ENGLISH: "Output", Language.SPANISH: "Salida"},
+    "site_ground.title": {
+        Language.ENGLISH: "Site ground — cliff / second medium",
+        Language.SPANISH: "Suelo del sitio — acantilado / segundo medio",
+    },
+    "site_ground.enabled": {
+        Language.ENGLISH: "Use a second-medium / cliff profile",
+        Language.SPANISH: "Usar un perfil de segundo medio / acantilado",
+    },
+    "site_ground.permittivity": {
+        Language.ENGLISH: "Second-medium relative permittivity",
+        Language.SPANISH: "Permitividad relativa del segundo medio",
+    },
+    "site_ground.conductivity": {
+        Language.ENGLISH: "Second-medium conductivity",
+        Language.SPANISH: "Conductividad del segundo medio",
+    },
+    "site_ground.edge_shape": {
+        Language.ENGLISH: "Edge shape",
+        Language.SPANISH: "Forma del borde",
+    },
+    "site_ground.linear": {
+        Language.ENGLISH: "Straight edge (parallel to Y, along +X)",
+        Language.SPANISH: "Borde recto (paralelo a Y, sobre +X)",
+    },
+    "site_ground.circular": {
+        Language.ENGLISH: "Circular edge centered at the antenna",
+        Language.SPANISH: "Borde circular centrado en la antena",
+    },
+    "site_ground.edge_distance": {
+        Language.ENGLISH: "Edge distance",
+        Language.SPANISH: "Distancia al borde",
+    },
+    "site_ground.edge_height": {
+        Language.ENGLISH: "Second medium below the first",
+        Language.SPANISH: "Segundo medio por debajo del primero",
+    },
+    "site_ground.label": {
+        Language.ENGLISH: "Label",
+        Language.SPANISH: "Etiqueta",
+    },
+    "site_ground.notes": {
+        Language.ENGLISH: "Notes",
+        Language.SPANISH: "Notas",
+    },
+    "site_ground.hint": {
+        Language.ENGLISH: "The second medium changes far-field patterns only. Antenna impedance, currents, and SWR remain those of the design's first-medium ground. This is a single straight or circular edge, not full terrain.",
+        Language.SPANISH: "El segundo medio solo cambia el patrón de campo lejano. La impedancia, las corrientes y la ROE siguen siendo las del primer medio del diseño. Es un solo borde recto o circular, no terreno completo.",
+    },
+    "help.site_ground.enabled": {
+        Language.ENGLISH: "Enable the optional second-medium/cliff profile for this project.",
+        Language.SPANISH: "Activá el perfil opcional de segundo medio/acantilado para este proyecto.",
+    },
+    "help.site_ground.permittivity": {
+        Language.ENGLISH: "Relative permittivity of the medium outside the edge.",
+        Language.SPANISH: "Permitividad relativa del medio fuera del borde.",
+    },
+    "help.site_ground.conductivity": {
+        Language.ENGLISH: "Conductivity of the medium outside the edge in S/m. Salt water is about 5 S/m; fresh water is about 0.001 S/m.",
+        Language.SPANISH: "Conductividad del medio fuera del borde en S/m. El agua salada ronda 5 S/m; el agua dulce, 0.001 S/m.",
+    },
+    "help.site_ground.edge_shape": {
+        Language.ENGLISH: "Choose the NEC linear or circular cliff option. The circular edge is centered at the coordinate origin.",
+        Language.SPANISH: "Elegí la opción de acantilado lineal o circular de NEC. El borde circular se centra en el origen de coordenadas.",
+    },
+    "help.site_ground.edge_distance": {
+        Language.ENGLISH: "Distance from the origin to the edge: radius for a circle, distance along +X for a line.",
+        Language.SPANISH: "Distancia del origen al borde: radio para un círculo, distancia sobre +X para una línea.",
+    },
+    "help.site_ground.edge_height": {
+        Language.ENGLISH: "How far the second-medium surface is below the first. Use zero for a flat edge.",
+        Language.SPANISH: "Cuánto está la superficie del segundo medio por debajo del primero. Usá cero para un borde plano.",
+    },
+    "help.site_ground.label": {
+        Language.ENGLISH: "Optional short name for the site profile.",
+        Language.SPANISH: "Nombre corto opcional para el perfil del sitio.",
+    },
+    "help.site_ground.notes": {
+        Language.ENGLISH: "Optional notes about the site, source, or measurement.",
+        Language.SPANISH: "Notas opcionales sobre el sitio, la fuente o la medición.",
+    },
+    "status.site_ground_updated": {
+        Language.ENGLISH: "Site ground updated.",
+        Language.SPANISH: "Suelo del sitio actualizado.",
+    },
     "dialog.open_title": {
         Language.ENGLISH: "Open AntennaDesk project",
         Language.SPANISH: "Abrir proyecto AntennaDesk",

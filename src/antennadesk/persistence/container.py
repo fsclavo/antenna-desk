@@ -472,11 +472,15 @@ class ProjectContainerRepository:
             raise ProjectFormatError(
                 f"unsupported project container version {manifest.container_version}"
             )
-        if manifest.schema_version != SCHEMA_VERSION:
+        if manifest.schema_version not in (59, SCHEMA_VERSION):
             raise UnsupportedSchemaVersion(
                 found=manifest.schema_version,
                 supported=SCHEMA_VERSION,
             )
+        if manifest.schema_version == 59:
+            # The only 59 -> 60 change is the optional metadata field
+            # site_ground; the entry documents are structurally identical.
+            manifest = manifest.model_copy(update={"schema_version": SCHEMA_VERSION})
         return manifest
 
     @staticmethod
@@ -856,12 +860,31 @@ class ProjectContainerRepository:
             runs[run_id] = SimulationRunPayload.model_validate(run_data)
         return list(runs.values())
 
+    @staticmethod
+    def _migrate_payload(payload: bytes) -> bytes:
+        try:
+            data = json.loads(payload)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return payload
+        if not isinstance(data, dict) or data.get("schema_version") != 59:
+            return payload
+        data["schema_version"] = SCHEMA_VERSION
+        project = data.get("project")
+        if isinstance(project, dict):
+            project.setdefault("site_ground", None)
+        return json.dumps(
+            data,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
     def _parse_document(
         self,
         model: type[_ModelT],
         payload: bytes,
         path: str,
     ) -> _ModelT:
+        payload = self._migrate_payload(payload)
         try:
             return model.model_validate_json(payload)
         except ValidationError as exc:

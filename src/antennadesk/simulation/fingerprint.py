@@ -19,6 +19,8 @@ def model_fingerprint(model: AntennaModel, spec: SimulationSpec) -> str:
     # Runtime-only diagnostic context; adding it must not invalidate stored
     # fingerprints or make a completed result look stale.
     spec_payload.pop("matching_network_origin", None)
+    if spec_payload.get("site_ground") is None:
+        spec_payload.pop("site_ground", None)
     payload = {
         "format": FINGERPRINT_FORMAT,
         "model": asdict(model),

@@ -16,6 +16,7 @@ from ...application.discretization import (
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.load import ParallelLoad
 from ...domain.environment.ground import GroundKind
+from ...domain.environment.site_ground import EdgeShape
 from ...domain.simulation.spec import SimulationSpec
 from ..assumptions import ground_clearance_offset_m
 
@@ -87,6 +88,9 @@ def _local_segment_for_offset(segmentation: WireSegmentation, offset_m: float) -
 def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     layout = build_segment_layout(model, spec)
     ground = model.environment.ground
+    site_ground = spec.site_ground
+    if site_ground is not None and ground.kind is not GroundKind.FINITE:
+        raise ValueError("site ground requires a finite first-medium ground model")
     z_offset = ground_clearance_offset_m(model)
     lines: list[str] = [
         "CM AntennaDesk generated NEC-2 input",
@@ -114,7 +118,17 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
         conductivity = ground.conductivity_s_per_m
         if permittivity is None or conductivity is None:
             raise ValueError("finite ground requires permittivity and conductivity")
-        lines.append(f"GN 0 0 0 0 {_format(permittivity)} {_format(conductivity)}")
+        if site_ground is None:
+            lines.append(f"GN 0 0 0 0 {_format(permittivity)} {_format(conductivity)}")
+        else:
+            lines.append(
+                "GN 0 0 0 0 "
+                f"{_format(permittivity)} {_format(conductivity)} "
+                f"{_format(site_ground.second_medium_relative_permittivity)} "
+                f"{_format(site_ground.second_medium_conductivity_s_per_m)} "
+                f"{_format(site_ground.edge_distance_m)} "
+                f"{_format(site_ground.edge_height_m)}"
+            )
 
     if spec.extended_thin_wire_kernel:
         lines.append("EK")
@@ -163,10 +177,14 @@ def write_nec2_input(model: AntennaModel, spec: SimulationSpec) -> Nec2Deck:
     )
     lines.extend(_source_lines(layout))
 
+    pattern_mode = 0
+    if site_ground is not None:
+        pattern_mode = 3 if site_ground.edge_shape is EdgeShape.CIRCULAR else 2
+
     def append_pattern_card() -> None:
         far_field = spec.far_field
         lines.append(
-            "RP 0 "
+            f"RP {pattern_mode} "
             f"{far_field.theta_count} {far_field.phi_count} 1000 "
             f"{_format(far_field.theta_start_deg, 6)} "
             f"{_format(far_field.phi_start_deg, 6)} "

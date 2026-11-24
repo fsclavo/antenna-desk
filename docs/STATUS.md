@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-24
 **Latest published release:** `0.9.0` (2026-11-17)
-**Development schema:** `59`
+**Development schema:** `60`
 **Current product track:** 1.1 Station
 
 ## Where we are
@@ -14,9 +14,10 @@
   and structural hardware are deferred pending a dedicated ADR/spike.
 - DL3 live tuning is partial: the primary dimension has a coarse preview.
 - DL6 stacked Yagi is a domain prototype only.
-- DL7 is an accepted bounded slice: ADR-0051 selects the cliff/second-medium
-  far-field profile only; the native radial screen remains unvalidated for SWR
-  and is not exposed. Implementation is pending.
+- DL7 is implemented as the bounded cliff/second-medium far-field profile
+  (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
+  `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. The native
+  radial screen remains unvalidated for SWR and is not exposed.
 - A full QA and technical-debt sweep on 2026-11-20 left the complete gate green
   with no functional defect; see
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
@@ -34,7 +35,7 @@
   work, not another standalone refactor.
 - PF1 is **closed 2026-11-24** after manual validation of the incident-scale
   project. `.antennadesk` is a deterministic ZIP container (container 1, schema
-  59) with separate project, design, run, raw-text, and optimization entries;
+  60) with separate project, design, run, raw-text, and optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
   gzip/plain-JSON/migration reader. Opening is lazy through a
   `ProjectSession`; saving and compaction copy unchanged run entries and
@@ -46,7 +47,7 @@
 
 ## Next
 
-1. Implement the DL7 bounded cliff/second-medium slice (ADR-0051).
+1. Validate the DL7 cliff slice with a real site case or published reference.
 2. Continue DL4 (near-field/RF exposure) after its ADR/spike.
 3. Continue DL3 managed dimensions and the remaining 1.2 items.
 4. Close the pending manual U6 visual QA before the next release decision.

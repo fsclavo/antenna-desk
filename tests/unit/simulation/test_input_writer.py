@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.feed import FeedPoint
@@ -11,6 +13,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.environment.ground import GroundModel
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
@@ -34,6 +37,7 @@ def _spec(
     extended_thin_wire_kernel: bool = False,
     include_conductor_losses: bool = False,
     far_field: FarFieldRequest | None = None,
+    site_ground: SiteGroundProfile | None = None,
 ) -> SimulationSpec:
     return SimulationSpec(
         frequency_plan=frequency_plan or FrequencyPlan.single(299_800_000.0),
@@ -41,6 +45,7 @@ def _spec(
         extended_thin_wire_kernel=extended_thin_wire_kernel,
         include_conductor_losses=include_conductor_losses,
         far_field=far_field or FarFieldRequest(enabled=False),
+        site_ground=site_ground,
     )
 
 
@@ -449,3 +454,85 @@ def test_load_card_uses_local_segment_number_for_later_wires() -> None:
     deck = write_nec2_input(model, _spec(segments=7))
 
     assert "LD 0 2 4 4 50.000000000" in deck.text
+
+
+def test_cliff_ground_deck_uses_second_medium_and_rp_mode() -> None:
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    ).to_antenna()
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=50.0,
+        edge_shape=EdgeShape.CIRCULAR,
+    )
+    spec = _spec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(
+            enabled=True,
+            theta_count=19,
+            phi_count=1,
+        ),
+        site_ground=site,
+    )
+
+    deck = write_nec2_input(model, spec)
+
+    assert (
+        "GN 0 0 0 0 13.000000000 0.005000000 81.000000000 5.000000000 50.000000000 0.000000000"
+    ) in deck.text
+    assert "RP 3 19 1 1000" in deck.text
+
+
+def test_linear_cliff_uses_rp_mode_two() -> None:
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    ).to_antenna()
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=50.0,
+        edge_shape=EdgeShape.LINEAR,
+    )
+    spec = _spec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        far_field=FarFieldRequest(enabled=True, theta_count=19, phi_count=1),
+        site_ground=site,
+    )
+
+    deck = write_nec2_input(model, spec)
+
+    assert "RP 2 19 1 1000" in deck.text
+
+
+def test_site_ground_requires_finite_first_medium() -> None:
+    model = DipoleParameters(
+        frequency_hz=7_100_000.0,
+        total_length_m=20.0,
+        height_m=8.0,
+        ground=GroundModel.free_space(),
+    ).to_antenna()
+    site = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=50.0,
+    )
+    spec = _spec(
+        frequency_plan=FrequencyPlan.single(7_100_000.0),
+        site_ground=site,
+    )
+
+    with pytest.raises(ValueError, match="finite first-medium"):
+        write_nec2_input(model, spec)

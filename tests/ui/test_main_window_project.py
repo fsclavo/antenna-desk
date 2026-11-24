@@ -17,6 +17,7 @@ from pytestqt.qtbot import QtBot
 from antennadesk.application.errors import ProjectPayloadTooLargeError
 from antennadesk.application.project_payload import PreparedProject, ProjectLimits
 from antennadesk.application.project_session import ProjectSession
+from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.persistence.json_repository import JsonProjectRepository
@@ -1004,3 +1005,64 @@ def test_compaction_with_a_lazy_session_does_not_materialize(
     assert JsonProjectRepository().open_session(saved).run_count() == 1
     loaded._dirty = False
     loaded.close()
+
+
+def test_site_ground_action_updates_the_project_and_undoes(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=20.0,
+        edge_shape=EdgeShape.CIRCULAR,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            del args, kwargs
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def profile(self) -> SiteGroundProfile:
+            return profile
+
+    monkeypatch.setattr(main_window_module, "SiteGroundDialog", FakeDialog)
+
+    window.show_site_ground()
+
+    assert window._project is not None
+    assert window._project.site_ground == profile
+    assert window._undo_stack.canUndo()
+
+    window._undo_stack.undo()
+
+    assert window._project.site_ground is None
+    window._dirty = False
+
+
+def test_simulation_spec_carries_the_project_site_ground(
+    window: MainWindow,
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
+    del qtbot, tmp_path
+    assert window._project is not None
+    profile = SiteGroundProfile(
+        second_medium_relative_permittivity=81.0,
+        second_medium_conductivity_s_per_m=5.0,
+        edge_distance_m=15.0,
+        edge_shape=EdgeShape.LINEAR,
+    )
+    window._project = window._project.with_site_ground(
+        profile,
+        updated_at=window._project.updated_at,
+    )
+
+    window.simulate()
+    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+
+    assert window._last_result is not None
+    assert window._last_result.spec.site_ground == profile
+    window._dirty = False

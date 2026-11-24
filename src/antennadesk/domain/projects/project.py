@@ -20,6 +20,7 @@ from ..common.units import ensure_non_negative
 from ..common.validation import Diagnostic, Severity, raise_if_errors
 from ..design.band_plan import BandPlan
 from ..design.matching_design import MatchingNetworkDesign
+from ..environment.site_ground import SiteGroundProfile
 from ..measurement import Measurement, MeasurementSession
 from ..optimization.summary import OptimizationSummary
 from ..simulation.band_result import BandAnalysisResult
@@ -172,6 +173,7 @@ class Project:
     current_balun: bool = False
     installation_profiles: tuple[InstallationProfile, ...] = field(default_factory=tuple)
     active_installation_profile_id: UUID | None = None
+    site_ground: SiteGroundProfile | None = None
     construction_record: ConstructionRecord | None = None
     bom_costs: BomCostRecord | None = None
     measurement_sessions: tuple[MeasurementSession, ...] = field(default_factory=tuple)
@@ -779,6 +781,14 @@ class Project:
         updated_at: datetime,
     ) -> Project:
         return replace(self, bom_costs=bom_costs, updated_at=updated_at)
+
+    def with_site_ground(
+        self,
+        site_ground: SiteGroundProfile | None,
+        *,
+        updated_at: datetime,
+    ) -> Project:
+        return replace(self, site_ground=site_ground, updated_at=updated_at)
 
     def _retained_simulation_runs(self) -> tuple[SimulationRun, ...]:
         retained_ids: set[UUID] = set()

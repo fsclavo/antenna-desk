@@ -295,11 +295,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- **Bounded cliff site ground selected (DL7).** `ADR-0051` accepts a
-  project-level cliff/second-medium profile that changes far-field patterns
-  only; SWR and currents stay on the design's first-medium ground. The native
-  radial screen remains unavailable until a validated reference exists.
-  Implementation is pending schema 60 and the `GN`/`RP` adapter slice.
+- **Bounded cliff site ground (DL7).** `ADR-0051` implements a project-level
+  cliff/second-medium profile that changes far-field patterns only; SWR and
+  currents stay on the design's first-medium ground. Schema 60 adds
+  `site_ground` with a metadata-only 59→60 migration. **Tools → Site Ground...**
+  edits the profile, the NEC adapter emits the second medium and `RP 2`/`RP 3`,
+  and the NEC/HTML notes state the far-field-only limitation. A real nec2c test
+  confirms unchanged impedance with a changed pattern. The native radial screen
+  remains unavailable until a validated reference exists.
 - **ZIP project container (PF1 slice 1).** `.antennadesk` is now a
   deterministic ZIP container (container version 1, schema 59) with separate
   metadata, design, run, raw-solver-text, and optimization entries. The

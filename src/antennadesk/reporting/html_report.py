@@ -429,6 +429,17 @@ def render_html_report(
         version=_escape(result.solver.version),
         status=_escape(status),
     )
+    site = spec.site_ground
+    site_ground_row = ""
+    if site is not None:
+        site_ground_row = (
+            "<tr><th>Site ground</th><td>"
+            f"second medium epsilon_r={site.second_medium_relative_permittivity:g}, "
+            f"sigma={site.second_medium_conductivity_s_per_m:g} S/m; "
+            f"{_escape(site.edge_shape.value)} edge at {site.edge_distance_m:g} m; "
+            "far-field only; SWR and currents unchanged"
+            "</td></tr>"
+        )
     document = f"""<!DOCTYPE html>
 <html lang="{_escape(language)}">
 <head>
@@ -462,6 +473,7 @@ def render_html_report(
 <tr><th>Reference impedance</th><td>{spec.reference_impedance_ohm:g} Ω</td></tr>
 <tr><th>Conductor losses</th><td>{_escape(tr("enabled" if spec.include_conductor_losses else "disabled"))}</td></tr>
 <tr><th>Far field</th><td>{_escape(tr("enabled" if spec.far_field.enabled else "disabled"))}</td></tr>
+{site_ground_row}
 <tr><th>Solver executable</th><td>{_escape(result.solver.executable or tr("unknown"))}</td></tr>
 </table>
 

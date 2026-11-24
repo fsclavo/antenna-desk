@@ -1,6 +1,6 @@
 # ADR-0051 — Bounded cliff/second-medium site ground
 
-- **Status:** accepted 2026-11-24; implementation pending
+- **Status:** accepted and implemented 2026-11-24
 - **Date:** 2026-11-24
 - **Related:** DL7, [`spikes/dl7-ground-gn-spike.md`](../spikes/dl7-ground-gn-spike.md)
 
@@ -74,6 +74,13 @@ Costs:
 - Faceted terrain, diffraction, buildings, vegetation, multiple edges, buried
   conductors.
 - A gain or pattern accuracy guarantee beyond the B/C evidence label.
+
+## Implementation (2026-11-24)
+
+Schema 60, the project-level profile, the 59→60 metadata migration, the
+`SimulationSpec.site_ground` field, the `GN`/`RP` adapter, the Site Ground
+dialog, the HTML/NEC limitation notes, and the real-nec2c far-field-only test
+are implemented.
 
 ## Acceptance
 
