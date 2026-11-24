@@ -1644,8 +1644,10 @@ decision:
   assets and checksums were verified. The tag CI Windows jobs did not go
   green: two failed on a Unix-only `os.geteuid()` guard in a test added by the
   U6 QA pass, and Python 3.12 was canceled after a UI stall. The Release
-  workflow still built and smoke-tested the Windows artifacts, and the guard
-  was fixed on main. See
+  workflow still built and smoke-tested the Windows artifacts; the guard was
+  fixed on main and the rerun
+  [`45512002095`](https://github.com/fsclavo/antenna-desk/actions/runs/45512002095)
+  passed all jobs. See
   [`RELEASE_QA_0.10.0.md`](archive/releases/RELEASE_QA_0.10.0.md). **0.9.0**
   remains the previous release (2026-11-17, Touchstone/UX31/UX30). See
   [`RELEASE_QA_0.9.0.md`](archive/releases/RELEASE_QA_0.9.0.md).

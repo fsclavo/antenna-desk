@@ -125,8 +125,10 @@ non-UI job failed during collection because the U6 QA pass added a Unix-only
 `os.geteuid()` guard to a directory-permission test, and Python 3.12 was
 canceled after a long UI stall. The Release workflow independently built,
 smoke-tested, and published the Windows artifacts successfully. The guard was
-fixed on main after publication and a CI rerun is pending; the 0.10.0
-artifacts themselves are unaffected.
+fixed on main after publication, and the main CI rerun
+([`45512002095`](https://github.com/fsclavo/antenna-desk/actions/runs/45512002095))
+passed every job, including Windows 3.11/3.12/3.13. The 0.10.0 artifacts
+themselves are unaffected.
 
 ## Known limitations
 

@@ -8,8 +8,8 @@
 ## Where we are
 
 - 0.10.0 is published (2026-11-24). The tag CI Windows jobs exposed a
-  Unix-only test guard and one UI stall; the test guard is fixed on main, and
-  the Release workflow built and smoke-tested every artifact.
+  Unix-only test guard and one UI stall; the test guard is fixed and the main
+  CI rerun is green. The Release workflow built and smoke-tested every artifact.
 - 1.0 Confidence is complete (TS1–TS7, DL9).
 - DL1 Smith chart and DL2 tuner matchability are complete.
 - DL5 support structures are **explicitly narrowed**: the Yagi mast and guy
