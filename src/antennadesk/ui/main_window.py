@@ -7802,7 +7802,6 @@ class MainWindow(QMainWindow):
             lambda parameters: self._apply_live_tuning(design, parameters),
             dimensions=dimensions,
             display_units=DisplayUnits(self._unit_system, self._length_policy),
-            is_simulation_running=lambda: self._simulating,
             parent=self,
         )
         dialog.exec()

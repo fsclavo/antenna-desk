@@ -1667,12 +1667,10 @@ preview faster. The preview badge and note make clear that this is not a saved
 simulation.
 
 **Apply and simulate** applies the dimension through the normal design path,
-enters undo history, and starts the full simulation. The dialog stays open and
-resets its baseline to the applied design, so you can keep tuning and apply
-again without reopening it. Closing the dialog cancels only the preview; the
-full simulation continues and the last applied design is kept. The selector
-covers length dimensions and a coarse pattern preview; non-length managed
-values are not in this slice.
+enters undo history, closes the dialog, and starts the full simulation. Closing
+without applying cancels only the preview. The selector covers length
+dimensions and a coarse pattern preview; non-length managed values are not in
+this slice.
 
 ## Import VNA measurements
 

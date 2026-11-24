@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
@@ -94,7 +95,6 @@ def test_live_tuning_previews_and_applies(qtbot: QtBot) -> None:
         spec,
         _FakeSolver(),
         applied.append,
-        is_simulation_running=lambda: False,
     )
     qtbot.addWidget(dialog)
     dialog.show()
@@ -103,42 +103,11 @@ def test_live_tuning_previews_and_applies(qtbot: QtBot) -> None:
     dialog._slider.setValue(120)
     qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
     dialog._apply_clicked()
-    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
 
     assert applied
     assert applied[0].total_length_m != parameters.total_length_m
-    assert dialog.isVisible()
-    assert dialog._slider.value() == 100
-
-
-def test_live_tuning_can_apply_twice_without_reopening(qtbot: QtBot) -> None:
-    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
-    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
-    applied = []
-    dialog = LiveTuningDialog(
-        Translator(Language.ENGLISH),
-        parameters,
-        spec,
-        _FakeSolver(),
-        applied.append,
-        is_simulation_running=lambda: False,
-    )
-    qtbot.addWidget(dialog)
-    dialog.show()
-    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
-
-    dialog._slider.setValue(120)
-    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
-    dialog._apply_clicked()
-    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
-    dialog._slider.setValue(80)
-    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
-    dialog._apply_clicked()
-    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
-
-    assert len(applied) == 2
-    assert dialog.isVisible()
-    assert applied[0].total_length_m != applied[1].total_length_m
+    assert dialog.result() == QDialog.DialogCode.Accepted
+    assert not dialog.isVisible()
 
 
 def test_live_tuning_shows_a_coarse_pattern_and_can_hide_it(qtbot: QtBot) -> None:
@@ -150,7 +119,6 @@ def test_live_tuning_shows_a_coarse_pattern_and_can_hide_it(qtbot: QtBot) -> Non
         spec,
         _FakeSolver(),
         lambda parameters: None,
-        is_simulation_running=lambda: False,
     )
     qtbot.addWidget(dialog)
     dialog.show()
@@ -174,7 +142,6 @@ def test_live_tuning_can_switch_to_a_secondary_dimension(qtbot: QtBot) -> None:
         spec,
         _FakeSolver(),
         applied.append,
-        is_simulation_running=lambda: False,
     )
     qtbot.addWidget(dialog)
     dialog.show()
@@ -187,9 +154,8 @@ def test_live_tuning_can_switch_to_a_secondary_dimension(qtbot: QtBot) -> None:
     dialog._slider.setValue(120)
     qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
     dialog._apply_clicked()
-    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
 
     assert applied
     assert applied[-1].height_m != parameters.height_m
     assert applied[-1].total_length_m == parameters.total_length_m
-    assert dialog.isVisible()
+    assert dialog.result() == QDialog.DialogCode.Accepted

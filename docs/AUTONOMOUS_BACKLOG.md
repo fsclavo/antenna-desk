@@ -768,9 +768,8 @@ the primary dimension plus family-specific length dimensions such as height,
 spacing, radial length, feed height, and reflector spacing. The coarse
 single-frequency preview, debounce/cancel, stale-result guard, preview badge,
 optional coarse elevation-cut pattern preview, and apply/full-run path are
-implemented. Apply keeps the dialog open, resets the baseline to the applied
-design, and re-enables tuning after the full simulation finishes. Non-length
-managed values remain a follow-up.
+implemented. **Apply and simulate** closes the dialog and starts the full
+simulation. Non-length managed values remain a follow-up.
 
 **Goal:** make geometry exploration immediate without replacing the full
 simulation.
@@ -800,8 +799,7 @@ follow-up.
   worker.
 - A stale result never overwrites a newer one.
 - Commit produces a normal simulation and undo entry.
-- The dialog stays open after Apply; the operator can continue tuning, and
-  closing it preserves the last applied design.
+- Apply closes the dialog and starts the full simulation.
 - Preview values are visibly marked and never exported as final.
 
 **Evidence:** performance benchmark; no accuracy claim.
@@ -1214,7 +1212,7 @@ decision:
 ## Current baseline
 
 - Schema: **60**; container version 1.
-- Full gate: **4,302 passed, 1 skipped** on 2026-11-24 after the full QA,
+- Full gate: **4,301 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
   PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
   (typed simulation specs,

@@ -13,10 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   single-frequency solve while the operator drags the primary dimension, with
   pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
   cancels stale previews, and **Apply and simulate** routes the dimension
-  through the normal design/undo path before the full run. Apply keeps the
-  dialog open, resets the preview baseline to the applied design, and re-enables
-  tuning when the full simulation finishes; closing it preserves the last
-  applied design. A dimension selector exposes family-specific length
+  through the normal design/undo path before the full run. Apply closes the
+  dialog and starts the full simulation. A dimension selector exposes
+  family-specific length
   dimensions such as height, spacing, radial length, feed height, and reflector
   spacing, not only the primary dimension. An optional coarse elevation-cut
   pattern preview accompanies the impedance preview when the solver supports
