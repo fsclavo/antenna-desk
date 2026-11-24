@@ -302,7 +302,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   edits the profile, the NEC adapter emits the second medium and `RP 2`/`RP 3`,
   and the NEC/HTML notes state the far-field-only limitation. A real nec2c test
   confirms unchanged impedance with a changed pattern. The native radial screen
-  remains unavailable until a validated reference exists.
+  remains unavailable until a validated reference exists. No external site
+  reference is available, so the DL7 evidence label stays B/C. DL4 (near-field
+  and RF exposure) is canceled as not relevant enough to the amateur design
+  workflow.
 - **ZIP project container (PF1 slice 1).** `.antennadesk` is now a
   deterministic ZIP container (container version 1, schema 59) with separate
   metadata, design, run, raw-solver-text, and optimization entries. The

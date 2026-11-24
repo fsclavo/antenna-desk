@@ -30,9 +30,9 @@ external service and must not be invented or simulated into existence.
 
 The 2026-11-19 product trust and station wave is the active product sequence.
 Wave 0 (TS1–TS7 and DL9) is **done 2026-11-19**; DL1 and DL2 are done, DL5 is
-next, and DL8 remains post-1.2. DL3 and DL6 are partial, and DL7 has a completed
-spike but no implementation. Its rows are in the table; scope, acceptance,
-evidence, and risk are in §Product trust and station wave below.
+narrowed, DL7 is implemented as a bounded slice, and DL8 remains post-1.2. DL3
+and DL6 are partial; DL4 is canceled. Its rows are in the table; scope,
+acceptance, evidence, and risk are in §Product trust and station wave below.
 
 PF1 is a P0 reliability insertion outside the antenna wave; it landed before
 any further project-format change. It is closed after manual validation on
@@ -50,10 +50,9 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Partially delivered.** EF7b added the measured transformer-loss table (`BalunLoss`); EF8 added the bounded feedpoint common-mode choke; ADR-0039 adds frequency-dependent feed-line attenuation with source-backed RG-58A/RG-213 tables, log-frequency interpolation, endpoint clamping, and a preflight range warning. The loss-accounting audit is also done (ADR-0040): the feed-chain sum must match the transducer gain, and NEC conductor/load losses including the feedpoint choke stay in the antenna power budget. Still deferred: analytical ferrite core loss with complex permeability/core geometry/winding/load data; frequency-interpolated `Zcm(f)` and shack-end choke placement; the remaining coax/choke evidence audit. All loss fields stay optional and off/zero by default; no invented loss numbers. |
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Documentation/help complete 2026-11-18; manual QA pending.** The user guide, roadmap, units spec, README, changelog, help tests, and automated font-scaling/geometry checks are updated. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) records the automated gate and the remaining desktop light/dark/font-scaling checklist. The track closes after that manual QA. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
-| DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
-| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter; native radial screen still unvalidated for SWR and not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
+| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -298,8 +297,8 @@ manual recovery of the one existing pre-container project.
 ## Product trust and station wave
 
 **Status:** wave 0 (TS1–TS7, DL9) is **done 2026-11-19**; DL1 and DL2 are done,
-and DL5 is next. Wave 2 is in progress (DL3/DL6 partial, DL7 spike complete).
-Waves 1–2 are the active product sequence.
+DL5 is narrowed, and DL7 is implemented as a bounded slice. Wave 2 remains
+partial (DL3/DL6); DL4 is canceled. Waves 1–2 are the active product sequence.
 **Scope:** product trust, station completeness, and site awareness. **Product
 scope:** [`ROADMAP.md`](ROADMAP.md). This wave pauses new antenna families: the
 catalog is broad enough, and the next value is answering the questions an
@@ -309,9 +308,10 @@ This wave is part of the single active queue above. The queue table is
 canonical; the subsections below define scope, dependencies, acceptance
 criteria, evidence, and risk for each item.
 
-**Priority:** P0 = TS1–TS7 and DL9, **done 2026-11-19**; P1 = DL5, next;
-P2 = DL3, DL4, DL6, and DL7 (DL3/DL6 partial, DL7 spike complete); P3 = DL8.
-P0 was the 1.0 gate; P1 and P2 are the 1.1 and 1.2 slices.
+**Priority:** P0 = TS1–TS7 and DL9, **done 2026-11-19**; P1 = DL5, narrowed
+2026-11-24; P2 = DL3, DL6, and DL7 (DL3/DL6 partial, DL7 implemented bounded);
+P3 = DL8. DL4 is canceled. P0 was the 1.0 gate; P1 and P2 are the 1.1 and 1.2
+slices.
 
 **Not in this wave:** the measurement-calibrated model, true multi-band
 optimization, parametric custom geometry, CLI/API, a second engine as a
@@ -325,20 +325,19 @@ content tracks and must not be smuggled into 1.0.
 | Wave | Release | IDs | Exit criterion |
 |---|---|---|---|
 | 0 | 1.0 Confidence | TS1–TS7, DL9 | **Done 2026-11-19.** Trust and interoperability green; documentation truthful; no new family work |
-| 1 | 1.1 Station | DL1, DL2, DL5 | **DL1 and DL2 done 2026-11-20.** Smith and the bounded tuner check are usable; DL5 next |
-| 2 | 1.2 Site and exploration | DL3, DL4, DL6, DL7 | Live preview, near-field, stacking, and native ground screen/cliff with visible limits |
+| 1 | 1.1 Station | DL1, DL2, DL5 | **Done as narrowed 2026-11-24.** Smith and the bounded tuner check are usable; DL5 mast/guys delivered, boom/tower deferred |
+| 2 | 1.2 Site and exploration | DL3, DL6, DL7 | Live preview, stacking, and bounded cliff ground with visible limits |
 | 3 | post-1.2 | DL8 | Only after a validated terrain ADR; otherwise explicitly unavailable |
 
 **Wave 0 order (completed 2026-11-19):** TS7 → TS3 → TS6 → TS4 → TS1 → TS2 +
 DL9 → TS5. The quick wins made the application feel 1.0; convergence and
 metrics followed; VNA import closed the interoperability side.
 
-**Wave 1 order:** DL1 and DL2 are done. DL5 is the remaining wave-1 item.
+**Wave 1 order:** DL1 and DL2 are done. DL5 is narrowed to mast and guy wires; no further wave-1 work is planned.
 
-**Wave 2 order:** the DL7 spike is complete; start the DL4 spike early and
-implement the bounded DL7 cliff slice before DL8. The DL6 domain prototype is
-started; its form, schema, and per-port UI wait for the support-structure
-decision.
+**Wave 2 order:** DL7's bounded cliff slice is implemented; DL4 is canceled by
+product decision. The DL6 domain prototype is started; its form, schema, and
+per-port UI wait for the support-structure decision.
 
 ### Wave rules
 
@@ -797,39 +796,11 @@ cancellation, and a coarse mode mitigate them.
 
 **Effort:** M–L (3–6 weeks). **Release:** 1.2.
 
-### DL4 — Near-field and RF exposure
+### DL4 — Near-field and RF exposure (canceled)
 
-**Goal:** answer "is it safe to operate here?" with a conservative,
-source-backed near-field estimate.
-
-**Scope (MVP):**
-- Spike: confirm `nec2c` `NE`/`NH` output, parser format, and a validation case
-  against an analytical dipole.
-- Domain near-field request/grid; input writer cards; parser; results view with
-  E/H and power density; selectable standard (FCC OET-65, ICNIRP) and
-  frequency; compliance distance.
-- Conservative assumptions, visible limits, and an explicit "not a safety
-  guarantee" disclaimer.
-- ADR for the model, standards, and UI claims.
-
-**Out of scope:** full SAR, body models, time averaging, arbitrary environments,
-legal certification.
-
-**Dependencies:** ADR; spike; solver parser; existing far-field/results path.
-
-**Acceptance:**
-- A dipole near-field grid matches the analytical/reference case within the
-  documented tolerance.
-- The compliance distance is shown with the selected standard and assumptions.
-- Unsupported frequencies/standards return an explicit unavailable state.
-- The report and UI never claim legal compliance.
-
-**Evidence:** NEC-2 manual, analytical dipole, standard formulas; B/C.
-
-**Risk / mitigation:** high. Solver/parser and safety claims; a spike and a
-conservative label are mandatory. Do not ship without the ADR.
-
-**Effort:** L (6–10 weeks). **Release:** 1.2 (after spike).
+**Canceled 2026-11-24.** The product owner judged near-field/RF-exposure
+compliance modeling not relevant enough to the amateur design workflow to
+justify the solver, standards, and safety-claim work. Do not start it.
 
 ### DL5 — Support structures
 
@@ -926,7 +897,9 @@ cliff/second-medium far-field profile. It adds one optional project-level
 and states that SWR and currents are unchanged. The native radial screen remains
 unavailable until a measurement or published reference exists. Schema 60 adds
 `site_ground` with a metadata-only 59→60 migration. A real nec2c test confirms
-the impedance is unchanged while the far-field pattern differs.
+the impedance is unchanged while the far-field pattern differs. No external
+site reference is available, so the B/C evidence label stands and no further
+validation is planned.
 
 **Goal:** use the ground information the engine already supports before building
 a full terrain model.
@@ -1116,6 +1089,7 @@ decision:
 
 | Item | Why it is not active | Tracked in |
 |---|---|---|
+| Near-field and RF exposure (DL4) | Canceled 2026-11-24; not relevant enough to the amateur design workflow for the required safety-claim work | [`ROADMAP.md`](ROADMAP.md) |
 | Fan-dipole angle optimization and an explicit per-element feed model | Needs a different antenna model, not another scalar correction | [`ROADMAP.md`](ROADMAP.md), [`FAN_DIPOLE_CALIBRATION.md`](FAN_DIPOLE_CALIBRATION.md) |
 | Measured or optimized 20/10 m fan-dipole preset | Needs a traceable source or measurement | [`ROADMAP.md`](ROADMAP.md) |
 | Gamma match for the Yagi | NEC-2 is unreliable for close-spaced gamma assemblies; the beta/hairpin match is implemented | [`ROADMAP.md`](ROADMAP.md) item 6 |

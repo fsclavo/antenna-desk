@@ -16,7 +16,8 @@
 - DL6 stacked Yagi is a domain prototype only.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
-  `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. The native
+  `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
+  external site reference is available, so the evidence stays B/C; the native
   radial screen remains unvalidated for SWR and is not exposed.
 - A full QA and technical-debt sweep on 2026-11-20 left the complete gate green
   with no functional defect; see
@@ -47,10 +48,10 @@
 
 ## Next
 
-1. Validate the DL7 cliff slice with a real site case or published reference.
-2. Continue DL4 (near-field/RF exposure) after its ADR/spike.
-3. Continue DL3 managed dimensions and the remaining 1.2 items.
-4. Close the pending manual U6 visual QA before the next release decision.
+1. Continue DL3 with additional managed dimensions.
+2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
+3. Close the pending manual U6 visual QA before the next release decision.
+4. Keep DL8 blocked until a validated terrain model or second engine exists.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in

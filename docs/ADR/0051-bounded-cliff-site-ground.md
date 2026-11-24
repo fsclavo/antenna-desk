@@ -80,7 +80,8 @@ Costs:
 Schema 60, the project-level profile, the 59→60 metadata migration, the
 `SimulationSpec.site_ground` field, the `GN`/`RP` adapter, the Site Ground
 dialog, the HTML/NEC limitation notes, and the real-nec2c far-field-only test
-are implemented.
+are implemented. No external site reference is available, so the evidence
+label remains B/C and no further validation is planned.
 
 ## Acceptance
 

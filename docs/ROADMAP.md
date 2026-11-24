@@ -40,8 +40,9 @@ tolerance.
 ## Current state
 
 **Latest published release:** `0.9.0` (2026-11-17). The 1.0 Confidence wave is
-complete; 1.1 Station is in progress (DL1/DL2 done, DL5 partial), and 1.2 has
-partial DL3/DL6 work and a completed DL7 spike. See [`STATUS.md`](STATUS.md)
+complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
+1.2 has partial DL3/DL6 work and a bounded DL7 implementation. DL4 is canceled.
+See [`STATUS.md`](STATUS.md)
 and the [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
 
 Completed:
@@ -277,7 +278,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; 1.1 in progress (DL1/DL2 done, DL5 partial); 1.2 partial (DL3/DL6 prototypes, DL7 spike); see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave) |
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; 1.1 done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 partial (DL3/DL6, DL7 implemented bounded; DL4 canceled); see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -532,8 +533,7 @@ live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave).
 The UX track rules apply unchanged. This track adds: table-stakes items land
 before delight items; no new antenna families; terrain starts with the bounded
-native ground screen/cliff work; near-field is conservative and never a legal
-guarantee. Antenna content work (C7h 6 m HexBeam, the LPDA 7 MHz swept variant,
+cliff/second-medium work; near-field/RF exposure (DL4) is canceled. Antenna content work (C7h 6 m HexBeam, the LPDA 7 MHz swept variant,
 and new catalog presets) waits until this track closes.
 
 | Release | ID | Item | Outcome | Size | Evidence | Status |
@@ -548,9 +548,9 @@ and new catalog presets) waits until this track closes.
 | 1.0 Confidence | TS7 | Documentation truth pass | Docs match behavior; status review | S | n/a | done 2026-11-19 |
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part, best effort/bypass, band-center rows, port ratings | M–L | B/C | done 2026-11-20; per-component branch ratings optional |
-| 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; conductive boom deferred pending ADR/spike; tower and attachments remain | M–L | B/C | partial 2026-11-20 |
+| 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, attachments, and hardware deferred pending ADR/spike | M–L | B/C | narrowed 2026-11-24 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Primary-dimension coarse preview done; other dimensions and pattern preview remain | M–L | n/a | partial 2026-11-20 |
-| 1.2 Site and exploration | DL4 | Near-field and RF exposure | E/H grid and compliance distance, with limits | L | B/C | queued after ADR/spike |
+| 1.2 Site and exploration | DL4 | Near-field and RF exposure | Canceled 2026-11-24; not relevant to the amateur design workflow | — | — | canceled |
 | 1.2 Site and exploration | DL6 | Stacked Yagi arrays | Domain prototype done (2–4 levels, ideal sources); form, schema, per-port UI, splitter/phase lines remain | L | B/C | partial 2026-11-20 |
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | Bounded cliff/second-medium far-field profile implemented; native screen still unvalidated for SWR | M–L | B/C | implemented 2026-11-24 |
 | post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
@@ -558,9 +558,8 @@ and new catalog presets) waits until this track closes.
 Release sequence for this track: **1.0 Confidence** closed truth,
 interoperability, convergence, metrics, and recovery on 2026-11-19. **1.1
 Station** adds Smith, tuner/components, and support structures; DL1 and DL2 are
-done, and DL5 is next. **1.2 Site and exploration** adds live preview, near-field,
-stacking, and
-native ground screen/cliff. **DL8** remains post-1.2 until a validated terrain
+done, and DL5 is narrowed. **1.2 Site and exploration** adds live preview,
+stacking, and bounded cliff ground; DL4 is canceled. **DL8** remains post-1.2 until a validated terrain
 ADR exists. The names and numbers are working labels; the backlog is the
 executable order.
 
@@ -585,10 +584,10 @@ Product track:
    feed-line preview, automatic L/Pi/T preview, and export) is done. DL2's
    first slice (bounded tuner check, E12/E24, Q loss, limiting part, L/Pi/T
    best effort, bypass, band-center rows, and port ratings) is done; only
-   per-component branch ratings remain optional. DL5 is next. Wave 2 is in
-   progress: DL3 is partial, DL6 is a domain prototype, and DL7 has a completed
-   spike; DL4 is queued. DL8 stays post-1.2 until a validated terrain ADR
-   exists. Execution and acceptance criteria are in
+   per-component branch ratings remain optional. DL5 is narrowed. Wave 2 is in
+   progress: DL3 is partial, DL6 is a domain prototype, and DL7 is implemented
+   as a bounded cliff slice; DL4 is canceled by product decision. DL8 stays
+   post-1.2 until a validated terrain ADR exists. Execution and acceptance criteria are in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave).
 
 Modeling track:
@@ -620,9 +619,9 @@ Release track:
    see [`CHANGELOG.md`](../CHANGELOG.md) and the archived release QA records in
    [`archive/releases/`](archive/releases/).
 9. The 2026-11-19 trust/station track completed 1.0 Confidence. 1.1 Station is
-   in progress (DL1/DL2 done, DL5 partial); 1.2 has partial DL3/DL6 work and a
-   completed DL7 spike. There are no committed dates, and each release is gated
-   by the acceptance criteria in the backlog.
+   done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has partial DL3/DL6 work
+   and a bounded DL7 implementation, with DL4 canceled. There are no committed
+   dates, and each release is gated by the acceptance criteria in the backlog.
 
 Validation track:
 
