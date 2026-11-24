@@ -782,7 +782,8 @@ simulation.
 - Tests for cancellation, stale responses, and no accidental persistence.
 
 **Out of scope:** continuous full-pattern solving, GPU acceleration, optimizer
-replacement.
+replacement. Optional UX follow-up: turn the modal dialog into a non-modal tool
+window; that needs explicit stale-baseline and concurrent-simulation handling.
 
 **Dependencies:** existing worker/cancellation; no solver change.
 
