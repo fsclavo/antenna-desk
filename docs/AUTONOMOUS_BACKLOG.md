@@ -1645,6 +1645,10 @@ decision:
   [`RELEASE_QA_0.9.0.md`](archive/releases/RELEASE_QA_0.9.0.md). **0.8.2** remains the previous
   release (2026-11-16, element-table header sizing fix). See
   [`RELEASE_QA_0.8.2.md`](archive/releases/RELEASE_QA_0.8.2.md).
+- Release candidate: **0.10.0** prepared on 2026-11-24; the local wheel/sdist,
+  AppImage, and Debian package are built and smoke-tested. Windows artifacts
+  and the final tag remain pending. See
+  [`RELEASE_QA_0.10.0.md`](archive/releases/RELEASE_QA_0.10.0.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
   the native heap during view teardown; Windows 3.12/3.13 and Linux

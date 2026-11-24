@@ -2,8 +2,9 @@
 
 **Updated:** 2026-11-24
 **Latest published release:** `0.9.0` (2026-11-17)
+**Release candidate:** `0.10.0` (prepared 2026-11-24)
 **Development schema:** `61`
-**Current product track:** 1.1 Station
+**Current product track:** 1.2 Site and exploration
 
 ## Where we are
 
@@ -65,7 +66,8 @@
 
 ## Next
 
-1. Prepare the 0.10.0 release candidate and packaging.
+1. Finish the 0.10.0 release candidate: native artifact builds, smoke tests,
+   tag, and published release notes.
 2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 and UX45 maintenance items separate from the

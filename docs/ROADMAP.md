@@ -1,6 +1,6 @@
 # AntennaDesk roadmap and backlog
 
-**Updated:** 2026-11-19
+**Updated:** 2026-11-24
 **Status:** active product roadmap after catalog, measurement, optimization,
 packaging, the 2026-11-11 product-experience review, and the 2026-11-19
 trust/station review.
@@ -39,7 +39,8 @@ tolerance.
 
 ## Current state
 
-**Latest published release:** `0.9.0` (2026-11-17). The 1.0 Confidence wave is
+**Latest published release:** `0.9.0` (2026-11-17). Release candidate:
+`0.10.0` (prepared 2026-11-24). The 1.0 Confidence wave is
 complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
 1.2 has partial DL3/DL6 work and a bounded DL7 implementation. DL4 is canceled.
 See [`STATUS.md`](STATUS.md)
