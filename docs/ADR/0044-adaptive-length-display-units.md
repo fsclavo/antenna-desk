@@ -141,14 +141,14 @@ Negative:
 
 ## Implementation status
 
-U0–U5 are implemented: the normative spec and ADR are accepted, the Qt-free
+U0–U6 are implemented: the normative spec and ADR are accepted, the Qt-free
 `DisplayUnits`/`LengthPolicy` formatter plus the four-option Units preference
 and QSettings mapping are in place, and geometry scenes, dimension labels,
 summaries, detail insets, and the scale bar follow the policy. Family forms,
 editable tables, optimization/synthesis/auxiliary dialogs, construction sheets,
 and human-readable reports use the same policy. U6 documentation and the help
-audit are complete; only the manual light/dark and font-scaling QA remains.
-Legacy `unit_system=` scene callers keep their fixed strings.
+audit are complete, and the manual light/dark and font-scaling QA closed on
+2026-11-24. Legacy `unit_system=` scene callers keep their fixed strings.
 
 ## References
 

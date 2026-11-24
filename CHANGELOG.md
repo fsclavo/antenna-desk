@@ -313,6 +313,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Adaptive length display units U1–U6.** The display-units track is complete
+  after the manual desktop light/dark and font-scaling QA on 2026-11-24; no
+  blocking findings. The automatic/fixed metric and imperial policy, adaptive
+  scenes, family editors, dialogs, reports, and CSV/DXF exceptions are closed.
 - **Bounded cliff site ground (DL7).** `ADR-0051` implements a project-level
   cliff/second-medium profile that changes far-field patterns only; SWR and
   currents stay on the design's first-medium ground. Schema 60 adds

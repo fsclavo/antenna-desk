@@ -398,9 +398,9 @@ execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7
 **Measure**, and 0.8 **Explore** releases are closed, and the 0.9 **Sustain**
 slice is complete. UX18–UX31 are implemented. UX32–UX38 were completed on
 2026-11-17. The UX queue is closed. The adaptive length display-units track
-(U1–U6) is implemented through U5, with U6 documentation/help complete and the
-manual visual checklist remaining; the release plan decides whether it lands in
-0.10.0 or a later release.
+(U1–U6) is complete, including the manual desktop light/dark and font-scaling
+QA on 2026-11-24; the release plan decides whether it lands in 0.10.0 or a later
+release.
 
 Rules for this track:
 
@@ -495,15 +495,15 @@ unchanged. The normative rules and examples are in
 | U3 | Family forms and editable tables | Per-field ranges/steps, table headers, Moxon/hexbeam range fixes, adaptive Yagi table | M–L | U1 | done 2026-11-18 |
 | U4 | Optimization, synthesis, and auxiliary dialogs | Same policy across every length surface | M | U1, U3 | done 2026-11-18 |
 | U5 | Construction sheet and human-readable reports | Design summary, wire schedule, BOM, title block, CSV/DXF exception | M–L | U1, U2, U3 | done 2026-11-18 |
-| U6 | Documentation, help audit, and visual QA | User guide, changelog, EN/ES help, light/dark/scaling QA | S–M | U2–U5 | in progress |
+| U6 | Documentation, help audit, and visual QA | User guide, changelog, EN/ES help, light/dark/scaling QA | S–M | U2–U5 | done 2026-11-24 |
 
-U1–U5 are complete: the formatter/preference, geometry scenes, every family
-editor and editable table, the optimization/synthesis/auxiliary dialogs, and the
-construction/report surfaces use the shared policy. U6 closes the track with
-documentation, help coverage, and the remaining manual light/dark and
-font-scaling QA. The release plan decides whether the track lands in 0.10.0 or a
-later release; do not add a global current-units singleton, a `UnitSystem.CM`
-value, frequency-based selection, or per-cell table units.
+U1–U6 are complete: the formatter/preference, geometry scenes, every family
+editor and editable table, the optimization/synthesis/auxiliary dialogs, the
+construction/report surfaces, documentation, EN/ES help, and the manual
+light/dark/font-scaling QA are all closed. The release plan decides whether the
+track lands in 0.10.0 or a later release; do not add a global current-units
+singleton, a `UnitSystem.CM` value, frequency-based selection, or per-cell table
+units.
 
 Release sequence: **0.5 Decide** is the first slice because it has the highest
 user value and the lowest modeling risk. **0.6 Build** converts a simulation into
@@ -576,8 +576,8 @@ Product track:
 1. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7 **Measure**,
    and 0.8 **Explore** releases are closed. UX18–UX38 are implemented; the 0.9
    **Sustain** slice is complete. The UX queue is closed. The adaptive length
-   display-units track is implemented through U5; U6 documentation/help and
-   manual visual QA remain before release preparation.
+   display-units track is complete through U6, including manual visual QA;
+   release preparation is next.
 2. The 2026-11-19 **product trust and station** track has completed wave 0:
    1.0 Confidence (TS1–TS7, DL9) is done. Wave 1 Station (DL1, DL2, DL5) is
    active: DL1 (Smith chart, reference planes, measured overlay, editable

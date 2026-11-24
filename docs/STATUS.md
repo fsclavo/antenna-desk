@@ -53,6 +53,9 @@
   honest compressed/expanded sizes. Optional follow-ups are tracked as PF2
   (streaming container write) and PF3 (pattern-level lazy loading). See
   [`ADR-0050`](ADR/0050-zip-project-container.md).
+- The adaptive length display-units track is **closed (U1–U6)**; the manual
+  desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
+  blocking findings.
 - A follow-up QA and technical-debt pass on 2026-11-24 kept the full gate green
   and closed the retired `JsonProjectRepository` alias, stale gzip/schema
   claims, two live-tuning preview races, the vertical-optimizer droop bound at
@@ -62,10 +65,11 @@
 
 ## Next
 
-1. Continue DL6 from the domain prototype to form, schema, and per-port UI.
-2. Close the pending manual U6 visual QA before the next release decision.
+1. Prepare the 0.10.0 release candidate and packaging.
+2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
-4. Choose the next backlog item; DL3 and VR1 are no longer open blockers.
+4. Keep the optional PF2/PF3 and UX45 maintenance items separate from the
+   release gate.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in
