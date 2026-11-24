@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.domain.antennas.dimensions import managed_dimensions
+from antennadesk.domain.antennas.dimensions import ManagedValueKind, managed_dimensions
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.environment.ground import GroundModel
@@ -91,3 +92,34 @@ def test_yagi_and_moxon_have_no_primary_dimension() -> None:
 
     assert managed_dimensions(yagi) == ()
     assert managed_dimensions(moxon) == ()
+
+
+def test_non_length_values_report_their_kind_and_write_back() -> None:
+    parameters = InvertedVParameters(
+        frequency_hz=7_100_000.0,
+        leg_length_m=10.0,
+        apex_height_m=10.0,
+        included_angle_deg=120.0,
+    )
+    dimensions = {item.key: item for item in managed_dimensions(parameters)}
+
+    angle = dimensions["included_angle"]
+    assert angle.kind is ManagedValueKind.ANGLE
+    assert angle.read(parameters) == pytest.approx(120.0)
+    changed = angle.write(parameters, 90.0)
+    assert isinstance(changed, InvertedVParameters)
+    assert changed.included_angle_deg == pytest.approx(90.0)
+
+    vertical = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        top_hat_enabled=True,
+        top_hat_radius_m=0.5,
+        top_hat_wire_count=4,
+    )
+    vertical_dimensions = {item.key: item for item in managed_dimensions(vertical)}
+    count = vertical_dimensions["radial_count"]
+    assert count.kind is ManagedValueKind.COUNT
+    assert count.write(vertical, 5.4).radial_count == 5  # type: ignore[union-attr]

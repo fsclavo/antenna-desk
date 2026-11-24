@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from enum import StrEnum
 
 from .beverage import BeverageParameters
 from .biquad import BiquadParameters
@@ -24,6 +25,7 @@ from .log_periodic import LogPeriodicParameters
 from .loop import LoopParameters
 from .ocfd import OCFDParameters
 from .phased_vertical import PhasedVerticalParameters
+from .quad_beam import QuadBeamParameters
 from .scv import ScvParameters
 from .t2fd import T2FDParameters
 from .transmission_line_doublet import TransmissionLineDoubletParameters
@@ -33,24 +35,33 @@ from .vertical import VerticalParameters
 from .zepp import ZeppParameters
 
 
+class ManagedValueKind(StrEnum):
+    LENGTH = "length"
+    ANGLE = "angle"
+    COUNT = "count"
+    RATIO = "ratio"
+
+
 @dataclass(frozen=True, slots=True)
 class ManagedDimension:
-    """One editable length dimension with a display-safe range."""
+    """One editable dimension with a display-safe range and value kind."""
 
     key: str
     label_key: str
-    minimum_m: float
-    maximum_m: float
+    minimum: float
+    maximum: float
     read: Callable[[AntennaDesignParameters], float]
     write: Callable[[AntennaDesignParameters, float], AntennaDesignParameters]
+    kind: ManagedValueKind = ManagedValueKind.LENGTH
 
 
 def _field_dimension(
     key: str,
     label_key: str,
     field: str,
-    minimum_m: float,
-    maximum_m: float,
+    minimum: float,
+    maximum: float,
+    kind: ManagedValueKind = ManagedValueKind.LENGTH,
 ) -> ManagedDimension:
     def read(parameters: AntennaDesignParameters) -> float:
         value = getattr(parameters, field, None)
@@ -62,23 +73,25 @@ def _field_dimension(
         parameters: AntennaDesignParameters,
         value: float,
     ) -> AntennaDesignParameters:
-        return replace(parameters, **{field: value})  # type: ignore[arg-type]
+        resolved = round(value) if kind is ManagedValueKind.COUNT else value
+        return replace(parameters, **{field: resolved})  # type: ignore[arg-type]
 
     return ManagedDimension(
         key=key,
         label_key=label_key,
-        minimum_m=minimum_m,
-        maximum_m=maximum_m,
+        minimum=minimum,
+        maximum=maximum,
         read=read,
         write=write,
+        kind=kind,
     )
 
 
 _PRIMARY = ManagedDimension(
     key="primary",
     label_key="field.primary_dimension",
-    minimum_m=0.01,
-    maximum_m=2_000.0,
+    minimum=0.01,
+    maximum=2_000.0,
     read=primary_dimension_m,
     write=with_primary_dimension,
 )
@@ -91,6 +104,17 @@ def _height(
     label_key: str = "field.height",
 ) -> ManagedDimension:
     return _field_dimension(key, label_key, field, 0.0, 1_000.0)
+
+
+def _value_dimension(
+    key: str,
+    label_key: str,
+    field: str,
+    minimum: float,
+    maximum: float,
+    kind: ManagedValueKind,
+) -> ManagedDimension:
+    return _field_dimension(key, label_key, field, minimum, maximum, kind)
 
 
 def managed_dimensions(
@@ -116,10 +140,30 @@ def managed_dimensions(
             (
                 _height(),
                 _field_dimension("spacing", "field.spacing", "spacing_m", 0.001, 100.0),
+                _value_dimension(
+                    "transformer_ratio",
+                    "field.transformer_ratio",
+                    "transformer_ratio",
+                    1.0,
+                    10.0,
+                    ManagedValueKind.RATIO,
+                ),
             )
         )
     elif isinstance(parameters, LoopParameters):
-        dimensions.append(_height())
+        dimensions.extend(
+            (
+                _height(),
+                _value_dimension(
+                    "transformer_ratio",
+                    "field.transformer_ratio",
+                    "transformer_ratio",
+                    1.0,
+                    10.0,
+                    ManagedValueKind.RATIO,
+                ),
+            )
+        )
     elif isinstance(parameters, VerticalParameters):
         dimensions.extend(
             (
@@ -139,6 +183,14 @@ def managed_dimensions(
                             0.0,
                             1_000.0,
                         ),
+                        _value_dimension(
+                            "radial_count",
+                            "vertical.radial_count",
+                            "radial_count",
+                            1.0,
+                            32.0,
+                            ManagedValueKind.COUNT,
+                        ),
                     )
                     if parameters.radial_count > 0
                     else ()
@@ -151,6 +203,14 @@ def managed_dimensions(
                             "top_hat_radius_m",
                             0.0,
                             100.0,
+                        ),
+                        _value_dimension(
+                            "top_hat_wire_count",
+                            "vertical.top_hat_wire_count",
+                            "top_hat_wire_count",
+                            1.0,
+                            12.0,
+                            ManagedValueKind.COUNT,
                         ),
                     )
                     if parameters.top_hat_enabled
@@ -172,17 +232,47 @@ def managed_dimensions(
             )
         )
     elif isinstance(parameters, InvertedVParameters):
-        dimensions.append(
-            _field_dimension(
-                "apex_height",
-                "field.apex_height",
-                "apex_height_m",
-                0.0,
-                1_000.0,
+        dimensions.extend(
+            (
+                _field_dimension(
+                    "apex_height",
+                    "field.apex_height",
+                    "apex_height_m",
+                    0.0,
+                    1_000.0,
+                ),
+                _value_dimension(
+                    "included_angle",
+                    "inverted_v.included_angle",
+                    "included_angle_deg",
+                    20.0,
+                    170.0,
+                    ManagedValueKind.ANGLE,
+                ),
             )
         )
     elif isinstance(parameters, OCFDParameters):
-        dimensions.append(_height())
+        dimensions.extend(
+            (
+                _height(),
+                _value_dimension(
+                    "feed_ratio",
+                    "field.feed_ratio",
+                    "feed_ratio",
+                    0.05,
+                    0.95,
+                    ManagedValueKind.RATIO,
+                ),
+                _value_dimension(
+                    "transformer_ratio",
+                    "field.transformer_ratio",
+                    "transformer_ratio",
+                    1.0,
+                    10.0,
+                    ManagedValueKind.RATIO,
+                ),
+            )
+        )
     elif isinstance(parameters, EndFedParameters):
         dimensions.extend(
             (
@@ -199,6 +289,14 @@ def managed_dimensions(
                     "end_height_m",
                     0.0,
                     1_000.0,
+                ),
+                _value_dimension(
+                    "transformer_ratio",
+                    "field.transformer_ratio",
+                    "transformer_ratio",
+                    1.0,
+                    100.0,
+                    ManagedValueKind.RATIO,
                 ),
             )
         )
@@ -250,6 +348,16 @@ def managed_dimensions(
                     100.0,
                 )
             )
+        dimensions.append(
+            _value_dimension(
+                "transformer_ratio",
+                "field.transformer_ratio",
+                "transformer_ratio",
+                1.0,
+                10.0,
+                ManagedValueKind.RATIO,
+            )
+        )
     elif isinstance(parameters, TrapDipoleParameters):
         dimensions.append(_height())
     elif isinstance(parameters, PhasedVerticalParameters):
@@ -272,6 +380,14 @@ def managed_dimensions(
                             0.0,
                             1_000.0,
                         ),
+                        _value_dimension(
+                            "radial_count",
+                            "vertical.radial_count",
+                            "radial_count",
+                            1.0,
+                            32.0,
+                            ManagedValueKind.COUNT,
+                        ),
                     )
                     if parameters.radial_count > 0
                     else ()
@@ -286,6 +402,17 @@ def managed_dimensions(
                 "base_height_m",
                 0.0,
                 100.0,
+            )
+        )
+    elif isinstance(parameters, QuadBeamParameters):
+        dimensions.append(
+            _value_dimension(
+                "transformer_ratio",
+                "field.transformer_ratio",
+                "transformer_ratio",
+                1.0,
+                10.0,
+                ManagedValueKind.RATIO,
             )
         )
     elif isinstance(parameters, TrapYagiParameters):

@@ -24,7 +24,11 @@ from PySide6.QtWidgets import (
 from ...application.cancellation import EventCancelToken
 from ...application.ports.antenna_solver import AntennaSolver
 from ...domain.antennas.design import AntennaDesignParameters
-from ...domain.antennas.dimensions import ManagedDimension, managed_dimensions
+from ...domain.antennas.dimensions import (
+    ManagedDimension,
+    ManagedValueKind,
+    managed_dimensions,
+)
 from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.result import SimulationResult
@@ -140,8 +144,23 @@ class LiveTuningDialog(QDialog):
         self._debounce.start()
 
     def _dimension_for_slider(self, value: int) -> float:
-        candidate = self._dimension_m * (0.80 + 0.40 * value / 200.0)
-        return min(max(candidate, self._dimension.minimum_m), self._dimension.maximum_m)
+        if self._dimension.kind is ManagedValueKind.COUNT:
+            step = max(1, round(self._dimension_m * 0.25))
+            candidate = self._dimension_m + (value - 100) / 100.0 * step
+        elif self._dimension.kind is ManagedValueKind.ANGLE and abs(self._dimension_m) < 1.0:
+            candidate = self._dimension_m + (value - 100) / 100.0 * 30.0
+        else:
+            candidate = self._dimension_m * (0.80 + 0.40 * value / 200.0)
+        return min(max(candidate, self._dimension.minimum), self._dimension.maximum)
+
+    def _format_dimension(self, value: float) -> str:
+        if self._dimension.kind is ManagedValueKind.LENGTH:
+            return self._display_units.format_length(value)
+        if self._dimension.kind is ManagedValueKind.ANGLE:
+            return f"{value:.1f}°"
+        if self._dimension.kind is ManagedValueKind.COUNT:
+            return f"{round(value):d}"
+        return f"{value:.3g}"
 
     def _on_dimension_changed(self, _index: int) -> None:
         key = self._dimension_combo.currentData()
@@ -183,7 +202,7 @@ class LiveTuningDialog(QDialog):
             self._translator.t(
                 "live.dimension_value",
                 dimension=self._translator.t(self._dimension.label_key),
-                value=self._display_units.format_length(dimension),
+                value=self._format_dimension(dimension),
             )
         )
 

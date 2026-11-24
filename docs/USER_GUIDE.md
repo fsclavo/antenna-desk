@@ -1669,8 +1669,8 @@ simulation.
 **Apply and simulate** applies the dimension through the normal design path,
 enters undo history, closes the dialog, and starts the full simulation. Closing
 without applying cancels only the preview. The selector covers length
-dimensions and a coarse pattern preview; non-length managed values are not in
-this slice.
+dimensions, managed angles, counts, transformer/feed ratios, and a coarse
+pattern preview.
 
 ## Import VNA measurements
 

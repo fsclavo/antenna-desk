@@ -17,9 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   dialog and starts the full simulation. A dimension selector exposes
   family-specific length
   dimensions such as height, spacing, radial length, feed height, and reflector
-  spacing, not only the primary dimension. An optional coarse elevation-cut
-  pattern preview accompanies the impedance preview when the solver supports
-  far fields. No schema or solver change.
+  spacing, not only the primary dimension. The selector also covers managed
+  angles, counts (radial and top-hat wires), and transformer/feed ratios. An
+  optional coarse elevation-cut pattern preview accompanies the impedance
+  preview when the solver supports far fields. No schema or solver change.
 - **Yagi mast conductor (first support-structure slice).** A Yagi can include
   one optional vertical mast wire behind the reflector, with editable diameter
   and offset. It uses the element material, is drawn and included in the wire

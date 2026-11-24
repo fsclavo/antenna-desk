@@ -6178,6 +6178,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Plantilla: {value}",
     },
     "field.spacing": {Language.ENGLISH: "Spacing", Language.SPANISH: "Separación"},
+    "field.feed_ratio": {
+        Language.ENGLISH: "Feed ratio",
+        Language.SPANISH: "Relación de alimentación",
+    },
     "field.transformer_ratio": {
         Language.ENGLISH: "Feed transformer ratio",
         Language.SPANISH: "Relación del transformador de alimentación",
@@ -13757,6 +13761,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "radial_preset.screen": {
         Language.ENGLISH: "Ground screen (32 x 0.10λ)",
         Language.SPANISH: "Pantalla de suelo (32 x 0,10λ)",
+    },
+    "vertical.top_hat_wire_count": {
+        Language.ENGLISH: "Top-hat wire count",
+        Language.SPANISH: "Cantidad de hilos del sombrero",
     },
     "vertical.radial_count": {
         Language.ENGLISH: "Radial count",
