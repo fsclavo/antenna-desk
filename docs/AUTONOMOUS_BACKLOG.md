@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-20
+**Date:** 2026-11-24
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -39,6 +39,10 @@ any further project-format change. It is closed after manual validation on
 2026-11-24; the optional streaming write and pattern-level lazy loading are
 deferred follow-ups.
 
+VR1 is a queued vertical-geometry enhancement, not part of the active 1.1/1.2
+sequence. It requires an ADR and a schema decision before implementation; do not
+start it merely because it appears in the table.
+
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
 | ID | Task | Size | Depends on | Acceptance |
@@ -54,6 +58,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
+| VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Queued 2026-11-24; not started.** Add one downward droop angle to the vertical radial generator, with physical radial length semantics, ground-tip validation, schema migration, EN/ES editor and help, scene and report updates, and family-optimizer coverage. No per-radial angles and no performance claim. Decide whether the phased vertical shares the field. See §VR1. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -962,6 +967,100 @@ fudge factor.
 **Risk / mitigation:** high. Do not start before DL7 and the ADR.
 
 **Effort:** XL (8+ weeks). **Release:** post-1.2.
+
+## VR1 — Sloped vertical radials (uniform droop)
+
+**Status:** queued 2026-11-24; not started. **Priority:** future vertical
+geometry enhancement; the ADR must land before implementation.
+
+**Motivation:** the vertical and loaded-vertical templates currently generate
+all radials in the horizontal plane at `base_height_m`. The existing
+`radial_angle_deg` is the azimuth of the first radial, not a droop angle. Sloped
+radials are common for elevated quarter-wave verticals and for ground-mounted
+radial skirts, and NEC-2 already supports them as ordinary straight wires. The
+missing work is parametric modeling, validation, persistence, presentation, and
+optimizer coverage, not a solver feature.
+
+**Goal:** add one uniform downward angle to the generated radial set so users
+can model a radial skirt without converting to custom wires.
+
+**Scope (MVP):**
+- Add `radial_droop_deg` to `VerticalParameters`: 0° horizontal, positive tips
+  down, bounded below 90°; keep 0° bit-identical to the current geometry.
+- Define `radial_length_m` as the physical conductor length. Endpoint:
+  `r = L cos(delta)`, `z = base_height - L sin(delta)`; document the horizontal
+  footprint and tip height.
+- Validate that radial tips stay at or above ground; for ground-backed models,
+  decide and document the NEC clearance policy. Do not let a sloped tip bypass
+  the current 1 cm clearance silently.
+- Reconstruct the droop in `from_custom_parameters()`; today it uses only
+  `hypot(x, y)` and would flatten a sloped custom radial.
+- Add the editor field, EN/ES label and help, enablement when `radial_count > 0`,
+  and preserve it in `_preserve_estimate_context()`.
+- Update the scene summary and plan-inset dimension: a physical radial length
+  cannot be labelled over a shorter horizontal projection. Use the horizontal
+  footprint or a true-length callout; the wire schedule remains authoritative.
+- Add design-summary and construction-sheet rows for droop and tip height;
+  replace the "in the base plane" construction note.
+- Persist with the next schema bump (61 at the time of writing) and a
+  no-value-rewrite migration; regenerate the example container and update the
+  schema truth tests.
+- Add family-optimizer coverage: a bounded variable with a hard tip-clearance
+  constraint, or an explicit context classification. Do not leave the field
+  uncovered.
+
+**ADR decisions:** name (`radial_droop_deg` recommended), positive-down
+convention, range, physical vs projected radial length, ground-clearance rule,
+optimizer variable vs context, and whether `PhasedVerticalParameters` shares the
+field in the same slice.
+
+**Out of scope:** independent angle or length per radial; arbitrary radial
+layouts (use custom wires); buried or soil-contact radials; the native NEC `GN`
+radial screen; performance claims or an "optimal" droop preset without a
+traceable source.
+
+**Likely files:** `domain/antennas/vertical.py`,
+`domain/optimization/families/vertical.py`, `persistence/schema.py`,
+`persistence/constants.py`, `persistence/container.py`,
+`ui/widgets/vertical_form.py`, `ui/widgets/radial_presets.py`, `ui/i18n.py`,
+`ui/main_window.py`, `ui/geometry/builder.py`, `reporting/design_summary.py`,
+`reporting/construction_sheet.py`, `simulation/assumptions.py`, and the
+corresponding domain, persistence, UI, scene, reporting, optimizer, and NEC2C
+tests. Include `phased_vertical.py` and its form/payload only if that scope is
+accepted.
+
+**Acceptance:**
+- A vertical with droop greater than zero has connected radials, exact 3D wire
+  lengths, and tips at the declared height; droop = 0 reproduces the current
+  canonical wires.
+- Invalid tips are rejected with a clear message; a ground-backed simulation
+  does not emit a wire endpoint at `z = 0` through the clearance gap.
+- `to_custom_parameters()` and `from_custom_parameters()` round-trip the droop.
+- Old projects load at 0° with unchanged geometry; the new schema round-trips
+  and the previous schema migrates.
+- EN/ES help is in the manifest; the estimate-context and preset behavior are
+  tested.
+- The scene, wire schedule, design summary, and construction sheet agree.
+- The optimizer either explores the field with a hard constraint or states why
+  it is installation context; field-coverage, determinism, and Apply Best pass.
+- A real nec2c sloped-radial case completes with positive input resistance.
+- No new numerical reference or performance claim is added.
+
+**Tests:** domain validation and round-trip; schema migration; UI form, help,
+and presets; scene contract and plan dimension; reporting; optimizer
+registry/constraints; real nec2c integration; documentation truth. Keep the
+golden scenes unchanged unless the default scene intentionally changes.
+
+**Evidence:** structural/experimental; the family remains B/C for starting
+dimensions. Sloped-radial performance is not independently validated; do not
+invent an optimum.
+
+**Risk / mitigation:** medium. The main risks are ground clearance and
+presentation semantics, not the geometry formula. An ADR plus one real nec2c
+case and explicit tip validation mitigate them.
+
+**Effort:** M (1–2 weeks). **Release:** unassigned; not before the ADR and the
+current 1.1/1.2 priorities.
 
 ## Adaptive length display units (implemented 2026-11-18; manual QA pending)
 
