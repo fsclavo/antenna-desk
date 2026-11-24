@@ -79,7 +79,7 @@ DipoleParameters ──► AntennaModel
 DesignVariant ──► Project
         │
         ▼
-SaveProject ──► ProjectRepository ──► JsonProjectRepository
+SaveProject ──► ProjectRepository ──► ProjectContainerRepository
 ```
 
 Opening a project reverses the flow: the repository validates and migrates the

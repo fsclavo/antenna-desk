@@ -238,8 +238,8 @@ truth for each topic, every ADR, and the archived plans.
 - Immutable domain model for units, geometry, conductors, feed points, ground
   models, environments, wire dipoles, folded dipoles, and regular-polygon
   loops.
-- Versioned JSON persistence with atomic saves, lossless gzip compression, and
-  a migration framework.
+- Versioned ZIP project container with atomic saves, per-entry validation, and
+  explicit schema migrations.
 - A `nec2c` solver adapter with input generation, output parsing, SWR
   normalization, currents, power budget, and far-field patterns.
 - Numerical validation against NEC-2 User's Guide examples and selected ARRL
@@ -295,9 +295,10 @@ Per-template limitations and evidence levels are single-sourced in
   measurement comparison are implemented; live instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical
-  generator supports a radial screen. Transmission-line two-ports are supported,
-  including the log-periodic transposed phase line and generic phase reversal;
-  physical feed-line geometry and arbitrary radial screens are not modeled. The
+  generator supports a dense-wire radial-screen approximation. Transmission-line
+  two-ports are supported, including the log-periodic transposed phase line and
+  generic phase reversal; physical feed-line geometry and arbitrary radial
+  screens are not modeled. The
   feed line is a uniform post-processing model; its loss is included in the
   transmitter-side realized gain and mismatch budget, but it does not change the
   antenna pattern or power gain.
@@ -323,12 +324,13 @@ Per-template limitations and evidence levels are single-sourced in
   hooks are available for later releases. The wheel/sdist remains available for
   users who manage the solver themselves.
 - Simulation runs are stored in the project, including raw solver text. Project
-  files are losslessly gzip-compressed JSON; the 64 MB limit applies to the
-  compressed file, with a warning above 32 MB. Saving also rejects a project
-  that would expand above 256 MB before writing, and decompression is bounded
-  to the same 256 MB. Use **Tools → Compact Simulation History** to keep only
-  the latest run per variant; the save flow offers compaction and retry when a
-  project exceeds a limit. High-resolution patterns and long sweeps multiply runtime and stored
+  files are deterministic ZIP containers; the 64 MB limit applies to the
+  container, with a warning above 32 MB. Saving also rejects a project whose
+  entries would expand above 256 MB before writing, and loading verifies each
+  entry's declared size, CRC32, and SHA-256 through a bounded stream. Use
+  **Tools → Compact Simulation History** to keep only the latest run per
+  variant; the save flow offers compaction and retry when a project exceeds a
+  limit. High-resolution patterns and long sweeps multiply runtime and stored
   points.
 - The segmentation policy is a documented heuristic; explicit counts are used
   for reference cases. The UI derives per-wire counts and aligns the feed wire

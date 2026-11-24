@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover - Windows development host
 from dataclasses import dataclass
 from pathlib import Path
 
+from antennadesk.application.pattern_resolution import far_field_request
 from antennadesk.application.use_cases.analyze_bands import (
     AnalyzeBands,
     AnalyzeBandsCommand,
@@ -49,9 +50,8 @@ from antennadesk.domain.simulation.segmentation import (
     aligned_policy_for_model,
 )
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.simulation.nec2.solver import Nec2cSolver
-from antennadesk.ui.pattern_resolution import far_field_request
 
 DEFAULT_SWEEP_POINTS = 15
 DEFAULT_PATTERN_FREQUENCIES = 5
@@ -144,9 +144,13 @@ def _requests(
             frequency_plan.stop_hz,
             SegmentationPolicy(min_segments_per_wire=3),
         )
-        pattern_frequencies = frequency_plan.snapshot_frequencies(
-            density.pattern_frequencies,
-            preferred_frequency_hz=case.parameters.frequency_hz,
+        pattern_frequencies = (
+            frequency_plan.snapshot_frequencies(
+                density.pattern_frequencies,
+                preferred_frequency_hz=case.parameters.frequency_hz,
+            )
+            if density.pattern_frequencies > 0
+            else ()
         )
         spec = SimulationSpec(
             frequency_plan=frequency_plan,
@@ -169,7 +173,7 @@ def _peak_rss_kib() -> int:
 
 def _run_case(
     solver: Nec2cSolver,
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
     case: BenchmarkCase,
     workers: int,
     density: BenchmarkDensity,
@@ -294,7 +298,7 @@ def main() -> int:
         parser.error(str(exc))
 
     solver = Nec2cSolver(args.nec2c)
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     cases = tuple(case for case in _cases() if args.case is None or case.key == args.case)
     print(f"Workers: {args.workers}")
     results = tuple(_run_case(solver, repository, case, args.workers, density) for case in cases)

@@ -22,13 +22,13 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 
 EXAMPLE_PROJECT = Path(__file__).resolve().parents[2] / "examples" / "dipole_40m.antennadesk"
 
 
 def test_create_save_and_open_a_dipole_project(
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
@@ -43,7 +43,7 @@ def test_create_save_and_open_a_dipole_project(
 
 
 def test_editing_length_keeps_previous_snapshot_unchanged(
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
@@ -82,7 +82,7 @@ def test_invalid_dipole_is_rejected_before_persistence() -> None:
         )
 
 
-def test_example_project_opens(repository: JsonProjectRepository) -> None:
+def test_example_project_opens(repository: ProjectContainerRepository) -> None:
     project = OpenProject(repository).execute(EXAMPLE_PROJECT)
 
     assert project.name == "40 m dipole"
@@ -92,7 +92,7 @@ def test_example_project_opens(repository: JsonProjectRepository) -> None:
 
 
 def test_vertical_dipole_project_round_trip(
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
@@ -126,7 +126,7 @@ def test_vertical_dipole_project_round_trip(
 
 
 def test_example_project_migrates_to_the_current_schema(
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
 ) -> None:
     from antennadesk.domain.antennas.dipole import DipoleOrientation
 
@@ -159,7 +159,7 @@ def test_example_project_migrates_to_the_current_schema(
     ],
 )
 def test_new_geometry_project_round_trip(
-    repository: JsonProjectRepository,
+    repository: ProjectContainerRepository,
     tmp_path: Path,
     parameters: AntennaDesignParameters,
 ) -> None:

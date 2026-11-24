@@ -190,12 +190,12 @@ def test_nec_deck_actions_require_a_project(
 ) -> None:
     from main_window_support import FakeSolver
 
-    from antennadesk.persistence.json_repository import JsonProjectRepository
+    from antennadesk.persistence.container import ProjectContainerRepository
     from antennadesk.ui.i18n import Language, Translator
     from antennadesk.ui.units import UnitSystem
 
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -218,12 +218,12 @@ def test_geometry_exports_require_a_project(
 ) -> None:
     from main_window_support import FakeSolver
 
-    from antennadesk.persistence.json_repository import JsonProjectRepository
+    from antennadesk.persistence.container import ProjectContainerRepository
     from antennadesk.ui.i18n import Language, Translator
     from antennadesk.ui.units import UnitSystem
 
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

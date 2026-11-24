@@ -26,7 +26,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.pattern import front_to_back_db, max_power_gain_db
 from antennadesk.domain.simulation.result import FarFieldPoint
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.simulation.nec2.parser import parse_nec2_output
 
 _NEC2_BLOCK = """\
@@ -126,7 +126,7 @@ def test_project_save_and_load(
     project: Project,
     tmp_path: Path,
 ) -> None:
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     path = tmp_path / "benchmark.antennadesk"
 
     def save_load() -> None:

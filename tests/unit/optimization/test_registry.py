@@ -927,6 +927,25 @@ def test_vertical_optimizer_covers_radial_droop_with_a_tip_clearance_constraint(
     assert any(item.message_key == "optimize.constraint.radial_tip_height" for item in violations)
 
 
+def test_vertical_optimizer_bounds_include_a_droop_at_the_tip_limit() -> None:
+    base = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+    )
+    parameters = replace(base, radial_droop_deg=base.max_radial_droop_deg)
+    descriptor = optimizer_availability(parameters).descriptor
+    assert descriptor is not None
+    variable = next(item for item in descriptor.variables if item.name == "radial_droop_deg")
+
+    assert descriptor.initial_values["radial_droop_deg"] == pytest.approx(
+        parameters.radial_droop_deg
+    )
+    assert variable.minimum <= descriptor.initial_values["radial_droop_deg"] <= variable.maximum
+
+
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:
     parameters = phased_vertical_parameters(
         element_count=3,

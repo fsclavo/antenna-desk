@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
+from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
@@ -27,10 +28,14 @@ from antennadesk.ui.i18n import Language, Translator
 
 
 class _FakeSolver:
+    def __init__(self) -> None:
+        self.calls: list[SimulationSpec] = []
+
     def validate(self, model, spec):
         return ()
 
     def run(self, model, spec, *, cancel_token=None):
+        self.calls.append(spec)
         frequency = spec.frequency_plan.start_hz
         impedance = complex(50.0, 0.0)
         far_field = (
@@ -230,3 +235,66 @@ def test_live_tuning_can_tune_radial_droop(qtbot: QtBot) -> None:
     assert applied[-1].radial_droop_deg > parameters.radial_droop_deg
     assert applied[-1].radial_tip_height_m > 0.0
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_live_tuning_discards_a_stale_result_after_the_target_changes(
+    qtbot: QtBot,
+) -> None:
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    solver = _FakeSolver()
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        solver,
+        lambda updated: None,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(lambda: bool(solver.calls) and not dialog._busy, timeout=3000)
+    dialog._debounce.stop()
+
+    old_request = dialog._request_id
+    token = EventCancelToken()
+    dialog._token = token
+    dialog._busy = True
+    height_index = dialog._dimension_combo.findData("height")
+    assert height_index >= 0
+    dialog._dimension_combo.setCurrentIndex(height_index)
+    dialog._debounce.stop()
+
+    assert token.is_cancelled()
+    assert dialog._request_id > old_request
+
+    dialog._result_label.clear()
+    stale_result = solver.run(parameters.to_antenna(), spec)
+    dialog._finished(old_request, stale_result)
+
+    assert dialog._result_label.text() == ""
+    assert dialog._busy is False
+
+
+def test_live_tuning_apply_stops_a_pending_debounce(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    solver = _FakeSolver()
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        solver,
+        lambda updated: None,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(lambda: len(solver.calls) == 1 and not dialog._busy, timeout=3000)
+
+    dialog._slider.setValue(120)
+    assert dialog._debounce.isActive()
+    dialog._apply_clicked()
+
+    assert dialog.result() == QDialog.DialogCode.Accepted
+    assert dialog._debounce.isActive() is False
+    qtbot.wait(400)
+    assert len(solver.calls) == 1

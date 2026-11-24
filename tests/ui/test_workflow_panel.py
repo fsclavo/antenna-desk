@@ -9,7 +9,7 @@ from dataclasses import replace
 from main_window_support import FakeSolver
 from pytestqt.qtbot import QtBot
 
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
@@ -71,7 +71,7 @@ def test_workflow_mode_persists_across_windows(qtbot: QtBot, window: MainWindow)
     assert store.load().workflow_mode is WorkflowMode.GUIDED
 
     reopened = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

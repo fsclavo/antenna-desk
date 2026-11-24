@@ -1,10 +1,13 @@
 # ADR-0050 — ZIP project container and honest size contract
 
-- **Status:** accepted 2026-11-20; slice 1 implemented 2026-11-20 (PF1)
+- **Status:** accepted 2026-11-20; implemented and closed 2026-11-24 (PF1)
 - **Schema note:** original container used schema 59; ADR-0051 adds schema 60
-  with the optional project-level `site_ground` field.
+  with the optional project-level `site_ground` field; ADR-0052 adds schema 61
+  with the optional vertical `radial_droop_deg` field.
 - **Date:** 2026-11-20
 - **Supersedes:** [ADR-0021](0021-compressed-project-files.md)
+- **Follow-ups:** [`AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) §PF2
+  (streaming container write) and §PF3 (pattern-level lazy loading)
 - **Related:** `docs/AUTONOMOUS_BACKLOG.md` §PF1
 
 ## Context

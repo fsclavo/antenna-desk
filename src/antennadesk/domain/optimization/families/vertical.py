@@ -82,8 +82,9 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
         )
         initial["radial_length_m"] = parameters.radial_length_m
         droop_high = max(
-            0.1,
+            parameters.radial_droop_deg,
             math.floor(parameters.max_radial_droop_deg * 10.0) / 10.0,
+            0.1,
         )
         variables.append(
             OptimizationVariable(

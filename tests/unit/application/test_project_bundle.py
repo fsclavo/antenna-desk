@@ -22,7 +22,7 @@ from antennadesk.application.use_cases.project_bundle import (
 from antennadesk.domain.projects.installation import InstallationProfile
 from antennadesk.domain.projects.journal import JournalEntry, JournalEntryKind
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 
 
 def _project_with_images(
@@ -72,7 +72,7 @@ def _write_zip(path: Path, entries: dict[str, bytes]) -> None:
 def _bundle_project(entries: dict[str, bytes], tmp_path: Path) -> Project:
     project_path = tmp_path / "bundle-project.antennadesk"
     project_path.write_bytes(entries[PROJECT_NAME])
-    return JsonProjectRepository().load(project_path)
+    return ProjectContainerRepository().load(project_path)
 
 
 def test_export_writes_a_manifest_project_and_assets(
@@ -82,7 +82,7 @@ def test_export_writes_a_manifest_project_and_assets(
     project, photo, plan = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "project.antennadesk-bundle"
 
-    result = ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    result = ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
 
     assert result.bundle_path == bundle
     assert result.asset_count == 2
@@ -109,11 +109,11 @@ def test_import_round_trip_rewrites_images_to_local_files(
 ) -> None:
     project, _, _ = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "project.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     destination_parent = tmp_path / "imported"
     destination_parent.mkdir()
 
-    result = ImportProjectBundle(JsonProjectRepository()).execute(
+    result = ImportProjectBundle(ProjectContainerRepository()).execute(
         bundle,
         destination_parent,
     )
@@ -126,7 +126,7 @@ def test_import_round_trip_rewrites_images_to_local_files(
     assert Path(profile_image).is_file()
     journal_images = result.project.journal_entries[0].image_references
     assert all(Path(reference).is_file() for reference in journal_images)
-    loaded = JsonProjectRepository().load(result.project_path)
+    loaded = ProjectContainerRepository().load(result.project_path)
     assert loaded.installation_profiles[0].image_reference == profile_image
     assert loaded.journal_entries[0].image_references == journal_images
 
@@ -138,13 +138,13 @@ def test_missing_images_are_reported_but_do_not_block_export_or_import(
     project, _, _ = _project_with_images(sample_project, tmp_path, missing=True)
     bundle = tmp_path / "project.antennadesk-bundle"
 
-    exported = ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    exported = ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
 
     assert exported.asset_count == 2
     assert exported.missing_assets == (str(tmp_path / "missing.jpg"),)
     destination_parent = tmp_path / "imported"
     destination_parent.mkdir()
-    imported = ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination_parent)
+    imported = ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination_parent)
     assert imported.missing_assets == (str(tmp_path / "missing.jpg"),)
     assert str(tmp_path / "missing.jpg") in imported.project.journal_entries[0].image_references
 
@@ -174,7 +174,7 @@ def test_duplicate_image_references_share_one_asset(
     project = project.with_journal_entry(entry, updated_at=sample_project.updated_at)
     bundle = tmp_path / "bundle.antennadesk-bundle"
 
-    result = ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    result = ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
 
     assert result.asset_count == 1
     manifest = json.loads(_read_zip(bundle)[MANIFEST_NAME])
@@ -195,7 +195,7 @@ def test_import_rejects_path_traversal(tmp_path: Path) -> None:
     destination.mkdir()
 
     with pytest.raises(ProjectBundleError, match="unsafe"):
-        ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination)
+        ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination)
 
 
 def test_import_rejects_unlisted_assets(
@@ -204,7 +204,7 @@ def test_import_rejects_unlisted_assets(
 ) -> None:
     project, _, _ = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "bundle.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     entries = _read_zip(bundle)
     entries["assets/extra.jpg"] = b"extra"
     bad_bundle = tmp_path / "bad.antennadesk-bundle"
@@ -213,7 +213,7 @@ def test_import_rejects_unlisted_assets(
     destination.mkdir()
 
     with pytest.raises(ProjectBundleError, match="does not match"):
-        ImportProjectBundle(JsonProjectRepository()).execute(bad_bundle, destination)
+        ImportProjectBundle(ProjectContainerRepository()).execute(bad_bundle, destination)
 
 
 def test_import_rejects_a_corrupt_asset(
@@ -222,7 +222,7 @@ def test_import_rejects_a_corrupt_asset(
 ) -> None:
     project, _, _ = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "bundle.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     entries = _read_zip(bundle)
     manifest = json.loads(entries[MANIFEST_NAME])
     asset = next(item for item in manifest["assets"] if not item["missing"])
@@ -234,7 +234,7 @@ def test_import_rejects_a_corrupt_asset(
     destination.mkdir()
 
     with pytest.raises(ProjectBundleError, match="checksum mismatch"):
-        ImportProjectBundle(JsonProjectRepository()).execute(bad_bundle, destination)
+        ImportProjectBundle(ProjectContainerRepository()).execute(bad_bundle, destination)
 
 
 def test_import_rejects_an_unsupported_manifest(
@@ -243,7 +243,7 @@ def test_import_rejects_an_unsupported_manifest(
 ) -> None:
     project, _, _ = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "bundle.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     entries = _read_zip(bundle)
     manifest = json.loads(entries[MANIFEST_NAME])
     manifest["format_version"] = 99
@@ -254,7 +254,7 @@ def test_import_rejects_an_unsupported_manifest(
     destination.mkdir()
 
     with pytest.raises(ProjectBundleError, match="version"):
-        ImportProjectBundle(JsonProjectRepository()).execute(bad_bundle, destination)
+        ImportProjectBundle(ProjectContainerRepository()).execute(bad_bundle, destination)
 
 
 def test_import_rejects_a_bundle_without_its_project(tmp_path: Path) -> None:
@@ -264,7 +264,7 @@ def test_import_rejects_a_bundle_without_its_project(tmp_path: Path) -> None:
     destination.mkdir()
 
     with pytest.raises(ProjectBundleError, match="missing"):
-        ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination)
+        ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination)
 
 
 def test_export_rejects_an_oversized_asset(
@@ -288,7 +288,7 @@ def test_export_rejects_an_oversized_asset(
     bundle = tmp_path / "bundle.antennadesk-bundle"
 
     with pytest.raises(ProjectBundleError, match="too large"):
-        ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+        ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
 
 
 def test_import_creates_a_unique_destination(
@@ -297,12 +297,12 @@ def test_import_creates_a_unique_destination(
 ) -> None:
     project, _, _ = _project_with_images(sample_project, tmp_path)
     bundle = tmp_path / "bundle.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     destination = tmp_path / "destination"
     destination.mkdir()
 
-    first = ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination)
-    second = ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination)
+    first = ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination)
+    second = ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination)
 
     assert first.destination != second.destination
     assert first.destination.is_dir()

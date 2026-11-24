@@ -15,7 +15,7 @@ import antennadesk.ui.widgets.polar_pattern_view as polar_module
 import antennadesk.ui.widgets.radiation_pattern_3d_view as pattern_3d_module
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.dialogs.comparison_dialog import ComparisonDialog
 from antennadesk.ui.dialogs.fan_dipole_dialog import FanDipoleDialog
 from antennadesk.ui.dialogs.feed_line_dialog import FeedLineDialog
@@ -111,7 +111,7 @@ def test_main_window_renders_large_spanish(qtbot: QtBot) -> None:
     controller = _controller()
     controller.apply(FontSize.LARGE)
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         None,
         Translator(Language.SPANISH),
         UnitSystem.METRIC,
@@ -137,7 +137,7 @@ def test_form_panels_widen_for_large_spanish_forms(qtbot: QtBot) -> None:
     controller = _controller()
     controller.apply(FontSize.LARGE)
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         None,
         Translator(Language.SPANISH),
         UnitSystem.METRIC,

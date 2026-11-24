@@ -20,7 +20,7 @@ from antennadesk.application.project_session import ProjectSession
 from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.solver import SolverMetadata
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
@@ -30,7 +30,7 @@ from antennadesk.ui.units import UnitSystem
 
 def test_main_window_starts_without_a_project(qtbot: QtBot) -> None:
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -59,7 +59,7 @@ def test_new_antenna_from_the_empty_state_creates_a_project(
     from antennadesk.domain.antennas.dipole import DipoleParameters
 
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -274,7 +274,7 @@ def test_save_without_a_project_reports_an_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -298,7 +298,7 @@ def test_open_project_loads_a_saved_file(
     source = tmp_path / "source.antennadesk"
     assert window._save_to(source) is True
     loaded = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -339,7 +339,7 @@ def test_open_project_processes_events_while_loading(
     source = tmp_path / "responsive-open.antennadesk"
     assert window._save_to(source) is True
     loaded = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -770,7 +770,7 @@ def test_save_can_choose_design_only_for_an_oversized_project(
     assert window._project is not None
     assert window._project.simulation_runs == ()
     assert window._status_label.text() == "Project saved without simulation history."
-    loaded = JsonProjectRepository().load(path)
+    loaded = ProjectContainerRepository().load(path)
     assert loaded.simulation_runs == ()
     assert all(design.optimization_summary is None for design in loaded.designs)
     window._dirty = False
@@ -856,7 +856,7 @@ def test_open_project_keeps_runs_lazy(
     assert window._save_to(source) is True
 
     loaded = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -881,7 +881,7 @@ def test_open_project_keeps_runs_lazy(
     assert loaded._session.run_count() == 2
     assert loaded._project is not None
     assert loaded._project.simulation_runs == ()
-    assert JsonProjectRepository().open_session(saved_again).run_count() == 2
+    assert ProjectContainerRepository().open_session(saved_again).run_count() == 2
     loaded._dirty = False
     loaded.close()
 
@@ -895,7 +895,7 @@ def test_open_offers_design_only_recovery(
     source = tmp_path / "design-only.antennadesk"
     assert window._save_to(source) is True
     loaded = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -952,7 +952,7 @@ def test_save_design_only_action_drops_runs_and_optimizations(
 
     assert window.save_design_only() is True
 
-    loaded = JsonProjectRepository().load(path)
+    loaded = ProjectContainerRepository().load(path)
     assert loaded.simulation_runs == ()
     assert all(design.optimization_summary is None for design in loaded.designs)
     assert window._project is not None
@@ -975,7 +975,7 @@ def test_compaction_with_a_lazy_session_does_not_materialize(
     assert window._save_to(source) is True
 
     loaded = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -1002,7 +1002,7 @@ def test_compaction_with_a_lazy_session_does_not_materialize(
     assert loaded._save_to(saved) is True
     assert loaded._session is not None
     assert loaded._session.run_count() == 1
-    assert JsonProjectRepository().open_session(saved).run_count() == 1
+    assert ProjectContainerRepository().open_session(saved).run_count() == 1
     loaded._dirty = False
     loaded.close()
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from antennadesk.domain.projects.bom_costs import BomCostLine, BomCostRecord
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.constants import SCHEMA_VERSION
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 
 
 def test_schema_version_is_current() -> None:
@@ -29,7 +29,7 @@ def test_bom_costs_round_trip(
     )
     project = sample_project.with_bom_costs(record, updated_at=sample_project.updated_at)
     path = tmp_path / "costs.antennadesk"
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
 
     repository.save(project, path)
     loaded = repository.load(path)

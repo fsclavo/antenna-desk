@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QInputDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.preferences import InMemoryPreferencesStore
@@ -24,7 +24,7 @@ from antennadesk.ui.units import UnitSystem
 
 
 def _save_project(project: Project, path: Path) -> None:
-    JsonProjectRepository().save(project, path)
+    ProjectContainerRepository().save(project, path)
 
 
 def test_open_project_records_and_removes_a_missing_recent(
@@ -120,7 +120,7 @@ def test_restore_last_project_opens_the_newest_recent(
         (RecentProject(path.resolve(), sample_project.name, "2026-11-19T12:00:00+00:00"),)
     )
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

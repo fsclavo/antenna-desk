@@ -44,15 +44,21 @@
   work, not another standalone refactor.
 - PF1 is **closed 2026-11-24** after manual validation of the incident-scale
   project. `.antennadesk` is a deterministic ZIP container (container 1, schema
-  60) with separate project, design, run, raw-text, and optimization entries;
+  61) with separate project, design, run, raw-text, and optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
-  gzip/plain-JSON/migration reader. Opening is lazy through a
-  `ProjectSession`; saving and compaction copy unchanged run entries and
-  serialize only new runs. Design-only recovery and
+  gzip/plain-JSON reader or migration from schema 58 and older. Opening is
+  lazy through a `ProjectSession`; saving and compaction copy unchanged run
+  entries and serialize only new runs. Design-only recovery and
   **File → Save Design Only...** are available, and `PreparedProject` reports
-  honest compressed/expanded sizes. Optional follow-ups are streaming the
-  container write and pattern-level lazy loading. See
+  honest compressed/expanded sizes. Optional follow-ups are tracked as PF2
+  (streaming container write) and PF3 (pattern-level lazy loading). See
   [`ADR-0050`](ADR/0050-zip-project-container.md).
+- A follow-up QA and technical-debt pass on 2026-11-24 kept the full gate green
+  and closed the retired `JsonProjectRepository` alias, stale gzip/schema
+  claims, two live-tuning preview races, the vertical-optimizer droop bound at
+  the tip-clearance limit, and the multiband benchmark import. See
+  [`archive/qa/QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md). The
+  remaining Qt worker-lifecycle duplication is queued as UX45.
 
 ## Next
 

@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.yagi import YagiParameters
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -604,7 +604,7 @@ def test_estimate_dimensions_does_not_require_a_solver(
     sample_project,
 ) -> None:
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         None,
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

@@ -25,7 +25,7 @@ from antennadesk.application.use_cases.project_bundle import (
 from antennadesk.domain.projects.installation import InstallationProfile
 from antennadesk.domain.projects.journal import JournalEntry, JournalEntryKind
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 
 
 def _project_with_images(
@@ -68,7 +68,7 @@ def _write_zip(
 
 def _base_entries(sample_project: Project, tmp_path: Path) -> dict[str, bytes]:
     bundle = tmp_path / "base.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(sample_project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(sample_project, bundle)
     return _read_zip(bundle)
 
 
@@ -92,17 +92,17 @@ def _import(
     bundle: Path,
     destination: Path,
 ) -> object:
-    return ImportProjectBundle(JsonProjectRepository()).execute(bundle, destination)
+    return ImportProjectBundle(ProjectContainerRepository()).execute(bundle, destination)
 
 
 def test_export_rejects_a_directory_path(sample_project: Project, tmp_path: Path) -> None:
     with pytest.raises(ProjectBundleError, match="directory"):
-        ExportProjectBundle(JsonProjectRepository()).execute(sample_project, tmp_path)
+        ExportProjectBundle(ProjectContainerRepository()).execute(sample_project, tmp_path)
 
 
 def test_export_rejects_a_missing_parent(sample_project: Project, tmp_path: Path) -> None:
     with pytest.raises(ProjectBundleError, match="does not exist"):
-        ExportProjectBundle(JsonProjectRepository()).execute(
+        ExportProjectBundle(ProjectContainerRepository()).execute(
             sample_project,
             tmp_path / "missing" / "bundle",
         )
@@ -117,7 +117,7 @@ def test_export_rejects_too_many_assets(
     monkeypatch.setattr(bundle_module, "MAX_ASSETS", 0)
 
     with pytest.raises(ProjectBundleError, match="more than 0 assets"):
-        ExportProjectBundle(JsonProjectRepository()).execute(
+        ExportProjectBundle(ProjectContainerRepository()).execute(
             project,
             tmp_path / "bundle.antennadesk-bundle",
         )
@@ -132,7 +132,7 @@ def test_export_rejects_a_total_asset_size_limit(
     monkeypatch.setattr(bundle_module, "MAX_UNCOMPRESSED_BYTES", 1)
 
     with pytest.raises(ProjectBundleError, match="assets exceed"):
-        ExportProjectBundle(JsonProjectRepository()).execute(
+        ExportProjectBundle(ProjectContainerRepository()).execute(
             project,
             tmp_path / "bundle.antennadesk-bundle",
         )
@@ -146,7 +146,7 @@ def test_export_rejects_a_project_payload_limit(
     monkeypatch.setattr(bundle_module, "MAX_PROJECT_PAYLOAD_BYTES", 1)
 
     with pytest.raises(ProjectBundleError, match="project payload is too large"):
-        ExportProjectBundle(JsonProjectRepository()).execute(
+        ExportProjectBundle(ProjectContainerRepository()).execute(
             sample_project,
             tmp_path / "bundle.antennadesk-bundle",
         )
@@ -160,7 +160,7 @@ def test_export_rejects_a_manifest_limit(
     monkeypatch.setattr(bundle_module, "MAX_MANIFEST_BYTES", 1)
 
     with pytest.raises(ProjectBundleError, match="manifest is too large"):
-        ExportProjectBundle(JsonProjectRepository()).execute(
+        ExportProjectBundle(ProjectContainerRepository()).execute(
             sample_project,
             tmp_path / "bundle.antennadesk-bundle",
         )
@@ -175,7 +175,7 @@ def test_export_rejects_a_bundle_size_limit(
     bundle = tmp_path / "bundle.antennadesk-bundle"
 
     with pytest.raises(ProjectBundleError, match="bundle is too large"):
-        ExportProjectBundle(JsonProjectRepository()).execute(sample_project, bundle)
+        ExportProjectBundle(ProjectContainerRepository()).execute(sample_project, bundle)
 
     assert not bundle.exists()
 
@@ -485,7 +485,7 @@ def test_import_rejects_a_project_without_designs(
     tmp_path: Path,
 ) -> None:
     project = replace(sample_project, designs=())
-    payload = JsonProjectRepository().prepare_payload(project).payload
+    payload = ProjectContainerRepository().prepare_payload(project).payload
     manifest = {
         "format": "antennadesk.project_bundle",
         "format_version": 1,
@@ -543,7 +543,7 @@ def test_import_removes_the_destination_on_save_error(
         del self, project, path
         raise OSError("disk full")
 
-    monkeypatch.setattr(JsonProjectRepository, "save", fail_save)
+    monkeypatch.setattr(ProjectContainerRepository, "save", fail_save)
 
     with pytest.raises(ProjectBundleError, match="could not write imported bundle"):
         _import(bundle, destination)
@@ -566,7 +566,7 @@ def test_import_removes_the_destination_on_unexpected_error(
         del self, project, path
         raise ValueError("invalid project")
 
-    monkeypatch.setattr(JsonProjectRepository, "save", fail_save)
+    monkeypatch.setattr(ProjectContainerRepository, "save", fail_save)
 
     with pytest.raises(ValueError, match="invalid project"):
         _import(bundle, destination)
@@ -589,7 +589,7 @@ def test_import_handles_a_journal_reference_without_an_asset(
     )
     project = sample_project.with_journal_entry(entry, updated_at=sample_project.updated_at)
     bundle = tmp_path / "bundle.antennadesk-bundle"
-    ExportProjectBundle(JsonProjectRepository()).execute(project, bundle)
+    ExportProjectBundle(ProjectContainerRepository()).execute(project, bundle)
     destination = tmp_path / "destination"
     destination.mkdir()
 

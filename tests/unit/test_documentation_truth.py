@@ -101,6 +101,20 @@ def test_user_guide_limitations_match_shipped_optimizer_and_feed_line() -> None:
     assert "[ADR](ADR/)" in text
 
 
+def test_persistence_documentation_describes_the_current_container() -> None:
+    documents = {
+        "README.md": _read(README),
+        "docs/ARCHITECTURE.md": _read(DOCS / "ARCHITECTURE.md"),
+        "docs/MULTIBAND_PERFORMANCE.md": _read(DOCS / "MULTIBAND_PERFORMANCE.md"),
+    }
+
+    for name, text in documents.items():
+        normalized = " ".join(text.lower().split())
+        assert "lossless gzip compression" not in normalized, name
+        assert "gzip-compressed json" not in normalized, name
+        assert "jsonprojectrepository" not in normalized, name
+
+
 def test_schema_documents_name_the_current_version() -> None:
     architecture = _read(DOCS / "ARCHITECTURE.md")
     domain = _read(DOCS / "DOMAIN_MODEL.md")

@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.recovery import AutosaveRecovery
@@ -25,7 +25,7 @@ def _window(
     recovery: AutosaveRecovery | None = None,
 ) -> MainWindow:
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -42,7 +42,7 @@ def test_autosave_writes_a_recovery_and_restores_the_project(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     assert window._project is not None
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True
@@ -73,7 +73,7 @@ def test_simulation_result_does_not_trigger_autosave(
     qtbot: QtBot,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = False
@@ -97,7 +97,7 @@ def test_design_edit_still_triggers_a_compact_autosave(
     window: MainWindow,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     window._recovery = recovery
     window._autosave_enabled = True
     window._on_form_changed()
@@ -117,7 +117,7 @@ def test_autosave_is_cleared_by_a_normal_save(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True
@@ -144,7 +144,7 @@ def test_missing_original_path_falls_back_to_save_as(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     recovery.save(
         sample_project,
         original_path=tmp_path / "moved-away.antennadesk",
@@ -181,7 +181,7 @@ def test_discard_recovery_removes_the_copy(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     recovery.save(sample_project, original_path=None, dirty=True)
     window = _window(qtbot, recovery)
     monkeypatch.setattr(
@@ -202,7 +202,7 @@ def test_corrupt_recovery_is_discarded(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     recovery.directory.mkdir(parents=True)
     recovery.project_path.write_bytes(b"not a project")
     window = _window(qtbot, recovery)
@@ -225,7 +225,7 @@ def test_normal_close_clears_the_recovery(
     window: MainWindow,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     window._recovery = recovery
     window._autosave_enabled = True
     window._dirty = True

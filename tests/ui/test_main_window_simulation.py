@@ -16,7 +16,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.application.discretization import validate_segmentation
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui import catalog as catalog_module
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
@@ -546,9 +546,9 @@ def test_simulation_results_persist_across_save_and_open(
     assert window._save_to(path) is True
     assert window._results._table.rowCount() == 1
 
-    loaded = OpenProject(JsonProjectRepository()).execute(path)
+    loaded = OpenProject(ProjectContainerRepository()).execute(path)
     reopened = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -892,9 +892,9 @@ def test_band_analysis_reopens_from_a_saved_project(
     path = tmp_path / "bands.antennadesk"
     assert window._save_to(path) is True
 
-    loaded = JsonProjectRepository().load(path)
+    loaded = ProjectContainerRepository().load(path)
     second = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

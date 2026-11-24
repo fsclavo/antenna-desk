@@ -12,7 +12,7 @@ from PySide6.QtGui import QFont, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.simulation.preflight import run_preflight
 from antennadesk.ui.fonts import current_font_scale, set_current_font_scale
 from antennadesk.ui.i18n import Language, Translator
@@ -43,7 +43,7 @@ def _restore_application_appearance(qtbot: QtBot) -> Iterator[None]:
 @pytest.fixture
 def window(qtbot: QtBot, sample_project) -> Iterator[MainWindow]:
     main_window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

@@ -170,6 +170,8 @@ class LiveTuningDialog(QDialog):
         )
         if dimension is None or dimension.key == self._dimension.key:
             return
+        self._invalidate_preview()
+        self._pending = None
         self._dimension = dimension
         self._dimension_m = dimension.read(self._parameters)
         self._slider.blockSignals(True)
@@ -184,6 +186,7 @@ class LiveTuningDialog(QDialog):
         self._debounce.start()
 
     def _on_slider(self, _value: int) -> None:
+        self._invalidate_preview()
         self._update_dimension_label()
         self._progress.setText(self._translator.t("live.waiting"))
         self._debounce.start()
@@ -191,10 +194,18 @@ class LiveTuningDialog(QDialog):
     def _on_pattern_preview_toggled(self, enabled: bool) -> None:
         if not self._pattern_supported:
             return
+        self._invalidate_preview()
         if not enabled:
             self._pattern_view.set_points(())
         self._progress.setText(self._translator.t("live.waiting"))
         self._debounce.start()
+
+    def _invalidate_preview(self) -> None:
+        """Discard in-flight results: the requested target has changed."""
+
+        self._request_id += 1
+        if self._token is not None:
+            self._token.cancel()
 
     def _update_dimension_label(self) -> None:
         dimension = self._dimension_for_slider(self._slider.value())
@@ -273,7 +284,7 @@ class LiveTuningDialog(QDialog):
 
     def _finished(self, request_id: int, result: SimulationResult) -> None:
         if request_id != self._request_id:
-            self._cleanup_thread()
+            self._recover_after_stale_result()
             return
         self._busy = False
         self._cleanup_thread()
@@ -297,6 +308,16 @@ class LiveTuningDialog(QDialog):
             self._pending = None
             self._start_preview()
 
+    def _recover_after_stale_result(self) -> None:
+        """Release the worker after a result the user has already superseded."""
+
+        self._busy = False
+        self._cleanup_thread()
+        self._update_buttons()
+        if self._pending is not None:
+            self._pending = None
+            self._start_preview()
+
     def _update_pattern(self, result: SimulationResult) -> None:
         if not self._pattern_preview.isChecked():
             self._pattern_view.set_points(())
@@ -314,7 +335,7 @@ class LiveTuningDialog(QDialog):
 
     def _failed(self, request_id: int, message: str) -> None:
         if request_id != self._request_id:
-            self._cleanup_thread()
+            self._recover_after_stale_result()
             return
         self._busy = False
         self._cleanup_thread()
@@ -344,18 +365,21 @@ class LiveTuningDialog(QDialog):
         except Exception as exc:
             self._progress.setText(str(exc))
             return
+        self._stop_preview()
         self.accept()
 
-    def reject(self) -> None:
+    def _stop_preview(self) -> None:
+        """Stop timers and discard any in-flight preview before closing."""
+
         self._debounce.stop()
-        if self._token is not None:
-            self._token.cancel()
+        self._invalidate_preview()
+        self._pending = None
         self._cleanup_thread()
+
+    def reject(self) -> None:
+        self._stop_preview()
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        self._debounce.stop()
-        if self._token is not None:
-            self._token.cancel()
-        self._cleanup_thread()
+        self._stop_preview()
         event.accept()

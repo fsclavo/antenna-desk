@@ -19,7 +19,7 @@ against the real `nec2c` adapter; it is not a synthetic unit benchmark.
 - Six representative cases: OCFD, G5RV at 3/5/8 bands, and a fan dipole at
   3/8 bands.
 - Each produced band run is recorded in a project; the compressed project size
-  is measured with `JsonProjectRepository.serialized_size()`.
+  is measured with `ProjectContainerRepository.serialized_size()`.
 - Peak RSS is the process maximum reported by `resource.getrusage()` and is
   cumulative across the cases in one process. It is an upper-bound indicator,
   not an isolated per-case measurement.

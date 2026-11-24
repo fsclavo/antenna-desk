@@ -13,7 +13,7 @@ from PySide6.QtGui import QFont, QPalette
 from PySide6.QtWidgets import QApplication, QDialog, QStyleFactory
 from pytestqt.qtbot import QtBot
 
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.dialogs.preferences_dialog import PreferencesDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -227,7 +227,7 @@ def test_main_window_font_size_applies_and_persists(qtbot: QtBot) -> None:
     preferences = InMemoryPreferencesStore()
     controller = FontSizeController(base)
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -260,7 +260,7 @@ def test_main_window_starts_with_the_saved_font_size(qtbot: QtBot) -> None:
     controller = FontSizeController(base)
     controller.apply(preferences.load().font_size)
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,
@@ -319,7 +319,7 @@ def test_main_window_starts_with_the_saved_theme(qtbot: QtBot) -> None:
     app = _application()
     preferences = InMemoryPreferencesStore(UiPreferences(theme=ThemePreference.DARK))
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

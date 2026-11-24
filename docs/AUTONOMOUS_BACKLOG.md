@@ -47,7 +47,9 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
-| PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. Optional follow-ups: streaming write and pattern-level lazy loading. See §PF1. |
+| PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. Optional follow-ups are tracked as PF2 (streaming write) and PF3 (pattern-level lazy loading). See §PF1. |
+| PF2 | Streaming container write | M | PF1 (closed) | **Proposed; optional.** Write and compact a container one entry at a time to the atomic destination or a bounded spool; stream copied runs from the source ZIP instead of materializing them. Preserve deterministic bytes, manifest hashes, limits, and the save/load invariant. See §PF2. |
+| PF3 | Pattern-level lazy loading | L | PF1 (closed); pattern-entry ADR; PF2 soft | **Proposed; optional.** Split far-field patterns into validated per-run entries and load them only for the Pattern/3D/report consumers. Distinguish "not loaded/available" from "no pattern"; prune patterns independently. See §PF3. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
@@ -59,6 +61,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
+| UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Proposed; not started.** Replace the 14 copied `QThread`/worker setups with one controller that owns start, cancellation, completion, error, and teardown. Migrate every worker site with close-while-running, double-start, stale-result, and modal project-I/O tests. Not release-blocking. See §UX45. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -92,9 +95,9 @@ on demand, a failed oversized open offers design-only recovery, and
 `PreparedProject` now carries the payload, compressed/expanded sizes, entry
 count, and limits. Saving and compaction copy unchanged run entries from the
 source container and serialize only new runs; they reopen the session after
-writing. Remaining: stream the container write instead of holding its bytes in
-memory, and add pattern-level lazy loading if reports need it. See
-[ADR-0050](ADR/0050-zip-project-container.md).
+writing. The optional follow-ups are tracked as PF2 (streaming write) and PF3
+(pattern-level lazy loading); PF1's container and save/load contract stay
+unchanged. See [ADR-0050](ADR/0050-zip-project-container.md).
 
 **Scale benchmark (2026-11-21):** `scripts/benchmark_project_io.py` generated
 four runs with five 2° patterns and 8 MB of raw text each (118 MB expanded,
@@ -122,8 +125,9 @@ cannot reopen; keep one portable `.antennadesk` file and atomic saves.
 
 **Non-goals:** no backward compatibility with the gzip/plain-JSON project
 format or schema 59; no solver, antenna-model, or numerical-reference change;
-no binary pattern store or sidecar database in this item. Open a separate item
-if those are still needed after the container lands.
+no binary pattern store or sidecar database in this item; PF3 covers splitting
+pattern data into separate validated entries if that is still needed after the
+container lands.
 
 ### Container format (container version 1, schema version 61)
 
@@ -278,7 +282,7 @@ MAX_PATH_BYTES                   = 255
 
 - New ADR-0050 “ZIP project container and size contract” supersedes ADR-0021.
   Update `ARCHITECTURE.md`, `DOMAIN_MODEL.md`, `PROJECT_BUNDLE.md`,
-  `USER_GUIDE.md`, `STATUS.md` (schema 60), and `CHANGELOG.md`.
+  `USER_GUIDE.md`, `STATUS.md` (current schema), and `CHANGELOG.md`.
 - Acceptance:
   - Saving the reported six-run project either compacts to a reopenable
     container or refuses with an actionable message; it never writes another
@@ -298,6 +302,257 @@ MAX_PATH_BYTES                   = 255
 **Risk:** medium–high because the repository port and lazy-loading path change;
 mitigate with the ADR, atomic writes, the save/load invariant test, and a
 manual recovery of the one existing pre-container project.
+
+## PF2 — Streaming container write
+
+**Status:** proposed 2026-11-24; optional; not started. **Priority:** P3
+memory and save-time performance. **Trigger:** the PF1 benchmark shows the
+copy-entry save path at 174 MB peak RSS and the materialized path at 1,614 MB
+for the generated four-run project; `PreparedProject.payload` still holds the
+whole container in memory.
+
+**Current cost:** `prepare_payload()` builds every entry, `_build_container()`
+calls `_zip_bytes(entries)` once to learn compressed sizes and a second time
+with the manifest to produce the final bytes, and `write_payload()` validates
+those bytes through `io.BytesIO` before `_atomic_write()` writes them. Peak
+memory therefore includes all entry payloads plus the intermediate and final
+containers. Copied run entries are read into `bytes` by `copy_entries()` even
+though they are not parsed.
+
+**Goal:** write and compact a container directly to the atomic destination (or
+to a bounded temporary spool) one entry at a time, so peak memory scales with
+the largest entry and I/O buffers rather than the whole history. The saved file
+must remain byte-identical to the current deterministic writer and satisfy the
+same limits, manifest hashes, and save/load invariant.
+
+**Recommended design:**
+
+1. Keep the manifest-first, sorted-entry, fixed-timestamp, ZIP level-6 format.
+   Because the manifest needs each entry's compressed size, CRC32, and SHA-256,
+   use a two-phase writer rather than a placeholder manifest:
+   - phase 1 compresses each entry into a temporary spool and records its
+     metadata;
+   - phase 2 writes `manifest.json` first and then streams the spooled entries
+     into the destination ZIP.
+   A one-pass variant that writes the manifest last would be simpler but
+   changes byte order and risks reader/golden churn; do not choose it without a
+   format decision.
+2. Add a container writer that accepts entries as streams/chunks, not only
+   `bytes`. Copied run entries should stream from the source ZIP to the spool
+   or final ZIP while the existing manifest CRC/SHA is verified, without
+   materializing the full entry.
+3. Replace the `PreparedProject.payload: bytes` contract with a prepared spool
+   handle that exposes `compressed_bytes`, `expanded_bytes`, `entry_count`,
+   `limits`, `write_to(path)`, and a cleanup path. If a compatibility slice is
+   preferred, keep the in-memory path behind a documented size threshold and
+   use the spool above it; do not maintain two different output formats.
+4. Enforce per-entry, entry-count, expanded, and container limits while
+   streaming. If the compressed container exceeds `MAX_CONTAINER_BYTES`,
+   abort, unlink the temporary file, and raise `ProjectTooLargeError` without
+   touching the previous project. Derive the exact save/load invariant test
+   from this path.
+5. Keep the save dialog's compressed/expanded sizes honest. Phase 1 computes
+   the exact compressed sizes and can still prepare the payload in a worker;
+   only the final write becomes streaming. Do not replace exact sizes with
+   estimates unless the UI contract is explicitly changed.
+6. Benchmark the same four-run generated project and the incident-scale
+   6×68 MB shape. Record peak RSS for materialized save, copy-entry save, compact,
+   and design-only save. A reasonable target to confirm with the spike is peak
+   RSS near the largest entry plus roughly 100 MB of Python/ZIP overhead; do not
+   promise a number before measuring.
+
+**Scope (MVP):** the streaming writer, the prepared-spool contract, copied-entry
+streaming, limit enforcement, atomic failure behavior, and the benchmark.
+
+**Out of scope:** pattern splitting (PF3); changing the container version,
+compression level, timestamps, or entry order; a new thread model (UX45);
+changing when the UI prepares or saves; a binary pattern store or sidecar
+database.
+
+**Dependencies:** PF1 closed. No schema, solver, or domain dependency.
+PF3 benefits from this path but does not require it.
+
+**Acceptance:**
+
+- Saving and compacting a generated project with multiple large runs completes
+  without holding all entry bytes and both ZIP passes in memory.
+- The output is byte-identical to the current writer for a representative
+  project, or an explicitly approved format change updates the golden bytes and
+  ADR.
+- Copied run entries are streamed and their manifest size, CRC32, and SHA-256
+  are verified; a corrupted source entry aborts the save.
+- A container over the compressed limit aborts before replacing the destination;
+  the previous file remains intact.
+- `PreparedProject` still reports honest compressed/expanded sizes and entry
+  count, or the UI contract is updated with the same information.
+- The save/load invariant test and the full gate pass.
+
+**Tests:** byte-for-byte comparison against the current writer; generated large
+project with a memory benchmark; source-entry corruption and size mismatch;
+fault injection during the final replace; compressed-limit boundary; copied
+entries without materialization; compaction and design-only paths; full
+`ruff`, both `mypy` passes, and `pytest`.
+
+**Evidence:** `scripts/benchmark_project_io.py` and a new streaming case; peak
+RSS and wall time are report-only, with no numerical or solver claim.
+
+**Risk / mitigation:** medium. The writer and `PreparedProject` port change, and
+temporary spool cleanup/disk use add failure modes. Mitigate with a short design
+note, byte-identical golden output, bounded spooling, fault injection around
+`os.replace`, and a temporary in-memory fallback only if it keeps one output
+format.
+
+**Effort:** M (1–2 weeks including benchmark and failure tests). **Release:**
+unassigned; optional maintenance after PF1.
+
+**Likely files:** `persistence/container.py`, `application/project_payload.py`
+(prepared-spool contract), `application/ports/project_repository.py`,
+`ui/project_io.py`/save workers if the prepared type changes,
+`scripts/benchmark_project_io.py`, and the persistence/container tests.
+
+## PF3 — Pattern-level lazy loading
+
+**Status:** proposed 2026-11-24; optional; not started. **Priority:** P3 memory
+on open/select and report responsiveness. **Trigger:** PF1 lazy loading is per
+run, not per pattern. The benchmark shows a selected 2° run with five patterns
+at about 682 MB peak RSS (roughly 400 MB of domain objects), while impedance,
+SWR, and currents are much smaller and are usually needed first.
+
+**Current cost:** `ProjectSession` loads metadata/designs eagerly and runs on
+demand, but `ContainerRunStore.load_run()` reads the complete `runs/<id>.json`
+and `_read_runs()` materializes every `FrequencyResult.far_field` tuple. The
+Pattern tab, 3D view, comparison, and reports all consume the same
+fully materialized `SimulationRun`. There is no explicit state for "patterns
+exist but are not loaded" versus "this run has no pattern".
+
+**Goal:** store far-field patterns separately from the normalized
+impedance/current run, load them only when a Pattern/3D/report consumer asks,
+and make the availability state explicit. Pruning patterns must leave a valid
+run with an honest "unavailable" state, never a synthetic empty pattern or
+zero gain.
+
+**Recommended design:**
+
+1. Write a pattern-entry ADR before changing the container. Decide the entry
+   layout, manifest index, container-version policy, and the state model. A
+   proposed layout is:
+   - `runs/<run-id>.json` keeps run metadata, frequency plan, impedance,
+     currents, power, status, and raw-text references, with no pattern arrays;
+   - `runs/<run-id>/patterns/index.json` lists frequency, entry path, point
+     count, grid shape, and hashes;
+   - `runs/<run-id>/patterns/<index>.json` holds one immutable pattern
+     snapshot.
+   Use the existing relative-POSIX path validation and a new container version
+   or a documented extension; current readers reject unknown paths, so a
+   version decision is required.
+2. Extend the manifest run index with the pattern index metadata (frequency,
+   entry path, point count, bytes, CRC32, SHA-256) so opening a project can
+   validate and list patterns without reading them. Reject orphan, missing,
+   duplicate, and mismatched pattern entries with `ProjectFormatError`.
+3. Add an application-level run accessor rather than mutating domain objects:
+   - `load_run(run_id)` returns the run summary with an explicit pattern state,
+     for example `NOT_LOADED`, `AVAILABLE`, `PRUNED`, or `NO_PATTERN`;
+   - `load_patterns(run_id, frequency_hz_or_index)` returns the immutable
+     pattern snapshot;
+   - cache per selected run and release the cache on design switch or session
+     close.
+   `SimulationRun`/`SimulationResult` remain immutable. Do not put a lazy proxy
+   into the domain model; compose a display result at the application boundary.
+4. Migrate consumers one at a time: Pattern tab first, then the 3D view, then
+   comparison overlays, then HTML/PDF reports and pattern-bearing CSV. Each
+   consumer must show an explicit loading/unavailable state and must request
+   patterns explicitly. Do not make a missing pattern look like a flat or zero
+   gain pattern.
+5. Save and compaction copy unchanged pattern entries without reserializing
+   them, just as PF1 copies unchanged runs. Retention/compaction must remove
+   pattern entries with their run; a future optional "prune patterns for old
+   runs" policy is a separate decision unless the ADR includes it.
+6. Keep fingerprints, result status, band/batch ids, and report values
+   unchanged when patterns are loaded. The pattern state is presentation and
+   storage metadata, not a new electromagnetic result.
+7. Measure a selected run before/after. A reasonable target to confirm with the
+   spike is that selecting a run without patterns stays well below the current
+   ~682 MB peak and that loading one pattern adds only that snapshot; do not
+   promise a number before measuring.
+
+**Scope (MVP):** pattern-entry format, manifest/index validation, session
+accessor, Pattern-tab and report consumption, save/compact copying, explicit
+unavailable state, and the memory benchmark.
+
+**Out of scope:** binary or sidecar pattern storage; per-point lazy loading
+inside one pattern; changing pattern resolution or solver output; automatic
+pattern pruning without a product decision; changing the 3D rendering or report
+layout; a second engine.
+
+**Dependencies:** PF1 closed; pattern-entry ADR; PF2 soft (streaming is useful
+when a save writes many pattern entries but is not required). UI consumers and
+reports depend on the accessor contract.
+
+**Acceptance:**
+
+- Opening a project and selecting a run without patterns loads metadata,
+  impedance, SWR, currents, and status; the UI reports that patterns are not
+  loaded or not available, not zeros.
+- The Pattern tab, 3D view, comparison, and reports load patterns on demand and
+  produce the same values as the current fully materialized path.
+- A run whose pattern entries were pruned opens and displays an explicit
+  unavailable state; the rest of the run remains usable.
+- Saving and compaction copy unchanged pattern entries and remove pruned ones;
+  a round trip preserves pattern values, grid shape, frequency, and
+  fingerprints.
+- Missing, orphan, duplicate, path-traversal, CRC/SHA-mismatched, and
+  over-limit pattern entries are rejected.
+- Peak memory for a selected run without patterns is materially below the
+  current benchmark; the pattern-loading step is measured separately.
+- The full gate passes, including real `nec2c` tests; no numerical or
+  electromagnetic-model change.
+
+**Tests:** container round trip with patterns; manifest/index mismatch and
+corruption; pruned/missing pattern state; lazy accessor and cache release;
+Pattern-tab, 3D, comparison, and report output; save/compact entry copying;
+per-entry/total limits; memory benchmark; full `ruff`, both `mypy` passes, and
+`pytest`.
+
+**Evidence:** `scripts/benchmark_project_io.py` and the PF1 benchmark table;
+report-only memory and wall-time measurements. No new numerical reference or
+accuracy claim.
+
+**Risk / mitigation:** high. The container format, application accessor, and
+multiple consumers change together, and the "not loaded" state can be confused
+with "no pattern". Mitigate with an ADR, an explicit state enum, one consumer
+per change set, a container-version decision, corruption tests, and a memory
+benchmark. Keep the fully materialized path available as a parity oracle until
+the last consumer migrates.
+
+**Effort:** L (2–4 weeks including format, accessor, consumers, and tests).
+**Release:** unassigned; optional maintenance after PF2 or after the current
+1.2 work if open/select memory becomes a release blocker.
+
+**Likely files:** `persistence/container.py`, `persistence/schema.py` (run and
+pattern payloads), `application/project_session.py`,
+`application/ports/project_repository.py`, `ui/main_window.py`,
+`ui/widgets/results_view.py`, pattern/3D views, `reporting/`, and the
+persistence, session, UI, reporting, and benchmark tests.
+
+**Recommended sequence (PF2/PF3):**
+
+1. Keep PF2 and PF3 in separate change sets; do not bundle either one with an
+   antenna or UI feature.
+2. PF2 can start first: it is a self-contained writer change with a
+   byte-identical oracle, and it reduces save memory before PF3 adds more
+   entries.
+3. PF3 must not start before its pattern-entry ADR is accepted. PF2 is a soft
+   dependency, so PF3 may run first only if open/select memory becomes the
+   release blocker.
+4. Migrate PF3 consumers one at a time (Pattern tab, 3D view, comparison,
+   reports, pattern-bearing CSV) and keep the fully materialized path as a
+   parity oracle until the last consumer migrates.
+5. Benchmark both items with `scripts/benchmark_project_io.py`; record peak
+   RSS and wall time for open, select one run, materialized save, copy-entry
+   save, compact, and design-only save.
+6. Do not change PF1's container version, entry order, compression level, or
+   deterministic output in either item without an explicit ADR; keep the
+   save/load invariant test green.
 
 ## Product trust and station wave
 
@@ -1073,6 +1328,144 @@ case and explicit tip validation mitigate them.
 **Effort:** M (1–2 weeks). **Release:** unassigned; not before the ADR and the
 current 1.1/1.2 priorities.
 
+## UX45 — Shared Qt worker lifecycle
+
+**Status:** proposed 2026-11-24; not started. **Priority:** maintenance and
+reliability, not release-blocking. **Trigger:** the 2026-11-24 QA pass fixed a
+stale-result and debounce race inside `LiveTuningDialog`; the same lifecycle
+logic exists in other dialogs, so a future fix would not propagate. See
+[`archive/qa/QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md).
+
+**Goal:** replace the copied `QThread`/worker setup with one small, testable
+controller that owns thread creation, cancellation, completion, error handling,
+cleanup, and close-while-running behavior. Keep the UI responsive and preserve
+the current dialog behavior.
+
+**Current duplication:** there are 14 `QThread` construction sites. Ten dialogs
+(`convergence`, `element_optimization`, `endfed`, `family_optimization`,
+`live_tuning`, `optimization`, `parameter_sweep`, `robustness`, `synthesis`,
+`tuning_assistant`), three sites in `ui/main_window.py`, and one in
+`ui/project_io.py`. They fall into two styles:
+
+1. **Asynchronous signal/slot workers** used by most dialogs and the main
+   window.
+2. **Modal `QEventLoop` wrappers** in `endfed_dialog.py` and `project_io.py`
+   that block the caller until the worker finishes.
+
+The variants are not cosmetic:
+
+- some call `thread.wait(5_000)`, one calls `thread.wait(100)`, and the modal
+  wrappers call `thread.wait()` without a timeout;
+- some delete the worker through `thread.finished`, others through a
+  `_cleanup`/`_thread_finished` method;
+- some keep `self._thread`/`self._worker`, others use local variables;
+- double-start protection, cancellation text, progress, and close behavior
+  differ per dialog.
+
+**Recommendations:**
+
+1. Write a short ADR for the Qt lifecycle contract before the first migration.
+   It should define ownership, cancellation, timeout, deletion, close, and
+   error semantics. This is a cross-cutting UI contract, not a drive-by
+   refactor.
+2. Add one controller in `ui/workers/` (working name `TaskRunner` or
+   `WorkerLifecycle`) with a small API:
+   - `start(worker, cancel_token=...)`;
+   - `is_running`, `cancel()`, `close(timeout_ms=...)`;
+   - normalized `started`, `succeeded`, `failed`, `cancelled` signals;
+   - one active task at a time, or an explicit rejection with a reason.
+   The controller owns the `QThread`, the worker, and the single cleanup path.
+3. Delete the worker in its own thread and stop the thread through the same
+   path on success, failure, cancellation, timeout, and close. Do not call an
+   unbounded `wait()` on the GUI thread. If a bounded wait expires, keep the
+   dialog alive and surface a clear close/cancel message instead of destroying
+   a running worker.
+4. Prevent double starts centrally and let the controller reject a stale
+   result by generation/request id. `LiveTuningDialog` already has the
+   generation behavior; move it into the shared contract rather than keeping a
+   second copy.
+5. Keep a thin blocking adapter for `project_io` and the end-fed convergence
+   check only if the caller must remain modal. Build it on the same controller;
+   do not maintain a parallel `QEventLoop` lifecycle.
+6. Add an architecture guard that forbids direct `QThread(`,
+   `moveToThread(`, and ad-hoc worker deletion outside the controller, with a
+   shrinking allowlist during the migration.
+7. Migrate one site per change set, easiest first: `convergence`; then
+   `parameter_sweep`/`robustness`/`tuning_assistant`; then the optimizer
+   dialogs; then `live_tuning`; then the three main-window workers; finally the
+   modal `project_io`/end-fed wrappers. Do not mix this with a feature slice.
+8. Keep the existing worker classes; the controller coordinates lifecycle
+   only. Do not change solver, progress semantics, or user-visible text.
+
+**Scope (MVP):**
+
+- The shared controller and its tests.
+- Migration of every `QThread` site listed above.
+- Cancellation, failure, timeout, close-while-running, and double-start
+  coverage for each migrated site.
+- A successful normal close, a close during work, and a cancellation that
+  leaves the window usable.
+- Project I/O and end-fed modal behavior preserved, including exceptions and
+  progress dialogs.
+
+**Out of scope:**
+
+- A general thread pool, async/await framework, or parallel task scheduler.
+- Rewriting worker classes or moving electromagnetic logic.
+- Changing dialog layouts, progress wording, or result presentation.
+- GPU/solver execution changes.
+
+**Dependencies:** lifecycle ADR (recommended before code); no schema, solver,
+or domain dependency. Schedule after the current 1.2 form/schema/UI work or
+before a release only if a lifecycle defect appears.
+
+**Acceptance:**
+
+- One shared lifecycle implementation; the migrated call sites no longer
+  contain their own thread create/move/cleanup sequences.
+- Starting, completing, failing, cancelling, and closing during work are
+  deterministic and covered for every migrated site.
+- A second start while a task runs is rejected or ignored with a visible
+  reason; no worker overlap.
+- A stale result cannot overwrite a newer result after cancellation or a
+  target change.
+- No unbounded GUI-thread wait remains; close-time waits are bounded and
+  documented.
+- Project open/save/import progress remains modal where it is today and
+  returns the same results and errors.
+- The architecture guard and the full `ruff`, both `mypy` passes, and
+  `pytest` gate are green.
+- No schema, solver, domain, or project-format change.
+
+**Tests:** controller unit tests with fake workers (success, failure,
+cancellation, timeout, double start, close, generation); UI tests per migrated
+dialog for cancel/close/double-start; project I/O tests for the modal adapter;
+an offscreen teardown stress test that creates and closes dialogs repeatedly;
+the existing full gate and real `nec2c` integration where the site runs the
+solver.
+
+**Evidence:** n/a; reliability and maintainability. There is no numerical
+reference or performance claim.
+
+**Risk / mitigation:** high. Qt object ownership and teardown are sensitive;
+a shared controller can introduce crashes that the current per-dialog code
+hides. Mitigate with a short ADR, one-site-per-change-set migration, fake-worker
+tests, bounded waits, a temporary dual-path parity check, and manual desktop QA
+for close/cancel on light/dark and scaled fonts.
+
+**Effort:** M–L (2–4 weeks including migrations and tests). **Release:**
+unassigned; maintenance track.
+
+**Likely files:** a new `ui/workers/task_runner.py` (or similarly named
+controller), `ui/dialogs/convergence_dialog.py`,
+`ui/dialogs/element_optimization_dialog.py`,
+`ui/dialogs/endfed_dialog.py`, `ui/dialogs/family_optimization_dialog.py`,
+`ui/dialogs/live_tuning_dialog.py`, `ui/dialogs/optimization_dialog.py`,
+`ui/dialogs/parameter_sweep_dialog.py`, `ui/dialogs/robustness_dialog.py`,
+`ui/dialogs/synthesis_dialog.py`, `ui/dialogs/tuning_assistant_dialog.py`,
+`ui/main_window.py`, `ui/project_io.py`, `tests/unit/ui/`, `tests/ui/`, and an
+architecture-boundary guard test.
+
 ## Adaptive length display units (implemented 2026-11-18; manual QA pending)
 
 **Status:** U0–U6 are complete; only the manual desktop light/dark and
@@ -1222,11 +1615,11 @@ decision:
 ## Current baseline
 
 - Schema: **61**; container version 1.
-- Full gate: **4,320 passed, 1 skipped** on 2026-11-24 after the full QA,
-  technical-debt sweep, main-window extractions, save/load size invariant fix,
-  PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground, and
-  VR1 radial droop (typed simulation specs,
-  pattern presets, and pattern-budget planning in the application layer, plus
+- Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
+  technical-debt closure, main-window extractions, save/load size invariant
+  fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,
+  and VR1 radial droop (typed simulation specs, pattern presets, and
+  pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,
   project open/save workers in `ui/project_io.py`, autosave/recovery in
@@ -1235,7 +1628,8 @@ decision:
   `ui/optimization_actions.py`, and recent-list behavior in
   `ui/recent_actions.py`), with `NEC2C` auto-detected by the test
   configuration; the skip is the Windows-only console-hiding test on Linux.
-  See
+  See [`archive/qa/QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md)
+  and the earlier
   [`archive/qa/QA_PASS_2026-11-20.md`](archive/qa/QA_PASS_2026-11-20.md).
 - Main-window decomposition: **closed 2026-11-20** after the high-value
   extractions. `_build_ui`, `_build_actions`, and `retranslate` stay in the

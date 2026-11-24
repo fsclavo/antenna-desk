@@ -23,8 +23,8 @@ from antennadesk.domain.simulation.result import (
 from antennadesk.domain.simulation.run import SimulationRun
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.persistence.errors import ProjectFormatError
-from antennadesk.persistence.json_repository import JsonProjectRepository
 from antennadesk.ui.recovery import (
     MAX_RECOVERY_PAYLOAD_BYTES,
     AutosaveRecovery,
@@ -36,7 +36,7 @@ def test_recovery_round_trip_and_clear(
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
 
     recovery.save(
         sample_project,
@@ -89,7 +89,7 @@ def test_recovery_snapshot_excludes_simulation_runs(
     tmp_path: Path,
 ) -> None:
     project = replace(sample_project, simulation_runs=(_run(sample_project),))
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
 
     recovery.save(project, original_path=None, dirty=True)
 
@@ -127,7 +127,7 @@ def test_corrupt_metadata_falls_back_to_safe_defaults(
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     recovery.save(sample_project, original_path=None, dirty=True)
     recovery.metadata_path.write_text("{bad json", encoding="utf-8")
 
@@ -143,7 +143,7 @@ def test_corrupt_project_payload_raises(
     sample_project: Project,
     tmp_path: Path,
 ) -> None:
-    recovery = AutosaveRecovery(tmp_path / "recovery", JsonProjectRepository())
+    recovery = AutosaveRecovery(tmp_path / "recovery", ProjectContainerRepository())
     recovery.save(sample_project, original_path=None, dirty=True)
     recovery.project_path.write_bytes(b"not a project")
 
@@ -159,7 +159,7 @@ def test_read_only_recovery_directory_is_reported(
     directory = tmp_path / "recovery"
     directory.mkdir()
     directory.chmod(0o500)
-    recovery = AutosaveRecovery(directory, JsonProjectRepository())
+    recovery = AutosaveRecovery(directory, ProjectContainerRepository())
     try:
         with pytest.raises((OSError, ProjectFormatError)):
             recovery.save(sample_project, original_path=None, dirty=True)

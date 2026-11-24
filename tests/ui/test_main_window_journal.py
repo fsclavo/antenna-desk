@@ -14,7 +14,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.projects.journal import JournalEntry, JournalEntryKind
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui import main_window as main_window_module
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
@@ -123,7 +123,7 @@ def test_journal_action_requires_a_project(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window = MainWindow(
-        JsonProjectRepository(),
+        ProjectContainerRepository(),
         FakeSolver(),
         Translator(Language.ENGLISH),
         UnitSystem.METRIC,

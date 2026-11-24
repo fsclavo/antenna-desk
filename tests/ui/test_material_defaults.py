@@ -54,7 +54,7 @@ from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.antennas.zepp import ZeppParameters
 from antennadesk.domain.design.reference_library import REFERENCE_DESIGNS
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.dialogs.antenna_catalog_dialog import ENTRIES
 from antennadesk.ui.dialogs.biquad_dialog import BiquadDialog
 from antennadesk.ui.dialogs.discone_dialog import DisconeDialog
@@ -321,7 +321,7 @@ def test_material_survives_a_project_round_trip(
 ) -> None:
     design = sample_project.designs[0].with_parameters(_yagi_parameters(ALUMINUM))
     project = sample_project.with_design(design, updated_at=sample_project.updated_at)
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     path = tmp_path / "material.antennadesk"
 
     repository.save(project, path)

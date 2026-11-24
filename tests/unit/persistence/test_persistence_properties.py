@@ -20,7 +20,7 @@ from antennadesk.domain.antennas.dipole import DipoleOrientation, DipoleParamete
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.projects.project import Project
 from antennadesk.persistence.constants import SCHEMA_VERSION
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.persistence.schema import (
     document_from_project,
     project_from_document,
@@ -168,7 +168,7 @@ def test_project_document_and_repository_round_trip(
     assert document.schema_version == SCHEMA_VERSION
     assert project_from_document(document) == project
 
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "project.antennadesk"
         repository.save(project, path)
@@ -229,7 +229,7 @@ def test_measurement_sessions_round_trip() -> None:
     assert restored.measurement_sessions == (session,)
     assert restored.measurements[0].session_id == session.id
 
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "sessions.antennadesk"
         repository.save(project, path)
@@ -301,7 +301,7 @@ def test_journal_entries_round_trip() -> None:
     assert restored.journal_entries[0].snapshot == snapshot
     assert restored.journal_entries[1].design_id is None
 
-    repository = JsonProjectRepository()
+    repository = ProjectContainerRepository()
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / "journal.antennadesk"
         repository.save(project, path)

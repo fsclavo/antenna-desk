@@ -24,10 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,
   cancels stale previews, and **Apply and simulate** routes the dimension
   through the normal design/undo path before the full run. Apply closes the
-  dialog and starts the full simulation. A dimension selector exposes
-  family-specific length
-  dimensions such as height, spacing, radial length, feed height, and reflector
-  spacing, not only the primary dimension. The selector also covers managed
+  dialog and starts the full simulation. The preview discards any in-flight
+  result when the dimension, value, or pattern option changes, and stops its
+  debounce timer when the dialog is applied, closed, or rejected. A dimension
+  selector exposes family-specific length dimensions such as height, spacing,
+  radial length, feed height, and reflector spacing, not only the primary
+  dimension. The selector also covers managed
   angles, counts (radial and top-hat wires), and transformer/feed ratios. An
   optional coarse elevation-cut pattern preview accompanies the impedance
   preview when the solver supports far fields. No schema or solver change.

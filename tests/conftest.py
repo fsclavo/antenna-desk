@@ -20,7 +20,7 @@ from antennadesk.application.use_cases.create_dipole_project import (
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.projects.project import Project
-from antennadesk.persistence.json_repository import JsonProjectRepository
+from antennadesk.persistence.container import ProjectContainerRepository
 
 # Make the local Phase 0 build discoverable without an explicit environment
 # variable, so `uv run pytest` exercises the solver tests instead of silently
@@ -92,8 +92,8 @@ def sample_project(dipole_parameters: DipoleParameters) -> Project:
 
 
 @pytest.fixture
-def repository() -> JsonProjectRepository:
-    return JsonProjectRepository()
+def repository() -> ProjectContainerRepository:
+    return ProjectContainerRepository()
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

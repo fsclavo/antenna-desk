@@ -2606,10 +2606,11 @@ designs, normalized runs, raw solver text, and optimization summaries are
 separate validated entries. The container is limited to 64 MB, the total
 expanded entries to 256 MB, and each entry to 64 MB. The reader verifies each
 entry's size, CRC32, and SHA-256 before using it; gzip, plain JSON, and older
-schemas are rejected. Saving above 32 MB compressed shows a warning with the compressed and expanded sizes, and
-**Tools → Compact Simulation History...** keeps only the latest run per
-design. If a save would exceed a limit, the application offers to compact the
-history and retry instead of writing an unopenable file.
+schemas are rejected. Saving a container above 32 MB shows a warning with the
+compressed and expanded sizes, and **Tools → Compact Simulation History...**
+keeps only the latest run per design. If a save would exceed a limit, the
+application offers to compact the history and retry instead of writing an
+unopenable file.
 
 ## Cancel and errors
 
