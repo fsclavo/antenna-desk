@@ -549,7 +549,7 @@ and new catalog presets) waits until this track closes.
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part, best effort/bypass, band-center rows, port ratings | M–L | B/C | done 2026-11-20; per-component branch ratings optional |
 | 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, attachments, and hardware deferred pending ADR/spike | M–L | B/C | narrowed 2026-11-24 |
-| 1.2 Site and exploration | DL3 | Live tuning preview | Primary-dimension coarse preview done; other dimensions and pattern preview remain | M–L | n/a | partial 2026-11-20 |
+| 1.2 Site and exploration | DL3 | Live tuning preview | Managed length/non-length dimensions and optional coarse pattern preview implemented; Apply closes; optional non-modal remains | M–L | n/a | implemented 2026-11-24 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | Canceled 2026-11-24; not relevant to the amateur design workflow | — | — | canceled |
 | 1.2 Site and exploration | DL6 | Stacked Yagi arrays | Domain prototype done (2–4 levels, ideal sources); form, schema, per-port UI, splitter/phase lines remain | L | B/C | partial 2026-11-20 |
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | Bounded cliff/second-medium far-field profile implemented; native screen still unvalidated for SWR | M–L | B/C | implemented 2026-11-24 |

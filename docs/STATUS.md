@@ -12,7 +12,9 @@
 - DL5 support structures are **explicitly narrowed**: the Yagi mast and guy
   wires are the delivered 1.1 slice; the conductive boom, tower, attachments,
   and structural hardware are deferred pending a dedicated ADR/spike.
-- DL3 live tuning is partial: the primary dimension has a coarse preview, and Apply keeps the dialog open for repeated tuning; other managed dimensions and pattern preview remain.
+- DL3 live tuning now covers managed length and non-length values plus an
+  optional coarse pattern preview; **Apply and Simulate closes the dialog**.
+  Remaining items are optional: non-modal tool window and more family values.
 - DL6 stacked Yagi is a domain prototype only.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
@@ -48,7 +50,7 @@
 
 ## Next
 
-1. Continue DL3 with additional managed dimensions.
+1. Start VR1, sloped vertical radials with uniform droop (ADR first).
 2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
 3. Close the pending manual U6 visual QA before the next release decision.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
