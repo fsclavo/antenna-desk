@@ -767,9 +767,10 @@ labels and a visible limitation.
 the primary dimension plus family-specific length dimensions such as height,
 spacing, radial length, feed height, and reflector spacing. The coarse
 single-frequency preview, debounce/cancel, stale-result guard, preview badge,
-and apply/full-run path are implemented. Apply keeps the dialog open, resets the
-baseline to the applied design, and re-enables tuning after the full simulation
-finishes. Pattern preview and non-length managed values remain follow-ups.
+optional coarse elevation-cut pattern preview, and apply/full-run path are
+implemented. Apply keeps the dialog open, resets the baseline to the applied
+design, and re-enables tuning after the full simulation finishes. Non-length
+managed values remain a follow-up.
 
 **Goal:** make geometry exploration immediate without replacing the full
 simulation.
@@ -789,6 +790,8 @@ simulation.
 **Out of scope:** continuous full-pattern solving, GPU acceleration, optimizer
 replacement. Optional UX follow-up: turn the modal dialog into a non-modal tool
 window; that needs explicit stale-baseline and concurrent-simulation handling.
+Non-length managed values (angles, counts, transformer ratios) remain a
+follow-up.
 
 **Dependencies:** existing worker/cancellation; no solver change.
 
@@ -1211,7 +1214,7 @@ decision:
 ## Current baseline
 
 - Schema: **60**; container version 1.
-- Full gate: **4,301 passed, 1 skipped** on 2026-11-24 after the full QA,
+- Full gate: **4,302 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
   PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
   (typed simulation specs,

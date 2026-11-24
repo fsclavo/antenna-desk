@@ -10,6 +10,7 @@ from dataclasses import replace
 from PySide6.QtCore import Qt, QThread, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QDialog,
     QHBoxLayout,
@@ -32,6 +33,7 @@ from ...presentation.units import DisplayUnits
 from ..fonts import scaled_dialog_size
 from ..help import apply_help
 from ..i18n import Translator
+from ..widgets.polar_pattern_view import PolarPatternView
 from ..workers.simulation_worker import SimulationWorker
 
 
@@ -72,7 +74,7 @@ class LiveTuningDialog(QDialog):
         self._thread: QThread | None = None
         self._worker: SimulationWorker | None = None
         self.setWindowTitle(translator.t("live.title"))
-        self.resize(*scaled_dialog_size(620, 300))
+        self.resize(*scaled_dialog_size(640, 620))
         self._debounce = QTimer(self)
         self._debounce.setSingleShot(True)
         self._debounce.setInterval(250)
@@ -88,6 +90,18 @@ class LiveTuningDialog(QDialog):
                 dimension.key,
             )
         self._dimension_combo.currentIndexChanged.connect(self._on_dimension_changed)
+        self._pattern_preview = QCheckBox(translator.t("live.pattern_preview"), self)
+        try:
+            supports_pattern = bool(solver.capabilities().supports_far_field)
+        except Exception:
+            supports_pattern = False
+        self._pattern_supported = supports_pattern
+        self._pattern_preview.setChecked(supports_pattern)
+        self._pattern_preview.setEnabled(supports_pattern)
+        self._pattern_preview.toggled.connect(self._on_pattern_preview_toggled)
+        self._pattern_view = PolarPatternView(translator, self)
+        self._pattern_view.set_title(translator.t("live.pattern_title"))
+        self._pattern_view.set_cut(0.0, symbol="φ")
         self._slider = QSlider(Qt.Orientation.Horizontal, self)
         self._slider.setRange(0, 200)
         self._slider.setValue(100)
@@ -116,12 +130,15 @@ class LiveTuningDialog(QDialog):
         layout.addLayout(dimension_row)
         layout.addWidget(self._dimension_label)
         layout.addWidget(self._slider)
-        layout.addWidget(self._result_label, 1)
+        layout.addWidget(self._result_label)
+        layout.addWidget(self._pattern_preview)
+        layout.addWidget(self._pattern_view, 1)
         layout.addWidget(self._progress)
         layout.addWidget(self._preview_label)
         layout.addLayout(controls)
         self._dimension_selector_label.setText(translator.t("live.dimension_selector"))
         apply_help(self._dimension_combo, translator, "live.dimension")
+        apply_help(self._pattern_preview, translator, "live.pattern_preview")
         apply_help(self._slider, translator, "live.dimension")
         apply_help(self, translator, "live.title")
         self._update_dimension_label()
@@ -148,13 +165,24 @@ class LiveTuningDialog(QDialog):
         finally:
             self._slider.blockSignals(False)
         self._result_label.clear()
+        self._pattern_view.set_points(())
         self._progress.setText(self._translator.t("live.waiting"))
         self._update_dimension_label()
         if not self._applying:
             self._debounce.start()
 
     def _on_slider(self, _value: int) -> None:
+        if self._applying:
+            return
         self._update_dimension_label()
+        self._progress.setText(self._translator.t("live.waiting"))
+        self._debounce.start()
+
+    def _on_pattern_preview_toggled(self, enabled: bool) -> None:
+        if self._applying or not self._pattern_supported:
+            return
+        if not enabled:
+            self._pattern_view.set_points(())
         self._progress.setText(self._translator.t("live.waiting"))
         self._debounce.start()
 
@@ -185,11 +213,24 @@ class LiveTuningDialog(QDialog):
         try:
             parameters = self._current_parameters()
             model = parameters.to_antenna()
+            far_field = (
+                FarFieldRequest(
+                    enabled=True,
+                    theta_start_deg=0.0,
+                    theta_stop_deg=180.0,
+                    theta_count=19,
+                    phi_start_deg=0.0,
+                    phi_stop_deg=0.0,
+                    phi_count=1,
+                )
+                if self._pattern_preview.isChecked()
+                else FarFieldRequest(enabled=False)
+            )
             spec = replace(
                 self._base_spec,
                 frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
                 pattern_frequencies_hz=(),
-                far_field=FarFieldRequest(enabled=False),
+                far_field=far_field,
                 segmentation=replace(
                     self._base_spec.segmentation,
                     target_segment_length_wavelengths=0.10,
@@ -241,11 +282,27 @@ class LiveTuningDialog(QDialog):
                     z=f"{abs(frequency.impedance_ohm):.2f}",
                 )
             )
+        self._update_pattern(result)
         self._progress.setText(self._translator.t("live.preview"))
         self._update_buttons()
         if self._pending is not None:
             self._pending = None
             self._start_preview()
+
+    def _update_pattern(self, result: SimulationResult) -> None:
+        if not self._pattern_preview.isChecked():
+            self._pattern_view.set_points(())
+            return
+        frequency = result.frequencies[0] if result.frequencies else None
+        if frequency is None or not frequency.far_field:
+            self._pattern_view.set_points(())
+            return
+        points = tuple(
+            (point.theta_deg, point.gain_total_db)
+            for point in frequency.far_field
+            if point.gain_total_db is not None
+        )
+        self._pattern_view.set_points(points)
 
     def _failed(self, request_id: int, message: str) -> None:
         if request_id != self._request_id:
@@ -254,6 +311,7 @@ class LiveTuningDialog(QDialog):
         self._busy = False
         self._cleanup_thread()
         self._progress.setText(message)
+        self._pattern_view.set_points(())
         self._update_buttons()
 
     def _cleanup_thread(self) -> None:
@@ -272,6 +330,7 @@ class LiveTuningDialog(QDialog):
         self._apply.setEnabled(ready)
         self._slider.setEnabled(not self._applying)
         self._dimension_combo.setEnabled(not self._applying)
+        self._pattern_preview.setEnabled(self._pattern_supported and not self._applying)
 
     def _apply_clicked(self) -> None:
         if self._busy or self._applying:
@@ -292,6 +351,7 @@ class LiveTuningDialog(QDialog):
             self._slider.blockSignals(False)
         self._update_dimension_label()
         self._result_label.setText(self._translator.t("live.applied"))
+        self._pattern_view.set_points(())
         self._progress.setText(self._translator.t("live.simulation_running"))
         self._debounce.stop()
         self._applying = True
@@ -308,6 +368,7 @@ class LiveTuningDialog(QDialog):
         self._apply_timer.stop()
         self._progress.setText(self._translator.t("live.applied_ready"))
         self._update_buttons()
+        self._debounce.start()
 
     def reject(self) -> None:
         self._debounce.stop()

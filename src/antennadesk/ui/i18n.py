@@ -16937,6 +16937,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Live tuning",
         Language.SPANISH: "Ajuste en vivo",
     },
+    "live.pattern_preview": {
+        Language.ENGLISH: "Show a coarse pattern preview",
+        Language.SPANISH: "Mostrar una vista previa gruesa del patrón",
+    },
+    "live.pattern_title": {
+        Language.ENGLISH: "Coarse elevation cut",
+        Language.SPANISH: "Corte de elevación grueso",
+    },
+    "help.live.pattern_preview": {
+        Language.ENGLISH: "Run a coarse far-field elevation cut with the preview. It is marked as a preview and is never saved.",
+        Language.SPANISH: "Ejecutá un corte de elevación de campo lejano grueso junto con la vista previa. Está marcado como preview y nunca se guarda.",
+    },
     "live.dimension_selector": {
         Language.ENGLISH: "Dimension",
         Language.SPANISH: "Dimensión",
@@ -16946,8 +16958,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "{dimension}: {value}",
     },
     "live.preview_note": {
-        Language.ENGLISH: "Preview only: pattern disabled, coarse segmentation, not saved. Apply runs the full simulation.",
-        Language.SPANISH: "Solo vista previa: patrón desactivado, segmentación gruesa, no se guarda. Aplicar corre la simulación completa.",
+        Language.ENGLISH: "Preview only: coarse segmentation, optional coarse pattern, not saved. Apply runs the full simulation.",
+        Language.SPANISH: "Solo vista previa: segmentación gruesa, patrón grueso opcional, no se guarda. Aplicar corre la simulación completa.",
     },
     "live.waiting": {
         Language.ENGLISH: "Waiting for the slider to settle...",
