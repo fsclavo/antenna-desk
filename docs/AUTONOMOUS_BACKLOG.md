@@ -758,10 +758,12 @@ labels and a visible limitation.
 
 ### DL3 — Live tuning preview
 
-**Status:** **Partially done 2026-11-20.** The primary-dimension slider, coarse
+**Status:** **Partially done 2026-11-24.** The primary-dimension slider, coarse
 single-frequency preview, debounce/cancel, stale-result guard, preview badge,
-and apply/full-run path are implemented. Other managed dimensions (height,
-spacing) and pattern preview remain follow-ups.
+and apply/full-run path are implemented. Apply now keeps the dialog open,
+resets the baseline to the applied design, and re-enables tuning after the full
+simulation finishes. Other managed dimensions (height, spacing) and pattern
+preview remain follow-ups.
 
 **Goal:** make geometry exploration immediate without replacing the full
 simulation.
@@ -787,6 +789,8 @@ replacement.
   worker.
 - A stale result never overwrites a newer one.
 - Commit produces a normal simulation and undo entry.
+- The dialog stays open after Apply; the operator can continue tuning, and
+  closing it preserves the last applied design.
 - Preview values are visibly marked and never exported as final.
 
 **Evidence:** performance benchmark; no accuracy claim.
@@ -1105,7 +1109,7 @@ decision:
 ## Current baseline
 
 - Schema: **60**; container version 1.
-- Full gate: **4,294 passed, 1 skipped** on 2026-11-24 after the full QA,
+- Full gate: **4,295 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
   PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
   (typed simulation specs,

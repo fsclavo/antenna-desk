@@ -7801,6 +7801,7 @@ class MainWindow(QMainWindow):
             self._solver,
             lambda parameters: self._apply_live_tuning(design, parameters),
             display_units=DisplayUnits(self._unit_system, self._length_policy),
+            is_simulation_running=lambda: self._simulating,
             parent=self,
         )
         dialog.exec()
@@ -7812,6 +7813,8 @@ class MainWindow(QMainWindow):
     ) -> None:
         if self._project is None or self._design_id is None:
             raise ValueError(self._translator.t("error.no_project"))
+        if self._simulating:
+            raise ValueError(self._translator.t("live.wait_simulation"))
         updated = design.with_parameters(parameters)
         self._project = self._project.with_design(updated, updated_at=utc_now())
         self._invalidate_design_result(self._design_id)

@@ -12,7 +12,7 @@
 - DL5 support structures are **explicitly narrowed**: the Yagi mast and guy
   wires are the delivered 1.1 slice; the conductive boom, tower, attachments,
   and structural hardware are deferred pending a dedicated ADR/spike.
-- DL3 live tuning is partial: the primary dimension has a coarse preview.
+- DL3 live tuning is partial: the primary dimension has a coarse preview, and Apply keeps the dialog open for repeated tuning; other managed dimensions and pattern preview remain.
 - DL6 stacked Yagi is a domain prototype only.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,

@@ -1663,8 +1663,11 @@ shows SWR, R, X, and |Z|. The preview badge and note make clear that this is not
 a saved simulation.
 
 **Apply and simulate** applies the dimension through the normal design path,
-enters undo history, and starts the full simulation. Closing the dialog cancels
-the preview. Only the primary dimension is exposed in this first slice.
+enters undo history, and starts the full simulation. The dialog stays open and
+resets its baseline to the applied design, so you can keep tuning and apply
+again without reopening it. Closing the dialog cancels only the preview; the
+full simulation continues and the last applied design is kept. Only the primary
+dimension is exposed in this slice.
 
 ## Import VNA measurements
 

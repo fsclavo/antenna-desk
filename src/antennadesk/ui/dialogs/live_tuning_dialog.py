@@ -49,6 +49,7 @@ class LiveTuningDialog(QDialog):
         on_apply: Callable[[AntennaDesignParameters], None],
         *,
         display_units: DisplayUnits | None = None,
+        is_simulation_running: Callable[[], bool] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -58,7 +59,9 @@ class LiveTuningDialog(QDialog):
         self._solver = solver
         self._on_apply = on_apply
         self._display_units = display_units or DisplayUnits()
+        self._is_simulation_running = is_simulation_running or (lambda: False)
         self._dimension_m = primary_dimension_m(parameters)
+        self._applying = False
         self._request_id = 0
         self._busy = False
         self._pending: float | None = None
@@ -71,6 +74,9 @@ class LiveTuningDialog(QDialog):
         self._debounce.setSingleShot(True)
         self._debounce.setInterval(250)
         self._debounce.timeout.connect(self._start_preview)
+        self._apply_timer = QTimer(self)
+        self._apply_timer.setInterval(200)
+        self._apply_timer.timeout.connect(self._poll_apply)
         self._slider = QSlider(Qt.Orientation.Horizontal, self)
         self._slider.setRange(0, 200)
         self._slider.setValue(100)
@@ -129,6 +135,8 @@ class LiveTuningDialog(QDialog):
         )
 
     def _start_preview(self) -> None:
+        if self._applying:
+            return
         if self._busy:
             self._pending = self._dimension_for_slider(self._slider.value())
             if self._token is not None:
@@ -220,20 +228,49 @@ class LiveTuningDialog(QDialog):
             thread.wait(100)
 
     def _update_buttons(self) -> None:
-        self._apply.setEnabled(not self._busy)
+        ready = not self._busy and not self._applying
+        self._apply.setEnabled(ready)
+        self._slider.setEnabled(not self._applying)
 
     def _apply_clicked(self) -> None:
-        if self._busy:
+        if self._busy or self._applying:
             return
+        parameters = self._current_parameters()
         try:
-            self._on_apply(self._current_parameters())
+            self._on_apply(parameters)
         except Exception as exc:
             self._progress.setText(str(exc))
             return
-        self.accept()
+        # Keep the dialog open: the operator can keep tuning without reopening.
+        self._parameters = parameters
+        self._dimension_m = primary_dimension_m(parameters)
+        self._slider.blockSignals(True)
+        try:
+            self._slider.setValue(100)
+        finally:
+            self._slider.blockSignals(False)
+        self._update_dimension_label()
+        self._result_label.setText(self._translator.t("live.applied"))
+        self._progress.setText(self._translator.t("live.simulation_running"))
+        self._debounce.stop()
+        self._applying = True
+        self._apply_timer.start()
+        self._update_buttons()
+
+    def _poll_apply(self) -> None:
+        if not self._applying:
+            self._apply_timer.stop()
+            return
+        if self._is_simulation_running():
+            return
+        self._applying = False
+        self._apply_timer.stop()
+        self._progress.setText(self._translator.t("live.applied_ready"))
+        self._update_buttons()
 
     def reject(self) -> None:
         self._debounce.stop()
+        self._apply_timer.stop()
         if self._token is not None:
             self._token.cancel()
         self._cleanup_thread()
@@ -241,6 +278,7 @@ class LiveTuningDialog(QDialog):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         self._debounce.stop()
+        self._apply_timer.stop()
         if self._token is not None:
             self._token.cancel()
         self._cleanup_thread()

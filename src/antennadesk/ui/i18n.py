@@ -16933,9 +16933,25 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Apply and simulate",
         Language.SPANISH: "Aplicar y simular",
     },
+    "live.applied": {
+        Language.ENGLISH: "Applied. Preview restarts from the applied design.",
+        Language.SPANISH: "Aplicado. La vista previa parte del diseño aplicado.",
+    },
+    "live.simulation_running": {
+        Language.ENGLISH: "Full simulation running. You can close this window; the simulation continues.",
+        Language.SPANISH: "Simulación completa en curso. Podés cerrar esta ventana; la simulación continúa.",
+    },
+    "live.applied_ready": {
+        Language.ENGLISH: "Applied and simulated. Continue tuning or close.",
+        Language.SPANISH: "Aplicado y simulado. Seguí ajustando o cerrá.",
+    },
     "live.close": {
         Language.ENGLISH: "Close",
         Language.SPANISH: "Cerrar",
+    },
+    "live.wait_simulation": {
+        Language.ENGLISH: "Wait for the current simulation to finish before applying another change.",
+        Language.SPANISH: "Esperá a que termine la simulación actual antes de aplicar otro cambio.",
     },
     "live.unsupported": {
         Language.ENGLISH: "Live tuning is available only for designs with one primary dimension.",

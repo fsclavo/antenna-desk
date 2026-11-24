@@ -71,13 +71,48 @@ def test_live_tuning_previews_and_applies(qtbot: QtBot) -> None:
         spec,
         _FakeSolver(),
         applied.append,
+        is_simulation_running=lambda: False,
     )
     qtbot.addWidget(dialog)
+    dialog.show()
 
     qtbot.waitUntil(lambda: "SWR 1.000" in dialog._result_label.text(), timeout=3000)
     dialog._slider.setValue(120)
     qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
     dialog._apply_clicked()
+    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
 
     assert applied
     assert applied[0].total_length_m != parameters.total_length_m
+    assert dialog.isVisible()
+    assert dialog._slider.value() == 100
+
+
+def test_live_tuning_can_apply_twice_without_reopening(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    applied = []
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        _FakeSolver(),
+        applied.append,
+        is_simulation_running=lambda: False,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+
+    dialog._slider.setValue(120)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+    dialog._apply_clicked()
+    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
+    dialog._slider.setValue(80)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+    dialog._apply_clicked()
+    qtbot.waitUntil(lambda: not dialog._applying, timeout=3000)
+
+    assert len(applied) == 2
+    assert dialog.isVisible()
+    assert applied[0].total_length_m != applied[1].total_length_m
