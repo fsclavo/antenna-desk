@@ -246,6 +246,7 @@ DEFAULT_LOCKED_VARIABLES = frozenset(
         "apex_height_m",
         "base_height_m",
         "ring_height_m",
+        "radial_droop_deg",
     }
 )
 RADIATOR_HEIGHT_KEYS = frozenset({"vertical", "phased_vertical"})

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import replace
 
@@ -80,6 +81,22 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
             )
         )
         initial["radial_length_m"] = parameters.radial_length_m
+        droop_high = max(
+            0.1,
+            math.floor(parameters.max_radial_droop_deg * 10.0) / 10.0,
+        )
+        variables.append(
+            OptimizationVariable(
+                "radial_droop_deg",
+                "vertical.radial_droop",
+                "optimize.group.geometry",
+                0.0,
+                droop_high,
+                unit="deg",
+                step=0.1,
+            )
+        )
+        initial["radial_droop_deg"] = parameters.radial_droop_deg
         radial_count_low = max(1, round(parameters.radial_count * 0.5))
         radial_count_high = min(
             MAX_RADIALS,
@@ -196,6 +213,7 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
             radial_length_m=values.get("radial_length_m", parameters.radial_length_m),
             radial_count=round(values.get("radial_count", float(parameters.radial_count))),
             radial_angle_deg=values.get("radial_angle_deg", parameters.radial_angle_deg),
+            radial_droop_deg=values.get("radial_droop_deg", parameters.radial_droop_deg),
             loading_coil_offset_m=values.get(
                 "loading_coil_offset_m",
                 parameters.loading_coil_offset_m,
@@ -221,6 +239,26 @@ def vertical_descriptor(parameters: VerticalParameters) -> AntennaOptimizerDescr
             if values["radial_count"] < 1.0:
                 issues.append(violation("radial_count", 1.0, "optimize.constraint.radial_count"))
             issues.append(positive_violation("radial_length_m", values["radial_length_m"]))
+        if "radial_droop_deg" in values:
+            issues.append(
+                non_negative_violation(
+                    "radial_droop_deg",
+                    values["radial_droop_deg"],
+                )
+            )
+            radial_length = values.get("radial_length_m", parameters.radial_length_m)
+            base_height = values.get("base_height_m", parameters.base_height_m)
+            tip_height = base_height - radial_length * math.sin(
+                math.radians(values["radial_droop_deg"])
+            )
+            if tip_height < -1e-9 or (base_height > 0.0 and tip_height <= 1e-9):
+                issues.append(
+                    violation(
+                        "radial_droop_deg",
+                        -tip_height,
+                        "optimize.constraint.radial_tip_height",
+                    )
+                )
         if "loading_coil_inductance_h" in values:
             issues.append(
                 non_negative_violation(

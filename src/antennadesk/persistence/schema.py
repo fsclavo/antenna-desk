@@ -678,6 +678,7 @@ class VerticalParametersPayload(StrictModel):
     radial_count: int = Field(default=0, ge=0, le=128)
     radial_length_m: float = Field(default=0.0, ge=0.0)
     radial_angle_deg: float = Field(default=0.0, ge=0.0, lt=360.0)
+    radial_droop_deg: float = Field(default=0.0, ge=0.0, lt=90.0)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
     material: MaterialPayload
     ground: GroundPayload
@@ -1748,6 +1749,7 @@ def _vertical_parameters_from_domain(
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        radial_droop_deg=value.radial_droop_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
@@ -3090,6 +3092,7 @@ def _vertical_parameters_to_domain(value: VerticalParametersPayload) -> Vertical
         radial_count=value.radial_count,
         radial_length_m=value.radial_length_m,
         radial_angle_deg=value.radial_angle_deg,
+        radial_droop_deg=value.radial_droop_deg,
         wire_radius_m=value.wire_radius_m,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),

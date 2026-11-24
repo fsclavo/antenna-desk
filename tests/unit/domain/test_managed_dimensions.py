@@ -53,6 +53,7 @@ def test_vertical_adds_contextual_dimensions() -> None:
     assert keys[0] == "primary"
     assert "base_height" in keys
     assert "radial_length" in keys
+    assert "radial_droop" in keys
     assert "loading_coil_offset" in keys
     assert "top_hat_radius" in keys
 
@@ -66,6 +67,7 @@ def test_contextual_dimensions_disappear_when_disabled() -> None:
     keys = [dimension.key for dimension in managed_dimensions(parameters)]
 
     assert "radial_length" not in keys
+    assert "radial_droop" not in keys
     assert "top_hat_radius" not in keys
     assert "loading_coil_offset" not in keys
 
@@ -123,3 +125,24 @@ def test_non_length_values_report_their_kind_and_write_back() -> None:
     count = vertical_dimensions["radial_count"]
     assert count.kind is ManagedValueKind.COUNT
     assert count.write(vertical, 5.4).radial_count == 5  # type: ignore[union-attr]
+
+
+def test_vertical_droop_is_bounded_by_the_current_tip_clearance() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+    )
+    dimensions = {item.key: item for item in managed_dimensions(parameters)}
+
+    droop = dimensions["radial_droop"]
+    assert droop.kind is ManagedValueKind.ANGLE
+    assert droop.minimum == pytest.approx(0.0)
+    assert droop.maximum == pytest.approx(parameters.max_radial_droop_deg)
+    assert droop.read(parameters) == pytest.approx(20.0)
+    changed = droop.write(parameters, 10.0)
+    assert isinstance(changed, VerticalParameters)
+    assert changed.radial_droop_deg == pytest.approx(10.0)

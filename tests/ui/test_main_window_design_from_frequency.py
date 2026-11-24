@@ -623,3 +623,107 @@ def test_estimate_dimensions_does_not_require_a_solver(
 
     window._dirty = False
     window.close()
+
+
+def test_design_from_frequency_preserves_radial_droop_when_it_fits(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+    )
+    use_parameters(window, current)
+    estimated = VerticalParameters(
+        frequency_hz=7_050_000.0,
+        height_m=10.2,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.2,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.vertical",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.3,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, VerticalParameters)
+    assert design.parameters.radial_droop_deg == pytest.approx(20.0)
+    assert design.parameters.radial_tip_height_m > 0.0
+    window._dirty = False
+
+
+def test_design_from_frequency_clamps_radial_droop_to_the_new_base(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    current = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=30.0,
+    )
+    use_parameters(window, current)
+    estimated = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=1.0,
+        radial_count=4,
+        radial_length_m=5.0,
+    )
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            pass
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.vertical",
+                confidence=Confidence.EMPIRICAL,
+                tolerance_m=0.3,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert window._project is not None
+    design = window._project.designs[0]
+    assert isinstance(design.parameters, VerticalParameters)
+    assert design.parameters.radial_droop_deg == pytest.approx(estimated.max_radial_droop_deg)
+    assert design.parameters.radial_tip_height_m > 0.0
+    window._dirty = False

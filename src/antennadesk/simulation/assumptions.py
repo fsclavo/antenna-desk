@@ -21,7 +21,19 @@ GROUND_CLEARANCE_M = 0.01
 def _wire_lies_near_ground(wire: Wire) -> bool:
     low = min(wire.start.z_m, wire.end.z_m)
     high = max(wire.start.z_m, wire.end.z_m)
-    return 0.0 <= low < GROUND_CLEARANCE_M and high < GROUND_CLEARANCE_M
+    if not 0.0 <= low < GROUND_CLEARANCE_M:
+        return False
+    if high < GROUND_CLEARANCE_M:
+        return True
+    # A non-vertical wire that starts near the ground can be a sloped radial or
+    # another intentional ground-level run. Raise the model instead of letting
+    # its low endpoint bypass the clearance. Vertical stubs keep their
+    # deliberate wire-to-ground connection.
+    horizontal = math.hypot(
+        wire.end.x_m - wire.start.x_m,
+        wire.end.y_m - wire.start.y_m,
+    )
+    return horizontal > 1e-9
 
 
 def ground_clearance_offset_m(model: AntennaModel) -> float:

@@ -171,6 +171,7 @@ def test_descriptor_variables_cover_every_geometric_field() -> None:
                 "radial_length_m",
                 "radial_count",
                 "radial_angle_deg",
+                "radial_droop_deg",
                 "loading_coil_inductance_h",
                 "loading_coil_offset_m",
                 "top_hat_radius_m",
@@ -897,6 +898,33 @@ def test_quad_beam_descriptor_exposes_the_transformer_choice() -> None:
     rebuilt = descriptor.build_parameters({**descriptor.initial_values, "transformer_ratio": 4.0})
     assert isinstance(rebuilt, QuadBeamParameters)
     assert rebuilt.transformer_ratio == pytest.approx(4.0)
+
+
+def test_vertical_optimizer_covers_radial_droop_with_a_tip_clearance_constraint() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+    variables = {variable.name: variable for variable in descriptor.variables}
+
+    assert "radial_droop_deg" in variables
+    assert variables["radial_droop_deg"].locked_by_default is True
+    assert variables["radial_droop_deg"].maximum > parameters.radial_droop_deg
+    assert descriptor.initial_values["radial_droop_deg"] == pytest.approx(20.0)
+    assert descriptor.build_parameters(descriptor.initial_values) == parameters
+
+    too_steep = dict(descriptor.initial_values)
+    too_steep["radial_droop_deg"] = 40.0
+    violations = descriptor.validate(too_steep)
+
+    assert any(item.message_key == "optimize.constraint.radial_tip_height" for item in violations)
 
 
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:

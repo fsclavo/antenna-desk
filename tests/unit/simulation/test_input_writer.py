@@ -281,6 +281,30 @@ def test_ground_mounted_radials_are_raised_for_nec() -> None:
     ) in deck.text
 
 
+def test_sloped_radial_tip_near_ground_is_raised_for_nec() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.environment.ground import GroundModel
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=36.8,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+
+    deck = write_nec2_input(parameters.to_antenna(name="Vertical"), _spec(segments=3))
+
+    assert deck.z_offset_m == pytest.approx(0.01 - parameters.radial_tip_height_m)
+    assert deck.z_offset_m > 0.0
+    assert "GW 2 3 0.000000000 0.000000000 3.005117" in deck.text
+
+
 def test_grounded_vertical_connection_is_not_raised_for_nec() -> None:
     from antennadesk.domain.antennas.beverage import beverage_parameters
     from antennadesk.domain.environment.ground import GroundModel

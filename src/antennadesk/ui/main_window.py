@@ -6343,7 +6343,12 @@ class MainWindow(QMainWindow):
         ):
             if hasattr(previous, name) and hasattr(estimated, name):
                 updates[name] = getattr(previous, name)
-        if isinstance(previous, T2FDParameters) and isinstance(estimated, T2FDParameters):
+        if isinstance(previous, VerticalParameters) and isinstance(estimated, VerticalParameters):
+            updates["radial_droop_deg"] = min(
+                previous.radial_droop_deg,
+                estimated.max_radial_droop_deg,
+            )
+        elif isinstance(previous, T2FDParameters) and isinstance(estimated, T2FDParameters):
             updates.update(
                 termination_resistance_ohm=previous.termination_resistance_ohm,
                 transformer_ratio=previous.transformer_ratio,

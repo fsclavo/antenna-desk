@@ -141,6 +141,7 @@ def test_round_trip_preserves_vertical_top_hat(
         base_height_m=0.25,
         radial_count=14,
         radial_length_m=12.863,
+        radial_droop_deg=0.5,
         loading_coil_enabled=True,
         loading_coil_inductance_h=10e-6,
         top_hat_enabled=True,
@@ -2125,7 +2126,7 @@ def test_round_trip_with_site_ground(
     assert document["project"]["site_ground"]["edge_shape"] == "circular"
 
 
-def test_schema_59_container_migrates_to_60(
+def test_schema_59_container_migrates_to_current(
     repository: ProjectContainerRepository,
     sample_project: Project,
     tmp_path: Path,
@@ -2150,9 +2151,58 @@ def test_schema_59_container_migrates_to_60(
     loaded = repository.load(source)
     assert loaded.site_ground is None
 
-    target = tmp_path / "schema-60.antennadesk"
+    target = tmp_path / "schema-current.antennadesk"
     repository.save(loaded, target)
-    assert _manifest(target)["schema_version"] == 60
+    assert _manifest(target)["schema_version"] == SCHEMA_VERSION
+
+
+def test_schema_60_container_migrates_a_vertical_at_zero_droop(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    from uuid import uuid4
+
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+    from antennadesk.domain.projects.project import DesignVariant
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=2.0,
+        radial_count=8,
+        radial_length_m=5.0,
+    )
+    design = DesignVariant(
+        id=uuid4(),
+        name="Vertical",
+        antenna_type="vertical",
+        parameters=parameters,
+        antenna=parameters.to_antenna(),
+    )
+    source = tmp_path / "schema-60.antennadesk"
+    repository.save(replace(sample_project, designs=(design,)), source)
+
+    entries = _read_entries(source)
+    manifest = json.loads(entries["manifest.json"])
+    manifest["schema_version"] = 60
+    entries["manifest.json"] = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+    project_document = json.loads(entries["project.json"])
+    project_document["schema_version"] = 60
+    entries["project.json"] = json.dumps(project_document, separators=(",", ":")).encode("utf-8")
+    design_entry = next(name for name in entries if name.startswith("designs/"))
+    design_document = json.loads(entries[design_entry])
+    design_document["schema_version"] = 60
+    design_document["design"]["parameters"].pop("radial_droop_deg")
+    entries[design_entry] = json.dumps(design_document, separators=(",", ":")).encode("utf-8")
+    _write_container(source, entries)
+
+    loaded = repository.load(source)
+
+    assert loaded.designs[0].parameters.radial_droop_deg == 0.0
+    target = tmp_path / "schema-current-vertical.antennadesk"
+    repository.save(loaded, target)
+    assert _manifest(target)["schema_version"] == SCHEMA_VERSION
 
 
 def test_round_trip_preserves_run_site_ground(

@@ -226,9 +226,9 @@ class _Entry:
 class ProjectContainerRepository:
     """Read and write versioned ZIP project containers.
 
-    The reader accepts only container version 1 and schema version 59. The
-    previous gzip/plain-JSON files are rejected deliberately; the project has
-    not shipped to users yet.
+    The reader accepts container version 1 and the current schema, plus the
+    migration path for schema 59 and 60. Previous gzip/plain-JSON files are
+    rejected deliberately; the project has not shipped to users yet.
     """
 
     # -- public repository API ------------------------------------------------
@@ -472,14 +472,12 @@ class ProjectContainerRepository:
             raise ProjectFormatError(
                 f"unsupported project container version {manifest.container_version}"
             )
-        if manifest.schema_version not in (59, SCHEMA_VERSION):
+        if manifest.schema_version not in (59, 60, SCHEMA_VERSION):
             raise UnsupportedSchemaVersion(
                 found=manifest.schema_version,
                 supported=SCHEMA_VERSION,
             )
-        if manifest.schema_version == 59:
-            # The only 59 -> 60 change is the optional metadata field
-            # site_ground; the entry documents are structurally identical.
+        if manifest.schema_version != SCHEMA_VERSION:
             manifest = manifest.model_copy(update={"schema_version": SCHEMA_VERSION})
         return manifest
 
@@ -866,11 +864,15 @@ class ProjectContainerRepository:
             data = json.loads(payload)
         except (json.JSONDecodeError, UnicodeDecodeError):
             return payload
-        if not isinstance(data, dict) or data.get("schema_version") != 59:
+        if not isinstance(data, dict) or data.get("schema_version") not in (59, 60):
             return payload
+        migrated_from = data["schema_version"]
         data["schema_version"] = SCHEMA_VERSION
         project = data.get("project")
-        if isinstance(project, dict):
+        if migrated_from == 59 and isinstance(project, dict):
+            # 59 -> 60 added the optional site_ground metadata field. The
+            # 60 -> 61 radial droop field defaults to zero, so no rewrite is
+            # needed for design entries.
             project.setdefault("site_ground", None)
         return json.dumps(
             data,

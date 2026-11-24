@@ -39,9 +39,9 @@ any further project-format change. It is closed after manual validation on
 2026-11-24; the optional streaming write and pattern-level lazy loading are
 deferred follow-ups.
 
-VR1 is a queued vertical-geometry enhancement, not part of the active 1.1/1.2
-sequence. It requires an ADR and a schema decision before implementation; do not
-start it merely because it appears in the table.
+VR1 is a vertical-geometry enhancement implemented ahead of the remaining 1.1/1.2
+items. It is bounded to one uniform droop, physical radial length, schema 61, and
+family-optimizer coverage; the phased vertical is not included.
 
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
@@ -58,7 +58,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
-| VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Queued 2026-11-24; not started.** Add one downward droop angle to the vertical radial generator, with physical radial length semantics, ground-tip validation, schema migration, EN/ES editor and help, scene and report updates, and family-optimizer coverage. No per-radial angles and no performance claim. Decide whether the phased vertical shares the field. See §VR1. |
+| VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -125,7 +125,7 @@ format or schema 59; no solver, antenna-model, or numerical-reference change;
 no binary pattern store or sidecar database in this item. Open a separate item
 if those are still needed after the container lands.
 
-### Container format (container version 1, schema version 60)
+### Container format (container version 1, schema version 61)
 
 ```text
 manifest.json
@@ -971,8 +971,8 @@ fudge factor.
 
 ## VR1 — Sloped vertical radials (uniform droop)
 
-**Status:** queued 2026-11-24; not started. **Priority:** future vertical
-geometry enhancement; the ADR must land before implementation.
+**Status:** **implemented 2026-11-24.** **Priority:** bounded vertical geometry
+enhancement; see ADR-0052 for the accepted decisions and limitations.
 
 **Motivation:** the vertical and loaded-vertical templates currently generate
 all radials in the horizontal plane at `base_height_m`. The existing
@@ -984,6 +984,16 @@ optimizer coverage, not a solver feature.
 
 **Goal:** add one uniform downward angle to the generated radial set so users
 can model a radial skirt without converting to custom wires.
+
+**Implementation (2026-11-24):** schema 61 stores `radial_droop_deg` with a
+default of 0. The domain keeps physical radial length, exposes horizontal span
+and tip height, rejects tips at or below ground when the base is elevated, and
+round-trips droop through custom wires. The editor caps the angle with the
+current base/radial length; the scene labels the plan span instead of the
+physical length; the design summary and construction sheet add droop and tip
+height. Live tuning exposes the angle when the current geometry allows it, and
+the locked optimizer variable has a hard tip-clearance constraint. A real
+`nec2c` sloped-radial case completes with positive resistance.
 
 **Scope (MVP):**
 - Add `radial_droop_deg` to `VerticalParameters`: 0° horizontal, positive tips
@@ -1010,10 +1020,10 @@ can model a radial skirt without converting to custom wires.
   constraint, or an explicit context classification. Do not leave the field
   uncovered.
 
-**ADR decisions:** name (`radial_droop_deg` recommended), positive-down
-convention, range, physical vs projected radial length, ground-clearance rule,
-optimizer variable vs context, and whether `PhasedVerticalParameters` shares the
-field in the same slice.
+**ADR decisions:** `radial_droop_deg`, positive-down convention, range
+`0 <= droop < 90`, physical radial length, tips above ground when the base is
+elevated, locked optimizer variable with a tip-clearance constraint, and no
+`PhasedVerticalParameters` field in this slice.
 
 **Out of scope:** independent angle or length per radial; arbitrary radial
 layouts (use custom wires); buried or soil-contact radials; the native NEC `GN`
@@ -1211,11 +1221,11 @@ decision:
 
 ## Current baseline
 
-- Schema: **60**; container version 1.
-- Full gate: **4,303 passed, 1 skipped** on 2026-11-24 after the full QA,
+- Schema: **61**; container version 1.
+- Full gate: **4,320 passed, 1 skipped** on 2026-11-24 after the full QA,
   technical-debt sweep, main-window extractions, save/load size invariant fix,
-  PF1 container, lazy open/save/compact, PreparedProject, and DL7 site ground
-  (typed simulation specs,
+  PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground, and
+  VR1 radial droop (typed simulation specs,
   pattern presets, and pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,

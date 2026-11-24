@@ -449,6 +449,7 @@ HELP_MANIFEST = frozenset(
         "help.yagi.match_type",
         "help.trap_yagi.trap_frequency",
         "help.vertical.radial_system",
+        "help.vertical.radial_droop",
         "help.journal.timeline",
         "help.journal.table",
         "help.journal.details",

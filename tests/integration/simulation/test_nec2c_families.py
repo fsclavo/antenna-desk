@@ -23,6 +23,7 @@ from antennadesk.domain.simulation.segmentation import (
     aligned_policy_for_model,
 )
 from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.simulation.nec2.input_writer import write_nec2_input
 from antennadesk.simulation.nec2.solver import Nec2cSolver
 
 NEC2C = os.environ.get("NEC2C")
@@ -1036,3 +1037,38 @@ def test_shortened_endfed_reports_the_input_shunt_topology_floor(
     assert all(
         item.code != "matching_network.topology_limit" for item in without_origin.diagnostics
     )
+
+
+def test_vertical_with_drooped_radials_completes(solver: Nec2cSolver) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=16,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+        ground=GroundModel.finite(
+            relative_permittivity=13.0,
+            conductivity_s_per_m=0.005,
+        ),
+    )
+    model = parameters.to_custom_parameters().to_antenna(name="Drooped vertical")
+    deck = write_nec2_input(model, SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)))
+    assert "0.000000000 0.000000000 3.000000000" in deck.text
+    assert "4.698463104" in deck.text
+    assert "1.289899283" in deck.text
+
+    result = solver.run(
+        model,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(7_100_000.0),
+            segmentation=SegmentationPolicy(min_segments_per_wire=3),
+            include_conductor_losses=False,
+            far_field=FarFieldRequest(enabled=False),
+        ),
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies[0].impedance_ohm.real > 0.0

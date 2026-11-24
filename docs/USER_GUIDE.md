@@ -1387,6 +1387,16 @@ any of those fields switches the selector to **Custom / measured**. The
 ground-screen preset is a dense radial approximation, not a bonded mesh or a
 buried-wire model.
 
+**Radial droop** lowers every radial by the same angle. Zero keeps them
+horizontal. **Radial length** is the physical conductor length, not its
+horizontal projection: at a 20° droop a 5 m radial still uses 5 m of wire but
+spans only 4.70 m. The editor limits the angle so the tips stay above ground
+when the base is elevated; a base at ground level cannot use a positive droop.
+The scene shows the horizontal span in the top view and reports the physical
+length, droop, and tip height in the summary; the wire schedule remains the
+authoritative cut list. The droop is a modeling choice, not a performance
+recommendation.
+
 The **Loading coil** group adds a series coil at a selected height above the
 radiator base. The model is an ideal series inductor with optional series
 resistance; enter a measured or estimated coil resistance when you need a more

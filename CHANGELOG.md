@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Uniform radial droop for verticals (VR1).** The vertical template adds one
+  downward angle for every radial. Radial length stays the physical conductor
+  length, so the horizontal span and tip height are explicit and the tips must
+  stay above ground when the base is elevated. Schema 61 adds
+  `radial_droop_deg` with a no-value-rewrite 60→61 migration; older projects
+  load at 0° with unchanged geometry. The editor, EN/ES help, scene summary and
+  plan span, design summary, construction sheet, live tuning, and a locked
+  family-optimizer variable with a hard tip-clearance constraint are covered.
+  The phased vertical does not share the field, and there is no performance
+  claim. See [`ADR-0052`](docs/ADR/0052-uniform-radial-droop.md).
 - **Live tuning preview.** **Tools → Live Tuning...** debounces a coarse
   single-frequency solve while the operator drags the primary dimension, with
   pattern disabled and no saved result. The dialog reports SWR, R, X, and |Z|,

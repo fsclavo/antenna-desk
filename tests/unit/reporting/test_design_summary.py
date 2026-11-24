@@ -523,6 +523,26 @@ def test_top_loaded_vertical_summary_reports_the_capacity_hat() -> None:
     assert rows["Type"] == "top-loaded vertical"
     assert rows["Top hat wires"] == "4"
     assert rows["Top hat radius"] == "0.7500 m"
+    assert rows["Radial droop"] == "0.0°"
+    assert rows["Radial tip height"] == "0.2500 m"
+
+
+def test_drooped_vertical_summary_reports_the_tip_height() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Radial droop"] == "20.0°"
+    assert rows["Radial tip height"] == "1.2899 m"
 
 
 def test_scv_summary_reports_the_published_array_geometry() -> None:

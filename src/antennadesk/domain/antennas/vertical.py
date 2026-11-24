@@ -50,6 +50,7 @@ class VerticalParameters:
     radial_count: int = 0
     radial_length_m: float = 0.0
     radial_angle_deg: float = 0.0
+    radial_droop_deg: float = 0.0
     wire_radius_m: float = 0.001
     material: ConductorMaterial = ALUMINUM
     ground: GroundModel = FREE_SPACE
@@ -77,6 +78,14 @@ class VerticalParameters:
             "radial_angle_deg",
             units.normalize_azimuth_degrees(self.radial_angle_deg),
         )
+        if not 0.0 <= self.radial_droop_deg < 90.0:
+            raise ValueError("radial_droop_deg must be between 0 and 90 degrees")
+        if self.radial_tip_height_m < -1e-9:
+            raise ValueError("radial tips must stay at or above the ground plane")
+        if self.radial_count > 0 and self.base_height_m > 0.0 and self.radial_tip_height_m <= 1e-9:
+            raise ValueError(
+                "radial tips must stay above the ground plane when base_height_m is positive"
+            )
         ensure_non_negative(self.loading_coil_offset_m, name="loading_coil_offset_m")
         ensure_non_negative(
             self.loading_coil_inductance_h,
@@ -104,6 +113,25 @@ class VerticalParameters:
     @property
     def top_height_m(self) -> float:
         return self.base_height_m + self.height_m
+
+    @property
+    def radial_span_m(self) -> float:
+        return self.radial_length_m * math.cos(math.radians(self.radial_droop_deg))
+
+    @property
+    def radial_tip_height_m(self) -> float:
+        return self.base_height_m - self.radial_length_m * math.sin(
+            math.radians(self.radial_droop_deg)
+        )
+
+    @property
+    def max_radial_droop_deg(self) -> float:
+        """Largest droop that keeps the radial tips above the ground plane."""
+
+        if self.radial_length_m <= 0.0 or self.base_height_m <= 0.0:
+            return 0.0
+        ratio = min(self.base_height_m / self.radial_length_m, 1.0) * (1.0 - 1e-6)
+        return max(0.0, min(math.degrees(math.asin(ratio)), 89.999))
 
     @property
     def managed_load_ids(self) -> frozenset[str]:
@@ -163,6 +191,7 @@ class VerticalParameters:
             hat_wires.append(wire)
         radial_lengths: list[float] = []
         radial_angles: list[float] = []
+        radial_droops: list[float] = []
         for radial in radials:
             endpoints = (radial.start, radial.end)
             base_endpoint = next(
@@ -177,8 +206,13 @@ class VerticalParameters:
             if base_endpoint is None:
                 raise ValueError("all radials must start at the vertical base")
             far_endpoint = radial.end if base_endpoint == radial.start else radial.start
-            radial_lengths.append(math.hypot(far_endpoint.x_m, far_endpoint.y_m))
+            horizontal = math.hypot(far_endpoint.x_m, far_endpoint.y_m)
+            drop = base_z - far_endpoint.z_m
+            if drop < -1e-9:
+                raise ValueError("radial tips must not rise above the vertical base")
+            radial_lengths.append(math.hypot(horizontal, drop))
             radial_angles.append(math.degrees(math.atan2(far_endpoint.y_m, far_endpoint.x_m)))
+            radial_droops.append(math.degrees(math.atan2(drop, horizontal)))
         hat_lengths: list[float] = []
         for wire in hat_wires:
             far = wire.end if math.isclose(wire.start.z_m, top_z, abs_tol=1e-6) else wire.start
@@ -202,6 +236,7 @@ class VerticalParameters:
             radial_count=len(radials),
             radial_length_m=(sum(radial_lengths) / len(radial_lengths) if radials else 0.0),
             radial_angle_deg=(radial_angles[0] if radial_angles else 0.0),
+            radial_droop_deg=(sum(radial_droops) / len(radial_droops) if radial_droops else 0.0),
             wire_radius_m=radiator.radius_m,
             material=radiator.material,
             ground=parameters.ground,
@@ -230,6 +265,8 @@ class VerticalParameters:
         ]
         if self.radial_count > 0:
             step = 360.0 / self.radial_count
+            span = self.radial_span_m
+            tip_height = self.radial_tip_height_m
             for index in range(self.radial_count):
                 angle = math.radians(self.radial_angle_deg + index * step)
                 wires.append(
@@ -237,9 +274,9 @@ class VerticalParameters:
                         id=f"radial-{index + 1}",
                         start=base,
                         end=Point3D(
-                            x_m=self.radial_length_m * math.cos(angle),
-                            y_m=self.radial_length_m * math.sin(angle),
-                            z_m=self.base_height_m,
+                            x_m=span * math.cos(angle),
+                            y_m=span * math.sin(angle),
+                            z_m=tip_height,
                         ),
                         radius_m=self.wire_radius_m,
                         material=self.material,

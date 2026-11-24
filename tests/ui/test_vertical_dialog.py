@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import math
+
 import pytest
 from pytestqt.qtbot import QtBot
 
@@ -234,3 +236,61 @@ def test_vertical_form_applies_radial_presets_with_auto_units(qtbot: QtBot) -> N
         wavelength_m(parameters.frequency_hz) * 0.25,
         abs=1e-3,
     )
+
+
+def test_vertical_dialog_edits_a_uniform_radial_droop(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    original = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=8,
+        radial_length_m=5.0,
+        radial_droop_deg=12.0,
+    )
+    dialog = VerticalDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=original,
+    )
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    assert form._radial_droop.isEnabled() is True
+    assert form._radial_droop.value() == pytest.approx(12.0)
+    assert dialog.parameters().radial_droop_deg == pytest.approx(12.0)
+    assert dialog.parameters().radial_tip_height_m == pytest.approx(original.radial_tip_height_m)
+
+    form._radial_droop.setValue(20.0)
+    parameters = dialog.parameters()
+    assert parameters.radial_droop_deg == pytest.approx(20.0)
+    assert parameters.radial_tip_height_m == pytest.approx(3.0 - 5.0 * math.sin(math.radians(20.0)))
+
+    form._radial_count.setValue(0)
+    assert form._radial_droop.isEnabled() is False
+
+
+def test_vertical_dialog_clamps_droop_when_the_base_is_lowered(qtbot: QtBot) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    dialog = VerticalDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        parameters=VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            base_height_m=3.0,
+            radial_count=4,
+            radial_length_m=5.0,
+            radial_droop_deg=20.0,
+        ),
+    )
+    qtbot.addWidget(dialog)
+    form = dialog._form
+
+    form._base_height.setValue(1.0)
+
+    assert form._radial_droop.maximum() == pytest.approx(11.5)
+    assert form._radial_droop.value() <= form._radial_droop.maximum()
+    assert dialog.parameters().radial_tip_height_m > 0.0

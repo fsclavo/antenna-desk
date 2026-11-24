@@ -430,6 +430,8 @@ REPORT_SPANISH: dict[str, str] = {
     "Project": "Proyecto",
     "R (Ω)": "R (Ω)",
     "Radial length": "Longitud de radiales",
+    "Radial droop": "Inclinación de radiales",
+    "Radial tip height": "Altura de las puntas de los radiales",
     "Radial wires": "Hilos radiales",
     "Radials": "Radiales",
     "Radials per element": "Radiales por elemento",
@@ -994,11 +996,15 @@ REPORT_SPANISH: dict[str, str] = {
         "hilo seleccionados; un lazo de acoplamiento y la tensión del capacitor no "
         "están modelados."
     ),
-    "Install a {length} m vertical radiator with its base {base} m above ground. Add {radials} radials of {radial_length} m in the base plane.{top_hat_note}": (  # noqa: E501
+    "Install a {length} m vertical radiator with its base {base} m above ground. Add {radials} radials of {radial_length} m.{radial_droop_note}{top_hat_note}": (  # noqa: E501
         "Instalá un radiador vertical de {length} m con su base a {base} m sobre "
-        "el suelo. Agregá {radials} radiales de {radial_length} m en el plano de "
-        "base.{top_hat_note}"
+        "el suelo. Agregá {radials} radiales de {radial_length} m."
+        "{radial_droop_note}{top_hat_note}"
     ),
+    " Slope them {droop}° downward; the tips are {tip} m above ground.": (
+        " Inclinálos {droop}° hacia abajo; las puntas quedan a {tip} m sobre el suelo."
+    ),
+    " Keep them horizontal at the base plane.": (" Mantenelos horizontales en el plano de base."),
     "Leave the far end open for a bidirectional receiving pattern.": (
         "Dejá el extremo lejano abierto para un patrón de recepción bidireccional."
     ),

@@ -197,6 +197,20 @@ def managed_dimensions(
                 ),
                 *(
                     (
+                        _value_dimension(
+                            "radial_droop",
+                            "vertical.radial_droop",
+                            "radial_droop_deg",
+                            0.0,
+                            parameters.max_radial_droop_deg,
+                            ManagedValueKind.ANGLE,
+                        ),
+                    )
+                    if parameters.radial_count > 0 and parameters.max_radial_droop_deg > 0.0
+                    else ()
+                ),
+                *(
+                    (
                         _field_dimension(
                             "top_hat_radius",
                             "field.top_hat_radius",

@@ -376,11 +376,14 @@ the design panel share the same taxonomy.
 ### VerticalParameters
 
 A first-class vertical radiator with height, base/radial-plane height, optional
-radial count/length/angle, wire radius, material, and ground. `to_antenna()`
+radial count/length/angle/droop, wire radius, material, and ground. `to_antenna()`
 creates the vertical wire and evenly spaced radial wires connected at the base,
-with the feed at the radiator base. The editor's ground, elevated, and screen
-radial systems are UI-only starting presets; only the numeric fields are
-persisted. It is experimental.
+with the feed at the radiator base. `radial_length_m` is the physical conductor
+length; `radial_droop_deg` is a uniform downward angle, so the horizontal span is
+`L cos(droop)` and the tip height is `base_height_m - L sin(droop)`. Tips must
+stay above the ground plane when the base is elevated. The editor's ground,
+elevated, and screen radial systems are UI-only starting presets; only the
+numeric fields are persisted. It is experimental.
 
 An optional loading coil is described by `loading_coil_enabled`,
 `loading_coil_offset_m` (measured from the radiator base),
@@ -805,7 +808,7 @@ and SWR at the target. The result is an explicit `TuningProposal` with
 ## Project file
 
 The native `.antennadesk` file is a versioned ZIP container (container version
-1, schema version 60). It is one portable file written atomically. The
+1, schema version 61). It is one portable file written atomically. The
 container separates the small project metadata from designs, runs, raw solver
 text, and optimization summaries:
 
@@ -842,9 +845,11 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `60`; the application writes version 60 and
-rejects gzip, plain JSON, and every schema below 59; a 59 container migrates its metadata to 60 on open. The project has not shipped
-to users, so no legacy reader or migration is retained. The complete example
+trusted. The current schema is `61`; the application writes version 61 and
+rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
+optional `site_ground: null` metadata on open; a 60 container loads vertical
+designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged. The
+project has not shipped to users, so no legacy reader is retained. The complete example
 lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
 and is written in the current container format.
 
@@ -862,11 +867,12 @@ migration.
 
 ## Schema policy
 
-- Current version: `60`.
-- Only container version 1 / schema version 60 is accepted; schema 59 is migrated
-  on open by adding `project.site_ground: null`. The list below is a
-  historical record of earlier development schemas; those readers and
-  migrations were removed on 2026-11-20.
+- Current version: `61`.
+- Only container version 1 / schema versions 59, 60, and 61 are accepted; 59
+  adds `project.site_ground: null` and 60 adds the default
+  `radial_droop_deg = 0` on open. The list below is a historical record of
+  earlier development schemas; those readers and migrations were removed on
+  2026-11-20.
 
 ### Historical schema changes (not readable by the current build)
 

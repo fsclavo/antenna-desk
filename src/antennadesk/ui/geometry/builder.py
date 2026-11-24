@@ -3967,11 +3967,7 @@ def _summary(
             base_height = min_z
             radial_wires = [wire for wire in model.wires if wire.id.startswith("radial-")]
             radial_count = len(radial_wires)
-            radial_length = (
-                max(math.hypot(wire.end.x_m, wire.end.y_m) for wire in radial_wires)
-                if radial_wires
-                else 0.0
-            )
+            radial_length = max((wire.length_m for wire in radial_wires), default=0.0)
         parts.extend(
             [
                 f"{translator.t('field.height').lower()} "
@@ -3984,6 +3980,23 @@ def _summary(
             parts.append(
                 f"{translator.t('geometry.radials').lower()} {radial_count} x "
                 f"{_format_length(radial_length, translator, display_units)}"
+            )
+        if (
+            isinstance(parameters, VerticalParameters)
+            and parameters.radial_count
+            and parameters.radial_droop_deg > 0.0
+        ):
+            tip_height = _format_length(
+                parameters.radial_tip_height_m,
+                translator,
+                display_units,
+            )
+            parts.extend(
+                [
+                    f"{translator.t('vertical.radial_droop').lower()} "
+                    f"{parameters.radial_droop_deg:.1f}°",
+                    f"{translator.t('vertical.radial_tip_height').lower()} {tip_height}",
+                ]
             )
         if isinstance(parameters, VerticalParameters) and parameters.loading_coil_enabled:
             parts.append(
@@ -4445,10 +4458,21 @@ def build_scene(
                     Dimension(
                         start=ScenePoint(radial.start.x_m, radial.start.y_m),
                         end=ScenePoint(radial.end.x_m, radial.end.y_m),
-                        text=_format_length(
-                            parameters.radial_length_m,
-                            translator,
-                            resolved_units,
+                        text=(
+                            translator.t(
+                                "geometry.radial_span",
+                                value=_format_length(
+                                    parameters.radial_span_m,
+                                    translator,
+                                    resolved_units,
+                                ),
+                            )
+                            if parameters.radial_droop_deg > 0.0
+                            else _format_length(
+                                parameters.radial_length_m,
+                                translator,
+                                resolved_units,
+                            )
                         ),
                         side="below",
                         priority=80,

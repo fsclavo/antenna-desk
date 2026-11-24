@@ -129,6 +129,12 @@ class VerticalForm(QWidget):
         self._radial_angle.setDecimals(1)
         self._radial_angle.setSuffix("°")
 
+        self._radial_droop = QDoubleSpinBox(self)
+        self._radial_droop.setRange(0.0, 89.9)
+        self._radial_droop.setDecimals(1)
+        self._radial_droop.setSingleStep(0.5)
+        self._radial_droop.setSuffix("°")
+
         self._radial_preset = QComboBox(self)
         self._radial_presets = RadialPresetController(
             self._radial_preset,
@@ -281,6 +287,7 @@ class VerticalForm(QWidget):
         form.addRow(self._labels.label("vertical.radial_count"), self._radial_count)
         form.addRow(self._labels.label("vertical.radial_length"), self._radial_length)
         form.addRow(self._labels.label("vertical.radial_angle"), self._radial_angle)
+        form.addRow(self._labels.label("vertical.radial_droop"), self._radial_droop)
         form.addRow(self._labels.label("vertical.wire_radius"), self._radius)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
@@ -297,9 +304,8 @@ class VerticalForm(QWidget):
         layout.addWidget(self._geometry)
 
         for widget in (
-            self._base_height,
-            self._radial_length,
             self._radial_angle,
+            self._radial_droop,
             self._radius,
             self._permittivity,
             self._conductivity,
@@ -313,6 +319,8 @@ class VerticalForm(QWidget):
         self._coil_resistance.valueChanged.connect(self._coil_resistance_changed)
         self._coil_q.valueChanged.connect(self._coil_q_changed)
         self._height.valueChanged.connect(self._height_changed)
+        self._base_height.valueChanged.connect(self._radial_geometry_changed)
+        self._radial_length.valueChanged.connect(self._radial_geometry_changed)
         self._radial_count.valueChanged.connect(self._radial_count_changed)
         self._material.currentIndexChanged.connect(self._emit_changed)
         self._ground.currentIndexChanged.connect(self._ground_changed)
@@ -336,6 +344,10 @@ class VerticalForm(QWidget):
         self._emit_changed()
 
     def _radial_count_changed(self, *_args: object) -> None:
+        self._update_radial_controls()
+        self._emit_changed()
+
+    def _radial_geometry_changed(self, *_args: object) -> None:
         self._update_radial_controls()
         self._emit_changed()
 
@@ -439,10 +451,31 @@ class VerticalForm(QWidget):
         if self._coil_offset.value() > maximum:
             self._coil_offset.setValue(maximum)
 
+    def _maximum_droop_deg(self) -> float:
+        base_height_m = self._base_height_field.value_m()
+        radial_length_m = self._radial_length_field.value_m()
+        if base_height_m <= 0.0 or radial_length_m <= 0.0:
+            return 0.0
+        ratio = min(base_height_m / radial_length_m, 1.0)
+        angle = min(math.degrees(math.asin(ratio)), 89.9)
+        return math.floor(angle * 10.0) / 10.0
+
+    def _update_radial_droop_limit(self) -> None:
+        maximum = self._maximum_droop_deg()
+        self._radial_droop.blockSignals(True)
+        try:
+            self._radial_droop.setMaximum(maximum)
+            if self._radial_droop.value() > maximum:
+                self._radial_droop.setValue(maximum)
+        finally:
+            self._radial_droop.blockSignals(False)
+
     def _update_radial_controls(self) -> None:
         enabled = self._radial_count.value() > 0
         self._radial_length.setEnabled(enabled)
         self._radial_angle.setEnabled(enabled)
+        self._radial_droop.setEnabled(enabled)
+        self._update_radial_droop_limit()
         self._update_geometry()
 
     def _update_top_hat_controls(self) -> None:
@@ -529,6 +562,8 @@ class VerticalForm(QWidget):
             self._radial_count.setValue(parameters.radial_count)
             self._radial_length_field.configure(parameters.radial_length_m)
             self._radial_angle.setValue(parameters.radial_angle_deg)
+            self._update_radial_droop_limit()
+            self._radial_droop.setValue(parameters.radial_droop_deg)
             self._radius.setValue(radius_from_m(parameters.wire_radius_m, self._unit_system))
             material_index = self._material.findData(parameters.material)
             if material_index >= 0:
@@ -602,6 +637,7 @@ class VerticalForm(QWidget):
             radial_count=self._radial_count.value(),
             radial_length_m=self._radial_length_field.value_m(),
             radial_angle_deg=self._radial_angle.value(),
+            radial_droop_deg=self._radial_droop.value(),
             wire_radius_m=radius_to_m(self._radius.value(), self._unit_system),
             material=self._selected_material(),
             ground=self._ground_model(),

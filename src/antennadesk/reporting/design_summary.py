@@ -608,6 +608,16 @@ def design_summary_rows(
                 ("Radial length", _length(parameters.radial_length_m, display_units)),
             ]
         )
+        if parameters.radial_count > 0:
+            rows.extend(
+                [
+                    ("Radial droop", f"{parameters.radial_droop_deg:.1f}°"),
+                    (
+                        "Radial tip height",
+                        _length(parameters.radial_tip_height_m, display_units),
+                    ),
+                ]
+            )
         if parameters.loading_coil_enabled:
             rows.append(
                 (

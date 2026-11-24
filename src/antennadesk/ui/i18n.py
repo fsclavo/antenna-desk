@@ -2565,6 +2565,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.total_length": {Language.ENGLISH: "Total length", Language.SPANISH: "Longitud total"},
     "geometry.leg_length": {Language.ENGLISH: "Leg", Language.SPANISH: "Rama"},
     "geometry.azimuth": {Language.ENGLISH: "Azimuth", Language.SPANISH: "Azimut"},
+    "geometry.radial_span": {
+        Language.ENGLISH: "span {value}",
+        Language.SPANISH: "huella {value}",
+    },
     "geometry.vertical": {Language.ENGLISH: "Vertical wire", Language.SPANISH: "Hilo vertical"},
     "geometry.summary": {
         Language.ENGLISH: "Length {length} · Height {height} · Azimuth {azimuth}°",
@@ -4457,6 +4461,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.vertical.radial_angle": {
         Language.ENGLISH: "Azimuth step between radials.",
         Language.SPANISH: "Paso de azimut entre radiales.",
+    },
+    "help.vertical.radial_droop": {
+        Language.ENGLISH: (
+            "Uniform downward angle of the radials. Radial length is the physical "
+            "conductor; the horizontal footprint is shorter and the tips must stay "
+            "above ground."
+        ),
+        Language.SPANISH: (
+            "Ángulo descendente uniforme de los radiales. La longitud es la del "
+            "conductor físico; la huella horizontal es menor y las puntas deben "
+            "quedar sobre el suelo."
+        ),
     },
     "help.vertical.loading_coil_inductance": {
         Language.ENGLISH: "Loading-coil inductance.",
@@ -13778,6 +13794,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "First radial angle",
         Language.SPANISH: "Ángulo del primer radial",
     },
+    "vertical.radial_droop": {
+        Language.ENGLISH: "Radial droop",
+        Language.SPANISH: "Inclinación de los radiales",
+    },
+    "vertical.radial_tip_height": {
+        Language.ENGLISH: "Radial tip height",
+        Language.SPANISH: "Altura de las puntas de los radiales",
+    },
     "vertical.wire_radius": {
         Language.ENGLISH: "Wire radius (mm)",
         Language.SPANISH: "Radio del hilo (mm)",
@@ -13842,14 +13866,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "vertical.hint": {
         Language.ENGLISH: (
-            "The radiator is fed at its base. Radials are wires in the radial "
-            "plane; over finite ground use at least 0.25 m to avoid numerical "
-            "instability close to the soil."
+            "The radiator is fed at its base. Radials use their physical length; "
+            "a droop lowers the tips without shortening the wire. Over finite "
+            "ground use at least 0.25 m to avoid numerical instability close to "
+            "the soil."
         ),
         Language.SPANISH: (
-            "El radiador se alimenta en la base. Los radiales son hilos en el "
-            "plano de radiales; sobre suelo finito usá al menos 0.25 m para evitar "
-            "inestabilidad numérica cerca del suelo."
+            "El radiador se alimenta en la base. Los radiales usan su longitud "
+            "física; una inclinación baja las puntas sin acortar el hilo. Sobre "
+            "suelo finito usá al menos 0.25 m para evitar inestabilidad numérica "
+            "cerca del suelo."
         ),
     },
     "vertical.evidence": {
@@ -16379,6 +16405,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.constraint.vertical_clearance": {
         Language.ENGLISH: "A vertically polarized array must clear the ground.",
         Language.SPANISH: "Un conjunto con polarización vertical debe quedar por encima del suelo.",
+    },
+    "optimize.constraint.radial_tip_height": {
+        Language.ENGLISH: "Radial tips must stay above the ground plane.",
+        Language.SPANISH: "Las puntas de los radiales deben quedar sobre el plano de tierra.",
     },
     "optimize.constraint.director_length_taper": {
         Language.ENGLISH: (

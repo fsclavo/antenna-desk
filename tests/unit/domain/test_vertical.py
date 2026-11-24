@@ -194,3 +194,89 @@ def test_vertical_loading_coil_survives_custom_round_trip() -> None:
     assert restored.loading_coil_offset_m == pytest.approx(0.75)
     assert restored.loading_coil_inductance_h == pytest.approx(18e-6)
     assert restored.loading_coil_resistance_ohm == pytest.approx(0.2)
+
+
+def test_vertical_with_drooped_radials_keeps_the_physical_length() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_angle_deg=0.0,
+        radial_droop_deg=20.0,
+    )
+    custom = parameters.to_custom_parameters()
+
+    radials = custom.wires[1:]
+    assert len(radials) == 4
+    for radial in radials:
+        assert radial.start.z_m == pytest.approx(3.0)
+        assert radial.end.z_m == pytest.approx(parameters.radial_tip_height_m)
+        assert radial.length_m == pytest.approx(5.0)
+    assert parameters.radial_span_m == pytest.approx(5.0 * math.cos(math.radians(20.0)))
+    assert parameters.radial_tip_height_m == pytest.approx(3.0 - 5.0 * math.sin(math.radians(20.0)))
+    assert parameters.max_radial_droop_deg < math.degrees(math.asin(3.0 / 5.0))
+
+
+def test_vertical_zero_droop_reproduces_the_horizontal_radial_geometry() -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=0.25,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_angle_deg=45.0,
+    )
+    custom = parameters.to_custom_parameters()
+    radial = custom.wires[1]
+
+    assert parameters.radial_droop_deg == 0.0
+    assert radial.end.z_m == pytest.approx(0.25)
+    assert math.hypot(radial.end.x_m, radial.end.y_m) == pytest.approx(5.0)
+
+
+def test_vertical_rejects_a_droop_that_reaches_the_ground() -> None:
+    with pytest.raises(ValueError, match="above the ground"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            base_height_m=2.5,
+            radial_count=4,
+            radial_length_m=5.0,
+            radial_droop_deg=30.0,
+        )
+    with pytest.raises(ValueError, match="ground plane"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            base_height_m=0.0,
+            radial_count=4,
+            radial_length_m=5.0,
+            radial_droop_deg=10.0,
+        )
+    with pytest.raises(ValueError, match="radial_droop_deg"):
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            radial_count=4,
+            radial_length_m=5.0,
+            radial_droop_deg=90.0,
+        )
+
+
+def test_vertical_round_trips_drooped_radials() -> None:
+    original = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=8,
+        radial_length_m=5.0,
+        radial_angle_deg=22.5,
+        radial_droop_deg=12.5,
+    )
+    restored = VerticalParameters.from_custom_parameters(original.to_custom_parameters())
+
+    assert restored.radial_length_m == pytest.approx(original.radial_length_m)
+    assert restored.radial_droop_deg == pytest.approx(original.radial_droop_deg)
+    assert restored.radial_tip_height_m == pytest.approx(original.radial_tip_height_m)

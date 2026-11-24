@@ -473,8 +473,35 @@ def test_top_loaded_vertical_construction_sheet_lists_the_hat(
 
     assert "Top hat wires" in sheet
     assert "Top hat radius" in sheet
+    assert "Radial droop" in sheet
+    assert "Radial tip height" in sheet
     assert "0.7500 m" in sheet
     assert "top-hat wires of 0.7500 m" in sheet
+
+
+def test_drooped_vertical_construction_sheet_lists_the_slope(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    design = sample_project.designs[0]
+    vertical = design.with_parameters(
+        VerticalParameters(
+            frequency_hz=7_100_000.0,
+            height_m=10.0,
+            base_height_m=3.0,
+            radial_count=4,
+            radial_length_m=5.0,
+            radial_droop_deg=20.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, vertical, None)
+
+    assert "Radial droop" in sheet
+    assert "20.0°" in sheet
+    assert "Radial tip height" in sheet
+    assert "1.2899 m" in sheet
+    assert "Slope them 20.0° downward" in sheet
 
 
 def test_scv_construction_sheet_lists_the_array_wires(

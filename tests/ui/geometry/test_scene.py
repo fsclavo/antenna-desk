@@ -489,6 +489,29 @@ def test_vertical_with_radials_gets_a_top_inset() -> None:
     assert "radials 4" in scene.summary
 
 
+def test_vertical_droop_summary_and_plan_span() -> None:
+    from antennadesk.domain.antennas.vertical import VerticalParameters
+
+    parameters = VerticalParameters(
+        frequency_hz=7_100_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=20.0,
+    )
+
+    elevation = _scene(parameters, "vertical", GeometryViewMode.ELEVATION)
+    plan = _scene(parameters, "vertical", GeometryViewMode.PLAN)
+
+    assert "radials 4 x 5.00 m" in elevation.summary
+    assert "radial droop 20.0°" in elevation.summary
+    assert "radial tip height 1.29 m" in elevation.summary
+    assert any(dimension.text == "1.29 m" for dimension in elevation.dimensions)
+    plan_inset = next(inset for inset in plan.insets if inset.label == "top view")
+    assert any(dimension.text == "span 4.70 m" for dimension in plan_inset.dimensions)
+
+
 def test_transmission_lines_are_drawn_as_dashed_construction_lines() -> None:
     from antennadesk.domain.antennas.transmission_line import TransmissionLine
 

@@ -34,6 +34,7 @@ CONTEXT_NAMES = (
     "wire_radius_m",
     "ring_height_m",
     "phase_step_deg",
+    "radial_droop_deg",
 )
 
 EXPECTED_LOCKED = {
@@ -48,6 +49,7 @@ EXPECTED_LOCKED = {
     "transformer_ratio",
     "wire_radius_m",
     "ring_height_m",
+    "radial_droop_deg",
 }
 
 

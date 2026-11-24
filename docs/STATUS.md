@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-24
 **Latest published release:** `0.9.0` (2026-11-17)
-**Development schema:** `60`
+**Development schema:** `61`
 **Current product track:** 1.1 Station
 
 ## Where we are
@@ -15,6 +15,12 @@
 - DL3 live tuning now covers managed length and non-length values plus an
   optional coarse pattern preview; **Apply and Simulate closes the dialog**.
   Remaining items are optional: non-modal tool window and more family values.
+- VR1 adds one uniform radial droop to the vertical template (ADR-0052):
+  physical radial length, ground-tip validation, schema 61 migration, editor
+  and help, scene/report rows, managed live-tuning value, and a locked
+  optimizer variable with a hard tip-clearance constraint. No performance
+  claim; the phased vertical does not share the field. See
+  [`ADR-0052`](ADR/0052-uniform-radial-droop.md).
 - DL6 stacked Yagi is a domain prototype only.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
@@ -50,10 +56,10 @@
 
 ## Next
 
-1. Start VR1, sloped vertical radials with uniform droop (ADR first).
-2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
-3. Close the pending manual U6 visual QA before the next release decision.
-4. Keep DL8 blocked until a validated terrain model or second engine exists.
+1. Continue DL6 from the domain prototype to form, schema, and per-port UI.
+2. Close the pending manual U6 visual QA before the next release decision.
+3. Keep DL8 blocked until a validated terrain model or second engine exists.
+4. Choose the next backlog item; DL3 and VR1 are no longer open blockers.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in

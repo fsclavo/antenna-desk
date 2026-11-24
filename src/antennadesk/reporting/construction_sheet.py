@@ -1489,23 +1489,40 @@ def render_construction_sheet(
                 count=parameters.top_hat_wire_count,
                 radius=parameters.top_hat_radius_m,
             )
+        radial_droop_rows = ""
+        radial_droop_note = ""
+        if parameters.radial_count > 0:
+            radial_droop_rows = f"""
+<tr><th>Radial droop</th><td>{parameters.radial_droop_deg:.1f}°</td></tr>
+<tr><th>Radial tip height</th><td>{_length(parameters.radial_tip_height_m, display_units)}</td></tr>
+"""
+            if parameters.radial_droop_deg > 0.0:
+                radial_droop_note = tr(
+                    " Slope them {droop}° downward; the tips are {tip} m above ground.",
+                    droop=f"{parameters.radial_droop_deg:.1f}",
+                    tip=f"{parameters.radial_tip_height_m:.4f}",
+                )
+            else:
+                radial_droop_note = tr(" Keep them horizontal at the base plane.")
         feed_rows = f"""
 <tr><th>Radiator length</th><td>{_length(parameters.height_m, display_units)}</td></tr>
 <tr><th>Base height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
 <tr><th>Radials</th><td>{parameters.radial_count}</td></tr>
 <tr><th>Radial length</th><td>{_length(parameters.radial_length_m, display_units)}</td></tr>
+{radial_droop_rows}
 {top_hat_rows}
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         construction_note = _note(
             tr,
             "Install a {length} m vertical radiator with its base {base} m above "
-            "ground. Add {radials} radials of {radial_length} m in the base "
-            "plane.{top_hat_note}",
+            "ground. Add {radials} radials of {radial_length} m.{radial_droop_note}"
+            "{top_hat_note}",
             length=f"{parameters.height_m:.4f}",
             base=f"{parameters.base_height_m:.4f}",
             radials=parameters.radial_count,
             radial_length=f"{parameters.radial_length_m:.4f}",
+            radial_droop_note=radial_droop_note,
             top_hat_note=top_hat_note,
         )
     elif isinstance(parameters, OCFDParameters):

@@ -11,6 +11,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.common.reflection import calculate_swr
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.result import (
@@ -192,4 +193,40 @@ def test_live_tuning_can_tune_an_angle_dimension(qtbot: QtBot) -> None:
 
     assert applied
     assert applied[-1].included_angle_deg != parameters.included_angle_deg
+    assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_live_tuning_can_tune_radial_droop(qtbot: QtBot) -> None:
+    parameters = VerticalParameters(
+        frequency_hz=7_000_000.0,
+        height_m=10.0,
+        base_height_m=3.0,
+        radial_count=4,
+        radial_length_m=5.0,
+        radial_droop_deg=10.0,
+    )
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    applied = []
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        _FakeSolver(),
+        applied.append,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    index = dialog._dimension_combo.findData("radial_droop")
+    assert index >= 0
+    dialog._dimension_combo.setCurrentIndex(index)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+    dialog._slider.setValue(120)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+
+    assert "°" in dialog._dimension_label.text()
+    dialog._apply_clicked()
+
+    assert applied
+    assert applied[-1].radial_droop_deg > parameters.radial_droop_deg
+    assert applied[-1].radial_tip_height_m > 0.0
     assert dialog.result() == QDialog.DialogCode.Accepted
