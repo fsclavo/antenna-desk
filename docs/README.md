@@ -138,6 +138,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0048 — Yagi mast conductor](ADR/0048-yagi-mast-conductor.md)
 - [ADR-0049 — Stacked Yagi as a composed family](ADR/0049-stacked-yagi-composed-family.md)
 - [ADR-0050 — ZIP project container and honest size contract](ADR/0050-zip-project-container.md)
+- [ADR-0051 — Bounded cliff/second-medium site ground](ADR/0051-bounded-cliff-site-ground.md)
 
 ## Archive
 

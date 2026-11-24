@@ -34,14 +34,16 @@ next, and DL8 remains post-1.2. DL3 and DL6 are partial, and DL7 has a completed
 spike but no implementation. Its rows are in the table; scope, acceptance,
 evidence, and risk are in §Product trust and station wave below.
 
-PF1 is a P0 reliability insertion outside the antenna wave; it must land before
-any further project-format change.
+PF1 is a P0 reliability insertion outside the antenna wave; it landed before
+any further project-format change. It is closed after manual validation on
+2026-11-24; the optional streaming write and pattern-level lazy loading are
+deferred follow-ups.
 
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
-| PF1 | ZIP project container and honest size contract | L | none | **P0 reliability.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. See §PF1. |
+| PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. Optional follow-ups: streaming write and pattern-level lazy loading. See §PF1. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
@@ -49,9 +51,9 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Documentation/help complete 2026-11-18; manual QA pending.** The user guide, roadmap, units spec, README, changelog, help tests, and automated font-scaling/geometry checks are updated. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) records the automated gate and the remaining desktop light/dark/font-scaling checklist. The track closes after that manual QA. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL4 | Near-field and RF exposure | L | ADR, spike | **Wave 2.** E/H grid and compliance distance with standards, sources, limits, and no safety guarantee. See §DL4. |
-| DL5 | Support structures | M–L | ADR | **Partially done 2026-11-20.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom is **deferred 2026-11-20** pending ADR/spike; tower, attachments, and structural hardware remain. See §DL5. |
+| DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
-| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Spike complete 2026-11-20; implementation pending.** Cliff/second-medium is far-field-only and the safest bounded slice; native radial screen disagrees with dense wires and stays unvalidated for SWR. See `spikes/dl7-ground-gn-spike.md` and §DL7. |
+| DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **ADR accepted 2026-11-24; implementation pending.** Cliff/second-medium is far-field-only and the selected bounded slice; native radial screen disagrees with dense wires and stays unvalidated for SWR. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -60,9 +62,10 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 
 ## PF1 — ZIP project container and honest size contract
 
-**Status:** accepted 2026-11-20 (ADR-0050); slice 1 implemented 2026-11-20,
-slice 2 pending. **Priority:** P0 reliability, independent of the antenna
-waves. Do this before any further project-format change.
+**Status:** **closed 2026-11-24** after manual validation of the incident-scale
+project. Slice 1 landed 2026-11-20; lazy open, save/compact by copying entries,
+`PreparedProject`, and design-only recovery/save followed. **Priority:** P0
+reliability, independent of the antenna waves.
 
 **Motivation:** On 2026-11-20 a 56.9 MB compressed project (409.1 MB expanded)
 was written successfully but could not be reopened. `JsonProjectRepository`
@@ -830,11 +833,12 @@ conservative label are mandatory. Do not ship without the ADR.
 
 ### DL5 — Support structures
 
-**Status:** **Partially done 2026-11-20.** The Yagi family has an optional
-vertical mast conductor behind the reflector with editable diameter and offset,
-normal wire geometry, optional 2–4 guy wires, scene/BOM coverage, ADR-0048,
-and schema 57–58. It is not connected to the elements. Boom, tower,
-bonded/insulated attachments, and structural hardware remain follow-ups.
+**Status:** **Explicitly narrowed 2026-11-24.** The delivered 1.1 slice is the
+optional vertical mast conductor behind the Yagi reflector with editable
+diameter and offset, normal wire geometry, optional 2–4 guy wires, scene/BOM
+coverage, ADR-0048, and schema 57–58. It is not connected to the elements. The
+conductive boom, tower, bonded/insulated attachments, and structural hardware
+are deferred pending a dedicated ADR/spike; no further 1.1 work is planned.
 
 **Boom decision (2026-11-20): deferred.** Do not implement a conductive boom
 as another mast-like field. It changes the wire graph and feed junction at every
@@ -915,14 +919,12 @@ with a published stack mitigates it.
 
 ### DL7 — Native ground screen and cliff ground
 
-**Spike result (2026-11-20):** see
-[`spikes/dl7-ground-gn-spike.md`](spikes/dl7-ground-gn-spike.md). The cliff and
-second-medium path changes far-field patterns only and leaves impedance
-unchanged. The native radial screen is a reflection-coefficient approximation;
-it disagrees strongly with the current dense-wire screen for input impedance and
-must not be presented as validated SWR. A bounded cliff-only far-field slice is
-the recommended first implementation; the native screen remains experimental
-until a measurement or published reference exists.
+**Decision (2026-11-24):** [ADR-0051](ADR/0051-bounded-cliff-site-ground.md)
+accepts only the cliff/second-medium far-field profile. It adds one optional
+project-level `SiteGroundProfile`, applies it at simulation/export time, emits
+`RP 2`/`RP 3`, and states that SWR and currents are unchanged. The native
+radial screen remains unavailable until a measurement or published reference
+exists. Schema 60 adds `site_ground` with a metadata-only 59→60 migration.
 
 **Goal:** use the ground information the engine already supports before building
 a full terrain model.

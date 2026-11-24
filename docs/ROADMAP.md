@@ -552,7 +552,7 @@ and new catalog presets) waits until this track closes.
 | 1.2 Site and exploration | DL3 | Live tuning preview | Primary-dimension coarse preview done; other dimensions and pattern preview remain | M–L | n/a | partial 2026-11-20 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | E/H grid and compliance distance, with limits | L | B/C | queued after ADR/spike |
 | 1.2 Site and exploration | DL6 | Stacked Yagi arrays | Domain prototype done (2–4 levels, ideal sources); form, schema, per-port UI, splitter/phase lines remain | L | B/C | partial 2026-11-20 |
-| 1.2 Site and exploration | DL7 | Native ground screen and cliff | Spike done: cliff far-field only; native screen unvalidated for SWR | M–L | B/C | spike 2026-11-20; implementation pending |
+| 1.2 Site and exploration | DL7 | Native ground screen and cliff | ADR-0051 accepts the bounded cliff/second-medium far-field profile; native screen unvalidated for SWR | M–L | B/C | ADR 2026-11-24; implementation pending |
 | post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
 
 Release sequence for this track: **1.0 Confidence** closed truth,

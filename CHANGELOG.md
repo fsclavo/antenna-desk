@@ -295,6 +295,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Bounded cliff site ground selected (DL7).** `ADR-0051` accepts a
+  project-level cliff/second-medium profile that changes far-field patterns
+  only; SWR and currents stay on the design's first-medium ground. The native
+  radial screen remains unavailable until a validated reference exists.
+  Implementation is pending schema 60 and the `GN`/`RP` adapter slice.
 - **ZIP project container (PF1 slice 1).** `.antennadesk` is now a
   deterministic ZIP container (container version 1, schema 59) with separate
   metadata, design, run, raw-solver-text, and optimization entries. The
@@ -311,7 +316,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the large-project warning reports both sizes. Saving and compaction now copy
   unchanged run entries from the source container, serialize only new runs, and
   reopen the session after writing; the fallback is a full materialization for
-  custom stores or new runs plus retention. See
+  custom stores or new runs plus retention. Manual validation of the
+  incident-scale project passed on 2026-11-24. See
   [`ADR-0050`](docs/ADR/0050-zip-project-container.md).
 - **Typed simulation-spec assembly moved out of the main window.** The
   per-family `SimulationSpec` builders and far-field pattern presets now live
