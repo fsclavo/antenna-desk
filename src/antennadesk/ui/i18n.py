@@ -1294,6 +1294,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Lazo poligonal regular en un plano vertical u horizontal.",
     },
     "catalog.yagi": {Language.ENGLISH: "Yagi", Language.SPANISH: "Yagi"},
+    "catalog.stacked_yagi": {
+        Language.ENGLISH: "Stacked Yagi",
+        Language.SPANISH: "Yagi apilado",
+    },
+    "catalog.stacked_yagi.description": {
+        Language.ENGLISH: (
+            "Two to four identical Yagis on a vertical stack with ideal phase "
+            "and amplitude sources; level 1 is the primary feed."
+        ),
+        Language.SPANISH: (
+            "De dos a cuatro Yagis idénticos en una pila vertical con fuentes "
+            "ideales de fase y amplitud; el nivel 1 es la alimentación principal."
+        ),
+    },
     "catalog.yagi.description": {
         Language.ENGLISH: (
             "Editable multi-element Yagi with horizontal or vertical "
@@ -2853,6 +2867,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "top view: vertical plane is edge-on; use Elevation to see the layout",
         Language.SPANISH: "vista superior: el plano vertical está de canto; usá Alzado para ver la disposición",
     },
+    "geometry.stacked_yagi_plan_note": {
+        Language.ENGLISH: (
+            "plan view collapses the stack levels onto each other; use Elevation "
+            "to see the level spacing"
+        ),
+        Language.SPANISH: (
+            "la planta superpone los niveles de la pila; usá Alzado para ver la "
+            "separación entre niveles"
+        ),
+    },
     "geometry.horizontal_plane_edge_on": {
         Language.ENGLISH: "elevation: horizontal loop is edge-on; use Plan to see the layout",
         Language.SPANISH: "alzado: el lazo horizontal está de canto; usá Planta para ver la disposición",
@@ -4148,6 +4172,48 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Relación ideal del transformador; la impedancia del lado de la antena se "
             "divide por este valor en los informes."
+        ),
+    },
+    "help.stacked_yagi.level_count": {
+        Language.ENGLISH: "Number of identical Yagi levels; two to four.",
+        Language.SPANISH: "Cantidad de niveles Yagi idénticos; de dos a cuatro.",
+    },
+    "help.stacked_yagi.spacing": {
+        Language.ENGLISH: (
+            "Vertical distance between the booms of adjacent levels. It must be "
+            "longer than the longest element for vertical polarization."
+        ),
+        Language.SPANISH: (
+            "Distancia vertical entre los boms de niveles adyacentes. Debe ser "
+            "mayor que el elemento más largo para polarización vertical."
+        ),
+    },
+    "help.stacked_yagi.phase_step": {
+        Language.ENGLISH: (
+            "Progressive phase applied to each additional level relative to level 1."
+        ),
+        Language.SPANISH: ("Fase progresiva aplicada a cada nivel adicional respecto del nivel 1."),
+    },
+    "help.stacked_yagi.amplitude_ratio": {
+        Language.ENGLISH: (
+            "Ideal voltage ratio of every additional level relative to the primary "
+            "feed; 1.0 is an equal-amplitude progression."
+        ),
+        Language.SPANISH: (
+            "Relación de tensión ideal de cada nivel adicional respecto de la "
+            "alimentación principal; 1,0 es una progresión de igual amplitud."
+        ),
+    },
+    "help.stacked_yagi.load_starting": {
+        Language.ENGLISH: (
+            "Rebuild the base Yagi from the NBS starting preset at the current "
+            "frequency and set a half-wave level spacing; keep the count, phase, "
+            "amplitude ratio, conductor, and ground."
+        ),
+        Language.SPANISH: (
+            "Reconstruye el Yagi base con el preset inicial NBS en la frecuencia "
+            "actual y fija una separación de media onda; conserva la cantidad, la "
+            "fase, la relación de amplitud, el conductor y el suelo."
         ),
     },
     "help.phased_vertical.load_starting": {
@@ -11597,6 +11663,99 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The amplitude taper must stay between 0 and 0.9.",
         Language.SPANISH: "La atenuación de amplitud debe quedar entre 0 y 0,9.",
     },
+    "stacked_yagi.title": {
+        Language.ENGLISH: "Stacked Yagi Generator",
+        Language.SPANISH: "Generador de Yagi apilado",
+    },
+    "stacked_yagi.level_count": {
+        Language.ENGLISH: "Levels",
+        Language.SPANISH: "Niveles",
+    },
+    "stacked_yagi.spacing": {
+        Language.ENGLISH: "Level spacing",
+        Language.SPANISH: "Separación entre niveles",
+    },
+    "stacked_yagi.phase_step": {
+        Language.ENGLISH: "Phase step per level",
+        Language.SPANISH: "Escalón de fase por nivel",
+    },
+    "stacked_yagi.amplitude_ratio": {
+        Language.ENGLISH: "Additional-level voltage ratio",
+        Language.SPANISH: "Relación de tensión de niveles adicionales",
+    },
+    "stacked_yagi.geometry": {
+        Language.ENGLISH: (
+            "{count} levels · spacing {spacing} {unit} · top {top} {unit} · phase step {phase}°"
+        ),
+        Language.SPANISH: (
+            "{count} niveles · separación {spacing} {unit} · tope {top} {unit} · "
+            "escalón de fase {phase}°"
+        ),
+    },
+    "stacked_yagi.overlap_warning": {
+        Language.ENGLISH: (
+            "Vertical-polarized levels overlap: the level spacing is not longer "
+            "than the longest element. Adjacent elements would share the same "
+            "axis and produce an invalid wire model. Increase the spacing or "
+            "use horizontal polarization."
+        ),
+        Language.SPANISH: (
+            "Los niveles con polarización vertical se superponen: la separación "
+            "no supera el elemento más largo. Los elementos adyacentes compartirían "
+            "el mismo eje y producirían un modelo de hilos inválido. Aumentá la "
+            "separación o usá polarización horizontal."
+        ),
+    },
+    "stacked_yagi.hint": {
+        Language.ENGLISH: (
+            "Every level is the same Yagi. Level 1 is the primary feed with unit "
+            "amplitude and zero phase; later levels use index x phase step and "
+            "the additional-level voltage ratio. The splitter, phase lines, and "
+            "per-level matching are ideal and are not modeled."
+        ),
+        Language.SPANISH: (
+            "Cada nivel es el mismo Yagi. El nivel 1 es la alimentación principal "
+            "con amplitud unitaria y fase cero; los niveles siguientes usan índice "
+            "x escalón de fase y la relación de tensión indicada. El divisor, las "
+            "líneas de fase y el ajuste por nivel son ideales y no se modelan."
+        ),
+    },
+    "stacked_yagi.evidence": {
+        Language.ENGLISH: (
+            "Experimental composed array. Mutual coupling is included by the wire "
+            "solver, but the power splitter, phase-line hardware, splitter loss, "
+            "per-level matching, and shared mast are not modeled. No stacking gain "
+            "is claimed; verify spacing, phase, and matching with the solver or a "
+            "measurement."
+        ),
+        Language.SPANISH: (
+            "Arreglo compuesto experimental. El solver de hilos incluye el "
+            "acoplamiento mutuo, pero no se modelan el divisor de potencia, el "
+            "hardware de las líneas de fase, las pérdidas del divisor, el ajuste "
+            "por nivel ni el mástil compartido. No se declara ganancia de apilado; "
+            "verificá separación, fase y ajuste con el solver o una medición."
+        ),
+    },
+    "stacked_yagi.scene_note": {
+        Language.ENGLISH: (
+            "{count} levels · phase step {phase}° · level 1 is the primary port · ideal feed split"
+        ),
+        Language.SPANISH: (
+            "{count} niveles · escalón de fase {phase}° · el nivel 1 es el puerto "
+            "principal · división de alimentación ideal"
+        ),
+    },
+    "stacked_yagi.feed_note": {
+        Language.ENGLISH: (
+            "Level 1 is the primary port and the only impedance/SWR reference. "
+            "The Sources tab reports every driven level separately."
+        ),
+        Language.SPANISH: (
+            "El nivel 1 es el puerto principal y la única referencia de "
+            "impedancia/ROE. La pestaña Fuentes informa cada nivel excitado por "
+            "separado."
+        ),
+    },
     "hexbeam.title": {
         Language.ENGLISH: "Hexbeam Generator",
         Language.SPANISH: "Generador de hexbeam",
@@ -16434,6 +16593,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "optimize.unavailable.pending_family": {
         Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
         Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",
+    },
+    "optimize.unavailable.stacked_yagi": {
+        Language.ENGLISH: (
+            "The stack feed split, phase lines, and shared mast are ideal; "
+            "optimize the base Yagi first, then verify spacing and phase with "
+            "the solver."
+        ),
+        Language.SPANISH: (
+            "La división de alimentación, las líneas de fase y el mástil compartido "
+            "son ideales; optimizá primero el Yagi base y luego verificá la "
+            "separación y la fase con el solver."
+        ),
     },
     "optimize.unavailable.magnetic_loop": {
         Language.ENGLISH: "The magnetic-loop capacitor and loss model are not accurate enough for an optimizer.",

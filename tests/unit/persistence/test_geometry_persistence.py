@@ -1556,3 +1556,24 @@ def test_transmission_lines_round_trip_through_the_schema() -> None:
 
     assert restored.designs[0].antenna.transmission_lines == (line,)
     assert restored == project
+
+
+def test_stacked_yagi_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=12.0,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+    )
+    original = _project(parameters, "Stacked Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna == original.designs[0].antenna
+    assert restored.designs[0].antenna_type == "stacked_yagi"
+    assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources

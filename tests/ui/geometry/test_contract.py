@@ -48,6 +48,7 @@ from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
@@ -502,6 +503,26 @@ def _cases() -> tuple[FamilyCase, ...]:
             ),
         ),
         FamilyCase(
+            "stacked_yagi",
+            StackedYagiParameters(
+                yagi=YagiParameters(
+                    frequency_hz=14_100_000.0,
+                    elements=(
+                        YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                        YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+                    ),
+                    height_m=10.0,
+                ),
+                count=2,
+                spacing_m=10.6,
+                phase_step_deg=180.0,
+            ),
+            "stacked_yagi",
+            4,
+            GeometryViewMode.ELEVATION,
+            ("Stacked Yagi", "levels 2", "level spacing", "phase step"),
+        ),
+        FamilyCase(
             "phased_vertical",
             phased_vertical_parameters(
                 frequency_hz=14_100_000.0,
@@ -859,6 +880,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         ocfd,
         ringo,
         scv,
+        stacked_yagi,
         t2fd,
         vertical,
         yagi,
@@ -880,6 +902,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         ocfd,
         ringo,
         scv,
+        stacked_yagi,
         t2fd,
         vertical,
         yagi,

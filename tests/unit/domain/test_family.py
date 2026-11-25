@@ -11,6 +11,7 @@ from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.materials import COPPER
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import nbs_five_element
 
@@ -70,3 +71,14 @@ def test_custom_without_generator_is_custom() -> None:
 
     assert antenna_family(custom) is AntennaFamily.CUSTOM
     assert antenna_template_id(custom) == "custom"
+
+
+def test_stacked_yagi_maps_to_the_yagi_family_and_its_own_template() -> None:
+    stack = StackedYagiParameters(
+        yagi=nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0),
+        count=2,
+        spacing_m=3.0,
+    )
+
+    assert antenna_family(stack) is AntennaFamily.YAGI
+    assert antenna_template_id(stack) == "stacked_yagi"

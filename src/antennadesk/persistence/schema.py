@@ -103,6 +103,10 @@ from ..domain.antennas.scv import (
     ScvKind,
     ScvParameters,
 )
+from ..domain.antennas.stacked_yagi import (
+    ANTENNA_TYPE_STACKED_YAGI,
+    StackedYagiParameters,
+)
 from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.transmission_line_doublet import (
@@ -789,6 +793,32 @@ class YagiParametersPayload(StrictModel):
     guy_diameter_m: float = Field(default=0.0, ge=0.0)
 
 
+class StackedYagiParametersPayload(StrictModel):
+    yagi: YagiParametersPayload
+    count: int = Field(default=2, ge=2, le=4)
+    spacing_m: float = Field(gt=0.0)
+    phase_step_deg: float = Field(default=0.0, ge=-360.0, le=360.0)
+    amplitude_ratio: float = Field(default=1.0, gt=0.0)
+
+    @model_validator(mode="after")
+    def _validate_stack(self) -> Self:
+        if self.yagi.mast_diameter_m > 0.0 or self.yagi.guy_count > 0:
+            raise ValueError("a stacked Yagi does not support mast or guy wires yet")
+        if self.yagi.driven_folded or self.yagi.match_type is not YagiMatchType.NONE:
+            raise ValueError(
+                "a stacked Yagi does not support folded or matched driven elements yet"
+            )
+        if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
+        if self.yagi.polarization is Polarization.VERTICAL:
+            span = max(element.length_m for element in self.yagi.elements)
+            if self.spacing_m <= span:
+                raise ValueError(
+                    "vertical-polarized stack levels would overlap; increase spacing_m"
+                )
+        return self
+
+
 class CustomParametersPayload(StrictModel):
     frequency_hz: float = Field(gt=0.0)
     wires: list[WirePayload] = Field(min_length=1)
@@ -1066,6 +1096,7 @@ ParameterPayload = (
     | InvertedVParametersPayload
     | InvertedLParametersPayload
     | YagiParametersPayload
+    | StackedYagiParametersPayload
     | MoxonParametersPayload
     | FanDipoleParametersPayload
     | DisconeParametersPayload
@@ -1106,6 +1137,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_INVERTED_L
     if isinstance(value, YagiParametersPayload):
         return ANTENNA_TYPE_YAGI
+    if isinstance(value, StackedYagiParametersPayload):
+        return ANTENNA_TYPE_STACKED_YAGI
     if isinstance(value, MoxonParametersPayload):
         return ANTENNA_TYPE_MOXON
     if isinstance(value, FanDipoleParametersPayload):
@@ -1174,6 +1207,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return InvertedLParametersPayload
     if antenna_type == ANTENNA_TYPE_YAGI:
         return YagiParametersPayload
+    if antenna_type == ANTENNA_TYPE_STACKED_YAGI:
+        return StackedYagiParametersPayload
     if antenna_type == ANTENNA_TYPE_MOXON:
         return MoxonParametersPayload
     if antenna_type == ANTENNA_TYPE_FAN_DIPOLE:
@@ -1654,6 +1689,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _inverted_l_parameters_from_domain(value)
     if isinstance(value, YagiParameters):
         return _yagi_parameters_from_domain(value)
+    if isinstance(value, StackedYagiParameters):
+        return _stacked_yagi_parameters_from_domain(value)
     if isinstance(value, MoxonParameters):
         return _moxon_parameters_from_domain(value)
     if isinstance(value, FanDipoleParameters):
@@ -2157,6 +2194,18 @@ def _yagi_parameters_from_domain(value: YagiParameters) -> YagiParametersPayload
         guy_count=value.guy_count,
         guy_anchor_radius_m=value.guy_anchor_radius_m,
         guy_diameter_m=value.guy_diameter_m,
+    )
+
+
+def _stacked_yagi_parameters_from_domain(
+    value: StackedYagiParameters,
+) -> StackedYagiParametersPayload:
+    return StackedYagiParametersPayload(
+        yagi=_yagi_parameters_from_domain(value.yagi),
+        count=value.count,
+        spacing_m=value.spacing_m,
+        phase_step_deg=value.phase_step_deg,
+        amplitude_ratio=value.amplitude_ratio,
     )
 
 
@@ -2926,6 +2975,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, YagiParametersPayload):
             raise ValueError("Yagi parameters have the wrong shape")
         return _yagi_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_STACKED_YAGI:
+        if not isinstance(value.parameters, StackedYagiParametersPayload):
+            raise ValueError("stacked Yagi parameters have the wrong shape")
+        return _stacked_yagi_parameters_to_domain(value.parameters)
     if value.antenna_type == ANTENNA_TYPE_MOXON:
         if not isinstance(value.parameters, MoxonParametersPayload):
             raise ValueError("Moxon parameters have the wrong shape")
@@ -3503,6 +3556,18 @@ def _yagi_parameters_to_domain(value: YagiParametersPayload) -> YagiParameters:
     )
 
 
+def _stacked_yagi_parameters_to_domain(
+    value: StackedYagiParametersPayload,
+) -> StackedYagiParameters:
+    return StackedYagiParameters(
+        yagi=_yagi_parameters_to_domain(value.yagi),
+        count=value.count,
+        spacing_m=value.spacing_m,
+        phase_step_deg=value.phase_step_deg,
+        amplitude_ratio=value.amplitude_ratio,
+    )
+
+
 def _custom_parameters_to_domain(value: CustomParametersPayload) -> CustomAntennaParameters:
     return CustomAntennaParameters(
         frequency_hz=value.frequency_hz,
@@ -3825,10 +3890,10 @@ def _design_to_domain(value: DesignPayload) -> DesignVariant:
     parameters = _parameters_to_domain(value)
     saved_antenna = _antenna_to_domain(value.antenna)
     antenna = saved_antenna
-    if isinstance(parameters, YagiParameters):
-        # A Yagi geometry is always derived from its element table. Regenerate
-        # it so migrations that repair saved parameters cannot leave stale
-        # wires behind, while preserving user loads and transmission lines.
+    if isinstance(parameters, (YagiParameters, StackedYagiParameters)):
+        # A Yagi or stack geometry is always derived from its element table.
+        # Regenerate it so migrations that repair saved parameters cannot
+        # leave stale wires behind, while preserving user loads and lines.
         antenna = parameters.to_antenna(name=saved_antenna.name)
         antenna = antenna.with_loads(saved_antenna.loads)
         antenna = antenna.with_transmission_lines(saved_antenna.transmission_lines)

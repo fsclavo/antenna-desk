@@ -8,6 +8,7 @@ from antennadesk.ui.dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_HEXBEAM,
     CATALOG_TYPE_LOOP,
     CATALOG_TYPE_MOXON,
+    CATALOG_TYPE_STACKED_YAGI,
     CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_YAGI,
     CATALOG_TYPE_YAGI,
@@ -54,6 +55,7 @@ def test_catalog_selection_and_search(qtbot: QtBot) -> None:
         CATALOG_TYPE_HEXBEAM,
         CATALOG_TYPE_MOXON,
         CATALOG_TYPE_YAGI,
+        CATALOG_TYPE_STACKED_YAGI,
     ]
     dialog._list.setCurrentRow(
         next(

@@ -38,6 +38,7 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -177,6 +178,12 @@ def _every_typed_family_parameters() -> list[AntennaDesignParameters]:
             tuning_capacitance_f=100e-12,
         ),
         nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
+        stacked_yagi_parameters(
+            frequency_hz=14_100_000.0,
+            count=2,
+            height_m=10.0,
+            spacing_m=10.0,
+        ),
         moxon_20m_wire(),
         FanDipoleParameters(
             frequency_hz=7_100_000.0,

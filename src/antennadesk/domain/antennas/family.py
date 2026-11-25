@@ -29,6 +29,7 @@ from .phased_vertical import PhasedVerticalParameters
 from .quad_beam import QuadBeamParameters
 from .ringo import RingoParameters
 from .scv import ScvParameters
+from .stacked_yagi import StackedYagiParameters
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .transmission_line_doublet import TransmissionLineDoubletParameters
 from .trap_dipole import ANTENNA_TYPE_TRAP_DIPOLE, TrapDipoleParameters
@@ -99,6 +100,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
         return AntennaFamily.VERTICAL
     if isinstance(parameters, YagiParameters):
         return AntennaFamily.YAGI
+    if isinstance(parameters, StackedYagiParameters):
+        return AntennaFamily.YAGI
     if isinstance(parameters, MoxonParameters):
         return AntennaFamily.YAGI
     if isinstance(parameters, FanDipoleParameters):
@@ -163,6 +166,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "inverted_l"
     if isinstance(parameters, YagiParameters):
         return "yagi"
+    if isinstance(parameters, StackedYagiParameters):
+        return "stacked_yagi"
     if isinstance(parameters, MoxonParameters):
         return "moxon"
     if isinstance(parameters, FanDipoleParameters):

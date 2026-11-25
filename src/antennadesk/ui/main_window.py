@@ -165,6 +165,7 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -372,6 +373,7 @@ from .widgets.quad_beam_form import QuadBeamForm
 from .widgets.results_view import ResultsView
 from .widgets.ringo_form import RingoForm
 from .widgets.scv_form import ScvForm
+from .widgets.stacked_yagi_form import StackedYagiForm
 from .widgets.start_page import StartPage
 from .widgets.t2fd_form import T2FDForm
 from .widgets.task_progress import TaskProgressBar, TaskProgressState
@@ -821,6 +823,18 @@ class MainWindow(QMainWindow):
         self._yagi_scroll.setMinimumWidth(340)
         self._yagi_scroll.setMaximumWidth(520)
 
+        self._stacked_yagi_form = StackedYagiForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._stacked_yagi_form.changed.connect(self._on_form_changed)
+        self._stacked_yagi_scroll = QScrollArea(self)
+        self._stacked_yagi_scroll.setWidgetResizable(True)
+        self._stacked_yagi_scroll.setWidget(self._stacked_yagi_form)
+        self._stacked_yagi_scroll.setMinimumWidth(340)
+        self._stacked_yagi_scroll.setMaximumWidth(560)
+
         self._moxon_form = MoxonForm(self._translator, self._unit_system, parent=self)
         self._moxon_form.changed.connect(self._on_form_changed)
         self._moxon_scroll = QScrollArea(self)
@@ -1024,6 +1038,7 @@ class MainWindow(QMainWindow):
             (self._inverted_l_form, self._inverted_l_scroll, 480),
             (self._magnetic_loop_form, self._magnetic_loop_scroll, 480),
             (self._yagi_form, self._yagi_scroll, 520),
+            (self._stacked_yagi_form, self._stacked_yagi_scroll, 560),
             (self._moxon_form, self._moxon_scroll, 480),
             (self._fan_dipole_form, self._fan_dipole_scroll, 480),
             (self._trap_dipole_form, self._trap_dipole_scroll, 500),
@@ -1212,6 +1227,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._inverted_l_scroll)
         self._design_stack.addWidget(self._magnetic_loop_scroll)
         self._design_stack.addWidget(self._yagi_scroll)
+        self._design_stack.addWidget(self._stacked_yagi_scroll)
         self._design_stack.addWidget(self._moxon_scroll)
         self._design_stack.addWidget(self._fan_dipole_scroll)
         self._design_stack.addWidget(self._trap_dipole_scroll)
@@ -1870,6 +1886,7 @@ class MainWindow(QMainWindow):
         self._inverted_l_form.retranslate()
         self._magnetic_loop_form.retranslate()
         self._yagi_form.retranslate()
+        self._stacked_yagi_form.retranslate()
         self._moxon_form.retranslate()
         self._fan_dipole_form.retranslate()
         self._trap_dipole_form.retranslate()
@@ -2741,6 +2758,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, YagiParameters):
             self._design_stack.setCurrentWidget(self._yagi_scroll)
             self._yagi_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, StackedYagiParameters):
+            self._design_stack.setCurrentWidget(self._stacked_yagi_scroll)
+            self._stacked_yagi_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, MoxonParameters):
             self._design_stack.setCurrentWidget(self._moxon_scroll)
             self._moxon_form.set_parameters(design.parameters)
@@ -3453,6 +3473,7 @@ class MainWindow(QMainWindow):
                 LoadedDipoleParameters,
                 DisconeParameters,
                 PhasedVerticalParameters,
+                StackedYagiParameters,
                 TrapYagiParameters,
                 HexbeamParameters,
                 QuadBeamParameters,
@@ -3469,6 +3490,8 @@ class MainWindow(QMainWindow):
                 parameters = self._loaded_dipole_form.parameters()
             elif isinstance(previous_design.parameters, PhasedVerticalParameters):
                 parameters = self._phased_vertical_form.parameters()
+            elif isinstance(previous_design.parameters, StackedYagiParameters):
+                parameters = self._stacked_yagi_form.parameters()
             elif isinstance(previous_design.parameters, QuadBeamParameters):
                 parameters = self._quad_beam_form.parameters()
             elif isinstance(previous_design.parameters, LogPeriodicParameters):
@@ -4794,6 +4817,8 @@ class MainWindow(QMainWindow):
             self._phased_vertical_form.mark_starting_dimensions_pristine()
         elif isinstance(parameters, YagiParameters):
             self._yagi_form.mark_starting_dimensions_pristine()
+        elif isinstance(parameters, StackedYagiParameters):
+            self._stacked_yagi_form.mark_starting_dimensions_pristine()
         elif isinstance(parameters, MoxonParameters):
             self._moxon_form.mark_starting_dimensions_pristine()
 
@@ -5470,10 +5495,21 @@ class MainWindow(QMainWindow):
             and hasattr(parameters, "material")
             and cast(Any, parameters).material == default_material_for_template(selected)
         ):
-            parameters = replace(
-                parameters,
-                material=cast(Any, design.parameters).material,
-            )
+            if isinstance(parameters, StackedYagiParameters) and isinstance(
+                design.parameters, StackedYagiParameters
+            ):
+                parameters = replace(
+                    parameters,
+                    yagi=replace(
+                        parameters.yagi,
+                        material=design.parameters.yagi.material,
+                    ),
+                )
+            else:
+                parameters = replace(
+                    parameters,
+                    material=cast(Any, design.parameters).material,
+                )
         answer = QMessageBox.question(
             self,
             self._translator.t("dialog.change_template_title"),
@@ -7633,6 +7669,7 @@ class MainWindow(QMainWindow):
             self._inverted_l_form,
             self._magnetic_loop_form,
             self._yagi_form,
+            self._stacked_yagi_form,
             self._moxon_form,
             self._fan_dipole_form,
             self._trap_dipole_form,

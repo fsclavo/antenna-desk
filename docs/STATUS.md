@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-25
 **Latest published release:** `0.10.1` (2026-11-24)
-**Development schema:** `61`
+**Development schema:** `62`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
@@ -31,7 +31,13 @@
   optimizer variable with a hard tip-clearance constraint. No performance
   claim; the phased vertical does not share the field. See
   [`ADR-0052`](ADR/0052-uniform-radial-droop.md).
-- DL6 stacked Yagi is a domain prototype only.
+- DL6 stacked Yagi first slice is **implemented 2026-11-25** (ADR-0049):
+  two to four identical Yagis on one vertical stack, ideal per-level sources,
+  schema 62, form and both catalog routes, per-port **Sources** results, front
+  elevation scene, design/construction reports, multi-boom BOM, and a real
+  `nec2c` two-port test. The splitter/phase-line hardware, folded/matched
+  driven elements, per-level transformer, shared mast, and optimizer remain
+  explicitly unavailable. Evidence is C; no stacking gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -54,7 +60,7 @@
   work, not another standalone refactor.
 - PF1 is **closed 2026-11-24** after manual validation of the incident-scale
   project. `.antennadesk` is a deterministic ZIP container (container 1, schema
-  61) with separate project, design, run, raw-text, and optimization entries;
+  62) with separate project, design, run, raw-text, and optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
   gzip/plain-JSON reader or migration from schema 58 and older. Opening is
   lazy through a `ProjectSession`; saving and compaction copy unchanged run
@@ -75,7 +81,7 @@
 
 ## Next
 
-1. Continue DL6 from the domain prototype to form, schema, and per-port UI.
+1. Continue DL6 with splitter/phase-line hardware, a shared mast, and the spacing/phase optimizer.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

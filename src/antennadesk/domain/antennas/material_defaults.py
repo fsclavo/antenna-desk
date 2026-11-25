@@ -9,6 +9,7 @@ from .materials import ALUMINUM, COPPER, STAINLESS_STEEL_304, ConductorMaterial
 _ALUMINUM_TEMPLATES = frozenset(
     {
         "yagi",
+        "stacked_yagi",
         "trap_yagi",
         "log_periodic",
         "vertical",

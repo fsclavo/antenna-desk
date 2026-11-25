@@ -859,6 +859,58 @@ def test_phased_vertical_preset_uses_the_inline_editor(window: MainWindow) -> No
     window._dirty = False
 
 
+def test_stacked_yagi_preset_uses_the_inline_editor(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=3,
+        height_m=10.0,
+        spacing_m=10.6,
+        phase_step_deg=90.0,
+    )
+    use_parameters(window, parameters)
+    assert window._project is not None
+    assert window._project.designs[0].antenna_type == "stacked_yagi"
+    assert window._design_stack.currentWidget() is window._stacked_yagi_scroll
+    restored = window._stacked_yagi_form.parameters()
+    assert restored.count == 3
+    assert restored.spacing_m == pytest.approx(10.6, abs=1e-3)
+    assert restored.phase_step_deg == pytest.approx(90.0, abs=1e-3)
+    assert len(window._project.designs[0].antenna.sources) == 2
+    assert window._optimize_action.isEnabled() is False
+    assert "ideal" in window._optimize_action.toolTip()
+    window._dirty = False
+
+
+def test_stacked_yagi_inline_editor_applies_a_new_level_count(window: MainWindow) -> None:
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+
+    use_parameters(
+        window,
+        stacked_yagi_parameters(
+            frequency_hz=14_100_000.0,
+            count=2,
+            height_m=10.0,
+            spacing_m=10.6,
+        ),
+    )
+    assert window._project is not None
+    form = window._stacked_yagi_form
+    form._level_count.setValue(3)
+    form._spacing_field.configure(10.7)
+    window.apply_design()
+
+    assert window._project.designs[0].parameters.count == 3
+    assert window._project.designs[0].parameters.spacing_m == pytest.approx(10.7, abs=1e-3)
+    assert len(window._project.designs[0].antenna.sources) == 2
+    window._dirty = False
+
+
 def test_quad_beam_preset_uses_the_inline_editor(window: MainWindow) -> None:
     from main_window_support import use_parameters
 

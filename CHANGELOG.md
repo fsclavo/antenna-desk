@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Stacked Yagi first slice (DL6).** Two to four identical Yagis can be
+  composed on one vertical stack with a level count, boom spacing, ideal phase
+  step, and additional-level voltage ratio. Level 1 remains the primary
+  impedance/SWR reference; the **Sources** table reports every driven level.
+  The embedded Yagi editor disables mast/guy wires, folded or matched driven
+  elements, and per-level transformers until a shared support and feed model
+  exists. Schema 62 adds the composed payload with a metadata-only 61→62
+  migration. The slice includes both catalog routes, a front-elevation scene
+  with level spacing, design and construction reports, a multi-boom BOM, a
+  vertical-polarization overlap guard, and a real `nec2c` two-port test. The
+  power splitter, phase-line hardware, splitter loss, and optimizer are
+  explicitly unavailable; evidence is C and no stacking gain is claimed. See
+  [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

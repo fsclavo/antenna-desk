@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from ..antennas.beverage import BeverageParameters
+from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
 from ..antennas.endfed import EndFedParameters
 from ..antennas.fan_dipole import FanDipoleParameters
@@ -29,6 +30,7 @@ from ..antennas.moxon import MoxonParameters
 from ..antennas.ocfd import OCFDParameters
 from ..antennas.phased_vertical import PhasedVerticalParameters
 from ..antennas.quad_beam import QuadBeamParameters
+from ..antennas.stacked_yagi import StackedYagiParameters
 from ..antennas.t2fd import T2FDParameters
 from ..antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..antennas.trap_dipole import TrapDipoleParameters
@@ -102,6 +104,8 @@ def native_height_m(parameters: object) -> float | None:
         return parameters.base_height_m + parameters.height_m
     if isinstance(parameters, PhasedVerticalParameters):
         return parameters.base_height_m + parameters.height_m
+    if isinstance(parameters, StackedYagiParameters):
+        return parameters.yagi.height_m
     if isinstance(parameters, EndFedParameters):
         return parameters.feed_height_m
     if isinstance(parameters, InvertedLParameters):
@@ -115,12 +119,27 @@ def apply_comparison_basis(
 ) -> BasisApplication:
     """Return ``design`` with the common ground and height applied."""
 
-    parameters = replace(design.parameters, ground=basis.ground)
+    if isinstance(design.parameters, StackedYagiParameters):
+        parameters: AntennaDesignParameters = replace(
+            design.parameters,
+            yagi=replace(design.parameters.yagi, ground=basis.ground),
+        )
+    else:
+        parameters = replace(design.parameters, ground=basis.ground)
     warnings: list[str] = []
     height_mapped = False
 
     if basis.reference_height_m is None:
         warnings.append("native_height")
+    elif isinstance(parameters, StackedYagiParameters):
+        try:
+            parameters = replace(
+                parameters,
+                yagi=replace(parameters.yagi, height_m=basis.reference_height_m),
+            )
+            height_mapped = True
+        except ValueError:
+            warnings.append("height_too_low")
     elif isinstance(parameters, _DIRECT_HEIGHT_TYPES):
         parameters = replace(parameters, height_m=basis.reference_height_m)
         height_mapped = True

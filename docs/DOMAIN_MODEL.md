@@ -226,6 +226,21 @@ wires (center plus two tips). Tapering is rejected with a folded or
 beta/hairpin driven element. Boom-mounting correction is not modeled. Edited
 designs are experimental.
 
+### StackedYagiParameters
+
+A composed two-to-four-level stack of one identical `YagiParameters` per level.
+It stores the base Yagi, level count, vertical boom spacing, ideal phase step,
+and an additional-level voltage ratio. `to_antenna()` copies every canonical
+base-Yagi wire at each level with a `level-N-` identifier. Level 1 is the
+primary feed; levels 2–N become additional ideal `Source` excitations with
+`(level-1) × phase_step_deg` and the configured amplitude ratio. The kind is a
+composed family, not a `stack_count` field on the Yagi. The splitter, phase-line
+hardware, splitter loss, per-level matching, folded/matched driven elements,
+per-level feed transformers, mast, and guy wires are not modeled. The reported
+impedance and SWR refer only to level 1. A vertical-polarized stack must space
+the levels farther apart than the longest element or the wire copies overlap.
+The family is experimental and makes no stacking-gain claim.
+
 ### RingoParameters
 
 A first-class Ringo-style vertical with radiator length, base matching ring
@@ -808,7 +823,7 @@ and SWR at the target. The result is an explicit `TuningProposal` with
 ## Project file
 
 The native `.antennadesk` file is a versioned ZIP container (container version
-1, schema version 61). It is one portable file written atomically. The
+1, schema version 62). It is one portable file written atomically. The
 container separates the small project metadata from designs, runs, raw solver
 text, and optimization summaries:
 
@@ -845,10 +860,11 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `61`; the application writes version 61 and
+trusted. The current schema is `62`; the application writes version 62 and
 rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
 optional `site_ground: null` metadata on open; a 60 container loads vertical
-designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged. The
+designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged; a
+61 container loads unchanged because the stacked-Yagi payload is optional. The
 project has not shipped to users, so no legacy reader is retained. The complete example
 lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
 and is written in the current container format.
@@ -867,10 +883,11 @@ migration.
 
 ## Schema policy
 
-- Current version: `61`.
+- Current version: `62`.
 - Only container version 1 / schema versions 59, 60, and 61 are accepted; 59
-  adds `project.site_ground: null` and 60 adds the default
-  `radial_droop_deg = 0` on open. The list below is a historical record of
+  adds `project.site_ground: null`, 60 adds the default
+  `radial_droop_deg = 0` on open, and 61 is the metadata-only predecessor of
+  the optional stacked-Yagi payload. The list below is a historical record of
   earlier development schemas; those readers and migrations were removed on
   2026-11-20.
 
@@ -1003,6 +1020,11 @@ migration.
   are derived from the existing height and length.
 - Version 57 adds the optional Yagi mast conductor fields with zero defaults.
 - Version 58 adds the optional Yagi guy-wire fields with zero defaults.
+- Version 59 replaces the gzip JSON envelope with the ZIP project container.
+- Version 60 adds the optional project-level site ground profile.
+- Version 61 adds the optional vertical radial-droop field.
+- Version 62 introduces the stacked-Yagi composed-family payload. Existing
+  designs load unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

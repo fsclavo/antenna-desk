@@ -37,6 +37,7 @@ from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
 from antennadesk.ui.widgets.quad_beam_form import QuadBeamForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
+from antennadesk.ui.widgets.stacked_yagi_form import StackedYagiForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
 from antennadesk.ui.widgets.transmission_line_doublet_form import (
     TransmissionLineDoubletForm,
@@ -60,6 +61,7 @@ FORMS = (
     ),
     (InvertedVForm, ("_apex_height", "_leg_length")),
     (YagiForm, ("_height",)),
+    (StackedYagiForm, ("_spacing",)),
     (MoxonForm, ("_width", "_depth", "_reflector_tip", "_driven_tip", "_height")),
     (FanDipoleForm, ("_apex_height",)),
     (TrapDipoleForm, ("_inner_length", "_outer_length", "_height")),

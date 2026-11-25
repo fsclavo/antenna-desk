@@ -84,6 +84,10 @@ from ...domain.antennas.scv import (
     ANTENNA_TYPE_HALF_SQUARE,
     ScvParameters,
 )
+from ...domain.antennas.stacked_yagi import (
+    ANTENNA_TYPE_STACKED_YAGI,
+    StackedYagiParameters,
+)
 from ...domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from ...domain.antennas.transmission_line_doublet import (
     ANTENNA_TYPE_G5RV,
@@ -139,6 +143,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_INVERTED_L: "catalog.inverted_l",
     ANTENNA_TYPE_MAGNETIC_LOOP: "catalog.magnetic_loop",
     ANTENNA_TYPE_YAGI: "catalog.yagi",
+    ANTENNA_TYPE_STACKED_YAGI: "catalog.stacked_yagi",
     ANTENNA_TYPE_MOXON: "catalog.moxon",
     ANTENNA_TYPE_LOG_PERIODIC: "catalog.log_periodic",
     ANTENNA_TYPE_FAN_DIPOLE: "catalog.fan_dipole",
@@ -2456,6 +2461,72 @@ def _moxon_tip_inset(
     )
 
 
+def _add_stacked_yagi_dimensions(
+    model: AntennaModel,
+    parameters: StackedYagiParameters | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    levels: dict[str, list[Wire]] = {}
+    for wire in model.wires:
+        if not wire.id.startswith("level-"):
+            continue
+        level = wire.id.split("-", 2)[1]
+        levels.setdefault(level, []).append(wire)
+    if not levels:
+        return
+    ordered = [levels[key] for key in sorted(levels, key=int)]
+    if factory.projection.vertical:
+        first = ordered[0][0]
+        x_scene = factory.project(first.start).x_m
+        if parameters is not None:
+            level_height = parameters.yagi.height_m
+            dimensions.append(
+                factory.vertical_dimension(
+                    x_scene,
+                    level_height,
+                    level_height + parameters.spacing_m,
+                    parameters.spacing_m,
+                    side="right",
+                    priority=90,
+                )
+            )
+            dimensions.append(
+                factory.vertical_dimension(
+                    x_scene,
+                    0.0,
+                    parameters.top_height_m,
+                    parameters.top_height_m,
+                    side="left",
+                    priority=60,
+                )
+            )
+            if len(parameters.yagi.elements) >= 2:
+                positions = [element.position_m for element in parameters.yagi.elements]
+                first_element = ordered[0][0]
+                last_element = ordered[0][-1]
+                dimensions.append(
+                    factory.dimension(
+                        _wire_point(first_element, 0.5),
+                        _wire_point(last_element, 0.5),
+                        max(positions) - min(positions),
+                        side="below",
+                        priority=70,
+                    )
+                )
+            notes.append(
+                translator.t(
+                    "stacked_yagi.scene_note",
+                    count=parameters.count,
+                    phase=f"{parameters.phase_step_deg:.1f}",
+                )
+            )
+    else:
+        notes.append(translator.t("geometry.stacked_yagi_plan_note"))
+
+
 def _add_array_dimensions(
     model: AntennaModel,
     parameters: object | None,
@@ -3733,6 +3804,41 @@ def _summary(
                 f"{phase_line_z0:.1f} Ω",
             ]
         )
+    elif isinstance(parameters, StackedYagiParameters) or antenna_type == ANTENNA_TYPE_STACKED_YAGI:
+        if isinstance(parameters, StackedYagiParameters):
+            level_count = parameters.count
+            spacing_m = parameters.spacing_m
+            top_height_m = parameters.top_height_m
+            element_count = len(parameters.yagi.elements)
+            boom_m = parameters.boom_length_m
+            phase = f"{parameters.phase_step_deg:.1f}°"
+            amplitude = f"{parameters.amplitude_ratio:.2f}"
+        else:
+            level_count = len(
+                {wire.id.split("-", 2)[1] for wire in model.wires if wire.id.startswith("level-")}
+            )
+            spacing_m = 0.0
+            top_height_m = max_z
+            element_count = len(
+                {wire.id.split("-", 3)[-1] for wire in model.wires if wire.id.startswith("level-")}
+            )
+            boom_m = 0.0
+            phase = "—"
+            amplitude = "—"
+        parts.extend(
+            [
+                f"{translator.t('stacked_yagi.level_count').lower()} {level_count}",
+                f"{translator.t('stacked_yagi.spacing').lower()} "
+                f"{_format_length(spacing_m, translator, display_units)}",
+                f"{translator.t('field.height').lower()} "
+                f"{_format_length(top_height_m, translator, display_units)}",
+                f"{translator.t('geometry.elements').lower()} {element_count}",
+                f"{translator.t('geometry.boom_length').lower()} "
+                f"{_format_length(boom_m, translator, display_units)}",
+                f"{translator.t('stacked_yagi.phase_step').lower()} {phase}",
+                f"{translator.t('stacked_yagi.amplitude_ratio').lower()} {amplitude}",
+            ]
+        )
     elif isinstance(parameters, YagiParameters) or antenna_type == ANTENNA_TYPE_YAGI:
         if isinstance(parameters, YagiParameters):
             positions = [element.position_m for element in parameters.elements]
@@ -4373,6 +4479,15 @@ def build_scene(
             notes,
             translator,
             active_band=active_band,
+        )
+    elif effective_type == ANTENNA_TYPE_STACKED_YAGI:
+        _add_stacked_yagi_dimensions(
+            model,
+            parameters if isinstance(parameters, StackedYagiParameters) else None,
+            factory,
+            dimensions,
+            notes,
+            translator,
         )
     elif effective_type in {ANTENNA_TYPE_YAGI, ANTENNA_TYPE_MOXON}:
         _add_array_dimensions(

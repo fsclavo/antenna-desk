@@ -146,6 +146,24 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "modeled. Gamma matches are not modeled by NEC-2 here."
         ),
     ),
+    "stacked_yagi": EvidenceEntry(
+        template="stacked_yagi",
+        level=EvidenceLevel.EXPERIMENTAL,
+        source=(
+            "Two to four identical Yagis on a vertical stack with ideal amplitude "
+            "and phase sources; no independent numerical reference or published "
+            "stacking measurement is used"
+        ),
+        tolerance="Not applicable (structural)",
+        limitation=(
+            "Mutual coupling is included by the wire solver, but the power "
+            "splitter, phase-line hardware, splitter loss, per-level matching, "
+            "and the shared mast are not modeled. The reported impedance and SWR "
+            "refer only to level 1. The additional levels are ideal voltage "
+            "sources. No stacking gain is claimed; verify spacing, phase, and "
+            "matching with the solver or a measurement."
+        ),
+    ),
     "log_periodic": EvidenceEntry(
         template="log_periodic",
         level=EvidenceLevel.PUBLISHED,

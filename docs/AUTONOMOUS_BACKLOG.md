@@ -57,7 +57,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **Domain prototype 2026-11-20.** StackedYagiParameters builds 2–4 levels with an ideal source progression and per-level wires. Form, schema, per-port UI, splitter/phase lines, and optimizer remain. See ADR-0049 and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, ideal per-level sources, schema 62, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, and a real nec2c two-port test. Splitter/phase hardware, shared mast, folded/matched driven elements, and the optimizer remain explicitly unavailable. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
@@ -129,7 +129,7 @@ no binary pattern store or sidecar database in this item; PF3 covers splitting
 pattern data into separate validated entries if that is still needed after the
 container lands.
 
-### Container format (container version 1, schema version 61)
+### Container format (container version 1, schema version 62)
 
 ```text
 manifest.json
@@ -596,8 +596,9 @@ metrics followed; VNA import closed the interoperability side.
 **Wave 1 order:** DL1 and DL2 are done. DL5 is narrowed to mast and guy wires; no further wave-1 work is planned.
 
 **Wave 2 order:** DL7's bounded cliff slice is implemented; DL4 is canceled by
-product decision. The DL6 domain prototype is started; its form, schema, and
-per-port UI wait for the support-structure decision.
+product decision. The DL6 first slice is implemented (form, schema 62, catalog,
+per-port Sources, scene and reports); splitter/phase hardware, a shared mast,
+and the optimizer remain.
 
 ### Wave rules
 
@@ -1119,10 +1120,32 @@ narrow MVP (straight cylinders) mitigate it.
 
 ### DL6 — Stacked Yagi arrays
 
-**Domain prototype (2026-11-20):** [`ADR-0049`](ADR/0049-stacked-yagi-composed-family.md)
-and `StackedYagiParameters` build 2–4 levels with an ideal source progression.
-Form, schema, per-port UI, splitter/phase lines, and optimizer remain
-follow-ups. See also [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
+**First slice implemented (2026-11-25):**
+[`ADR-0049`](ADR/0049-stacked-yagi-composed-family.md) composes two to four
+identical Yagis with an ideal source progression. The slice delivers the
+domain model, schema 62, both catalog routes, the embedded Yagi/stack form,
+per-port **Sources** results, front-elevation scene and dimensions, design and
+construction reports, a multi-boom BOM, and a real `nec2c` two-port test. The
+splitter, phase-line hardware, splitter loss, shared mast, folded/matched
+driven elements, per-level transformer, and optimizer remain follow-ups. The
+optimizer returns an explicit unavailable reason. Evidence is C and no stacking
+gain is claimed. See also
+[`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
+
+**Delivered in the first slice:**
+- A two-level stack runs with two driven sources; the `Sources` table reports
+  R/X/power for each port and the primary SWR stays on level 1.
+- The scene opens in front elevation, shows the level spacing and the complete
+  wire model, and warns that plan view collapses the levels.
+- Reports show levels, spacing, top height, phase step, amplitude ratio, and
+  the ideal-feed limitation; the BOM uses one boom per level.
+- A vertical-polarized stack rejects overlapping levels.
+- The base editor cannot add a mast, guys, folded/matched driven element, or
+  feed transformer inside a stack.
+
+**Remaining work:** real splitter and phase-line hardware, splitter loss,
+shared-mast support, folded/matched driven elements with per-level feed
+hardware, and spacing/phase optimization with a mechanical envelope.
 
 **Goal:** answer "two stacked Yagis or one bigger one?"
 
@@ -1144,10 +1167,12 @@ follow-ups. See also [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yag
 composed stack design.
 
 **Acceptance:**
-- A 2×3 stack runs, shows per-port impedance and the combined pattern.
-- Spacing/phase optimization respects the mechanical envelope.
-- The report shows the stack dimensions and feed notes.
-- No gain claim beyond the evidence level.
+- **Delivered:** a two-level stack runs with per-port impedance and the
+  combined pattern; a three-level stack is covered by the form/domain tests.
+- **Delivered:** the report shows the stack dimensions and feed notes.
+- **Delivered:** no gain claim beyond the evidence level.
+- **Deferred with an explicit unavailable reason:** spacing/phase optimization
+  with a mechanical envelope.
 
 **Evidence:** traceable stack reference or B/C. Do not invent a stacking gain.
 
@@ -1634,7 +1659,7 @@ decision:
 
 ## Current baseline
 
-- Schema: **61**; container version 1.
+- Schema: **62**; container version 1.
 - Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
   technical-debt closure, main-window extractions, save/load size invariant
   fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,

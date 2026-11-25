@@ -38,6 +38,7 @@ from antennadesk.domain.antennas.scv import (
     ANTENNA_TYPE_HALF_SQUARE,
     ScvKind,
 )
+from antennadesk.domain.antennas.stacked_yagi import ANTENNA_TYPE_STACKED_YAGI
 from antennadesk.domain.antennas.t2fd import ANTENNA_TYPE_T2FD
 from antennadesk.domain.antennas.transmission_line_doublet import (
     ANTENNA_TYPE_G5RV,
@@ -61,6 +62,7 @@ DECLARED_TYPES = (
     ANTENNA_TYPE_INVERTED_V,
     ANTENNA_TYPE_INVERTED_L,
     ANTENNA_TYPE_YAGI,
+    ANTENNA_TYPE_STACKED_YAGI,
     ANTENNA_TYPE_MOXON,
     ANTENNA_TYPE_FAN_DIPOLE,
     ANTENNA_TYPE_ENDFED,

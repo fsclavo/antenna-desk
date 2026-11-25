@@ -253,15 +253,19 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 61 is
-current: parameter payloads are additive within the current container. A design may also store an optional analysis band plan; it is
-intent metadata and never changes the canonical geometry. Series RLC loads are
+solver adapter does not need geometry-specific branches. Schema version 62 is
+current: parameter payloads are additive within the current container. A
+design may also store an optional analysis band plan; it is intent metadata
+and never changes the canonical geometry. Series RLC loads are
 optional antenna payloads and are emitted as `LD 0` cards by the solver
 adapter. The canonical model also carries optional additional sources with
 amplitude and phase; the NEC adapter emits one `EX` card per effective source
 while the primary feed remains the impedance/SWR reference port. The phased
 vertical array family uses that multi-source model with an ideal linear phase
-and amplitude progression. The quad beam uses a reflector loop, a driven loop,
+and amplitude progression. The stacked Yagi composes two to four identical
+Yagi level models with the same multi-source model; level 1 is the primary
+port, while the splitter and phase-line hardware are ideal and not modeled.
+The quad beam uses a reflector loop, a driven loop,
 and an optional director loop on a single feed. The log-periodic family uses
 one `TransmissionLine` between adjacent element centers with the generic
 `phase_reversal` flag; the rear element terminates the line and the front
@@ -359,7 +363,7 @@ keeps schema concerns out of the domain while still rejecting malformed or
 untrusted files.
 
 Project files use the `antennadesk.project` ZIP container with container
-version 1 and schema version 61. Saves are atomic: build the container in
+version 1 and schema version 62. Saves are atomic: build the container in
 memory, write a temporary file in the target directory, flush and `fsync`,
 then replace the destination with `os.replace`. Autosave uses the
 application-data recovery folder: it writes a design-only project container
@@ -375,7 +379,7 @@ place on open.
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored in optional separate entries so it can be omitted without
 rewriting the normalized result. Project files are versioned ZIP containers
-(container version 1, schema version 61) with a manifest, project metadata,
+(container version 1, schema version 62) with a manifest, project metadata,
 designs, runs, raw text, and optimization summaries as separate validated
 entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
 container above 64 MB, blocks total expanded entries above 256 MB, and offers

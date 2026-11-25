@@ -40,6 +40,7 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.trap_dipole import TrapDipoleParameters
 from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
@@ -141,6 +142,19 @@ def _parameters_for(key: str) -> object:
                 YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
             ),
             height_m=10.0,
+        ),
+        "stacked_yagi": StackedYagiParameters(
+            yagi=YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+            ),
+            count=2,
+            spacing_m=10.6,
+            phase_step_deg=180.0,
         ),
         "moxon": MoxonParameters(
             frequency_hz=14_100_000.0,
@@ -400,6 +414,7 @@ ESTIMATORLESS_CATALOG_KEYS = frozenset(
         "discone",
         "trap_yagi",
         "phased_vertical",
+        "stacked_yagi",
         "trap_dipole",
         "zepp",
         "zs6bkw",

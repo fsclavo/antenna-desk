@@ -11,7 +11,9 @@ import pytest
 from antennadesk.domain.antennas.design import antenna_type_for
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
+from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.design.comparison import (
     ComparisonBasis,
     apply_comparison_basis,
@@ -142,3 +144,31 @@ def test_native_height_helper_covers_direct_and_vertical_families(
 
     assert native_height_m(dipole_parameters) == dipole_parameters.height_m
     assert native_height_m(vertical) == pytest.approx(11.0)
+
+
+def test_stacked_yagi_maps_the_nested_base_height_and_ground() -> None:
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    assert native_height_m(stack) == pytest.approx(10.0)
+    application = apply_comparison_basis(
+        _design(stack),
+        _basis(reference_height_m=15.0),
+    )
+
+    assert application.height_mapped is True
+    mapped = application.design.parameters
+    assert isinstance(mapped, StackedYagiParameters)
+    assert mapped.yagi.height_m == pytest.approx(15.0)
+    assert mapped.spacing_m == pytest.approx(10.6)
+    assert mapped.yagi.ground == AVERAGE_GROUND

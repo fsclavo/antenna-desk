@@ -177,7 +177,9 @@ between:
     trapped Yagi, T2FD, folded dipole, horizontal loop) use the top view;
   - a cubical quad uses the top boom layout;
   - non-planar antennas (vertical with radials, discone, phased vertical) use
-    the front elevation with a top inset.
+    the front elevation with a top inset;
+  - a stacked Yagi uses the front elevation so the level spacing is visible;
+    plan view collapses the levels onto each other.
   A projection that would collapse the antenna to a line is not offered. A
   Slim Jim therefore shows its folded front elevation, stub spacing, gap
   detail, and feed offset; a Yagi shows its element layout, boom, and element
@@ -454,7 +456,7 @@ antenna family: Dipole, Yagi, Log-periodic, Loop, Vertical, and Custom. The
 Dipole family contains the straight dipole, folded dipole, trap dipole, T2FD,
 end-fed wire, sloper, random wire, doublet, inverted-V, inverted-L,
 off-center-fed dipole, and fan dipole. The Yagi family includes the parametric
-Yagi and the Moxon rectangle. The Log-periodic family contains the
+Yagi, the Moxon rectangle, and the stacked-Yagi composed array. The Log-periodic family contains the
 straight-element LPDA with its transposed phase line. The Loop family includes the generic vertical/horizontal loop plus
 delta-loop, quad-loop, and magnetic-loop presets; the loop editor switches the
 plane with the **Orientation** field. The Vertical family includes the generic vertical radiator,
@@ -1214,6 +1216,34 @@ squares; the boom, spreaders, mast, feed line, and matching network are not
 modeled. Gain, front-to-back ratio, and feedpoint impedance are not
 independently validated. Verify the pattern and match with the solver or a
 measurement.
+
+## Create a stacked Yagi
+
+Choose **File → New Antenna... → Stacked Yagi** to compose two to four
+identical Yagis on one vertical stack. The editor contains the complete base
+Yagi table and installation fields plus **Levels**, **Level spacing**, **Phase
+step per level**, and **Additional-level voltage ratio**. **Load starting
+dimensions** rebuilds the base Yagi from the NBS five-element preset at the
+current frequency and sets a half-wave level spacing while keeping the level
+count, phase step, amplitude ratio, conductor, and ground.
+
+Level 1 is the primary feed and the only impedance/SWR reference. Levels 2–4
+are ideal voltage sources with `(level-1) × phase step` and the configured
+voltage ratio. The **Sources** results table reports each driven level
+separately; a negative source power means that ideal source is absorbing
+power. The splitter, phase-line hardware, splitter loss, and per-level matching
+are not modeled. The base editor also disables mast/guy wires, folded or matched
+driven elements, and feed transformers inside a stack. Use **Optimize...** on
+the base Yagi as a separate design first, then verify the stack spacing and
+phase with the solver; the stack itself returns an explicit optimizer-unavailable
+reason.
+
+For vertical polarization, the level spacing must be longer than the longest
+element or adjacent copies overlap on the same axis. The form shows a warning
+and rejects the design in that case. The family is classified **experimental**:
+mutual coupling is included by the wire solver, but no stacking gain is
+claimed, and the feed network and shared mast are not modeled. Verify the
+pattern, per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array
 

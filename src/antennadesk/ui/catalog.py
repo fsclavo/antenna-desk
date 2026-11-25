@@ -57,6 +57,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_SHORTENED_ENDFED_80_10,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_SLOPER,
+    CATALOG_TYPE_STACKED_YAGI,
     CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_DIPOLE,
     CATALOG_TYPE_TRAP_YAGI,
@@ -88,6 +89,7 @@ from .dialogs.phased_vertical_dialog import PhasedVerticalDialog
 from .dialogs.quad_beam_dialog import QuadBeamDialog
 from .dialogs.ringo_dialog import RingoDialog
 from .dialogs.scv_dialog import ScvDialog
+from .dialogs.stacked_yagi_dialog import StackedYagiDialog
 from .dialogs.t2fd_dialog import T2FDDialog
 from .dialogs.trap_dipole_dialog import TrapDipoleDialog
 from .dialogs.trap_yagi_dialog import TrapYagiDialog
@@ -164,6 +166,7 @@ def _dialog_class(name: str) -> Callable[..., QDialog]:
         "QuadBeamDialog": QuadBeamDialog,
         "RingoDialog": RingoDialog,
         "ScvDialog": ScvDialog,
+        "StackedYagiDialog": StackedYagiDialog,
         "T2FDDialog": T2FDDialog,
         "TrapDipoleDialog": TrapDipoleDialog,
         "TrapYagiDialog": TrapYagiDialog,
@@ -321,6 +324,7 @@ NEW_BUILDERS: dict[str, NewBuilder] = {
         parent_keyword=True,
     ),
     CATALOG_TYPE_YAGI: _new_simple("YagiDialog", "Yagi"),
+    CATALOG_TYPE_STACKED_YAGI: _new_simple("StackedYagiDialog", None),
     CATALOG_TYPE_MOXON: _new_simple("MoxonDialog", "Moxon"),
     CATALOG_TYPE_RINGO: _new_simple("RingoDialog", "Ringo"),
     CATALOG_TYPE_MAGNETIC_LOOP: _new_simple("MagneticLoopDialog", "Magnetic loop"),
@@ -511,6 +515,7 @@ CHANGE_BUILDERS: dict[str, ChangeBuilder] = {
         parent_keyword=True,
     ),
     CATALOG_TYPE_YAGI: _change_simple("YagiDialog"),
+    CATALOG_TYPE_STACKED_YAGI: _change_simple("StackedYagiDialog"),
     CATALOG_TYPE_MOXON: _change_simple("MoxonDialog"),
     CATALOG_TYPE_RINGO: _change_simple("RingoDialog"),
     CATALOG_TYPE_MAGNETIC_LOOP: _change_simple("MagneticLoopDialog"),

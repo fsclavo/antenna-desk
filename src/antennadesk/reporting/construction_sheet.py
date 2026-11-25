@@ -37,6 +37,7 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
@@ -1380,6 +1381,35 @@ def render_construction_sheet(
             width=f"{parameters.width_m:.4f}",
             depth=f"{parameters.depth_m:.4f}",
             gap=f"{parameters.gap_m:.4f}",
+        )
+    elif isinstance(parameters, StackedYagiParameters):
+        yagi = parameters.yagi
+        feed_rows = f"""
+<tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
+<tr><th>Levels</th><td>{parameters.count}</td></tr>
+<tr><th>Level spacing</th><td>{_length(parameters.spacing_m, display_units)}</td></tr>
+<tr><th>Base Yagi elements</th><td>{len(yagi.elements)}</td></tr>
+<tr><th>Base boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
+<tr><th>Base boom height</th><td>{_length(yagi.height_m, display_units)}</td></tr>
+<tr><th>Top level height</th><td>{_length(parameters.highest_tip_m, display_units)}</td></tr>
+<tr><th>Phase step</th><td>{parameters.phase_step_deg:.1f}°</td></tr>
+<tr><th>Additional-level ratio</th><td>{parameters.amplitude_ratio:.2f}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
+"""
+        construction_note = _note(
+            tr,
+            "Build {count} identical Yagis on one vertical stack with {spacing} m "
+            "between level booms. Level 1 is the primary feed; drive levels 2 to "
+            "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
+            "amplitude. Fit each level as a complete Yagi from the base element "
+            "table. The power splitter, phase lines, splitter loss, per-level "
+            "matching, and the shared mast are not modeled; verify the combined "
+            "pattern and match.",
+            count=parameters.count,
+            spacing=f"{parameters.spacing_m:.4f}",
+            last=parameters.count,
+            phase=f"{parameters.phase_step_deg:.1f}",
+            ratio=f"{parameters.amplitude_ratio:.2f}",
         )
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]

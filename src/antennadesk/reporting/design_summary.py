@@ -44,6 +44,7 @@ from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
@@ -1251,6 +1252,31 @@ def design_summary_rows(
             [
                 ("Azimuth", f"{parameters.azimuth_deg:.1f}°"),
                 ("Ground", ground_text(parameters.ground, labeler)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, StackedYagiParameters):
+        yagi = parameters.yagi
+        total_conductor = parameters.count * sum(element.length_m for element in yagi.elements)
+        rows.extend(
+            [
+                ("Type", parameters.template_name),
+                ("Levels", str(parameters.count)),
+                ("Level spacing", _length(parameters.spacing_m, display_units)),
+                ("Base Yagi elements", str(len(yagi.elements))),
+                ("Base boom length", _length(parameters.boom_length_m, display_units)),
+                ("Base boom height", _length(yagi.height_m, display_units)),
+                ("Top level height", _length(parameters.highest_tip_m, display_units)),
+                ("Phase step", f"{parameters.phase_step_deg:.1f}°"),
+                ("Additional-level ratio", f"{parameters.amplitude_ratio:.2f}"),
+                ("Polarization", yagi.polarization.value),
+                (
+                    "Feed",
+                    "level 1 (primary); additional levels are ideal sources",
+                ),
+                ("Total conductor", _length(total_conductor, display_units)),
+                ("Material", material_text(yagi.material, labeler)),
+                ("Ground", ground_text(yagi.ground, labeler)),
             ]
         )
         return tuple(rows)

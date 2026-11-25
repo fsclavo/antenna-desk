@@ -15,6 +15,7 @@ from antennadesk.domain.antennas.feed_connection import (
 )
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
@@ -173,3 +174,13 @@ def test_custom_geometry_is_explicitly_unknown() -> None:
     assert detail.interface is FeedInterface.UNKNOWN
     assert detail.balun_requirement is BalunRequirement.UNKNOWN
     assert "not classified" in detail.summary
+
+
+def test_stacked_yagi_reports_a_multi_port_ideal_feed() -> None:
+    parameters = StackedYagiParameters(yagi=_yagi(), count=2, spacing_m=10.6)
+
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    assert detail.topology is FeedTopology.MULTI_PORT
+    assert detail.interface is FeedInterface.MULTI_PORT
+    assert "Level 1 is the primary port" in (detail.match_hardware or "")

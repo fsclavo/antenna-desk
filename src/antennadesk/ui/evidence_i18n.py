@@ -441,6 +441,23 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
             "la adaptación con el solver o una medición."
         ),
     },
+    "stacked_yagi": {
+        "source": (
+            "Dos a cuatro Yagis idénticos en una pila vertical con fuentes "
+            "ideales de amplitud y fase; no hay referencia numérica independiente "
+            "ni medición publicada de apilado"
+        ),
+        "tolerance": "No aplicable (estructural)",
+        "limitation": (
+            "El solver de hilos incluye el acoplamiento mutuo, pero no se modelan "
+            "el divisor de potencia, el hardware de las líneas de fase, las "
+            "pérdidas del divisor, el ajuste por nivel ni el mástil compartido. "
+            "La impedancia y la ROE informadas se refieren solo al nivel 1. Los "
+            "niveles adicionales son fuentes de tensión ideales. No se declara "
+            "ganancia de apilado; verificá separación, fase y ajuste con el "
+            "solver o una medición."
+        ),
+    },
     "log_periodic": {
         "source": (
             "L. B. Cebik, W4RNL, 'A 10-Meter LPDA', fase 3 (28-30 MHz, "

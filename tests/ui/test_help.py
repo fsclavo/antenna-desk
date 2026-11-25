@@ -57,6 +57,9 @@ def test_family_specific_labels_resolve_help() -> None:
     assert "9:1" in (help_text(translator, "beverage.transformer_ratio") or "")
     assert "Trap resonant" in (help_text(translator, "trap_dipole.trap_frequency") or "")
     assert "Progressive phase" in (help_text(translator, "phased_vertical.phase_step") or "")
+    assert "Number of identical Yagi levels" in (
+        help_text(translator, "stacked_yagi.level_count") or ""
+    )
     assert "loading-coil" in (help_text(translator, "endfed.loading_coil_inductance") or "")
     assert "matching line" in (help_text(translator, "g5rv.line_impedance") or "")
     assert "Vertical polarization" in (

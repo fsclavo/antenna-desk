@@ -42,6 +42,7 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -211,6 +212,27 @@ def _yagi_spec(parameters: YagiParameters, context: SimulationSpecContext) -> Si
         ),
         far_field=far_field_request(context.pattern_step_deg, parameters.ground),
         feed_transformer_ratio=parameters.transformer_ratio,
+    )
+
+
+def _stacked_yagi_spec(
+    parameters: StackedYagiParameters,
+    context: SimulationSpecContext,
+) -> SimulationSpec:
+    model = parameters.to_antenna()
+    frequency_hz = parameters.yagi.frequency_hz
+    return SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(
+            frequency_hz * 0.95,
+            frequency_hz * 1.05,
+            DEFAULT_GENERATED_SWEEP_POINTS,
+        ),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz * 1.05,
+            SegmentationPolicy(min_segments_per_wire=1),
+        ),
+        far_field=far_field_request(context.pattern_step_deg, parameters.yagi.ground),
     )
 
 
@@ -685,6 +707,7 @@ _BUILDERS: dict[type[object], Builder] = {
     InvertedLParameters: _inverted_l_spec,
     MagneticLoopParameters: _magnetic_loop_spec,
     YagiParameters: _yagi_spec,
+    StackedYagiParameters: _stacked_yagi_spec,
     MoxonParameters: _moxon_spec,
     FanDipoleParameters: _fan_dipole_spec,
     TrapDipoleParameters: _trap_dipole_spec,

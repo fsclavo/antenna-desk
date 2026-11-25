@@ -903,3 +903,36 @@ def test_installation_profile_rows_describe_the_active_site() -> None:
     assert rows["Profile ground"] == "free_space"
     assert rows["Profile notes"] == "Back yard"
     assert installation_profile_rows(None) == ()
+
+
+def test_stacked_yagi_summary_reports_levels_spacing_and_ideal_feed() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+        amplitude_ratio=1.0,
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Type"] == "Stacked Yagi"
+    assert rows["Levels"] == "2"
+    assert rows["Level spacing"] == "10.6000 m"
+    assert rows["Base Yagi elements"] == "2"
+    assert rows["Base boom length"] == "2.1000 m"
+    assert rows["Base boom height"] == "10.0000 m"
+    assert rows["Top level height"] == "20.6000 m"
+    assert rows["Phase step"] == "180.0°"
+    assert rows["Additional-level ratio"] == "1.00"
+    assert rows["Feed"] == "level 1 (primary); additional levels are ideal sources"
+    assert rows["Total conductor"] == "40.0000 m"

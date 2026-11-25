@@ -272,6 +272,13 @@ REPORT_SPANISH: dict[str, str] = {
     "Base height": "Altura de base",
     "Best SWR": "Mejor ROE",
     "Boom height": "Altura del boom",
+    "Levels": "Niveles",
+    "Level spacing": "Separación entre niveles",
+    "Base Yagi elements": "Elementos del Yagi base",
+    "Base boom length": "Longitud del boom base",
+    "Base boom height": "Altura del boom base",
+    "Top level height": "Altura del nivel superior",
+    "Additional-level ratio": "Relación de niveles adicionales",
     "Boom length": "Longitud del boom",
     "Longest element": "Elemento más largo",
     "Phase line Z0": "Z0 de la línea de fase",
@@ -795,6 +802,22 @@ REPORT_SPANISH: dict[str, str] = {
         "capacitancia para {frequency} MHz. El modelo de trampa es ideal; el "
         "montaje en el boom, la pérdida de la trampa, la línea de alimentación y "
         "la red de adaptación no están modelados."
+    ),
+    "Build {count} identical Yagis on one vertical stack with {spacing} m "
+    "between level booms. Level 1 is the primary feed; drive levels 2 to "
+    "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
+    "amplitude. Fit each level as a complete Yagi from the base element "
+    "table. The power splitter, phase lines, splitter loss, per-level "
+    "matching, and the shared mast are not modeled; verify the combined "
+    "pattern and match.": (
+        "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
+        "entre los boms de los niveles. El nivel 1 es la alimentación principal; "
+        "excitá los niveles 2 a {last} como fuentes ideales con un escalón de fase "
+        "de {phase}° y una amplitud relativa de {ratio}. Armá cada nivel como un "
+        "Yagi completo a partir de la tabla de elementos base. El divisor de "
+        "potencia, las líneas de fase, las pérdidas del divisor, el ajuste por "
+        "nivel y el mástil compartido no están modelados; verificá el patrón "
+        "combinado y el ajuste."
     ),
     "Build {count} cone wires from the apex at {apex} m down to a base ring of {radius} m radius at {base} m. Add {count} disc wires of {disc} m above the apex with a {gap} m feed gap. Feed across that gap. The cone and disc are wire approximations; the coax, mast, and solid surfaces are not modeled.": (  # noqa: E501
         "Construí {count} hilos de cono desde el vértice a {apex} m hasta un "

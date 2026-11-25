@@ -1430,3 +1430,35 @@ def test_construction_sheet_uses_automatic_units(sample_project: Project) -> Non
     assert "16.50 cm from the wire start" in sheet
     assert "16.50 cm from the start of the wire" in sheet
     assert "Length (cm)" in sheet
+
+
+def test_stacked_yagi_construction_sheet_lists_the_ideal_feed(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    design = sample_project.designs[0]
+    stack = design.with_parameters(
+        StackedYagiParameters(
+            yagi=YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                    YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+                ),
+                height_m=10.0,
+            ),
+            count=2,
+            spacing_m=10.6,
+            phase_step_deg=180.0,
+        )
+    )
+    sheet = render_construction_sheet(sample_project, stack, None)
+
+    assert "Stacked Yagi" in sheet
+    assert "Level spacing" in sheet
+    assert "10.6000 m" in sheet
+    assert "Build 2 identical Yagis" in sheet
+    assert "ideal sources" in sheet
+    assert "power splitter" in sheet

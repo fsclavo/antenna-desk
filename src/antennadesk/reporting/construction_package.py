@@ -15,7 +15,9 @@ from ..domain.projects.construction import (
 from ..domain.projects.project import DesignVariant, Project
 from .localization import Labeler, identity_labeler
 
-BEAM_TYPES = frozenset({"yagi", "moxon", "log_periodic", "hexbeam", "trap_yagi", "quad_beam"})
+BEAM_TYPES = frozenset(
+    {"yagi", "stacked_yagi", "moxon", "log_periodic", "hexbeam", "trap_yagi", "quad_beam"}
+)
 
 CHECKLIST_LABELS_EN: dict[str, str] = {
     "prepare_drawings": "Prepare the construction drawing and wire schedule.",
@@ -107,7 +109,11 @@ def hardware_bom_items(
         HardwareBomRow(
             key="boom",
             label="Boom",
-            quantity="1" if beam else "0",
+            quantity=(
+                str(getattr(parameters, "count", 1))
+                if design.antenna_type == "stacked_yagi"
+                else ("1" if beam else "0")
+            ),
             unit="pcs",
             note="Starting estimate" if beam else "—",
         ),

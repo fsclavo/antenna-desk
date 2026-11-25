@@ -28,6 +28,7 @@ from antennadesk.ui.widgets.phased_vertical_form import PhasedVerticalForm
 from antennadesk.ui.widgets.quad_beam_form import QuadBeamForm
 from antennadesk.ui.widgets.ringo_form import RingoForm
 from antennadesk.ui.widgets.scv_form import ScvForm
+from antennadesk.ui.widgets.stacked_yagi_form import StackedYagiForm
 from antennadesk.ui.widgets.t2fd_form import T2FDForm
 from antennadesk.ui.widgets.transmission_line_doublet_form import (
     TransmissionLineDoubletForm,
@@ -45,6 +46,7 @@ FORMS = (
     (InvertedVForm, "inverted_v.apex_height"),
     (MagneticLoopForm, "magnetic_loop.diameter"),
     (YagiForm, "field.frequency"),
+    (StackedYagiForm, "stacked_yagi.level_count"),
     (MoxonForm, "moxon.width"),
     (FanDipoleForm, "field.frequency"),
     (TrapDipoleForm, "trap_dipole.low_band"),
@@ -87,7 +89,7 @@ def test_family_form_retranslates_its_labels(
 
 @pytest.mark.parametrize(
     "form_type",
-    [HexbeamForm, DisconeForm, TrapYagiForm, PhasedVerticalForm],
+    [HexbeamForm, DisconeForm, TrapYagiForm, PhasedVerticalForm, StackedYagiForm],
 )
 def test_starting_dimensions_action_retranslates(
     qtbot: QtBot,

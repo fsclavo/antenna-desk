@@ -41,6 +41,10 @@ from .scv import (
     ScvKind,
     ScvParameters,
 )
+from .stacked_yagi import (
+    ANTENNA_TYPE_STACKED_YAGI,
+    StackedYagiParameters,
+)
 from .t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
 from .transmission_line_doublet import (
     ANTENNA_TYPE_G5RV,
@@ -65,6 +69,7 @@ AntennaDesignParameters = (
     | InvertedVParameters
     | InvertedLParameters
     | YagiParameters
+    | StackedYagiParameters
     | MoxonParameters
     | FanDipoleParameters
     | EndFedParameters
@@ -128,6 +133,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_INVERTED_L
     if isinstance(parameters, YagiParameters):
         return ANTENNA_TYPE_YAGI
+    if isinstance(parameters, StackedYagiParameters):
+        return ANTENNA_TYPE_STACKED_YAGI
     if isinstance(parameters, MoxonParameters):
         return ANTENNA_TYPE_MOXON
     if isinstance(parameters, FanDipoleParameters):

@@ -10,7 +10,7 @@ amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
 **Status:** pre-1.0. Latest published release: `0.10.1` (2026-11-24). The
-current development schema is `61`; unreleased work is tracked in
+current development schema is `62`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
@@ -25,7 +25,7 @@ Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
 a transposed phase-line feed; its starting design is the published Cebik 10 m
-reference. Projects use a versioned ZIP container with schema 61, per-entry
+reference. Projects use a versioned ZIP container with schema 62, per-entry
 validation, deterministic writes, and no legacy reader. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
@@ -118,6 +118,9 @@ truth for each topic, every ADR, and the archived plans.
 
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
+- A composed two-to-four-level stacked Yagi with schema 62, per-port
+  impedance/power, front-elevation scene, reports, and an explicit
+  ideal-feed/optimizer limitation; no stacking gain is claimed.
 - Project-level Undo/Redo and hover cursors on the result charts.
 - Multi-file VNA CSV, `.s1p`, and port-selected `.s2p` import with locale-aware
   numbers, analyzer detection, drag-and-drop, and a manual column-mapping
@@ -151,7 +154,7 @@ truth for each topic, every ADR, and the archived plans.
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` ZIP containers with multiple design
   variants, lazy run loading, design-only recovery, and a save-design-only
-  action. The current development schema is `61`; gzip, plain JSON, and older
+  action. The current development schema is `62`; gzip, plain JSON, and older
   schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.

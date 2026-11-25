@@ -27,6 +27,7 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
@@ -70,6 +71,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_SHORTENED_ENDFED_80_10,
     CATALOG_TYPE_SLIM_JIM,
     CATALOG_TYPE_SLOPER,
+    CATALOG_TYPE_STACKED_YAGI,
     CATALOG_TYPE_T2FD,
     CATALOG_TYPE_TRAP_DIPOLE,
     CATALOG_TYPE_TRAP_YAGI,
@@ -148,6 +150,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_INVERTED_L
     if isinstance(parameters, YagiParameters):
         return CATALOG_TYPE_YAGI
+    if isinstance(parameters, StackedYagiParameters):
+        return CATALOG_TYPE_STACKED_YAGI
     if isinstance(parameters, MoxonParameters):
         return CATALOG_TYPE_MOXON
     if isinstance(parameters, LogPeriodicParameters):

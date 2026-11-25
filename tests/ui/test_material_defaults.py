@@ -139,7 +139,7 @@ def test_template_mapping_covers_every_catalog_entry() -> None:
     catalog_keys = {entry.key for entry in ENTRIES}
 
     assert set(TEMPLATE_MATERIAL_DEFAULTS) == catalog_keys
-    assert len(TEMPLATE_MATERIAL_DEFAULTS) == 41
+    assert len(TEMPLATE_MATERIAL_DEFAULTS) == 42
     assert default_material_for_template("unknown") is COPPER
 
 

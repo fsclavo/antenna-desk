@@ -42,6 +42,7 @@ from ..antennas.phased_vertical import PhasedVerticalParameters
 from ..antennas.quad_beam import QuadBeamParameters
 from ..antennas.ringo import RingoParameters
 from ..antennas.scv import ScvParameters
+from ..antennas.stacked_yagi import StackedYagiParameters
 from ..antennas.t2fd import T2FDParameters
 from ..antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..antennas.trap_dipole import TrapDipoleParameters
@@ -447,6 +448,16 @@ def _classify(
             FeedInterface.MULTI_PORT,
             _center_terminals(model),
             "Primary port plus additional sources; the combining network is ideal",
+            None,
+            None,
+        )
+
+    if isinstance(parameters, StackedYagiParameters):
+        return (
+            FeedTopology.MULTI_PORT,
+            FeedInterface.MULTI_PORT,
+            _center_terminals(model),
+            "Level 1 is the primary port; levels 2-N are ideal sources and the split is ideal",
             None,
             None,
         )

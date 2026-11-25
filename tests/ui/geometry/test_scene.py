@@ -24,6 +24,7 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
@@ -1269,3 +1270,36 @@ def test_j_pole_construction_view_labels_the_feed_and_repeated_values() -> None:
     assert "Stub" in labels
     assert "feed offset 0.10 m" in scene.summary
     assert "base 0.25 m" in scene.summary
+
+
+def test_stacked_yagi_preserves_levels_and_labels_additional_sources() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+        amplitude_ratio=0.8,
+    )
+
+    model = parameters.to_antenna()
+    scene = _scene(parameters, "stacked_yagi", GeometryViewMode.ELEVATION)
+
+    assert len(scene.polylines) == len(model.wires) == 4
+    assert all(wire.id.startswith("level-") for wire in model.wires)
+    assert "levels 2" in scene.summary
+    assert "level spacing" in scene.summary
+    assert "phase step 180.0°" in scene.summary
+    source_labels = {
+        marker.label
+        for marker in scene.markers
+        if marker.kind == "source" and marker.label is not None
+    }
+    assert any("180°" in label and "80%" in label for label in source_labels)
+    assert any(dimension.text == "10.60 m" for dimension in scene.dimensions)

@@ -71,9 +71,13 @@ class YagiForm(QWidget):
         parent: QWidget | None = None,
         *,
         display_units: DisplayUnits | None = None,
+        include_support_structures: bool = True,
+        include_feed_hardware: bool = True,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
+        self._include_support_structures = include_support_structures
+        self._include_feed_hardware = include_feed_hardware
         self._labels = FormLabels(translator, self, family="yagi")
         self._unit_system = unit_system
         self._display_units = display_units or DisplayUnits(
@@ -304,23 +308,27 @@ class YagiForm(QWidget):
         form.addRow(self._labels.label("yagi.radius"), self._radius)
         form.addRow(self._labels.label("yagi.taper_length"), self._taper_length)
         form.addRow(self._labels.label("yagi.taper_radius"), self._taper_radius)
-        form.addRow(self._labels.label("yagi.mast_diameter"), self._mast_diameter)
-        form.addRow(self._labels.label("yagi.mast_offset"), self._mast_offset)
-        form.addRow(self._labels.label("yagi.guy_count"), self._guy_count)
-        form.addRow(self._labels.label("yagi.guy_anchor"), self._guy_anchor)
-        form.addRow(self._labels.label("yagi.guy_diameter"), self._guy_diameter)
+        if include_support_structures:
+            form.addRow(self._labels.label("yagi.mast_diameter"), self._mast_diameter)
+            form.addRow(self._labels.label("yagi.mast_offset"), self._mast_offset)
+            form.addRow(self._labels.label("yagi.guy_count"), self._guy_count)
+            form.addRow(self._labels.label("yagi.guy_anchor"), self._guy_anchor)
+            form.addRow(self._labels.label("yagi.guy_diameter"), self._guy_diameter)
         form.addRow(self._labels.label("field.material"), self._material)
         form.addRow(self._labels.label("field.ground"), self._ground)
         form.addRow(self._labels.label("field.soil_preset"), self._soil)
         form.addRow(self._labels.label("field.permittivity"), self._permittivity)
         form.addRow(self._labels.label("field.conductivity"), self._conductivity)
         form.addRow(self._labels.label("yagi.driven"), self._driven)
-        form.addRow(self._driven_folded)
-        form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
-        form.addRow(self._transformer_label, self._transformer)
-        form.addRow(self._labels.label("yagi.match_type"), self._match_type)
-        form.addRow(self._labels.label("yagi.match_length"), self._match_length)
-        form.addRow(self._labels.label("yagi.match_spacing"), self._match_spacing)
+        if include_feed_hardware:
+            form.addRow(self._driven_folded)
+            form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
+            form.addRow(self._transformer_label, self._transformer)
+            form.addRow(self._labels.label("yagi.match_type"), self._match_type)
+            form.addRow(self._labels.label("yagi.match_length"), self._match_length)
+            form.addRow(self._labels.label("yagi.match_spacing"), self._match_spacing)
+        else:
+            self._match_note.setVisible(False)
 
         element_buttons = QHBoxLayout()
         element_buttons.addWidget(self._add)
@@ -877,19 +885,35 @@ class YagiForm(QWidget):
                 if taper_length_m > 0.0
                 else 0.0
             ),
-            mast_diameter_m=self._mast_diameter_field.value_m(),
-            mast_offset_m=self._mast_offset_field.value_m(),
-            guy_count=int(self._guy_count.currentData() or 0),
-            guy_anchor_radius_m=self._guy_anchor_field.value_m(),
-            guy_diameter_m=self._guy_diameter_field.value_m(),
+            mast_diameter_m=(
+                self._mast_diameter_field.value_m() if self._include_support_structures else 0.0
+            ),
+            mast_offset_m=(
+                self._mast_offset_field.value_m() if self._include_support_structures else 0.0
+            ),
+            guy_count=(
+                int(self._guy_count.currentData() or 0) if self._include_support_structures else 0
+            ),
+            guy_anchor_radius_m=(
+                self._guy_anchor_field.value_m() if self._include_support_structures else 0.0
+            ),
+            guy_diameter_m=(
+                self._guy_diameter_field.value_m() if self._include_support_structures else 0.0
+            ),
             driven_index=driven_index,
-            driven_folded=self._driven_folded.isChecked(),
+            driven_folded=(
+                self._driven_folded.isChecked() if self._include_feed_hardware else False
+            ),
             driven_fold_spacing_m=self._driven_fold_spacing_field.value_m(),
-            match_type=self._selected_match_type(),
+            match_type=(
+                self._selected_match_type() if self._include_feed_hardware else YagiMatchType.NONE
+            ),
             match_length_m=self._match_length_field.value_m(),
             match_spacing_m=self._match_spacing_field.value_m(),
             transformer_ratio=(
-                self._transformer.value() if self._driven_folded.isChecked() else 1.0
+                self._transformer.value()
+                if self._include_feed_hardware and self._driven_folded.isChecked()
+                else 1.0
             ),
             azimuth_deg=self._azimuth.value(),
             polarization=self._selected_polarization(),
