@@ -1264,11 +1264,12 @@ NEC solves the network, the primary SWR is the splitter-node input, and the
 **Sources** table comes from the network connection points. The TL cards use the
 physical line length at every solver frequency, so the electrical phase changes
 with frequency. The splitter is an ideal N-way divider; its excess loss reduces
-realized gain. **Matched line loss** is entered in dB per 100 m and applied to
-realized gain in network mode, using each level's physical line length. That is
-a matched-loss approximation: the primary SWR remains the lossless network
-input, so mismatch-dependent line loss, splitter internal mismatch, and
-per-level matching are not modeled. Use the line lengths for the construction
+realized gain. **Matched line loss** is entered in dB per 100 m. Network mode
+applies the matched loss plus a load-mismatch correction estimated from each
+port impedance to realized gain, using each level's physical line length. The
+primary SWR remains the lossless network input; the loss-induced
+input-impedance shift, splitter internal mismatch, and per-level matching are
+not modeled. Use the line lengths for the construction
 harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
@@ -1287,12 +1288,12 @@ element or adjacent copies overlap on the same axis. The form shows a warning
 and rejects the design in that case. The family is classified **experimental**:
 mutual coupling is included by the wire solver, but no stacking gain is
 claimed. Ideal and phase-line mode are a specification layer; network mode
-co-simulates the lossless lines and applies a matched line loss to realized
-gain. The optional mast and guy wires are modeled once for the whole stack, not
+co-simulates the lossless lines and applies a mismatch-corrected line loss to
+realized gain. The optional mast and guy wires are modeled once for the whole stack, not
 once per level, and a beta/hairpin match is built at each driven element.
-Mismatch-dependent line loss, phase-line impedance transformation, splitter
-internal mismatch, per-level matching networks, and folded driven elements are
-not modeled. Verify the pattern, per-port impedance, and match with the solver
+The loss-induced input-impedance shift, phase-line impedance transformation,
+splitter internal mismatch, per-level matching networks, and folded driven
+elements are not modeled. Verify the pattern, per-port impedance, and match with the solver
 or a measurement.
 
 ## Create a phased vertical array

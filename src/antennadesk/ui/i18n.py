@@ -4218,37 +4218,37 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.stacked_yagi.feed_mode": {
         Language.ENGLISH: (
             "Ideal uses the phase-step field. Splitter + phase lines derives it "
-            "from the extra line length. Co-simulated network adds NEC lines from "
-            "the splitter node and applies matched line loss."
+            "from the extra line length. Co-simulated network adds NEC lines and "
+            "a per-port mismatch-corrected line loss."
         ),
         Language.SPANISH: (
             "Ideal usa el escalón de fase. Divisor + líneas de fase lo deriva del "
-            "largo adicional. La red co-simulada agrega líneas NEC desde el nodo "
-            "del divisor y aplica la pérdida de línea adaptada."
+            "largo adicional. La red co-simulada agrega líneas NEC y pérdida de "
+            "línea corregida por desadapto."
         ),
     },
     "help.stacked_yagi.reference_line": {
         Language.ENGLISH: (
             "Physical splitter-to-level-1 line length. Phase-line mode uses only "
             "the additional length to set phase; network mode co-simulates this "
-            "reference line and applies its matched loss."
+            "reference line and applies its matched plus mismatch loss."
         ),
         Language.SPANISH: (
             "Largo físico de la línea del divisor al nivel 1. El modo de líneas "
             "de fase solo usa el largo adicional para fijar la fase; el modo red "
-            "co-simula esta línea de referencia y aplica su pérdida adaptada."
+            "co-simula esta línea y aplica pérdida adaptada más desadapto."
         ),
     },
     "help.stacked_yagi.line_increment": {
         Language.ENGLISH: (
             "Extra line length per higher level. Phase-line mode derives the "
             "phase step; network mode uses the physical length at every frequency "
-            "and applies matched line loss."
+            "and applies matched plus mismatch loss."
         ),
         Language.SPANISH: (
             "Largo adicional de línea por nivel superior. El modo de líneas de "
             "fase deriva el escalón; el modo red usa el largo físico en cada "
-            "frecuencia y aplica la pérdida de línea adaptada."
+            "frecuencia y aplica pérdida adaptada más desadapto."
         ),
     },
     "help.stacked_yagi.velocity_factor": {
@@ -4266,15 +4266,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.stacked_yagi.line_loss": {
         Language.ENGLISH: (
-            "Matched phase-line loss in dB per 100 m. It is applied to realized "
-            "gain in network mode; the primary SWR remains the lossless network "
-            "input and the matched-loss approximation ignores mismatch."
+            "Matched phase-line loss in dB per 100 m. Network mode adds a load-"
+            "mismatch correction from each port impedance; the primary SWR stays "
+            "lossless and the input-impedance shift is not re-solved."
         ),
         Language.SPANISH: (
-            "Pérdida de línea adaptada en dB por 100 m. Se aplica a la ganancia "
-            "realizada en modo red; la ROE primaria sigue siendo la entrada de la "
-            "red sin pérdidas y la aproximación de línea adaptada ignora el "
-            "desadapto."
+            "Pérdida de línea adaptada en dB por 100 m. El modo red agrega una "
+            "corrección por desadapto de cada puerto; la ROE primaria queda sin "
+            "pérdidas y no se recalcula el corrimiento de impedancia de entrada."
         ),
     },
     "help.stacked_yagi.splitter_loss": {
@@ -11820,16 +11819,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "The lossless TL network is co-simulated by NEC; the per-port table "
             "comes from the network connection points. The reference line is "
-            "included and the matched line loss is applied to realized gain; the "
-            "primary SWR is the lossless input. Mismatch-dependent line loss and "
-            "the splitter's internal mismatch are not modeled."
+            "included. Line loss is applied to realized gain using the matched "
+            "loss plus a per-port load-mismatch correction; the primary SWR is the "
+            "lossless input and its impedance shift is not re-solved. The "
+            "splitter's internal mismatch is not modeled."
         ),
         Language.SPANISH: (
             "La red de líneas sin pérdidas se co-simula en NEC; la tabla por "
             "puerto viene de los puntos de conexión de la red. La línea de "
-            "referencia está incluida y la pérdida de línea adaptada se aplica a "
-            "la ganancia realizada; la ROE primaria es la entrada sin pérdidas. "
-            "No se modelan la pérdida dependiente del desadapto ni el desajuste "
+            "referencia está incluida. La pérdida de línea se aplica a la ganancia "
+            "realizada como pérdida adaptada más una corrección por desadapto de "
+            "cada puerto; la ROE primaria es la entrada sin pérdidas y no se "
+            "recalcula su corrimiento de impedancia. No se modela el desajuste "
             "interno del divisor."
         ),
     },
@@ -11866,9 +11867,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "is the primary feed; in network mode the numerical splitter node is "
             "the primary input and every level is a network port. The feed can be "
             "an ideal phase step, a splitter + phase-line specification, or a "
-            "co-simulated lossless TL network. Network mode applies the matched "
-            "line loss to realized gain; mismatch-dependent line loss and "
-            "splitter internal mismatch are not modeled. The optional mast and "
+            "co-simulated lossless TL network. Network mode applies a line loss "
+            "with a per-port mismatch correction to realized gain; splitter "
+            "internal mismatch and the loss-induced input-impedance shift are not "
+            "modeled. The optional mast and "
             "guy wires are shared by every level, and a beta/hairpin match is "
             "built at every driven element."
         ),
@@ -11878,21 +11880,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "del divisor es la entrada principal y cada nivel es un puerto de red. "
             "La alimentación puede ser un escalón de fase ideal, una "
             "especificación de divisor + líneas de fase o una red de líneas sin "
-            "pérdidas co-simulada. El modo red aplica la pérdida de línea "
-            "adaptada a la ganancia realizada; no se modelan la pérdida "
-            "dependiente del desadapto ni el desajuste interno del divisor. El "
-            "mástil y los vientos opcionales son compartidos por todos los niveles, "
-            "y se arma un match beta/hairpin en cada elemento excitado."
+            "pérdidas co-simulada. El modo red aplica una pérdida de línea con "
+            "corrección por desadapto de cada puerto a la ganancia realizada; no "
+            "se modelan el desajuste interno del divisor ni el corrimiento de "
+            "impedancia de entrada por la pérdida. El mástil y los vientos "
+            "opcionales son compartidos por todos los niveles, y se arma un match "
+            "beta/hairpin en cada elemento excitado."
         ),
     },
     "stacked_yagi.evidence": {
         Language.ENGLISH: (
             "Experimental composed array. Mutual coupling is included by the wire "
             "solver. The optional feed specification sets the source phase and "
-            "splitter excess loss; network mode also applies a matched line loss "
-            "to realized gain while the primary SWR stays lossless. "
-            "Mismatch-dependent line loss, splitter internal mismatch, and "
-            "per-level matching networks are not modeled. An optional mast and "
+            "splitter excess loss; network mode also applies a line loss with a "
+            "per-port mismatch correction to realized gain while the primary SWR "
+            "stays lossless. Splitter internal mismatch, the loss-induced input-"
+            "impedance shift, and per-level matching networks are not modeled. An "
+            "optional mast and "
             "guy wires are modeled once for the whole stack, and a beta/hairpin "
             "match is built at every driven element. In network mode the reference "
             "line and differential TL impedance transformation are included; "
@@ -11903,10 +11907,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Arreglo compuesto experimental. El solver de hilos incluye el "
             "acoplamiento mutuo. La especificación opcional de alimentación fija la "
             "fase de las fuentes y la pérdida extra del divisor; el modo red "
-            "también aplica una pérdida de línea adaptada a la ganancia realizada "
-            "mientras la ROE primaria queda sin pérdidas. No se modelan la pérdida "
-            "dependiente del desadapto, el desajuste interno del divisor ni el "
-            "ajuste por nivel. Un mástil y vientos opcionales se modelan una sola "
+            "también aplica una pérdida de línea con corrección por desadapto de "
+            "cada puerto a la ganancia realizada mientras la ROE primaria queda "
+            "sin pérdidas. No se modelan el desajuste interno del divisor, el "
+            "corrimiento de impedancia de entrada por la pérdida ni el ajuste por "
+            "nivel. Un mástil y vientos opcionales se modelan una sola "
             "vez para toda la pila, y se arma un match beta/hairpin en cada "
             "elemento excitado. En modo red se incluyen la línea de referencia "
             "y la transformación de impedancia de las líneas diferenciales; el modo "

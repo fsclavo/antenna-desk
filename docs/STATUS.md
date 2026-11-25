@@ -39,14 +39,15 @@
   user-set maximum top height, and an optional splitter + phase-line feed
   (reference/increment lengths, velocity factor, Z0, and splitter excess loss),
   plus a co-simulated network mode with a 1 cm numerical splitter node,
-  lossless NEC TL cards including the reference line, a matched line-loss
-  value applied to realized gain, and per-port network connection results. The
+  lossless NEC TL cards including the reference line, a matched line loss plus
+  a per-port mismatch correction applied to realized gain, and per-port network
+  connection results. The
   splitter node is the primary input in network mode; the primary SWR remains
   the lossless input. A single shared mast and optional guy set are modeled
   once across every level, and a beta/hairpin match is modeled at every driven
-  element. Mismatch-dependent line loss, splitter internal mismatch, per-level
-  matching networks, folded driven elements, and per-level transformers remain
-  unavailable. Evidence is C; no stacking
+  element. The loss-induced input-impedance shift, splitter internal mismatch,
+  per-level matching networks, folded driven elements, and per-level
+  transformers remain unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,

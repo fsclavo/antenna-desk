@@ -66,7 +66,7 @@ def gain_metric_rows(result: SimulationResult | None) -> tuple[tuple[str, str], 
         if frequency.mismatch_loss_db is not None:
             rows.append(("Mismatch loss", f"{frequency.mismatch_loss_db:.3f} dB"))
         if frequency.feed_line_loss_db is not None:
-            rows.append(("Feed-line loss (matched)", f"{frequency.feed_line_loss_db:.3f} dB"))
+            rows.append(("Feed-line loss", f"{frequency.feed_line_loss_db:.3f} dB"))
         if frequency.network_loss_db is not None:
             rows.append(("Network loss", f"{frequency.network_loss_db:.3f} dB"))
         if frequency.balun_loss_db is not None:

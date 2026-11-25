@@ -647,7 +647,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Resonance": "Resonancia",
     # Result-summary rows.
     "Balun/unun loss": "Pérdida del balun/unun",
-    "Feed-line loss (matched)": "Pérdida de la línea de alimentación (adaptada)",
+    "Feed-line loss": "Pérdida de la línea de alimentación",
     "Link metrics at": "Métricas de enlace en",
     "Max directivity": "Directividad máxima",
     "Max power gain": "Ganancia máxima de potencia",
@@ -822,7 +822,7 @@ REPORT_SPANISH: dict[str, str] = {
     "The shared mast and guys are not modeled.": (
         "El mástil compartido y los vientos no están modelados."
     ),
-    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter node is a 1 cm numerical feed point above the stack, not an antenna conductor. Feed every level through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss and {line_loss} dB/100 m of matched line loss, applied to realized gain. The solver co-simulates the network and reports every port; the primary SWR is the lossless network input and splitter internal mismatch is not modeled. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
+    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter node is a 1 cm numerical feed point above the stack, not an antenna conductor. Feed every level through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss and {line_loss} dB/100 m of matched line loss plus a per-port mismatch correction, applied to realized gain. The solver co-simulates the network and reports every port; the primary SWR is the lossless network input and splitter internal mismatch is not modeled. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
         "entre los boms de los niveles. El nodo del divisor es un punto de "
         "alimentación numérico de 1 cm sobre la pila, no un "
@@ -830,8 +830,9 @@ REPORT_SPANISH: dict[str, str] = {
         "vías y una red de líneas de transmisión sin pérdidas: el nivel 1 tiene "
         "{reference} m y cada nivel superior agrega {increment} m de línea con "
         "factor de velocidad {velocity}. Registrá {loss} dB de pérdida extra del "
-        "divisor y {line_loss} dB/100 m de pérdida de línea adaptada, aplicada a "
-        "la ganancia realizada. El solver co-simula la red e informa cada puerto; "
+        "divisor y {line_loss} dB/100 m de pérdida de línea adaptada más una "
+        "corrección por desadapto de cada puerto, aplicada a la ganancia "
+        "realizada. El solver co-simula la red e informa cada puerto; "
         "la ROE primaria es la entrada de la red sin pérdidas y no se modela el "
         "desajuste interno del divisor. Armá cada nivel como un Yagi completo a "
         "partir de la tabla de elementos base. {mast_note} El ajuste por nivel no "

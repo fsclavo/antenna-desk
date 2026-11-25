@@ -65,7 +65,7 @@ def test_gain_metrics_report_power_directivity_and_realized_gain() -> None:
     assert rows["Max directivity"] == "2.20 dBi"
     assert rows["Max realized gain"] == "1.85 dBi"
     assert rows["Mismatch loss"] == "0.200 dB"
-    assert rows["Feed-line loss (matched)"] == "0.100 dB"
+    assert rows["Feed-line loss"] == "0.100 dB"
     assert rows["Network loss"] == "0.050 dB"
     assert rows["Balun/unun loss"] == "0.030 dB"
     assert rows["Transformer loss"] == "0.300 dB"

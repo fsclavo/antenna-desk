@@ -168,8 +168,9 @@ def test_stacked_yagi_line_loss_reduces_realized_gain_only() -> None:
         feed_network_line_loss_db_per_100m=1.5,
     )
 
-    baseline = solver.run(parameters.to_antenna(), base_spec).frequencies[0]
-    with_loss = solver.run(parameters.to_antenna(), loss_spec).frequencies[0]
+    model = parameters.to_antenna()
+    baseline = solver.run(model, base_spec).frequencies[0]
+    with_loss = solver.run(model, loss_spec).frequencies[0]
 
     assert with_loss.impedance_ohm == pytest.approx(baseline.impedance_ohm)
     assert with_loss.realized_gain_db is not None
@@ -177,6 +178,19 @@ def test_stacked_yagi_line_loss_reduces_realized_gain_only() -> None:
     assert with_loss.realized_gain_db < baseline.realized_gain_db
     assert with_loss.feed_line_loss_db is not None
     assert with_loss.feed_line_loss_db > 0.0
+
+    ports = {source.wire_id: source for source in baseline.source_results}
+    total_power = 0.0
+    matched_input = 0.0
+    for line in model.transmission_lines:
+        source = ports.get(line.end_wire_id)
+        if source is None or source.power_w <= 0.0:
+            continue
+        matched_db = 1.5 * line.length_m / 100.0
+        total_power += source.power_w
+        matched_input += source.power_w * 10.0 ** (matched_db / 10.0)
+    matched_loss = 10.0 * math.log10(matched_input / total_power)
+    assert with_loss.feed_line_loss_db > matched_loss + 0.001
 
 
 def test_stacked_yagi_shared_mast_runs_once() -> None:

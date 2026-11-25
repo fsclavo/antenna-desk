@@ -251,8 +251,9 @@ network mode the lossless TL cards carry the physical length at every solver
 frequency, so the electrical phase and the differential line impedance
 transformation change with frequency. In ideal/phase-line mode line impedance
 transformation is not modeled; the network mode includes the reference line and
-the differential TL transformation. A user-entered matched line loss is applied
-to realized gain; mismatch-dependent line loss is not captured. Splitter
+the differential TL transformation. A user-entered matched line loss plus a
+load-mismatch correction estimated from each port impedance is applied to
+realized gain; the loss-induced input-impedance shift is not re-solved. Splitter
 internal mismatch, per-level matching networks, folded driven elements, and
 per-level feed transformers are not modeled. A beta/hairpin match is built at
 every driven element. The base Yagi's optional mast and

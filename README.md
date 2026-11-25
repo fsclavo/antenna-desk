@@ -120,8 +120,9 @@ truth for each topic, every ADR, and the archived plans.
   estimator, with assumptions, confidence, and optional numerical refinement.
 - A composed two-to-four-level stacked Yagi with schema 63, per-port
   impedance/power, front-elevation scene, reports, an optional splitter +
-  phase-line feed specification with a co-simulated TL network, matched line
-  loss, per-port network results, one shared mast/guy set, and a beta/hairpin
+  phase-line feed specification with a co-simulated TL network,
+  mismatch-corrected line loss, per-port network results, one shared mast/guy
+  set, and a beta/hairpin
   match at every driven element, plus a bounded spacing/phase optimizer inside a
   user-set top-height envelope; no stacking gain is claimed.
 - Project-level Undo/Redo and hover cursors on the result charts.

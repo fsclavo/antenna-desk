@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from antennadesk.domain.antennas.transmission_line import TransmissionLine
+from antennadesk.domain.antennas.transmission_line import (
+    TransmissionLine,
+    mismatched_line_loss_db,
+)
 
 
 def _line(**overrides: object) -> TransmissionLine:
@@ -41,3 +44,47 @@ def test_transmission_line_rejects_invalid_values() -> None:
         _line(velocity_factor=0.0)
     with pytest.raises(ValueError, match="velocity_factor"):
         _line(velocity_factor=1.1)
+
+
+def test_mismatched_line_loss_adds_the_load_mismatch() -> None:
+    total = mismatched_line_loss_db(
+        length_m=100.0,
+        loss_db_per_100m=1.0,
+        characteristic_impedance_ohm=50.0,
+        load_impedance_ohm=150.0 + 0.0j,
+    )
+
+    assert total == pytest.approx(1.504, abs=0.002)
+
+
+def test_mismatched_line_loss_keeps_the_matched_case() -> None:
+    total = mismatched_line_loss_db(
+        length_m=100.0,
+        loss_db_per_100m=1.0,
+        characteristic_impedance_ohm=50.0,
+        load_impedance_ohm=50.0 + 0.0j,
+    )
+
+    assert total == pytest.approx(1.0)
+
+
+def test_mismatched_line_loss_is_zero_for_a_lossless_line() -> None:
+    total = mismatched_line_loss_db(
+        length_m=100.0,
+        loss_db_per_100m=0.0,
+        characteristic_impedance_ohm=50.0,
+        load_impedance_ohm=150.0 + 0.0j,
+    )
+
+    assert total == 0.0
+
+
+def test_mismatched_line_loss_falls_back_for_a_singular_load() -> None:
+    total = mismatched_line_loss_db(
+        length_m=100.0,
+        loss_db_per_100m=1.0,
+        characteristic_impedance_ohm=50.0,
+        load_impedance_ohm=-50.0 + 0.0j,
+    )
+
+    assert total == pytest.approx(1.0)

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from ..common.units import ensure_non_negative, ensure_positive
@@ -59,3 +60,43 @@ class TransmissionLine:
     @property
     def electrical_length_m(self) -> float:
         return self.length_m / self.velocity_factor
+
+
+def mismatched_line_loss_db(
+    *,
+    length_m: float,
+    loss_db_per_100m: float,
+    characteristic_impedance_ohm: float,
+    load_impedance_ohm: complex,
+) -> float:
+    """Return matched plus load-mismatch loss for one line.
+
+    ``a = 10 ** (-matched_loss_db / 10)`` is the matched power attenuation.
+    With load reflection ``Gamma_L``, the input reflection magnitude is
+    ``|Gamma_L| * a`` and the total loss is::
+
+        matched - 10 log10((1 - |Gamma_L|^2) / (1 - |Gamma_L|^2 a^2))
+
+    The result is clamped to at least the matched loss. The estimate assumes
+    the source delivers the same incident power; the input-impedance shift
+    caused by the loss is not re-solved. Active or singular loads fall back to
+    the matched loss.
+    """
+
+    matched = loss_db_per_100m * length_m / 100.0
+    if matched <= 0.0:
+        return 0.0
+    denominator = load_impedance_ohm + characteristic_impedance_ohm
+    if abs(denominator) <= 1e-12:
+        return matched
+    gamma = abs((load_impedance_ohm - characteristic_impedance_ohm) / denominator)
+    if gamma <= 0.0 or gamma >= 1.0:
+        return matched
+    attenuation = 10.0 ** (-matched / 10.0)
+    gamma_in = gamma * attenuation
+    numerator = 1.0 - gamma * gamma
+    denominator_power = 1.0 - gamma_in * gamma_in
+    if numerator <= 0.0 or denominator_power <= 0.0:
+        return matched
+    extra_db = max(0.0, -10.0 * math.log10(numerator / denominator_power))
+    return matched + extra_db

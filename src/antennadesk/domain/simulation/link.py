@@ -25,7 +25,8 @@ class LinkBudget:
 
     ``feed_line_loss_db`` is the actual dissipative loss under the modeled
     impedance chain. A multiport network adapter adds its matched phase-line
-    loss to this field so ``total_loss_db`` still balances the transducer gain.
+    loss plus a load-mismatch correction to this field so ``total_loss_db``
+    still balances the transducer gain.
     """
 
     input_impedance_ohm: complex

@@ -1324,7 +1324,11 @@ def design_summary_rows(
                             f"{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m",
                         ),
                         (
-                            "Line losses",
+                            "Line loss model",
+                            "matched + per-port load mismatch",
+                        ),
+                        (
+                            "Matched line losses",
                             " · ".join(
                                 f"L{index + 1} {parameters.feed.line_loss_for_level(index):.2f} dB"
                                 for index in range(parameters.count)

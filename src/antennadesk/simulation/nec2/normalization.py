@@ -12,6 +12,7 @@ from datetime import datetime
 from ...application.discretization import SegmentLayout
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.matching_network import MatchingNetworkOrigin
+from ...domain.antennas.transmission_line import mismatched_line_loss_db
 from ...domain.common.validation import Diagnostic, Severity
 from ...domain.simulation.link import link_budget
 from ...domain.simulation.result import (
@@ -162,7 +163,12 @@ def _network_line_loss_db(
         power = max(0.0, source.power_w)
         if power <= 0.0:
             continue
-        loss_db = loss_db_per_100m * line.length_m / 100.0
+        loss_db = mismatched_line_loss_db(
+            length_m=line.length_m,
+            loss_db_per_100m=loss_db_per_100m,
+            characteristic_impedance_ohm=line.characteristic_impedance_ohm,
+            load_impedance_ohm=source.impedance_ohm,
+        )
         total_power += power
         input_power += power * 10.0 ** (loss_db / 10.0)
     if total_power <= 0.0 or input_power <= 0.0:

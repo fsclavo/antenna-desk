@@ -65,9 +65,10 @@ slices.
 - The family now covers form, schema, catalog, per-port results, scene,
   reports, solver coverage, the splitter/phase-line specification, the
   co-simulated network, one shared mast/guy set, and a beta/hairpin match.
-  Line loss is a user-entered matched-loss value; splitter internal mismatch,
-  per-level matching networks, folded driven elements, and per-level feed
-  transformers remain out.
+  Line loss is a user-entered matched loss plus a per-port load-mismatch
+  correction estimated from the solved port impedances; the loss-induced
+  input-impedance shift, splitter internal mismatch, per-level matching
+  networks, folded driven elements, and per-level feed transformers remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.

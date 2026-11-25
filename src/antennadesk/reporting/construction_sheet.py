@@ -1416,7 +1416,7 @@ def render_construction_sheet(
             line_rows = "".join(
                 f"<tr><th>Level {index + 1} line</th><td>"
                 f"{_length(parameters.feed.line_length_for_level(index), display_units)}"
-                f"{f' ({parameters.feed.line_loss_for_level(index):.2f} dB)' if is_network else ''}"
+                f"{f' ({parameters.feed.line_loss_for_level(index):.2f} dB matched)' if is_network else ''}"
                 f"</td></tr>"
                 for index in range(parameters.count)
             )
@@ -1438,7 +1438,8 @@ def render_construction_sheet(
                     "transmission-line network: level 1 is {reference} m, and each "
                     "higher level adds {increment} m of {velocity} velocity-factor "
                     "line. Record {loss} dB of splitter excess loss and {line_loss} "
-                    "dB/100 m of matched line loss, applied to realized gain. The solver "
+                    "dB/100 m of matched line loss plus a per-port mismatch correction, "
+                    "applied to realized gain. The solver "
                     "co-simulates the network and reports every port; the primary SWR is "
                     "the lossless network input and splitter internal mismatch is not "
                     "modeled. Fit each level as a "

@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   across every level. A beta/hairpin match is built at every driven element;
   folded driven elements and per-level transformers stay disabled. Schema 62 adds the composed payload with a metadata-only 61→62
   migration; schema 63 adds the optional maximum top height and the splitter/
-  phase-line feed specification, including a matched line-loss value. The slice includes
+  phase-line feed specification, including a matched line loss and a per-port
+  load-mismatch correction. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -36,9 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   node and co-simulates lossless NEC TL cards from that node to every level,
   including the reference line; it reports every network connection point. The
   reference line and differential TL impedance transformation are included. The
-  splitter node is the primary input. A matched line-loss value is applied to
-  realized gain, while the primary SWR remains the lossless input;
-  mismatch-dependent line loss and splitter internal mismatch are not modeled.
+  splitter node is the primary input. A matched line loss plus a per-port
+  load-mismatch correction is applied to realized gain, while the primary SWR
+  remains the lossless input; the loss-induced input-impedance shift and
+  splitter internal mismatch are not modeled.
   Evidence is C and no stacking gain is claimed. See
   [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
 
