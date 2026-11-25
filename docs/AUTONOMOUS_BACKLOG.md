@@ -1651,10 +1651,10 @@ decision:
   [`RELEASE_QA_0.10.0.md`](archive/releases/RELEASE_QA_0.10.0.md). **0.9.0**
   remains the previous release (2026-11-17, Touchstone/UX31/UX30). See
   [`RELEASE_QA_0.9.0.md`](archive/releases/RELEASE_QA_0.9.0.md).
-- Release candidate: **0.10.1** prepared on 2026-11-24 with the refreshed
-  application icon and the live-tuning GUI-thread worker handoff. The Windows
-  3.12/3.13 UI jobs pass with the fix; the tag and published assets are
-  pending. See [`RELEASE_QA_0.10.1.md`](archive/releases/RELEASE_QA_0.10.1.md).
+- Release: **0.10.1** published on 2026-11-24 with the refreshed application
+  icon and the live-tuning GUI-thread worker fix. Windows 3.11/3.12/3.13 and
+  Linux CI pass; the Release workflow built and checksum-verified every
+  artifact. See [`RELEASE_QA_0.10.1.md`](archive/releases/RELEASE_QA_0.10.1.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
   the native heap during view teardown; Windows 3.12/3.13 and Linux
