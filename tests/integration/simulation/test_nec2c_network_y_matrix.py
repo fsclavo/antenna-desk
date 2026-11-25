@@ -14,15 +14,18 @@ from antennadesk.application.feed_network_y import extract_antenna_y_matrix
 from antennadesk.domain.antennas.feed_network import (
     NPortNetwork,
     TransmissionLineBranch,
+    n_way_wilkinson,
     solve_feed_network,
     two_way_wilkinson,
 )
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeed,
     StackedYagiFeedMode,
     StackedYagiParameters,
 )
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.common.reflection import calculate_swr
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
@@ -156,3 +159,55 @@ def test_wilkinson_feed_network_with_the_real_antenna_y_matrix() -> None:
         sum(solution.antenna_port_powers_w) + solution.network_loss_w,
         rel=1e-12,
     )
+
+
+def test_per_level_matching_improves_the_real_antenna_input_match() -> None:
+    solver = Nec2cSolver(Path(os.environ["NEC2C"]))
+    antenna_y = extract_antenna_y_matrix(
+        solver,
+        _stack().to_antenna(),
+        _spec(co_simulate=False),
+    )
+    port_impedance = 1.0 / antenna_y.matrix[0][0]
+    matching = design_l_network(
+        port_impedance,
+        FREQUENCY_HZ,
+        source_impedance_ohm=50.0,
+    )
+    assert matching is not None
+
+    base = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(2.0, 2.0),
+    )
+    matched = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(2.0, 2.0),
+        level_matching_network=matching,
+    )
+    base_solution = solve_feed_network(
+        base,
+        antenna_y.matrix,
+        frequency_hz=FREQUENCY_HZ,
+    )
+    matched_solution = solve_feed_network(
+        matched,
+        antenna_y.matrix,
+        frequency_hz=FREQUENCY_HZ,
+    )
+
+    base_swr = calculate_swr(base_solution.input_impedance_ohm, 50.0)
+    matched_swr = calculate_swr(matched_solution.input_impedance_ohm, 50.0)
+    assert matched_swr < base_swr
+    assert matched_swr < 1.2
+    assert matched_solution.antenna_port_powers_w[0] == pytest.approx(
+        matched_solution.antenna_port_powers_w[1],
+        rel=1e-6,
+    )
+    assert matched_solution.input_power_w == pytest.approx(
+        sum(matched_solution.antenna_port_powers_w) + matched_solution.network_loss_w,
+        rel=1e-9,
+    )
+    assert matched_solution.antenna_port_voltages_v != base_solution.antenna_port_voltages_v

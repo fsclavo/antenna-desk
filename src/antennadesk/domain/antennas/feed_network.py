@@ -20,6 +20,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..common.units import ensure_positive
+from .matching_network import MatchingNetwork
 
 Matrix = list[list[complex]]
 Vector = list[complex]
@@ -179,7 +180,38 @@ class TransmissionLineBranch:
         return (y11, y12, y12, y11)
 
 
-NetworkBranch = SeriesBranch | ShuntBranch | TransmissionLineBranch
+@dataclass(frozen=True, slots=True)
+class TwoPortBranch:
+    """A two-port ABCD network between two nodes.
+
+    The matching network's input is ``node_a`` and its output is ``node_b``.
+    The network must have a non-zero series element so its ABCD matrix has a
+    finite B term; a pure shunt one-port is not a valid feed-network branch.
+    """
+
+    node_a: int
+    node_b: int
+    network: MatchingNetwork
+
+    def __post_init__(self) -> None:
+        if self.node_a < 0 or self.node_b < 0 or self.node_a == self.node_b:
+            raise ValueError("a two-port branch needs two distinct non-negative nodes")
+        if not self.network.is_active:
+            raise ValueError("a two-port matching branch needs an active network")
+
+    def y_parameters(self, frequency_hz: float) -> tuple[complex, complex, complex, complex]:
+        abcd = self.network.abcd(frequency_hz)
+        if abs(abcd.b) <= 1e-15:
+            raise ValueError("a two-port matching branch needs a non-zero series element")
+        return (
+            abcd.d / abcd.b,
+            (abcd.b * abcd.c - abcd.a * abcd.d) / abcd.b,
+            -1.0 / abcd.b,
+            abcd.a / abcd.b,
+        )
+
+
+NetworkBranch = SeriesBranch | ShuntBranch | TransmissionLineBranch | TwoPortBranch
 _SPEED_OF_LIGHT_M_PER_S = 299_792_458.0
 
 
@@ -224,7 +256,7 @@ class NPortNetwork:
         size = self.node_count
         admittance = _zero_matrix(size)
         for branch in self.branches:
-            if isinstance(branch, TransmissionLineBranch):
+            if isinstance(branch, (TransmissionLineBranch, TwoPortBranch)):
                 y11, y12, y21, y22 = branch.y_parameters(frequency_hz)
                 a, b = branch.node_a, branch.node_b
                 admittance[a][a] += y11
@@ -401,6 +433,7 @@ def n_way_wilkinson(
     system_impedance_ohm: float = 50.0,
     velocity_factor: float = 1.0,
     branch_velocity_factor: float = 1.0,
+    level_matching_network: MatchingNetwork | None = None,
 ) -> NPortNetwork:
     """Return an equal N-way Wilkinson with feed lines to each output.
 
@@ -409,8 +442,10 @@ def n_way_wilkinson(
     impedance ``system_impedance_ohm * sqrt(N)``. The isolation network is a
     star of N resistors of ``system_impedance_ohm`` around a floating center.
     Each splitter output then runs through a feed line of the given length and
-    the system impedance to its level port. The floating star center is
-    regularized by a very high numerical shunt; it is not a physical component.
+    the system impedance to its level port. When ``level_matching_network`` is
+    provided, the same two-port network is inserted between each feed line and
+    its level port. The floating star center is regularized by a very high
+    numerical shunt; it is not a physical component.
     """
 
     ensure_positive(frequency_hz, name="frequency_hz")
@@ -432,6 +467,7 @@ def n_way_wilkinson(
     branch_impedance_ohm = system_impedance_ohm * math.sqrt(port_count)
     first_splitter_node = port_count + 1
     star_center = first_splitter_node + port_count
+    matching_node_start = star_center + 1
     branches: list[NetworkBranch] = []
     for output_index in range(port_count):
         splitter_node = first_splitter_node + output_index
@@ -451,15 +487,28 @@ def n_way_wilkinson(
                 impedance_ohm=complex(system_impedance_ohm, 0.0),
             )
         )
+        feed_line_end = (
+            matching_node_start + output_index
+            if level_matching_network is not None
+            else output_index + 1
+        )
         branches.append(
             TransmissionLineBranch(
                 node_a=splitter_node,
-                node_b=output_index + 1,
+                node_b=feed_line_end,
                 characteristic_impedance_ohm=system_impedance_ohm,
                 length_m=feed_line_lengths_m[output_index],
                 velocity_factor=velocity_factor,
             )
         )
+        if level_matching_network is not None:
+            branches.append(
+                TwoPortBranch(
+                    node_a=matching_node_start + output_index,
+                    node_b=output_index + 1,
+                    network=level_matching_network,
+                )
+            )
     # The star center has no connection to the reference, so its common mode
     # is arbitrary and the internal nodal matrix would be singular at the
     # equal-split frequency. A very high shunt regularizes that common mode
@@ -473,5 +522,7 @@ def n_way_wilkinson(
     return NPortNetwork(
         port_names=("input", *(f"output-{index + 1}" for index in range(port_count))),
         branches=tuple(branches),
-        internal_node_count=port_count + 1,
+        internal_node_count=(
+            2 * port_count + 1 if level_matching_network is not None else port_count + 1
+        ),
     )

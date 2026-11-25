@@ -11,9 +11,15 @@ import pytest
 from antennadesk.domain.antennas.feed_network import (
     NPortNetwork,
     TransmissionLineBranch,
+    TwoPortBranch,
     n_way_wilkinson,
     solve_feed_network,
     two_way_wilkinson,
+)
+from antennadesk.domain.antennas.matching_network import (
+    design_l_network,
+    design_pi_network,
+    design_t_network,
 )
 
 FREQUENCY_HZ = 14_100_000.0
@@ -197,4 +203,76 @@ def test_n_way_wilkinson_is_matched_and_splits_equally(port_count: int) -> None:
     assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=0.01)
     for power in solution.antenna_port_powers_w:
         assert power == pytest.approx(solution.input_power_w / port_count, rel=1e-5)
+    assert solution.network_loss_w == pytest.approx(0.0, abs=1e-4)
+
+
+@pytest.mark.parametrize(
+    "network_factory",
+    [
+        lambda: design_l_network(100.0 + 0.0j, FREQUENCY_HZ, source_impedance_ohm=50.0),
+        lambda: design_pi_network(
+            100.0 + 0.0j,
+            FREQUENCY_HZ,
+            source_impedance_ohm=50.0,
+            loaded_q=3.0,
+        ),
+        lambda: design_t_network(
+            100.0 + 0.0j,
+            FREQUENCY_HZ,
+            source_impedance_ohm=50.0,
+            loaded_q=3.0,
+        ),
+    ],
+)
+def test_level_matching_branch_transforms_a_100_ohm_load(network_factory) -> None:
+    matching = network_factory()
+    assert matching is not None
+    quarter = SPEED_OF_LIGHT / FREQUENCY_HZ / 4.0
+    feed = NPortNetwork(
+        port_names=("input", "output"),
+        branches=(
+            TransmissionLineBranch(0, 2, 50.0, quarter),
+            TwoPortBranch(2, 1, matching),
+        ),
+        internal_node_count=1,
+    )
+
+    solution = solve_feed_network(
+        feed,
+        [[1.0 / 100.0 + 0.0j]],
+        frequency_hz=FREQUENCY_HZ,
+    )
+
+    assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=1e-6)
+    assert solution.antenna_port_powers_w[0] == pytest.approx(
+        solution.input_power_w,
+        rel=1e-6,
+    )
+
+
+def test_n_way_wilkinson_with_level_matching_is_matched_and_splits_equally() -> None:
+    matching = design_l_network(
+        100.0 + 0.0j,
+        FREQUENCY_HZ,
+        source_impedance_ohm=50.0,
+    )
+    assert matching is not None
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        level_matching_network=matching,
+    )
+    load = [[0.01 + 0.0j, 0.0j], [0.0j, 0.01 + 0.0j]]
+
+    solution = solve_feed_network(
+        network,
+        load,
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+    )
+
+    assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=0.001)
+    for power in solution.antenna_port_powers_w:
+        assert power == pytest.approx(solution.input_power_w / 2.0, rel=1e-4)
     assert solution.network_loss_w == pytest.approx(0.0, abs=1e-4)

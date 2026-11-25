@@ -96,7 +96,7 @@
 
 ## Next
 
-1. Continue DL6 with per-level matching networks and folded driven elements on top of the Wilkinson N-port feed; component tolerances and a general S-parameter engine remain separate.
+1. Expose the validated per-level L/Pi/T matching branch in the stacked-Yagi editor/schema; then add folded driven elements, Wilkinson component tolerances, and optimizer integration.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

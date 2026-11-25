@@ -279,12 +279,13 @@ has named external ports and an optional set of internal nodes:
 
 - `SeriesBranch` and `ShuntBranch` (complex impedance);
 - `TransmissionLineBranch` (ideal, Z0, physical length, velocity factor);
+- `TwoPortBranch` for an L/Pi/T matching network in the feed path;
 - `NPortNetwork.y_matrix(frequency)` with internal-node elimination;
 - `NPortNetwork.s_matrix(frequency, z0)` for equal real reference impedances;
 - `solve_feed_network(network, antenna_admittance, ...)` for the input
   impedance, per-port powers, and network loss;
 - `two_way_wilkinson()` and `n_way_wilkinson()` builders with optional feed
-  lines.
+  lines and an optional common `level_matching_network`.
 
 The antenna admittance matrix is extracted from NEC in
 `application/feed_network_y.py`: each level port is driven with 1 V while the
@@ -298,7 +299,9 @@ schema 64, reports, and construction sheet; the feed-network power budget is
 not reported because the reconstructed multi-source budget is ambiguous. The
 star isolation center is regularized by a very high numerical shunt in the
 solver; it is not a physical component and is not listed in the construction
-sheet.
+sheet. A `TwoPortBranch` can insert a common L/Pi/T matching network between
+each feed line and its level port; the solver branch is validated, but the
+editor/schema fields are pending.
 
 ### RingoParameters
 

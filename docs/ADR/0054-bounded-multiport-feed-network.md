@@ -119,6 +119,12 @@ The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
   omitted;
 - the existing NEC TL network mode remains available.
 
+The solver-side per-level matching branch is also validated: a `TwoPortBranch`
+inserts an L/Pi/T network between each feed line and its level port. A common
+L-network designed from the real antenna port self-impedance reduced the
+two-level stack input SWR from about 14.7 to 1.09 in the real NEC Y-matrix
+test. The editor/schema fields for per-level matching remain pending.
+
 ## Implementation phases
 
 ### Phase 1 — Solver and antenna Y-matrix (done)
@@ -142,13 +148,16 @@ The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
   conductor-only.
 - The ideal/excess-loss mode remains selectable.
 
-### Follow-up — Per-level matching
+### Follow-up — Per-level matching (solver validated; UI pending)
 
 - Reuse the N-port solver and antenna Y-matrix.
-- Synthesize one L/Pi/T network as a feed-network branch at a single level.
-- Compare its input impedance with the analytic two-port or scikit-rf.
-- Only then apply it to every level; require the currents and pattern to change
-  with the match, not only a reported SWR.
+- A `TwoPortBranch` inserts one L/Pi/T network between a feed line and a level
+  port; the same network can be applied to every level.
+- The branch is validated against the analytic matching-network two-port and
+  scikit-rf; a real two-level stack test reduced the input SWR from about 14.7
+  to 1.09 with a common L-network.
+- The editor/schema fields, per-level values, and optimizer integration remain
+  pending.
 
 ## Acceptance criteria
 
