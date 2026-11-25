@@ -49,9 +49,11 @@ class StackedYagiFeed:
     sweep; in network mode NEC's lossless TL cards use the physical length at
     every solver frequency. The splitter is an ideal parallel junction at a
     numerical node; the reference line is included as a lossless TL to level 1.
-    Line loss and the splitter's internal isolation/return loss are not
-    modeled. ``splitter_loss_db`` is the excess loss beyond the ideal N-way
-    division and is applied to the realized gain.
+    ``line_loss_db_per_100m`` is a matched-loss approximation applied to the
+    realized gain; the primary SWR remains the lossless network input and
+    mismatch-dependent line loss plus the splitter's internal isolation/return
+    loss are not modeled. ``splitter_loss_db`` is the excess loss beyond the
+    ideal N-way division and is applied to the realized gain.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -60,6 +62,7 @@ class StackedYagiFeed:
     velocity_factor: float = 1.0
     characteristic_impedance_ohm: float = 50.0
     splitter_loss_db: float = 0.0
+    line_loss_db_per_100m: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -73,6 +76,7 @@ class StackedYagiFeed:
             name="characteristic_impedance_ohm",
         )
         ensure_non_negative(self.splitter_loss_db, name="splitter_loss_db")
+        ensure_non_negative(self.line_loss_db_per_100m, name="line_loss_db_per_100m")
         if self.mode is StackedYagiFeedMode.NETWORK and self.line_increment_m <= 0.0:
             raise ValueError("network mode requires a positive line_increment_m")
         if self.mode is StackedYagiFeedMode.NETWORK and self.reference_length_m <= 0.0:
@@ -80,6 +84,11 @@ class StackedYagiFeed:
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m
+
+    def line_loss_for_level(self, level_index: int) -> float:
+        """Return the matched line loss for a zero-based level line."""
+
+        return self.line_loss_db_per_100m * self.line_length_for_level(level_index) / 100.0
 
 
 def stacked_yagi_parameters(

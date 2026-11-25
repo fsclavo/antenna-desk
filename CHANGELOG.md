@@ -11,13 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Stacked Yagi first slice (DL6).** Two to four identical Yagis can be
   composed on one vertical stack with a level count, boom spacing, ideal phase
-  step, and additional-level voltage ratio. Level 1 remains the primary
-  impedance/SWR reference; the **Sources** table reports every driven level.
+  step, and additional-level voltage ratio. In ideal and phase-line mode level 1
+  is the primary impedance/SWR reference; the **Sources** table reports every
+  driven level.
   The embedded Yagi editor disables mast/guy wires, folded or matched driven
   elements, and per-level transformers until a shared support model and
   per-level feed hardware exist. Schema 62 adds the composed payload with a metadata-only 61→62
-  migration; schema 63 adds the optional maximum top height and splitter/
-  phase-line feed specification. The slice includes
+  migration; schema 63 adds the optional maximum top height and the splitter/
+  phase-line feed specification, including a matched line-loss value. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -26,13 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   derives the excitation phase from a reference line and an additional length
   per level, records the velocity factor and characteristic impedance, and
   applies the splitter excess loss to realized gain; the line phase is fixed
-  at the design frequency across a sweep. The solver still uses ideal voltage
-  sources and does not model line loss or line impedance transformation. Per-level matching, a shared mast, folded/matched driven
+  at the design frequency across a sweep. In this mode the solver still uses
+  ideal voltage sources and does not model line loss or line impedance
+  transformation. Per-level matching, a shared mast, folded/matched driven
   elements remain unavailable. A network mode adds a 1 cm numerical splitter
   node and co-simulates lossless NEC TL cards from that node to every level,
   including the reference line; it reports every network connection point. The
-  reference line and differential TL impedance transformation are included;
-  line loss and splitter internal mismatch are not modeled.
+  reference line and differential TL impedance transformation are included. The
+  splitter node is the primary input. A matched line-loss value is applied to
+  realized gain, while the primary SWR remains the lossless input;
+  mismatch-dependent line loss and splitter internal mismatch are not modeled.
   Evidence is C and no stacking gain is claimed. See
   [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
 

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import datetime
 
 from ...application.discretization import SegmentLayout
@@ -140,6 +141,33 @@ def _network_source_results(
             )
         )
     return results
+
+
+def _network_line_loss_db(
+    model: AntennaModel,
+    source_results: Sequence[SourceResult],
+    loss_db_per_100m: float,
+) -> float:
+    if loss_db_per_100m <= 0.0:
+        return 0.0
+    ports = {source.wire_id: source for source in source_results}
+    total_power = 0.0
+    input_power = 0.0
+    for line in model.transmission_lines:
+        if line.start_wire_id != model.feed.wire_id:
+            continue
+        source = ports.get(line.end_wire_id)
+        if source is None:
+            continue
+        power = max(0.0, source.power_w)
+        if power <= 0.0:
+            continue
+        loss_db = loss_db_per_100m * line.length_m / 100.0
+        total_power += power
+        input_power += power * 10.0 ** (loss_db / 10.0)
+    if total_power <= 0.0 or input_power <= 0.0:
+        return 0.0
+    return max(0.0, 10.0 * math.log10(input_power / total_power))
 
 
 def normalize_nec2_result(
@@ -338,6 +366,21 @@ def normalize_nec2_result(
             frequency_hz=parsed_frequency.frequency_hz,
             spec=spec,
         )
+        line_loss_db = (
+            _network_line_loss_db(
+                model,
+                source_results,
+                spec.feed_network_line_loss_db_per_100m,
+            )
+            if spec.co_simulate_feed_network
+            else 0.0
+        )
+        if line_loss_db > 0.0:
+            link = replace(
+                link,
+                feed_line_loss_db=link.feed_line_loss_db + line_loss_db,
+                transducer_gain_db=link.transducer_gain_db - line_loss_db,
+            )
         if (
             link.matching_network_topology_floor_swr is not None
             and spec.matching_network_origin is MatchingNetworkOrigin.INTERNAL_ENDFED

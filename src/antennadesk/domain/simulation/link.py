@@ -21,7 +21,12 @@ from .spec import SimulationSpec
 
 @dataclass(frozen=True, slots=True)
 class LinkBudget:
-    """The transmitter-to-antenna link efficiency and its loss components."""
+    """The transmitter-to-antenna link efficiency and its loss components.
+
+    ``feed_line_loss_db`` is the actual dissipative loss under the modeled
+    impedance chain. A multiport network adapter adds its matched phase-line
+    loss to this field so ``total_loss_db`` still balances the transducer gain.
+    """
 
     input_impedance_ohm: complex
     transducer_gain_db: float

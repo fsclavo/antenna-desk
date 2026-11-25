@@ -153,6 +153,8 @@ def test_phase_line_feed_rejects_invalid_lines_and_loss() -> None:
         StackedYagiFeed(line_increment_m=-0.1)
     with pytest.raises(ValueError):
         StackedYagiFeed(splitter_loss_db=-0.1)
+    with pytest.raises(ValueError):
+        StackedYagiFeed(line_loss_db_per_100m=-0.1)
 
 
 def test_network_mode_builds_lossless_phase_lines_and_no_ideal_sources() -> None:
@@ -198,3 +200,14 @@ def test_network_mode_builds_lossless_phase_lines_and_no_ideal_sources() -> None
             mode=StackedYagiFeedMode.NETWORK,
             line_increment_m=2.0,
         )
+
+
+def test_phase_line_loss_is_scaled_by_the_physical_length() -> None:
+    feed = StackedYagiFeed(
+        reference_length_m=2.0,
+        line_increment_m=2.5,
+        line_loss_db_per_100m=1.5,
+    )
+
+    assert feed.line_loss_for_level(0) == pytest.approx(0.03)
+    assert feed.line_loss_for_level(2) == pytest.approx(0.105)

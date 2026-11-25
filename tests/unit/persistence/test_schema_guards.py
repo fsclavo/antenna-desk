@@ -153,6 +153,7 @@ def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.single(14_100_000.0),
         feed_network_loss_db=0.4,
+        feed_network_line_loss_db_per_100m=1.5,
         co_simulate_feed_network=True,
     )
 
@@ -160,6 +161,8 @@ def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
     restored = schema._simulation_spec_to_domain(payload)
 
     assert payload.feed_network_loss_db == 0.4
+    assert payload.feed_network_line_loss_db_per_100m == 1.5
     assert payload.co_simulate_feed_network is True
     assert restored.feed_network_loss_db == 0.4
+    assert restored.feed_network_line_loss_db_per_100m == 1.5
     assert restored.co_simulate_feed_network is True

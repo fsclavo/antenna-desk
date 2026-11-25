@@ -47,6 +47,7 @@ class SimulationSpec:
     transformer_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     feed_network_loss_db: float = 0.0
+    feed_network_line_loss_db_per_100m: float = 0.0
     co_simulate_feed_network: bool = False
     site_ground: SiteGroundProfile | None = None
     timeout_s: float = DEFAULT_TIMEOUT_S
@@ -54,8 +55,15 @@ class SimulationSpec:
     def __post_init__(self) -> None:
         ensure_positive(self.reference_impedance_ohm, name="reference_impedance_ohm")
         ensure_positive(self.feed_transformer_ratio, name="feed_transformer_ratio")
-        if not math.isfinite(self.feed_network_loss_db) or self.feed_network_loss_db < 0.0:
-            raise ValueError("feed_network_loss_db must be finite and non-negative")
+        for name, value in (
+            ("feed_network_loss_db", self.feed_network_loss_db),
+            (
+                "feed_network_line_loss_db_per_100m",
+                self.feed_network_line_loss_db_per_100m,
+            ),
+        ):
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
         ensure_positive(self.timeout_s, name="timeout_s")
         object.__setattr__(
             self,

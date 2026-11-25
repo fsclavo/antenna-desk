@@ -979,6 +979,8 @@ def test_stacked_yagi_phase_line_summary_reports_the_feed_network() -> None:
     assert rows["Velocity factor"] == "0.800"
     assert rows["Line Z0"] == "75.0 Ω"
     assert rows["Splitter excess loss"] == "0.40 dB"
+    assert "Matched line loss" not in rows
+    assert "Line losses" not in rows
     assert rows["Phase step"].endswith("°")
     assert rows["Phase step"] != "0.0°"
 
@@ -1013,11 +1015,14 @@ def test_stacked_yagi_network_mode_summary_names_the_co_simulation() -> None:
             line_increment_m=2.65,
             velocity_factor=0.8,
             characteristic_impedance_ohm=75.0,
+            line_loss_db_per_100m=1.5,
         ),
     )
 
     rows = dict(design_summary_rows(parameters))
 
     assert rows["Feed network"] == "co-simulated TL network"
+    assert rows["Matched line loss"] == "1.50 dB/100 m"
+    assert "L1" in rows["Line losses"]
     assert rows["Feed"] == "splitter node (primary input); every level is a network port"
     assert rows["Line increment"] == "2.6500 m"

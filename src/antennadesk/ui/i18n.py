@@ -4218,35 +4218,37 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.stacked_yagi.feed_mode": {
         Language.ENGLISH: (
             "Ideal uses the phase-step field. Splitter + phase lines derives it "
-            "from the extra line length. Co-simulated TL network adds lossless "
-            "NEC lines and reports every network port."
+            "from the extra line length. Co-simulated network adds NEC lines from "
+            "the splitter node and applies matched line loss."
         ),
         Language.SPANISH: (
             "Ideal usa el escalón de fase. Divisor + líneas de fase lo deriva del "
-            "largo adicional. La red co-simulada agrega líneas NEC sin pérdidas e "
-            "informa cada puerto."
+            "largo adicional. La red co-simulada agrega líneas NEC desde el nodo "
+            "del divisor y aplica la pérdida de línea adaptada."
         ),
     },
     "help.stacked_yagi.reference_line": {
         Language.ENGLISH: (
-            "Physical splitter-to-level-1 line length. It is a construction note; "
-            "only the additional length between levels sets the phase."
+            "Physical splitter-to-level-1 line length. Phase-line mode uses only "
+            "the additional length to set phase; network mode co-simulates this "
+            "reference line and applies its matched loss."
         ),
         Language.SPANISH: (
-            "Largo físico de la línea del divisor al nivel 1. Es una nota de "
-            "construcción; solo el largo adicional entre niveles fija la fase."
+            "Largo físico de la línea del divisor al nivel 1. El modo de líneas "
+            "de fase solo usa el largo adicional para fijar la fase; el modo red "
+            "co-simula esta línea de referencia y aplica su pérdida adaptada."
         ),
     },
     "help.stacked_yagi.line_increment": {
         Language.ENGLISH: (
-            "Extra line length added for each higher level. The phase step is "
-            "-360 x increment / (velocity factor x wavelength); line loss and "
-            "impedance transformation are not modeled."
+            "Extra line length per higher level. Phase-line mode derives the "
+            "phase step; network mode uses the physical length at every frequency "
+            "and applies matched line loss."
         ),
         Language.SPANISH: (
-            "Largo adicional de línea para cada nivel superior. El escalón de fase "
-            "es -360 x incremento / (factor de velocidad x longitud de onda); no se "
-            "modelan la pérdida de línea ni la transformación de impedancia."
+            "Largo adicional de línea por nivel superior. El modo de líneas de "
+            "fase deriva el escalón; el modo red usa el largo físico en cada "
+            "frecuencia y aplica la pérdida de línea adaptada."
         ),
     },
     "help.stacked_yagi.velocity_factor": {
@@ -4260,6 +4262,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Impedancia característica nominal de la línea de fase; se registra para "
             "la construcción."
+        ),
+    },
+    "help.stacked_yagi.line_loss": {
+        Language.ENGLISH: (
+            "Matched phase-line loss in dB per 100 m. It is applied to realized "
+            "gain in network mode; the primary SWR remains the lossless network "
+            "input and the matched-loss approximation ignores mismatch."
+        ),
+        Language.SPANISH: (
+            "Pérdida de línea adaptada en dB por 100 m. Se aplica a la ganancia "
+            "realizada en modo red; la ROE primaria sigue siendo la entrada de la "
+            "red sin pérdidas y la aproximación de línea adaptada ignora el "
+            "desadapto."
         ),
     },
     "help.stacked_yagi.splitter_loss": {
@@ -11783,32 +11798,39 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Splitter excess loss",
         Language.SPANISH: "Pérdida extra del divisor",
     },
+    "stacked_yagi.line_loss": {
+        Language.ENGLISH: "Matched line loss",
+        Language.SPANISH: "Pérdida de línea adaptada",
+    },
     "stacked_yagi.derived_phase": {
         Language.ENGLISH: "Derived phase step: {phase}° per level",
         Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
     },
     "stacked_yagi.network_scene_note": {
         Language.ENGLISH: (
-            "network mode: the splitter node is a numerical feed point; the "
-            "transmission lines are not drawn"
+            "network mode: the splitter node is a numerical feed point; dashed "
+            "lines are the lossless transmission lines"
         ),
         Language.SPANISH: (
             "modo red: el nodo del divisor es un punto de alimentación numérico; "
-            "las líneas de transmisión no se dibujan"
+            "las líneas discontinuas son las líneas de transmisión sin pérdidas"
         ),
     },
     "stacked_yagi.network_note": {
         Language.ENGLISH: (
             "The lossless TL network is co-simulated by NEC; the per-port table "
             "comes from the network connection points. The reference line is "
-            "included; line loss and the splitter's internal mismatch are not "
-            "modeled."
+            "included and the matched line loss is applied to realized gain; the "
+            "primary SWR is the lossless input. Mismatch-dependent line loss and "
+            "the splitter's internal mismatch are not modeled."
         ),
         Language.SPANISH: (
             "La red de líneas sin pérdidas se co-simula en NEC; la tabla por "
             "puerto viene de los puntos de conexión de la red. La línea de "
-            "referencia está incluida; no se modelan la pérdida de línea ni el "
-            "desajuste interno del divisor."
+            "referencia está incluida y la pérdida de línea adaptada se aplica a "
+            "la ganancia realizada; la ROE primaria es la entrada sin pérdidas. "
+            "No se modelan la pérdida dependiente del desadapto ni el desajuste "
+            "interno del divisor."
         ),
     },
     "stacked_yagi.amplitude_ratio": {
@@ -11844,8 +11866,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "is the primary feed; in network mode the numerical splitter node is "
             "the primary input and every level is a network port. The feed can be "
             "an ideal phase step, a splitter + phase-line specification, or a "
-            "co-simulated lossless TL network. Line loss and splitter internal "
-            "mismatch are not modeled."
+            "co-simulated lossless TL network. Network mode applies the matched "
+            "line loss to realized gain; mismatch-dependent line loss and "
+            "splitter internal mismatch are not modeled."
         ),
         Language.SPANISH: (
             "Cada nivel es el mismo Yagi. En modos ideal y de líneas de fase, el "
@@ -11853,27 +11876,32 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "del divisor es la entrada principal y cada nivel es un puerto de red. "
             "La alimentación puede ser un escalón de fase ideal, una "
             "especificación de divisor + líneas de fase o una red de líneas sin "
-            "pérdidas co-simulada. No se modelan la pérdida de línea ni el "
-            "desajuste interno del divisor."
+            "pérdidas co-simulada. El modo red aplica la pérdida de línea "
+            "adaptada a la ganancia realizada; no se modelan la pérdida "
+            "dependiente del desadapto ni el desajuste interno del divisor."
         ),
     },
     "stacked_yagi.evidence": {
         Language.ENGLISH: (
             "Experimental composed array. Mutual coupling is included by the wire "
             "solver. The optional feed specification sets the source phase and "
-            "splitter excess loss; line loss, splitter internal mismatch, "
-            "per-level matching, and the shared mast are not modeled. In network "
-            "mode the reference line and differential TL impedance transformation "
-            "are included; phase-line mode does not include them. No stacking gain "
-            "is claimed; verify spacing, phase, and matching with the solver or a "
+            "splitter excess loss; network mode also applies a matched line loss "
+            "to realized gain while the primary SWR stays lossless. "
+            "Mismatch-dependent line loss, splitter internal mismatch, per-level "
+            "matching, and the shared mast are not modeled. In network mode the "
+            "reference line and differential TL impedance transformation are "
+            "included; phase-line mode does not include them. No stacking gain is "
+            "claimed; verify spacing, phase, and matching with the solver or a "
             "measurement."
         ),
         Language.SPANISH: (
             "Arreglo compuesto experimental. El solver de hilos incluye el "
             "acoplamiento mutuo. La especificación opcional de alimentación fija la "
-            "fase de las fuentes y la pérdida extra del divisor; no se modelan la "
-            "pérdida de línea, el desajuste interno del divisor, el ajuste por "
-            "nivel ni el mástil compartido. En modo red se incluyen la línea de "
+            "fase de las fuentes y la pérdida extra del divisor; el modo red "
+            "también aplica una pérdida de línea adaptada a la ganancia realizada "
+            "mientras la ROE primaria queda sin pérdidas. No se modelan la pérdida "
+            "dependiente del desadapto, el desajuste interno del divisor, el ajuste "
+            "por nivel ni el mástil compartido. En modo red se incluyen la línea de "
             "referencia y la transformación de impedancia de las líneas "
             "diferenciales; el modo de líneas de fase no las incluye. No se declara "
             "ganancia de apilado; verificá separación, fase y ajuste con el solver "
@@ -11897,15 +11925,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Spacing and the phase variable are optimized inside the level count, "
             "base Yagi, amplitude ratio, and maximum top height you provide. In "
-            "phase-line mode the search moves the additional line length; the "
-            "splitter excess loss and line impedance transformation stay fixed."
+            "phase-line and network mode the search moves the additional line "
+            "length; the splitter and line losses stay fixed."
         ),
         Language.SPANISH: (
             "La separación y la variable de fase se optimizan dentro de la cantidad "
             "de niveles, el Yagi base, la relación de amplitud y la altura máxima "
-            "indicada. En modo de líneas de fase, la búsqueda mueve el largo "
-            "adicional de línea; la pérdida extra del divisor y la transformación "
-            "de impedancia de la línea quedan fijas."
+            "indicada. En modo de líneas de fase y en modo red, la búsqueda mueve "
+            "el largo adicional de línea; las pérdidas del divisor y de línea "
+            "quedan fijas."
         ),
     },
     "stacked_yagi.constraint.phase": {

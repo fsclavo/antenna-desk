@@ -462,10 +462,11 @@ def _classify(
             _center_terminals(model),
             (
                 "Splitter node is the primary input; lossless TLs feed every level; "
-                "line loss and splitter internal mismatch are not modeled"
+                "matched line loss is applied to gain, but mismatch-dependent loss and "
+                "splitter internal mismatch are not modeled"
                 if parameters.feed.mode is StackedYagiFeedMode.NETWORK
                 else "Level 1 is the primary port; splitter + phase lines, with ideal "
-                "sources and no line impedance transformation"
+                "sources, no line impedance transformation, and no line loss"
                 if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
                 else (
                     "Level 1 is the primary port; levels 2-N are ideal sources "

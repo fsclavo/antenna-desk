@@ -1512,6 +1512,7 @@ def test_stacked_yagi_phase_line_construction_sheet_lists_the_feed(
     assert "0.800" in sheet
     assert "75.0 Ω" in sheet
     assert "0.40 dB" in sheet
+    assert "Matched line loss" not in sheet
     assert "phase lines: level 1" in sheet
 
 
@@ -1548,11 +1549,13 @@ def test_stacked_yagi_network_construction_sheet_mentions_co_simulation(
                 line_increment_m=2.65,
                 velocity_factor=0.8,
                 characteristic_impedance_ohm=75.0,
+                line_loss_db_per_100m=1.5,
             ),
         )
     )
     sheet = render_construction_sheet(sample_project, stack, None)
 
-    assert "splitter + phase lines" in sheet
+    assert "co-simulated lossless TL network" in sheet
+    assert "Matched line loss" in sheet
     assert "co-simulates the network" in sheet
     assert "every port" in sheet

@@ -148,11 +148,13 @@ def test_phase_line_feed_derives_the_phase_and_applies_the_splitter_loss(
     form._line_increment_field.configure(2.5)
     form._velocity_factor.setValue(0.8)
     form._splitter_loss.setValue(0.4)
+    form._line_loss.setValue(1.5)
     form._update_geometry()
 
     parameters = dialog.parameters()
 
     assert parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+    assert form._line_loss.isEnabled() is False
     assert parameters.feed.line_increment_m == pytest.approx(2.5, abs=1e-3)
     assert parameters.feed.splitter_loss_db == pytest.approx(0.4, abs=1e-6)
     assert parameters.effective_phase_step_deg < 0.0
@@ -171,12 +173,15 @@ def test_network_feed_mode_builds_lossless_phase_lines(qtbot: QtBot) -> None:
     form._line_increment_field.configure(2.5)
     form._velocity_factor.setValue(0.8)
     form._splitter_loss.setValue(0.4)
+    form._line_loss.setValue(1.5)
     form._update_geometry()
 
     parameters = dialog.parameters()
     model = parameters.to_antenna()
 
     assert parameters.feed.mode is StackedYagiFeedMode.NETWORK
+    assert parameters.feed.line_loss_db_per_100m == pytest.approx(1.5, abs=1e-6)
+    assert form._line_loss.isEnabled() is True
     assert model.sources == ()
     assert len(model.transmission_lines) == parameters.count
     assert form._phase_step.isEnabled() is False

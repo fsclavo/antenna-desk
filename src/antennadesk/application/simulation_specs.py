@@ -43,6 +43,7 @@ from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
 from ..domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
     StackedYagiParameters,
 )
 from ..domain.antennas.t2fd import (
@@ -236,8 +237,16 @@ def _stacked_yagi_spec(
         ),
         far_field=far_field_request(context.pattern_step_deg, parameters.yagi.ground),
         feed_network_loss_db=(
-            parameters.feed.splitter_loss_db if parameters.feed.mode.value == "phase_lines" else 0.0
+            parameters.feed.splitter_loss_db
+            if parameters.feed.mode is not StackedYagiFeedMode.IDEAL
+            else 0.0
         ),
+        feed_network_line_loss_db_per_100m=(
+            parameters.feed.line_loss_db_per_100m
+            if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+            else 0.0
+        ),
+        co_simulate_feed_network=(parameters.feed.mode is StackedYagiFeedMode.NETWORK),
     )
 
 

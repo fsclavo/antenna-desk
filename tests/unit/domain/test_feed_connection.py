@@ -227,3 +227,4 @@ def test_stacked_yagi_network_mode_reports_the_co_simulated_feed() -> None:
     detail = feed_connection_detail(parameters, parameters.to_antenna())
 
     assert "Splitter node is the primary input" in (detail.match_hardware or "")
+    assert "matched line loss" in (detail.match_hardware or "")

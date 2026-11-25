@@ -159,6 +159,11 @@ class StackedYagiForm(QWidget):
         self._splitter_loss.setDecimals(2)
         self._splitter_loss.setSingleStep(0.05)
         self._splitter_loss.setSuffix(" dB")
+        self._line_loss = QDoubleSpinBox(self)
+        self._line_loss.setRange(0.0, 100.0)
+        self._line_loss.setDecimals(2)
+        self._line_loss.setSingleStep(0.1)
+        self._line_loss.setSuffix(" dB/100 m")
 
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
@@ -220,6 +225,7 @@ class StackedYagiForm(QWidget):
             self._labels.label("stacked_yagi.splitter_loss"),
             self._splitter_loss,
         )
+        form.addRow(self._labels.label("stacked_yagi.line_loss"), self._line_loss)
         form.addRow(self._starting)
 
         layout = QVBoxLayout(self)
@@ -243,6 +249,7 @@ class StackedYagiForm(QWidget):
             self._velocity_factor,
             self._line_z0,
             self._splitter_loss,
+            self._line_loss,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._feed_mode.currentIndexChanged.connect(self._feed_mode_changed)
@@ -325,6 +332,9 @@ class StackedYagiForm(QWidget):
             self._splitter_loss,
         ):
             widget.setEnabled(phase_lines)
+        self._line_loss.setEnabled(
+            self._feed_mode.currentData() == StackedYagiFeedMode.NETWORK.value
+        )
         self._phase_step.setEnabled(not phase_lines)
 
     def mark_starting_dimensions_pristine(self) -> None:
@@ -398,6 +408,7 @@ class StackedYagiForm(QWidget):
             self._velocity_factor.setValue(parameters.feed.velocity_factor)
             self._line_z0.setValue(parameters.feed.characteristic_impedance_ohm)
             self._splitter_loss.setValue(parameters.feed.splitter_loss_db)
+            self._line_loss.setValue(parameters.feed.line_loss_db_per_100m)
             self._update_feed_controls()
         finally:
             self._updating = False
@@ -485,5 +496,6 @@ class StackedYagiForm(QWidget):
                 velocity_factor=self._velocity_factor.value(),
                 characteristic_impedance_ohm=self._line_z0.value(),
                 splitter_loss_db=self._splitter_loss.value(),
+                line_loss_db_per_100m=self._line_loss.value(),
             ),
         )

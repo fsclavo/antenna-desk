@@ -39,10 +39,12 @@
   user-set maximum top height, and an optional splitter + phase-line feed
   (reference/increment lengths, velocity factor, Z0, and splitter excess loss),
   plus a co-simulated network mode with a 1 cm numerical splitter node,
-  lossless NEC TL cards including the reference line, and per-port network
-  connection results. The splitter node is the primary input in network mode. Line loss,
-  splitter internal mismatch, per-level matching, folded/matched driven
-  elements, and a shared mast remain unavailable. Evidence is C; no stacking
+  lossless NEC TL cards including the reference line, a matched line-loss
+  value applied to realized gain, and per-port network connection results. The
+  splitter node is the primary input in network mode; the primary SWR remains
+  the lossless input. Mismatch-dependent line loss, splitter internal mismatch,
+  per-level matching, folded/matched driven elements, and a shared mast remain
+  unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
@@ -87,7 +89,7 @@
 
 ## Next
 
-1. Continue DL6 with per-level matching, a shared mast, and a full feed-network co-simulation if a traceable model is selected.
+1. Continue DL6 with a splitter S-parameter/isolation model, per-level matching, and a shared mast if a traceable model is selected.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

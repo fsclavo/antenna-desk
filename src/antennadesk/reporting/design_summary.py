@@ -1317,6 +1317,23 @@ def design_summary_rows(
                     if parameters.feed.mode is not StackedYagiFeedMode.IDEAL
                     else []
                 ),
+                *(
+                    [
+                        (
+                            "Matched line loss",
+                            f"{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m",
+                        ),
+                        (
+                            "Line losses",
+                            " · ".join(
+                                f"L{index + 1} {parameters.feed.line_loss_for_level(index):.2f} dB"
+                                for index in range(parameters.count)
+                            ),
+                        ),
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+                    else []
+                ),
                 ("Total conductor", _length(total_conductor, display_units)),
                 ("Material", material_text(yagi.material, labeler)),
                 ("Ground", ground_text(yagi.ground, labeler)),

@@ -284,3 +284,27 @@ def test_stacked_yagi_phase_lines_apply_the_splitter_loss() -> None:
     assert parameters.to_antenna().sources[0].phase_deg == pytest.approx(
         360.0 - 360.0 * 2.65 / (0.8 * parameters.wavelength_m)
     )
+
+
+def test_stacked_yagi_network_mode_passes_the_line_loss() -> None:
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
+            line_increment_m=2.65,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+            line_loss_db_per_100m=1.5,
+        ),
+    )
+
+    spec = build_typed_family_simulation_spec(parameters)
+
+    assert spec.co_simulate_feed_network is True
+    assert spec.feed_network_loss_db == pytest.approx(0.4)
+    assert spec.feed_network_line_loss_db_per_100m == pytest.approx(1.5)

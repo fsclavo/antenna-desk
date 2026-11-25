@@ -1232,8 +1232,9 @@ Level 1 is the primary feed and the only impedance/SWR reference. Levels 2–4
 are ideal voltage sources with `(level-1) × phase step` and the configured
 voltage ratio. The **Sources** results table reports each driven level
 separately; a negative source power means that ideal source is absorbing
-power. The feed split and per-level matching are not solved as a coupled
-network; the feed specification below sets the phase and splitter excess loss.
+power. In ideal and phase-line mode the feed split is not a coupled network;
+the feed specification sets the phase and splitter excess loss. Network mode
+co-simulates the transmission lines but still leaves per-level matching out.
 The base editor also disables mast/guy wires, folded or matched driven elements,
 and feed transformers inside a stack.
 
@@ -1241,23 +1242,26 @@ and feed transformers inside a stack.
 **Co-simulated TL network**. The ideal mode uses the phase-step field directly.
 The two line modes record a physical line from the splitter to level 1
 (**Level-1 line length**), an **Additional line per level**, **Line velocity
-factor**, **Line characteristic impedance**, and **Splitter excess loss**. The
-phase step is derived from the additional length and velocity factor and is
-shown below the fields.
+factor**, **Line characteristic impedance**, and **Splitter excess loss**.
+Network mode also records **Matched line loss** in dB per 100 m. The phase step
+is derived from the additional length and velocity factor and is shown below
+the fields.
 
 In **Splitter + phase lines** the solver still uses ideal voltage sources: the
 line lengths only set the phase, which is computed at the design frequency and
-held fixed across a sweep. In **Co-simulated TL network** the app adds lossless
-NEC transmission-line cards from level 1 to each higher level. NEC solves the
-network, the primary SWR is the network input at the level-1 splitter node, and
-the **Sources** table comes from the network connection points. The TL cards
-use the physical line length at every solver frequency, so the electrical phase
-changes with frequency. The splitter is an ideal N-way divider; the excess loss
-reduces realized gain. The reference line is modeled as a lossless TL; line
-loss, splitter internal mismatch, and per-level matching are not modeled. The
-primary SWR is the splitter-node input in network mode. Use the line lengths
-for the construction harness and verify the match with the solver or a
-measurement.
+held fixed across a sweep. In **Co-simulated TL network** the app adds a 1 cm
+numerical splitter-node wire above the stack and lossless NEC transmission-line
+cards from that node to every level, including the reference line to level 1.
+NEC solves the network, the primary SWR is the splitter-node input, and the
+**Sources** table comes from the network connection points. The TL cards use the
+physical line length at every solver frequency, so the electrical phase changes
+with frequency. The splitter is an ideal N-way divider; its excess loss reduces
+realized gain. **Matched line loss** is entered in dB per 100 m and applied to
+realized gain in network mode, using each level's physical line length. That is
+a matched-loss approximation: the primary SWR remains the lossless network
+input, so mismatch-dependent line loss, splitter internal mismatch, and
+per-level matching are not modeled. Use the line lengths for the construction
+harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
 an optional mechanical envelope: zero leaves it unset and disables the stack
@@ -1274,10 +1278,12 @@ For vertical polarization, the level spacing must be longer than the longest
 element or adjacent copies overlap on the same axis. The form shows a warning
 and rejects the design in that case. The family is classified **experimental**:
 mutual coupling is included by the wire solver, but no stacking gain is
-claimed, and the feed network is a specification layer rather than a full
-N-port co-simulation. Line loss, line impedance transformation, splitter
-mismatch, per-level matching, and the shared mast are not modeled. Verify the
-pattern, per-port impedance, and match with the solver or a measurement.
+claimed. Ideal and phase-line mode are a specification layer; network mode
+co-simulates the lossless lines and applies a matched line loss to realized
+gain. Mismatch-dependent line loss, phase-line impedance transformation,
+splitter internal mismatch, per-level matching, and the shared mast are not
+modeled. Verify the pattern, per-port impedance, and match with the solver or a
+measurement.
 
 ## Create a phased vertical array
 

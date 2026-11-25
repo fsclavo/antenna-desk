@@ -38,7 +38,8 @@ The first slice is implemented with these boundaries:
   level, and reports each network connection point;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;
-- a real `nec2c` two-level, two-source test.
+- real `nec2c` tests for an ideal two-level stack and a co-simulated
+  three-level network.
 
 The base Yagi editor in the stack disables folded/matched driven elements,
 per-level feed transformers, mast, and guy wires. Those geometries remain
@@ -49,12 +50,15 @@ unavailable until the feed network and one shared support model exist.
 A stack has a separate feedpoint at every level and mutual coupling between
 levels. Adding a counter to a single Yagi would create a second feed without a
 feed-network model or a per-port result. The composed family makes that
-distinction explicit and leaves room for a real splitter/phase-line slice.
+distinction explicit and made room for the splitter/phase-line and network
+slices.
 
 ## Consequences
 
-- The first slice is form, schema, catalog, per-port results, scene, reports,
-  and solver coverage; the splitter loss and phase-line hardware remain out.
+- The family now covers form, schema, catalog, per-port results, scene,
+  reports, solver coverage, the splitter/phase-line specification, and the
+  co-simulated network. Line loss is a user-entered matched-loss value; the
+  hardware, splitter internal mismatch, and per-level matching remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
@@ -68,8 +72,10 @@ distinction explicit and leaves room for a real splitter/phase-line slice.
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent
   electrical length, the reference line, and its differential impedance
-  transformation. Line loss, splitter internal mismatch, per-level matching,
-  and a shared mast remain follow-ups. The splitter excess loss is applied to
+  transformation. A matched line-loss value is applied to realized gain; the
+  primary SWR remains the lossless network input, so mismatch-dependent line
+  loss is not captured. Splitter internal mismatch, per-level matching, and a
+  shared mast remain follow-ups. The splitter excess loss is applied to
   realized gain. The
   spacing/phase optimizer is available once a maximum top height is set and
   makes no gain claim.

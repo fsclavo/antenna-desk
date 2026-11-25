@@ -1400,30 +1400,36 @@ def render_construction_sheet(
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         if parameters.feed.mode is not StackedYagiFeedMode.IDEAL:
+            is_network = parameters.feed.mode is StackedYagiFeedMode.NETWORK
             line_rows = "".join(
                 f"<tr><th>Level {index + 1} line</th><td>"
-                f"{_length(parameters.feed.line_length_for_level(index), display_units)}</td></tr>"
+                f"{_length(parameters.feed.line_length_for_level(index), display_units)}"
+                f"{f' ({parameters.feed.line_loss_for_level(index):.2f} dB)' if is_network else ''}"
+                f"</td></tr>"
                 for index in range(parameters.count)
             )
             feed_rows += f"""
-<tr><th>Feed network</th><td>splitter + phase lines</td></tr>
+<tr><th>Feed network</th><td>{"splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>
 {line_rows}
 <tr><th>Line velocity factor</th><td>{parameters.feed.velocity_factor:.3f}</td></tr>
 <tr><th>Line Z0</th><td>{parameters.feed.characteristic_impedance_ohm:.1f} Ω</td></tr>
 <tr><th>Splitter excess loss</th><td>{parameters.feed.splitter_loss_db:.2f} dB</td></tr>
+{f"<tr><th>Matched line loss</th><td>{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m</td></tr>" if is_network else ""}
 """
             if parameters.feed.mode is StackedYagiFeedMode.NETWORK:
                 construction_note = _note(
                     tr,
                     "Build {count} identical Yagis on one vertical stack with {spacing} m "
                     "between level booms. The splitter node is a 1 cm numerical feed "
-                    "point above the level-1 element, not an antenna conductor. Feed "
+                    "point above the stack, not an antenna conductor. Feed "
                     "every level through a {count}-way splitter and a lossless "
                     "transmission-line network: level 1 is {reference} m, and each "
                     "higher level adds {increment} m of {velocity} velocity-factor "
-                    "line. Record {loss} dB of splitter excess loss. The solver "
-                    "co-simulates the network and reports every port; line loss and the "
-                    "splitter internal mismatch are not modeled. Fit each level as a "
+                    "line. Record {loss} dB of splitter excess loss and {line_loss} "
+                    "dB/100 m of matched line loss, applied to realized gain. The solver "
+                    "co-simulates the network and reports every port; the primary SWR is "
+                    "the lossless network input and splitter internal mismatch is not "
+                    "modeled. Fit each level as a "
                     "complete Yagi from the base element table. The shared mast and "
                     "per-level matching are not modeled; verify the combined pattern "
                     "and match.",
@@ -1433,6 +1439,7 @@ def render_construction_sheet(
                     increment=f"{parameters.feed.line_increment_m:.4f}",
                     velocity=f"{parameters.feed.velocity_factor:.3f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                    line_loss=f"{parameters.feed.line_loss_db_per_100m:.2f}",
                 )
             else:
                 construction_note = _note(

@@ -1579,6 +1579,7 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
             velocity_factor=0.8,
             characteristic_impedance_ohm=75.0,
             splitter_loss_db=0.4,
+            line_loss_db_per_100m=1.5,
         ),
     )
     original = _project(parameters, "Stacked Yagi")
