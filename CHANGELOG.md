@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Application icon refresh.** Replaced the flat antenna badge with a larger,
+  higher-contrast Yagi emblem on a deep blue gradient, keeping the orange feed
+  point. The SVG master, 256 px PNG, and multi-resolution Windows ICO were
+  regenerated. No functional change.
+
 ## [0.10.0] - 2026-11-24
 
 ### Added
