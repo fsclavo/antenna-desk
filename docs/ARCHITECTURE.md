@@ -273,7 +273,10 @@ table. The splitter node is the primary input in network mode. Network mode
 includes the reference line and the differential TL impedance transformation.
 Splitter excess loss and a matched line-loss approximation are applied to
 realized gain; mismatch-dependent line loss and splitter internal mismatch are
-not modeled. The primary SWR is the lossless network input.
+not modeled. The primary SWR is the lossless network input. A pure-Python
+N-port feed-network solver (`domain/antennas/feed_network.py`) can combine a
+feed-network admittance matrix with the antenna Y-matrix extracted at the level
+ports; it is validated but not yet exposed in the editor.
 The quad beam uses a reflector loop, a driven loop,
 and an optional director loop on a single feed. The log-periodic family uses
 one `TransmissionLine` between adjacent element centers with the generic

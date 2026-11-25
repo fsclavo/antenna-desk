@@ -189,63 +189,49 @@ stack, a per-level transformer or a folded element with a shared transformer
 would need the same multiport application. Keep these unavailable until
 per-level matching has a physical model.
 
-## ADR-0054 (proposed)
+## Selected path: N-port solver (2026-11-25)
 
-[ADR-0054](../ADR/0054-bounded-multiport-feed-network.md) records the proposed
-decision below. It is not accepted until the prototype and acceptance criteria
-pass.
+[ADR-0054](../ADR/0054-bounded-multiport-feed-network.md) now records the
+selected path: a small pure-Python N-port circuit solver instead of NEC port
+geometry.
 
-**Title:** Bounded multiport feed-network ports and Wilkinson splitter.
+1. NEC extracts the antenna short-circuit admittance matrix at the existing
+   level feed ports. Each port is driven with 1 V; the other ports are held at
+   1 µV (a nec2c workaround because zero EX voltage is treated as the default
+   1 V source).
+2. The feed network is solved as a nodal admittance network in Python:
+   transmission lines, resistors, and later matching networks.
+3. The antenna Y-matrix is connected to the feed-network outputs; the input
+   port is driven by a current source. The solver returns the input impedance,
+   per-port powers, and network loss.
 
-**Decision:**
+### Validation
 
-- introduce an explicit network port/reference in the canonical model;
-- model a 2-way Wilkinson at a declared design frequency as TLs plus a
-  resistor, then 3–4 way as a corporate network;
-- keep the ideal/excess-loss splitter as the default and fallback;
-- reject scalar isolation/return-loss post-processing;
-- keep per-level matching, folded driven elements, and per-level transformers
-  out until the follow-up subcircuit slice;
-- add no new dependency without a separate cost/license/benefit ADR.
+- The two-way Wilkinson S-matrix matches the standard equations and scikit-rf
+  at the design frequency.
+- A single 50 Ω line into a 50 Ω load is matched; a quarter-wave 70.71 Ω line
+  transforms 50 Ω to 100 Ω.
+- A real two-level stack Y-matrix plus the existing 3-port TL feed network
+  matches the NEC co-simulation input impedance within 0.01 Ω and the port
+  power ratio within 1e-3.
+- The Wilkinson with the real antenna Y-matrix satisfies the power balance.
 
-**Acceptance for the splitter slice:**
-
-- explicit input and output ports with a common reference;
-- a 2-way Wilkinson prototype compared with the standard equations or a
-  trusted circuit solver; tolerance derived from that reference;
-- a 3–4 way corporate network built from validated 2-way sections;
-- a real `nec2c` regression for input impedance, output power split, and
-  isolation;
-- a frequency sweep that shows the expected narrowing; no broadband claim;
-- the current ideal/excess-loss mode remains selectable;
-- the UI, reports, BOM, and documentation state the design frequency and the
-  narrowband limitation.
-
-**Acceptance for the per-level matching follow-up:**
-
-- a single-level L/Pi/T subcircuit validated against an analytic two-port or a
-  trusted circuit solver;
-- the antenna currents and pattern change with the match, not only a reported
-  SWR;
-- a two-level stack test with per-port results;
-- no post-processing-only claim.
+The solver is not yet exposed in the editor, schema, reports, or BOM. The
+current stacked-Yagi network mode still uses the NEC TL co-simulation.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Port/reference change breaks the existing antenna feed | Add it as an additive network abstraction; keep the current feed path unchanged |
-| Ground-clearance rule lifts port reference wires | Define a port/reference node that the adapter explicitly treats as a circuit reference, or use a geometry that is not lifted |
+| The NEC Y-matrix extraction is expensive (N runs per frequency) | Keep N at 2–4; cache per design/frequency; document the cost |
+| The near-short 1 µV source biases the Y-matrix | Validate against the existing NEC co-simulation; check reciprocity |
+| The solver is not a general circuit simulator | Bound it to small networks; add components only with tests |
 | Narrowband splitter surprises users | Require a declared design frequency and a frequency-sweep limitation in the UI/report |
-| Component synthesis changes the pattern | Validate currents and pattern, not only SWR |
-| New dependency for a general S-parameter solver | Separate ADR with cost, license, and benefit; not part of this slice |
+| Per-level matching changes the pattern | Validate currents and pattern, not only SWR |
 | Schema growth for new splitter fields | Plan a schema migration before implementation |
 
-## Decision requested
+## Next step
 
-1. Approve the recommendation to keep the current ideal/excess-loss splitter
-   as the default and **not** add a scalar isolation/return-loss correction.
-2. Approve ADR-0054's port/reference work as an **adapter-level** model, not a
-   geometry-only builder. Add the single-TL calibration before the Wilkinson.
-3. Keep per-level matching, folded driven elements, and per-level transformers
-   out until the port model and the single-level matching prototype exist.
+Add the user-facing Wilkinson mode on top of the validated solver: a declared
+design frequency, three- and four-way corporate networks, schema/UI/reports,
+and a real `nec2c` regression. Per-level matching remains a follow-up.

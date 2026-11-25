@@ -265,6 +265,28 @@ in network mode and level 1 in ideal/phase-line mode. A vertical-polarized stack
 the levels farther apart than the longest element or the wire copies overlap.
 The family is experimental and makes no stacking-gain claim.
 
+### N-port feed-network solver
+
+`domain/antennas/feed_network.py` contains a small pure-Python N-port solver
+for feed networks that cannot be expressed as NEC two-port TL cards. A network
+has named external ports and an optional set of internal nodes:
+
+- `SeriesBranch` and `ShuntBranch` (complex impedance);
+- `TransmissionLineBranch` (ideal, Z0, physical length, velocity factor);
+- `NPortNetwork.y_matrix(frequency)` with internal-node elimination;
+- `NPortNetwork.s_matrix(frequency, z0)` for equal real reference impedances;
+- `solve_feed_network(network, antenna_admittance, ...)` for the input
+  impedance, per-port powers, and network loss;
+- a `two_way_wilkinson()` builder.
+
+The antenna admittance matrix is extracted from NEC in
+`application/feed_network_y.py`: each level port is driven with 1 V while the
+other ports are held at a near-zero 1 µV source (a nec2c workaround for its
+zero-EX default), and the source currents form the short-circuit Y-matrix. The
+solver is validated against the standard Wilkinson equations, scikit-rf, and the
+existing NEC TL co-simulation, but it is not yet exposed as a feed mode in the
+editor, schema, reports, or BOM.
+
 ### RingoParameters
 
 A first-class Ringo-style vertical with radiator length, base matching ring

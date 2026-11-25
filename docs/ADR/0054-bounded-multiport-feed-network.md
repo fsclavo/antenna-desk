@@ -1,7 +1,7 @@
-# ADR-0054 — Bounded multiport feed-network ports and Wilkinson splitter
+# ADR-0054 — N-port feed-network solver for splitter isolation and matching
 
-- **Status:** proposed 2026-11-25; implementation gated by the prototype and
-  acceptance criteria below
+- **Status:** accepted 2026-11-25; bounded N-port solver prototype implemented;
+  UI/schema integration pending
 - **Date:** 2026-11-25
 - **Related:** DL6, [ADR-0049](0049-stacked-yagi-composed-family.md),
   [`spikes/dl6-feed-network-spike.md`](../spikes/dl6-feed-network-spike.md),
@@ -26,86 +26,105 @@ acceptable. Isolation is not a through-path loss, and a scalar correction would
 not re-solve the antenna currents, mutual coupling, or combined pattern. It
 would be a number, not a model.
 
-The feed-network spike found that a temporary two-way Wilkinson probe using the
-current canonical model was invalid: the ground-clearance rule lifted the node
-wires and the 50 Ω loads sat in series in floating wires instead of across
-explicit ports. A second T-junction probe on a perfect ground plane came close
-to a match with the isolation resistor effectively open (about 49.8 + 3.2j Ω)
-but loaded to about 37.8 + 2.4j Ω with the 100 Ω isolation resistor; the output
-ports were not balanced/isolated. The numbers are diagnostics, not references.
+The feed-network spike showed that a geometry-only NEC port builder is not
+reliable. A first probe was lifted by the ground-clearance rule and left the
+loads in floating wires. A T-junction probe came close with the isolation
+resistor effectively open, but loaded with the real resistor. A later clean
+T-junction probe produced a negative input resistance and an invalid passive
+model. Those results are diagnostics, not references. The geometry-only path
+is closed.
 
-The topology is expressible with NEC TLs and a resistor, but a geometry-only
-port builder is not sufficient. A later clean 10 cm T-junction probe also
-produced a negative input resistance and an invalid passive model. The
-canonical model needs an **adapter-level port/reference abstraction** that
-defines the node, reference, polarity, and network branch before a splitter can
-be built correctly. A geometry-only builder is rejected.
+## Selected path
+
+Use a small **pure-Python N-port circuit solver** for the feed network instead
+of persuading NEC's wire/segment model to behave as a circuit simulator:
+
+1. NEC computes the **antenna short-circuit admittance matrix** at the existing
+   level feed ports. Each port is driven with 1 V while the other ports are held
+   at a near-zero 1 µV source. The 1 µV value is a nec2c workaround because a
+   zero EX voltage is treated as the default 1 V excitation.
+2. The feed network (transmission lines, resistors, and later matching
+   networks) is solved as a nodal admittance network in Python.
+3. The antenna admittance matrix is connected to the feed-network output ports;
+   the input port is driven by a current source. The solver returns the input
+   impedance, per-port powers, and network loss.
+4. The feed-network S-matrix is available for validation against the standard
+   Wilkinson equations or a trusted circuit solver.
+
+The solver is bounded to small networks (a few ports and internal nodes) and
+uses dense Gaussian elimination. It adds no runtime dependency. `scikit-rf` is
+a development-only cross-check.
 
 ## Reference
 
 The bounded splitter uses the standard Wilkinson topology (E. J. Wilkinson,
 "An N-Way Hybrid Power Divider", *IRE Transactions on Microwave Theory and
-Techniques*, 1960) and NEC-2 `TL`/`LD` cards. The prototype must be compared
-with that reference or a trusted circuit solver; no numeric tolerance is
-invented here.
+Techniques*, 1960). The solver's S-matrix is compared with the standard
+equations and with scikit-rf in the tests; no numeric tolerance is invented.
 
 ## Decision
 
-1. **Add an explicit network port/reference abstraction** to the canonical model
-   before any splitter isolation work. A port is defined between a node and a
-   common reference; the NEC adapter must preserve that reference and report
-   per-port voltage, current, impedance, and power from the network connection
-   table.
-2. **Model a bounded Wilkinson/corporate splitter** at a declared design
-   frequency using canonical TLs and a resistor:
-   - a two-way Wilkinson prototype first;
+1. **Use the N-port solver as the feed-network engine** for splitter isolation
+   and per-level matching.
+2. **Extract the antenna Y-matrix through NEC at the existing level feed ports.**
+   No NEC port geometry, ground-clearance change, or adapter port type is
+   required for this feature.
+3. **Model a bounded Wilkinson/corporate splitter** at a declared design
+   frequency:
+   - a two-way Wilkinson first;
    - then three- and four-way corporate networks built from validated two-way
      sections.
-3. **Keep the current ideal/excess-loss splitter as the default and fallback.**
+4. **Keep the current ideal/excess-loss splitter as the default and fallback.**
    The Wilkinson mode is opt-in and narrowband; the UI and reports must state
    its design frequency and range limitation.
-4. **Do not add a general N-port S-parameter engine or an external circuit
-   solver in this ADR.** That path needs its own cost, license, and benefit
-   ADR.
 5. **Do not add a scalar isolation or return-loss post-processing correction.**
-6. **Keep per-level matching, folded driven elements, and per-level
-   transformers out** until the port model and a single-level matching
-   subcircuit are validated.
+6. **Do not add an external circuit engine or a general S-parameter dependency**
+   in this ADR. The bounded Python solver covers the DL6 splitter; a wider engine
+   needs its own cost, license, and benefit ADR.
+7. **Keep per-level matching, folded driven elements, and per-level
+   transformers out** until the single-level L/Pi/T matching slice is validated.
+
+## Implementation (2026-11-25)
+
+- `domain/antennas/feed_network.py`:
+  - `NPortNetwork` with series, shunt, and ideal transmission-line branches;
+  - port Y-matrix with internal-node elimination;
+  - port S-matrix for equal real reference impedances;
+  - `solve_feed_network` combining the feed network with an antenna Y-matrix;
+  - `two_way_wilkinson` builder.
+- `application/feed_network_y.py`:
+  - `extract_antenna_y_matrix` drives each port with 1 V and the others with
+    1 µV, then reads the source currents.
+- Validation:
+  - the two-way Wilkinson S-matrix matches the standard equations and
+    scikit-rf at the design frequency;
+  - a single 50 Ω line into a 50 Ω load is matched, and a quarter-wave 70.71 Ω
+    line transforms 50 Ω to 100 Ω;
+  - a real two-level stack Y-matrix plus the existing 3-port TL feed network
+    matches the NEC co-simulation input impedance within 0.01 Ω and the port
+    power ratio within 1e-3;
+  - the Wilkinson with the real antenna Y-matrix satisfies the power balance.
+
+The solver is **not yet exposed in the editor, project schema, reports, or
+BOM**. The current stacked-Yagi network mode still uses the NEC TL
+co-simulation. The next slice adds the user-facing Wilkinson mode.
 
 ## Implementation phases
 
-### Phase 1 — Port/reference abstraction
+### Phase 1 — Solver and antenna Y-matrix (done)
 
-- Add a canonical port type or an explicit reference-node convention at the
-  **adapter** level, not as extra geometry alone.
-- Define the port node, reference, polarity, and network branch so a source,
-  load, and TL can meet at the same electrical node.
-- Make the NEC adapter emit the reference without the ground-clearance lift
-  breaking the circuit.
-- Keep the existing antenna feed, splitter node, and TL behavior unchanged when
-  the new abstraction is unused.
+- Pure-Python N-port solver.
+- Antenna Y-matrix extraction at the existing level feed ports.
+- Unit tests against the standard Wilkinson and scikit-rf.
+- Real `nec2c` cross-check against the existing TL co-simulation.
 
-### Phase 2 — Single-TL calibration, then two-way Wilkinson
-
-- First build a single TL with a source and a 50 Ω load on explicit ports and
-  compare its input impedance with the analytic two-port result. This isolates
-  the port model from the splitter topology.
-- Then build a two-way divider from two quarter-wave TLs and one isolation
-  resistor.
-- Compare the input impedance, output power split, and isolation with the
-  standard Wilkinson equations or a trusted circuit solver.
-- Derive the acceptance tolerance from that reference; do not invent a numeric
-  tolerance.
-- Add a real `nec2c` regression for both the single line and the divider.
-
-### Phase 3 — Three- and four-way corporate splitter
+### Phase 2 — Three- and four-way corporate splitter (next)
 
 - Build three- and four-way networks from validated two-way sections.
-- Report each output port and the input port from the network connection table.
 - Add a frequency sweep that shows the expected narrowing; make no broadband
   claim.
 
-### Phase 4 — UI, schema, reports, and BOM
+### Phase 3 — UI, schema, reports, and BOM
 
 - Add the splitter mode and design frequency to the stacked-Yagi feed
   specification with a schema migration.
@@ -115,24 +134,28 @@ invented here.
 
 ### Follow-up — Per-level matching
 
-- Reuse the port/reference abstraction.
-- Synthesize one L/Pi/T network as a canonical subcircuit at a single level.
-- Compare its input impedance with the analytic two-port or a trusted circuit
-  solver.
+- Reuse the N-port solver and antenna Y-matrix.
+- Synthesize one L/Pi/T network as a feed-network branch at a single level.
+- Compare its input impedance with the analytic two-port or scikit-rf.
 - Only then apply it to every level; require the currents and pattern to change
   with the match, not only a reported SWR.
 
 ## Acceptance criteria
 
-### Splitter slice
+### Solver slice (done)
 
-- Explicit input and output ports with a common reference.
-- A single TL with a 50 Ω load calibrated against the analytic two-port.
-- A two-way Wilkinson compared with the standard equations or a trusted circuit
-  solver; tolerance derived from that reference.
+- A two-way Wilkinson compared with the standard equations and scikit-rf.
+- A single TL and a quarter-wave transformer validated analytically.
+- A real `nec2c` antenna Y-matrix combined with a 3-port TL network matches the
+  existing NEC co-simulation input impedance and port power ratio.
+- Power balance holds with a mismatched antenna load and with the isolation
+  resistor.
+
+### User-facing splitter slice
+
+- Explicit input and output ports with the N-port solver.
 - A three- or four-way corporate network built from validated two-way sections.
-- A real `nec2c` regression for input impedance, output power split, and
-  isolation.
+- A real `nec2c` regression for the antenna Y-matrix and feed network.
 - A frequency sweep showing the expected narrowing; no broadband claim.
 - The current ideal/excess-loss mode remains selectable.
 - The UI, reports, BOM, and documentation state the design frequency and the
@@ -140,31 +163,30 @@ invented here.
 
 ### Per-level matching follow-up
 
-- A single-level L/Pi/T subcircuit validated against an analytic two-port or a
-  trusted circuit solver.
+- A single-level L/Pi/T branch validated against the analytic two-port or
+  scikit-rf.
 - Antenna currents and pattern change with the match, not only a reported SWR.
 - A two-level stack test with per-port results.
 - No post-processing-only claim.
 
 ## Consequences
 
-- Splitter isolation remains unavailable until Phase 1 and Phase 2 pass.
+- Splitter isolation and return loss can be modeled without NEC port geometry.
 - The current ideal/excess-loss model stays the default; no existing result is
   invalidated.
-- The Wilkinson mode will be narrowband and opt-in. It will not be a general
+- The Wilkinson mode will be narrowband and opt-in. It is not a general
   S-parameter block.
-- Per-level matching and folded driven elements remain unavailable in the
-  meantime. The beta/hairpin match remains the only per-level match.
-- A new schema migration is required when the splitter fields are added; this
-  ADR does not change the schema.
+- Per-level matching and folded driven elements remain unavailable until the
+  follow-up slice. The beta/hairpin match remains the only per-level match.
+- A schema migration is required when the splitter fields are added.
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Port/reference change breaks the existing antenna feed | Add it as an additive abstraction; keep the current path unchanged when unused |
-| Ground-clearance rule lifts port reference wires | Define the reference explicitly and test it in the adapter |
+| The NEC Y-matrix extraction is expensive (N runs per frequency) | Keep N at 2–4; cache per design/frequency; document the cost |
+| The near-short 1 µV source biases the Y-matrix | Validate against the existing NEC co-simulation; use a small voltage and check reciprocity |
+| The solver is not a general circuit simulator | Bound it to small networks; add components only with tests |
 | Narrowband splitter surprises users | Require a declared design frequency and a frequency-sweep limitation in the UI/report |
-| Component synthesis changes the pattern | Validate currents and pattern, not only SWR |
-| New dependency for a general S-parameter solver | Separate ADR with cost, license, and benefit |
+| Per-level matching changes the pattern | Validate currents and pattern, not only SWR |
 | Schema growth | Plan and test the migration before implementation |

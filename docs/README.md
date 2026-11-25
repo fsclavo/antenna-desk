@@ -143,7 +143,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0051 — Bounded cliff/second-medium site ground](ADR/0051-bounded-cliff-site-ground.md)
 - [ADR-0052 — Uniform radial droop for verticals](ADR/0052-uniform-radial-droop.md)
 - [ADR-0053 — One lifecycle owner for Qt worker tasks](ADR/0053-qt-worker-task-lifecycle.md)
-- [ADR-0054 — Bounded multiport feed-network ports and Wilkinson splitter](ADR/0054-bounded-multiport-feed-network.md)
+- [ADR-0054 — N-port feed-network solver for splitter isolation and matching](ADR/0054-bounded-multiport-feed-network.md)
 
 ## Archive
 
