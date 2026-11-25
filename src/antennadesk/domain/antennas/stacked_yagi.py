@@ -21,6 +21,7 @@ from .feed import FeedPoint, Source
 from .geometry import Point3D
 from .materials import ALUMINUM, ConductorMaterial
 from .polarization import Polarization
+from .transmission_line import TransmissionLine
 from .wire import Wire
 from .yagi import YagiMatchType, YagiParameters, nbs_five_element
 
@@ -31,6 +32,7 @@ STACKED_YAGI_LEVEL_PREFIX = "level-"
 class StackedYagiFeedMode(StrEnum):
     IDEAL = "ideal"
     PHASE_LINES = "phase_lines"
+    NETWORK = "network"
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,11 +41,12 @@ class StackedYagiFeed:
 
     ``reference_length_m`` is the splitter-to-level-1 line. Every later level
     adds ``line_increment_m`` of the same line. The solver still receives ideal
-    voltage sources: the line lengths set the source phase at the design
-    frequency and that phase is held fixed across a frequency sweep, while line
-    loss and impedance transformation are not modeled. ``splitter_loss_db`` is
-    the excess loss beyond the ideal N-way division and is applied to the
-    realized gain.
+    voltage sources: in phase-line mode the line lengths set the source phase
+    at the design frequency and that phase is held fixed across a frequency
+    sweep; in network mode NEC's lossless TL cards use the physical length at
+    every solver frequency. Line loss and the reference-line impedance
+    transformation are not modeled. ``splitter_loss_db`` is the excess loss
+    beyond the ideal N-way division and is applied to the realized gain.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -65,6 +68,8 @@ class StackedYagiFeed:
             name="characteristic_impedance_ohm",
         )
         ensure_non_negative(self.splitter_loss_db, name="splitter_loss_db")
+        if self.mode is StackedYagiFeedMode.NETWORK and self.line_increment_m <= 0.0:
+            raise ValueError("network mode requires a positive line_increment_m")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m
@@ -281,15 +286,32 @@ class StackedYagiParameters:
                     )
                 )
         primary_wire = f"{STACKED_YAGI_LEVEL_PREFIX}1-{base.feed.wire_id}"
-        sources = tuple(
-            Source(
-                wire_id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-{base.feed.wire_id}",
-                offset_m=base.feed.offset_m,
-                amplitude=self.amplitude_ratio,
-                phase_deg=level * self.effective_phase_step_deg,
+        if self.feed.mode is StackedYagiFeedMode.NETWORK:
+            sources: tuple[Source, ...] = ()
+            phase_lines = tuple(
+                TransmissionLine(
+                    id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-phase-line",
+                    start_wire_id=primary_wire,
+                    start_offset_m=base.feed.offset_m,
+                    end_wire_id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-{base.feed.wire_id}",
+                    end_offset_m=base.feed.offset_m,
+                    characteristic_impedance_ohm=self.feed.characteristic_impedance_ohm,
+                    length_m=level * self.feed.line_increment_m,
+                    velocity_factor=self.feed.velocity_factor,
+                )
+                for level in range(1, self.count)
             )
-            for level in range(1, self.count)
-        )
+        else:
+            phase_lines = ()
+            sources = tuple(
+                Source(
+                    wire_id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-{base.feed.wire_id}",
+                    offset_m=base.feed.offset_m,
+                    amplitude=self.amplitude_ratio,
+                    phase_deg=level * self.effective_phase_step_deg,
+                )
+                for level in range(1, self.count)
+            )
         return AntennaModel(
             name=name or self.template_name,
             design_frequency_hz=base.design_frequency_hz,
@@ -297,4 +319,5 @@ class StackedYagiParameters:
             feed=FeedPoint(wire_id=primary_wire, offset_m=base.feed.offset_m),
             environment=base.environment,
             sources=sources,
+            transmission_lines=base.transmission_lines + phase_lines,
         )

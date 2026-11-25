@@ -28,7 +28,7 @@ def stacked_yagi_descriptor(
     if maximum_spacing <= minimum_spacing:
         raise ValueError("the stack top-height envelope leaves no searchable spacing")
 
-    phase_lines = parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+    phase_lines = parameters.feed.mode is not StackedYagiFeedMode.IDEAL
     max_increment = max(
         parameters.feed.velocity_factor * parameters.wavelength_m,
         parameters.feed.line_increment_m,

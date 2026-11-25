@@ -1513,3 +1513,46 @@ def test_stacked_yagi_phase_line_construction_sheet_lists_the_feed(
     assert "75.0 Ω" in sheet
     assert "0.40 dB" in sheet
     assert "phase lines: level 1" in sheet
+
+
+def test_stacked_yagi_network_construction_sheet_mentions_co_simulation(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    base = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    stack = sample_project.designs[0].with_parameters(
+        replace(
+            base,
+            feed=StackedYagiFeed(
+                mode=StackedYagiFeedMode.NETWORK,
+                reference_length_m=2.0,
+                line_increment_m=2.65,
+                velocity_factor=0.8,
+                characteristic_impedance_ohm=75.0,
+            ),
+        )
+    )
+    sheet = render_construction_sheet(sample_project, stack, None)
+
+    assert "splitter + phase lines" in sheet
+    assert "co-simulates the network" in sheet
+    assert "every port" in sheet

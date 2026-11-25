@@ -461,7 +461,9 @@ def _classify(
             FeedInterface.MULTI_PORT,
             _center_terminals(model),
             (
-                "Level 1 is the primary port; splitter + phase lines, with ideal "
+                "Level 1 is the primary port; the lossless TL network is co-simulated"
+                if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+                else "Level 1 is the primary port; splitter + phase lines, with ideal "
                 "sources and no line impedance transformation"
                 if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
                 else (

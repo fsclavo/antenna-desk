@@ -98,7 +98,7 @@ def hardware_bom_items(
     phase_line_length_m = (
         sum(parameters.feed.line_length_for_level(index) for index in range(parameters.count))
         if isinstance(parameters, StackedYagiParameters)
-        and parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+        and parameters.feed.mode is not StackedYagiFeedMode.IDEAL
         else 0.0
     )
     rows: list[HardwareBomRow] = [
@@ -145,7 +145,7 @@ def hardware_bom_items(
                 ),
             ]
             if isinstance(parameters, StackedYagiParameters)
-            and parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+            and parameters.feed.mode is not StackedYagiFeedMode.IDEAL
             else []
         ),
         HardwareBomRow(

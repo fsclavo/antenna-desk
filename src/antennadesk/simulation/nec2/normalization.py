@@ -8,6 +8,7 @@ import math
 from collections.abc import Sequence
 from datetime import datetime
 
+from ...application.discretization import SegmentLayout
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.matching_network import MatchingNetworkOrigin
 from ...domain.common.validation import Diagnostic, Severity
@@ -26,7 +27,12 @@ from ...domain.simulation.spec import SimulationSpec
 from ..fingerprint import model_fingerprint
 from ..normalization import calculate_swr
 from .input_writer import Nec2Deck
-from .parser import ParsedFarFieldPoint, ParsedNec2Output, ParsedPowerBudget
+from .parser import (
+    ParsedFarFieldPoint,
+    ParsedInputParameters,
+    ParsedNec2Output,
+    ParsedPowerBudget,
+)
 
 
 def _power_budget(value: ParsedPowerBudget | None) -> PowerBudget | None:
@@ -56,6 +62,84 @@ def _far_field_point(value: ParsedFarFieldPoint) -> FarFieldPoint:
         e_phi_magnitude_v_per_m=value.e_phi_magnitude_v_per_m,
         e_phi_phase_deg=value.e_phi_phase_deg,
     )
+
+
+def _network_port_map(
+    model: AntennaModel,
+    layout: SegmentLayout,
+) -> dict[tuple[int, int], tuple[str, float]]:
+    ports: dict[tuple[int, int], tuple[str, float]] = {
+        (layout.feed_tag, layout.feed_segment): (layout.feed_wire_id, layout.feed_offset_m)
+    }
+
+    def key_for(wire_id: str, offset_m: float) -> tuple[int, int]:
+        segmentation = layout.wire_segmentation(wire_id)
+        index = int(offset_m / segmentation.segment_length_m)
+        index = min(max(index, 0), segmentation.segments - 1)
+        return segmentation.tag, segmentation.first_segment + index
+
+    for line in model.transmission_lines:
+        for wire_id, offset_m in (
+            (line.start_wire_id, line.start_offset_m),
+            (line.end_wire_id, line.end_offset_m),
+        ):
+            ports.setdefault(key_for(wire_id, offset_m), (wire_id, offset_m))
+    return ports
+
+
+def _network_source_results(
+    *,
+    model: AntennaModel,
+    layout: SegmentLayout,
+    network_rows: Sequence[ParsedInputParameters],
+    feed_tag: int,
+    feed_segment: int,
+) -> list[SourceResult]:
+    ports = _network_port_map(model, layout)
+    unique: dict[tuple[int, int], ParsedInputParameters] = {}
+    for row in network_rows:
+        unique.setdefault((row.tag, row.segment), row)
+    primary_key = (feed_tag, feed_segment)
+    ordered = [primary_key, *(key for key in unique if key != primary_key)]
+    results: list[SourceResult] = []
+    for key in ordered:
+        point = unique.get(key)
+        if point is None:
+            continue
+        port = ports.get(key)
+        if port is None:
+            matched = next(
+                (
+                    segmentation
+                    for segmentation in layout.wires
+                    if segmentation.tag == key[0]
+                    and segmentation.first_segment <= key[1] <= segmentation.last_segment
+                ),
+                None,
+            )
+            if matched is None:
+                continue
+            wire_id = matched.wire.id
+            offset_m = (key[1] - matched.first_segment + 0.5) * matched.segment_length_m
+        else:
+            wire_id, offset_m = port
+        amplitude = abs(point.voltage_v)
+        phase = math.degrees(math.atan2(point.voltage_v.imag, point.voltage_v.real))
+        results.append(
+            SourceResult(
+                wire_id=wire_id,
+                offset_m=float(offset_m),
+                tag=point.tag,
+                segment=point.segment,
+                amplitude=max(amplitude, 1e-30),
+                phase_deg=phase % 360.0,
+                voltage_v=point.voltage_v,
+                current_a=point.current_a,
+                impedance_ohm=point.impedance_ohm,
+                power_w=point.power_w,
+            )
+        )
+    return results
 
 
 def normalize_nec2_result(
@@ -206,31 +290,42 @@ def normalize_nec2_result(
             for current in parsed_frequency.currents
         )
         source_results: list[SourceResult] = []
-        for feed in deck.layout.feeds:
-            parsed_source = next(
-                (
-                    candidate
-                    for candidate in parsed_frequency.input_parameters
-                    if candidate.tag == feed.tag and candidate.segment == feed.segment
-                ),
-                None,
-            )
-            if parsed_source is None:
-                continue
-            source_results.append(
-                SourceResult(
-                    wire_id=feed.wire_id,
-                    offset_m=feed.offset_m,
-                    tag=feed.tag,
-                    segment=feed.segment,
-                    amplitude=feed.amplitude,
-                    phase_deg=feed.phase_deg,
-                    voltage_v=parsed_source.voltage_v,
-                    current_a=parsed_source.current_a,
-                    impedance_ohm=parsed_source.impedance_ohm,
-                    power_w=parsed_source.power_w,
+        if spec.co_simulate_feed_network and parsed_frequency.network_parameters:
+            source_results.extend(
+                _network_source_results(
+                    model=model,
+                    layout=deck.layout,
+                    network_rows=parsed_frequency.network_parameters,
+                    feed_tag=deck.feed_tag,
+                    feed_segment=deck.feed_segment,
                 )
             )
+        if not source_results:
+            for feed in deck.layout.feeds:
+                parsed_source = next(
+                    (
+                        candidate
+                        for candidate in parsed_frequency.input_parameters
+                        if candidate.tag == feed.tag and candidate.segment == feed.segment
+                    ),
+                    None,
+                )
+                if parsed_source is None:
+                    continue
+                source_results.append(
+                    SourceResult(
+                        wire_id=feed.wire_id,
+                        offset_m=feed.offset_m,
+                        tag=feed.tag,
+                        segment=feed.segment,
+                        amplitude=feed.amplitude,
+                        phase_deg=feed.phase_deg,
+                        voltage_v=parsed_source.voltage_v,
+                        current_a=parsed_source.current_a,
+                        impedance_ohm=parsed_source.impedance_ohm,
+                        power_w=parsed_source.power_w,
+                    )
+                )
         if any(source.power_w < 0.0 for source in source_results):
             absorbing_source_hz.append(parsed_frequency.frequency_hz)
         if pattern_by_main_index:

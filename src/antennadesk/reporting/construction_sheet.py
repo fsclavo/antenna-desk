@@ -1399,7 +1399,7 @@ def render_construction_sheet(
 <tr><th>Additional-level ratio</th><td>{parameters.amplitude_ratio:.2f}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
-        if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES:
+        if parameters.feed.mode is not StackedYagiFeedMode.IDEAL:
             line_rows = "".join(
                 f"<tr><th>Level {index + 1} line</th><td>"
                 f"{_length(parameters.feed.line_length_for_level(index), display_units)}</td></tr>"
@@ -1412,27 +1412,49 @@ def render_construction_sheet(
 <tr><th>Line Z0</th><td>{parameters.feed.characteristic_impedance_ohm:.1f} Ω</td></tr>
 <tr><th>Splitter excess loss</th><td>{parameters.feed.splitter_loss_db:.2f} dB</td></tr>
 """
-            construction_note = _note(
-                tr,
-                "Build {count} identical Yagis on one vertical stack with {spacing} m "
-                "between level booms. Level 1 is the primary feed; drive levels 2 to "
-                "{last} with a {ratio} relative amplitude. Feed the levels through a "
-                "{count}-way splitter and phase lines: level 1 is {reference} m, and "
-                "each higher level adds {increment} m of {velocity} velocity-factor "
-                "line. Record {loss} dB of splitter excess loss. The line impedance "
-                "transformation and line loss are not modeled; the solver uses ideal "
-                "voltage sources. Fit each level as a complete Yagi from the base "
-                "element table. The shared mast and per-level matching are not "
-                "modeled; verify the combined pattern and match.",
-                count=parameters.count,
-                spacing=f"{parameters.spacing_m:.4f}",
-                last=parameters.count,
-                ratio=f"{parameters.amplitude_ratio:.2f}",
-                reference=f"{parameters.feed.reference_length_m:.4f}",
-                increment=f"{parameters.feed.line_increment_m:.4f}",
-                velocity=f"{parameters.feed.velocity_factor:.3f}",
-                loss=f"{parameters.feed.splitter_loss_db:.2f}",
-            )
+            if parameters.feed.mode is StackedYagiFeedMode.NETWORK:
+                construction_note = _note(
+                    tr,
+                    "Build {count} identical Yagis on one vertical stack with {spacing} m "
+                    "between level booms. Level 1 is the primary feed; feed levels 2 to "
+                    "{last} through a {count}-way splitter and a lossless transmission-line "
+                    "network: level 1 is {reference} m, and each higher level adds "
+                    "{increment} m of {velocity} velocity-factor line. Record {loss} dB of "
+                    "splitter excess loss. The solver co-simulates the network and reports "
+                    "every port; line loss and the reference-line impedance transformation "
+                    "are not modeled. Fit each level as a complete Yagi from the base "
+                    "element table. The shared mast and per-level matching are not modeled; "
+                    "verify the combined pattern and match.",
+                    count=parameters.count,
+                    spacing=f"{parameters.spacing_m:.4f}",
+                    last=parameters.count,
+                    reference=f"{parameters.feed.reference_length_m:.4f}",
+                    increment=f"{parameters.feed.line_increment_m:.4f}",
+                    velocity=f"{parameters.feed.velocity_factor:.3f}",
+                    loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                )
+            else:
+                construction_note = _note(
+                    tr,
+                    "Build {count} identical Yagis on one vertical stack with {spacing} m "
+                    "between level booms. Level 1 is the primary feed; drive levels 2 to "
+                    "{last} with a {ratio} relative amplitude. Feed the levels through a "
+                    "{count}-way splitter and phase lines: level 1 is {reference} m, and "
+                    "each higher level adds {increment} m of {velocity} velocity-factor "
+                    "line. Record {loss} dB of splitter excess loss. The line impedance "
+                    "transformation and line loss are not modeled; the solver uses ideal "
+                    "voltage sources. Fit each level as a complete Yagi from the base "
+                    "element table. The shared mast and per-level matching are not "
+                    "modeled; verify the combined pattern and match.",
+                    count=parameters.count,
+                    spacing=f"{parameters.spacing_m:.4f}",
+                    last=parameters.count,
+                    ratio=f"{parameters.amplitude_ratio:.2f}",
+                    reference=f"{parameters.feed.reference_length_m:.4f}",
+                    increment=f"{parameters.feed.line_increment_m:.4f}",
+                    velocity=f"{parameters.feed.velocity_factor:.3f}",
+                    loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                )
         else:
             construction_note = _note(
                 tr,

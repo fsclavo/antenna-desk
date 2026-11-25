@@ -1280,7 +1280,9 @@ def design_summary_rows(
                 (
                     "Feed network",
                     (
-                        "splitter + phase lines"
+                        "co-simulated TL network"
+                        if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+                        else "splitter + phase lines"
                         if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
                         else "ideal phase step"
                     ),
@@ -1308,7 +1310,7 @@ def design_summary_rows(
                             f"{parameters.feed.splitter_loss_db:.2f} dB",
                         ),
                     ]
-                    if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+                    if parameters.feed.mode is not StackedYagiFeedMode.IDEAL
                     else []
                 ),
                 ("Total conductor", _length(total_conductor, display_units)),

@@ -376,6 +376,58 @@ def test_stacked_yagi_phase_line_optimizer_runs_against_nec2c(
         include_conductor_losses=False,
         far_field=FarFieldRequest(enabled=False),
         feed_network_loss_db=parameters.feed.splitter_loss_db,
+        co_simulate_feed_network=True,
+    )
+
+    result = OptimizeAntenna(solver).execute(
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=spec,
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=OptimizationBudget(4, 4, 2),
+            seed=9,
+        )
+    )
+
+    assert result.best_parameters is not None
+    assert result.best_score is not None
+    assert math.isfinite(result.best_score)
+    assert result.evaluations
+
+
+def test_stacked_yagi_network_optimizer_co_simulates_each_candidate(
+    solver: Nec2cSolver,
+) -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        max_top_height_m=25.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+        feed_network_loss_db=parameters.feed.splitter_loss_db,
+        co_simulate_feed_network=True,
     )
 
     result = OptimizeAntenna(solver).execute(

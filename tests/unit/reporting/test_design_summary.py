@@ -981,3 +981,41 @@ def test_stacked_yagi_phase_line_summary_reports_the_feed_network() -> None:
     assert rows["Splitter excess loss"] == "0.40 dB"
     assert rows["Phase step"].endswith("°")
     assert rows["Phase step"] != "0.0°"
+
+
+def test_stacked_yagi_network_mode_summary_names_the_co_simulation() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    base = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    parameters = replace(
+        base,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            line_increment_m=2.65,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+        ),
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Feed network"] == "co-simulated TL network"
+    assert rows["Line increment"] == "2.6500 m"

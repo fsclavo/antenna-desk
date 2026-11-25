@@ -233,18 +233,23 @@ It stores the base Yagi, level count, vertical boom spacing, ideal phase step,
 an additional-level voltage ratio, an optional maximum top height that bounds
 the spacing optimizer, and an optional feed specification: ideal splitter plus
 equal phase-line increments, reference line length, velocity factor,
-characteristic impedance, and splitter excess loss. `to_antenna()` copies every
-canonical
+characteristic impedance, and splitter excess loss. In network mode
+`to_antenna()` adds lossless `TransmissionLine` cards from level 1 to each
+higher level instead of ideal sources; NEC reports every network connection
+point. `to_antenna()` copies every canonical
 base-Yagi wire at each level with a `level-N-` identifier. Level 1 is the
 primary feed; levels 2–N become additional ideal `Source` excitations with
 `(level-1) × effective_phase_step_deg` and the configured amplitude ratio. In
 phase-line mode the effective phase is `-360 × line_increment / (velocity_factor
-× wavelength)`, and the splitter excess loss is applied to realized gain. The
-kind is a composed family, not a `stack_count` field on the Yagi. The solver
-still uses ideal voltage sources: line loss, line impedance transformation,
-splitter mismatch, per-level matching, folded/matched driven elements,
-per-level feed transformers, mast, and guy wires are not modeled. The reported
-impedance and SWR refer only to level 1. A vertical-polarized stack must space
+× wavelength)`, and the splitter excess loss is applied to realized gain. In
+network mode the lossless TL cards carry the physical length at every solver
+frequency, so the electrical phase and the differential line impedance
+transformation change with frequency. In ideal/phase-line mode line impedance
+transformation is not modeled; the network mode includes the differential TL
+transformation. Line loss, the reference line, splitter mismatch, per-level
+matching, folded/matched driven elements, per-level feed transformers, mast,
+and guy wires are not modeled. The reported impedance and SWR refer to the
+primary network node at level 1. A vertical-polarized stack must space
 the levels farther apart than the longest element or the wire copies overlap.
 The family is experimental and makes no stacking-gain claim.
 

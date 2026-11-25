@@ -120,6 +120,10 @@ class StackedYagiForm(QWidget):
             translator.t("stacked_yagi.feed_mode.phase_lines"),
             StackedYagiFeedMode.PHASE_LINES.value,
         )
+        self._feed_mode.addItem(
+            translator.t("stacked_yagi.feed_mode.network"),
+            StackedYagiFeedMode.NETWORK.value,
+        )
         self._reference_line = QDoubleSpinBox(self)
         self._reference_line.setRange(0.0, maximum_length)
         self._reference_line.setDecimals(3)
@@ -181,6 +185,10 @@ class StackedYagiForm(QWidget):
         self._phase_note = QLabel(self)
         self._phase_note.setWordWrap(True)
         self._phase_note.setVisible(False)
+        self._network_note = QLabel(self)
+        self._network_note.setWordWrap(True)
+        self._network_note.setStyleSheet("font-style: italic;")
+        self._network_note.setVisible(False)
 
         form = QFormLayout()
         form.addRow(self._labels.label("stacked_yagi.level_count"), self._level_count)
@@ -223,6 +231,7 @@ class StackedYagiForm(QWidget):
         layout.addWidget(self._overlap_warning)
         layout.addWidget(self._envelope_warning)
         layout.addWidget(self._phase_note)
+        layout.addWidget(self._network_note)
         layout.addWidget(self._starting_note)
 
         for widget in (self._phase_step, self._amplitude_ratio):
@@ -268,6 +277,10 @@ class StackedYagiForm(QWidget):
             1,
             self._translator.t("stacked_yagi.feed_mode.phase_lines"),
         )
+        self._feed_mode.setItemText(
+            2,
+            self._translator.t("stacked_yagi.feed_mode.network"),
+        )
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
             self._starting,
@@ -300,7 +313,10 @@ class StackedYagiForm(QWidget):
         self.changed.emit()
 
     def _update_feed_controls(self) -> None:
-        phase_lines = self._feed_mode.currentData() == StackedYagiFeedMode.PHASE_LINES.value
+        phase_lines = self._feed_mode.currentData() in {
+            StackedYagiFeedMode.PHASE_LINES.value,
+            StackedYagiFeedMode.NETWORK.value,
+        }
         for widget in (
             self._reference_line,
             self._line_increment,
@@ -430,7 +446,12 @@ class StackedYagiForm(QWidget):
             self._translator.t("stacked_yagi.envelope_warning") if beyond_envelope else ""
         )
         self._envelope_warning.setVisible(beyond_envelope)
-        if self._feed_mode.currentData() == StackedYagiFeedMode.PHASE_LINES.value:
+        network = self._feed_mode.currentData() == StackedYagiFeedMode.NETWORK.value
+        phase_lines = self._feed_mode.currentData() in {
+            StackedYagiFeedMode.PHASE_LINES.value,
+            StackedYagiFeedMode.NETWORK.value,
+        }
+        if phase_lines:
             wavelength = 299_792_458.0 / yagi.frequency_hz
             derived = (
                 -360.0
@@ -444,6 +465,10 @@ class StackedYagiForm(QWidget):
         else:
             self._phase_note.clear()
             self._phase_note.setVisible(False)
+        self._network_note.setText(
+            self._translator.t("stacked_yagi.network_note") if network else ""
+        )
+        self._network_note.setVisible(network)
 
     def parameters(self) -> StackedYagiParameters:
         return StackedYagiParameters(

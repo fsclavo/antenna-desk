@@ -265,9 +265,11 @@ vertical array family uses that multi-source model with an ideal linear phase
 and amplitude progression. The stacked Yagi composes two to four identical
 Yagi level models with the same multi-source model; level 1 is the primary
 port. An optional feed specification derives the source phase from equal
-phase-line increments and applies splitter excess loss to realized gain; the
-solver still uses ideal voltage sources, and line loss plus impedance
-transformation are not modeled.
+phase-line increments; a network mode co-simulates lossless NEC TL cards from
+level 1 to each higher level and reads the per-port network connection table.
+Network mode includes the differential TL impedance transformation; the
+reference line, line loss, and splitter mismatch are not modeled. Splitter
+excess loss is applied to realized gain.
 The quad beam uses a reflector loop, a driven loop,
 and an optional director loop on a single feed. The log-periodic family uses
 one `TransmissionLine` between adjacent element centers with the generic

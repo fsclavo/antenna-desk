@@ -120,9 +120,9 @@ truth for each topic, every ADR, and the archived plans.
   estimator, with assumptions, confidence, and optional numerical refinement.
 - A composed two-to-four-level stacked Yagi with schema 63, per-port
   impedance/power, front-elevation scene, reports, an optional splitter +
-  phase-line feed specification, and a bounded spacing/phase optimizer inside a
-  user-set top-height envelope; the solver still uses ideal voltage sources and
-  no stacking gain is claimed.
+  phase-line feed specification with a co-simulated lossless TL network and
+  per-port network results, plus a bounded spacing/phase optimizer inside a
+  user-set top-height envelope; no stacking gain is claimed.
 - Project-level Undo/Redo and hover cursors on the result charts.
 - Multi-file VNA CSV, `.s1p`, and port-selected `.s2p` import with locale-aware
   numbers, analyzer detection, drag-and-drop, and a manual column-mapping

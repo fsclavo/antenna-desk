@@ -4217,14 +4217,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.stacked_yagi.feed_mode": {
         Language.ENGLISH: (
-            "Ideal uses the phase-step field directly. Splitter + phase lines "
-            "derives the phase from the additional line length and a velocity "
-            "factor; the solver still uses ideal voltage sources."
+            "Ideal uses the phase-step field. Splitter + phase lines derives it "
+            "from the extra line length. Co-simulated TL network adds lossless "
+            "NEC lines and reports every network port."
         ),
         Language.SPANISH: (
-            "Ideal usa directamente el campo de escalón de fase. Divisor + líneas "
-            "de fase deriva la fase del largo adicional de línea y el factor de "
-            "velocidad; el solver sigue usando fuentes de tensión ideales."
+            "Ideal usa el escalón de fase. Divisor + líneas de fase lo deriva del "
+            "largo adicional. La red co-simulada agrega líneas NEC sin pérdidas e "
+            "informa cada puerto."
         ),
     },
     "help.stacked_yagi.reference_line": {
@@ -11759,6 +11759,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Splitter + phase lines",
         Language.SPANISH: "Divisor + líneas de fase",
     },
+    "stacked_yagi.feed_mode.network": {
+        Language.ENGLISH: "Co-simulated TL network",
+        Language.SPANISH: "Red de líneas co-simulada",
+    },
     "stacked_yagi.reference_line": {
         Language.ENGLISH: "Level-1 line length",
         Language.SPANISH: "Largo de línea al nivel 1",
@@ -11782,6 +11786,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "stacked_yagi.derived_phase": {
         Language.ENGLISH: "Derived phase step: {phase}° per level",
         Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
+    },
+    "stacked_yagi.network_note": {
+        Language.ENGLISH: (
+            "The lossless TL network is co-simulated by NEC; the per-port table "
+            "comes from the network connection points. Line loss and the "
+            "reference-line impedance transformation are not modeled."
+        ),
+        Language.SPANISH: (
+            "La red de líneas sin pérdidas se co-simula en NEC; la tabla por "
+            "puerto viene de los puntos de conexión de la red. No se modelan la "
+            "pérdida de línea ni la transformación de impedancia de la línea de "
+            "referencia."
+        ),
     },
     "stacked_yagi.amplitude_ratio": {
         Language.ENGLISH: "Additional-level voltage ratio",
@@ -11815,9 +11832,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Every level is the same Yagi. Level 1 is the primary feed with unit "
             "amplitude and zero phase; later levels use the phase progression and "
             "the additional-level voltage ratio. The feed can be an ideal phase "
-            "step or a splitter + phase-line specification. The solver still uses "
-            "ideal voltage sources, so line loss and line impedance transformation "
-            "are not modeled."
+            "step, a splitter + phase-line specification, or a co-simulated "
+            "lossless TL network. Line loss and the reference-line impedance "
+            "transformation are not modeled."
         ),
         Language.SPANISH: (
             "Cada nivel es el mismo Yagi. El nivel 1 es la alimentación principal "
@@ -11835,8 +11852,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "solver. The optional feed specification sets the source phase and "
             "splitter excess loss; line loss, line impedance transformation, "
             "splitter mismatch, per-level matching, and the shared mast are not "
-            "modeled. No stacking gain is claimed; verify spacing, phase, and "
-            "matching with the solver or a measurement."
+            "modeled. In network mode the differential TL impedance "
+            "transformation is included; phase-line mode does not include it. "
+            "No stacking gain is claimed; verify spacing, phase, and matching "
+            "with the solver or a measurement."
         ),
         Language.SPANISH: (
             "Arreglo compuesto experimental. El solver de hilos incluye el "

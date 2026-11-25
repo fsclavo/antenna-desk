@@ -47,6 +47,7 @@ class SimulationSpec:
     transformer_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
     feed_network_loss_db: float = 0.0
+    co_simulate_feed_network: bool = False
     site_ground: SiteGroundProfile | None = None
     timeout_s: float = DEFAULT_TIMEOUT_S
 

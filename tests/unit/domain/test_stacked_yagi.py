@@ -152,3 +152,35 @@ def test_phase_line_feed_rejects_invalid_lines_and_loss() -> None:
         StackedYagiFeed(line_increment_m=-0.1)
     with pytest.raises(ValueError):
         StackedYagiFeed(splitter_loss_db=-0.1)
+
+
+def test_network_mode_builds_lossless_phase_lines_and_no_ideal_sources() -> None:
+    yagi = nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0)
+    feed = StackedYagiFeed(
+        mode=StackedYagiFeedMode.NETWORK,
+        reference_length_m=2.0,
+        line_increment_m=2.65,
+        velocity_factor=0.8,
+        characteristic_impedance_ohm=75.0,
+        splitter_loss_db=0.4,
+    )
+    stack = StackedYagiParameters(
+        yagi=yagi,
+        count=3,
+        spacing_m=10.0,
+        feed=feed,
+    )
+
+    model = stack.to_antenna()
+
+    assert model.sources == ()
+    assert len(model.transmission_lines) == 2
+    assert [line.length_m for line in model.transmission_lines] == pytest.approx([2.65, 5.3])
+    assert all(
+        line.characteristic_impedance_ohm == pytest.approx(75.0)
+        for line in model.transmission_lines
+    )
+    assert all(line.start_wire_id.startswith("level-1-") for line in model.transmission_lines)
+
+    with pytest.raises(ValueError, match="positive line_increment"):
+        StackedYagiFeed(mode=StackedYagiFeedMode.NETWORK, line_increment_m=0.0)

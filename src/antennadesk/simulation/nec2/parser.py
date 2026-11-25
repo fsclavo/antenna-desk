@@ -80,6 +80,7 @@ class ParsedPowerBudget:
 class ParsedFrequency:
     frequency_hz: float
     input_parameters: list[ParsedInputParameters] = field(default_factory=list)
+    network_parameters: list[ParsedInputParameters] = field(default_factory=list)
     currents: list[ParsedCurrent] = field(default_factory=list)
     far_field: list[ParsedFarFieldPoint] = field(default_factory=list)
     power_budget: ParsedPowerBudget | None = None
@@ -300,6 +301,13 @@ def parse_nec2_output(text: str) -> ParsedNec2Output:
             current = ParsedFrequency(frequency_hz=float(frequency_match.group(1)) * 1_000_000.0)
             frequencies.append(current)
             index += 1
+            continue
+
+        if "STRUCTURE EXCITATION DATA AT NETWORK CONNECTION POINTS" in line:
+            if current is None:
+                raise Nec2ParseError(f"network points found before a frequency at line {index + 1}")
+            network_rows, index = _parse_impedance_rows(lines, index)
+            current.network_parameters.extend(network_rows)
             continue
 
         if "ANTENNA INPUT PARAMETERS" in line:

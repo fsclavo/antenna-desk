@@ -942,6 +942,7 @@ class SimulationSpecPayload(StrictModel):
     transformer_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
     feed_network_loss_db: float = Field(default=0.0, ge=0.0)
+    co_simulate_feed_network: bool = False
     site_ground: SiteGroundPayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
@@ -2400,6 +2401,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
         feed_network_loss_db=value.feed_network_loss_db,
+        co_simulate_feed_network=value.co_simulate_feed_network,
         site_ground=(_site_ground_from_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )
@@ -3733,6 +3735,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
         feed_network_loss_db=value.feed_network_loss_db,
+        co_simulate_feed_network=value.co_simulate_feed_network,
         site_ground=(_site_ground_to_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )

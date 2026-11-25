@@ -28,8 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   applies the splitter excess loss to realized gain; the line phase is fixed
   at the design frequency across a sweep. The solver still uses ideal voltage
   sources and does not model line loss or line impedance transformation. Per-level matching, a shared mast, folded/matched driven
-  elements, and a full N-port co-simulation remain unavailable. Evidence is C
-  and no stacking gain is claimed. See
+  elements remain unavailable. A network mode co-simulates lossless NEC TL
+  cards from level 1 to each higher level and reports every network connection
+  point; the differential TL impedance transformation is included. The
+  reference line, line loss, and splitter mismatch are not modeled.
+  Evidence is C and no stacking gain is claimed. See
   [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
 
 ### Changed

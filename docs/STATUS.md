@@ -37,10 +37,11 @@
   elevation scene, design/construction reports, multi-boom BOM, a real `nec2c`
   two-port test, a bounded spacing/phase optimizer constrained by the
   user-set maximum top height, and an optional splitter + phase-line feed
-  (reference/increment lengths, velocity factor, Z0, and splitter excess loss).
-  The solver still uses ideal voltage sources: line loss, line impedance
-  transformation, splitter mismatch, per-level matching, folded/matched driven
-  elements, and a shared mast remain unavailable. Evidence is C; no stacking
+  (reference/increment lengths, velocity factor, Z0, and splitter excess loss),
+  plus a co-simulated network mode with lossless NEC TL cards and per-port
+  network connection results. The reference line, line loss, splitter
+  mismatch, per-level matching, folded/matched driven elements, and a shared
+  mast remain unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,

@@ -208,3 +208,21 @@ def test_stacked_yagi_phase_lines_report_the_splitter_feed() -> None:
     detail = feed_connection_detail(parameters, parameters.to_antenna())
 
     assert "splitter + phase lines" in (detail.match_hardware or "")
+
+
+def test_stacked_yagi_network_mode_reports_the_co_simulated_feed() -> None:
+    parameters = StackedYagiParameters(
+        yagi=_yagi(),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+        ),
+    )
+
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    assert "co-simulated" in (detail.match_hardware or "")

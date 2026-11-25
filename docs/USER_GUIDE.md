@@ -1237,19 +1237,25 @@ network; the feed specification below sets the phase and splitter excess loss.
 The base editor also disables mast/guy wires, folded or matched driven elements,
 and feed transformers inside a stack.
 
-**Feed network** selects **Ideal phase step** or **Splitter + phase lines**.
-The ideal mode uses the phase-step field directly. Phase-line mode records a
-physical line from the splitter to level 1 (**Level-1 line length**), an
-**Additional line per level**, **Line velocity factor**, **Line characteristic
-impedance**, and **Splitter excess loss**. The phase step is derived from the
-additional length and velocity factor and is shown below the fields. The
-splitter is an ideal N-way divider; the excess loss reduces realized gain. The
-solver still uses ideal voltage sources, so line loss, line impedance
-transformation, splitter mismatch, and per-level matching are not modeled. The
-line phase is computed at the design frequency and held fixed across a
-frequency sweep; a real line changes phase with frequency. Use the line lengths
-for the construction harness and verify the match with the solver or a
-measurement.
+**Feed network** selects **Ideal phase step**, **Splitter + phase lines**, or
+**Co-simulated TL network**. The ideal mode uses the phase-step field directly.
+The two line modes record a physical line from the splitter to level 1
+(**Level-1 line length**), an **Additional line per level**, **Line velocity
+factor**, **Line characteristic impedance**, and **Splitter excess loss**. The
+phase step is derived from the additional length and velocity factor and is
+shown below the fields.
+
+In **Splitter + phase lines** the solver still uses ideal voltage sources: the
+line lengths only set the phase, which is computed at the design frequency and
+held fixed across a sweep. In **Co-simulated TL network** the app adds lossless
+NEC transmission-line cards from level 1 to each higher level. NEC solves the
+network, the primary SWR is the network input at the level-1 splitter node, and
+the **Sources** table comes from the network connection points. The TL cards
+use the physical line length at every solver frequency, so the electrical phase
+changes with frequency. The splitter is an ideal N-way divider; the excess loss
+reduces realized gain. The reference line, line loss, splitter mismatch, and
+per-level matching are not modeled. Use the line lengths for the construction
+harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
 an optional mechanical envelope: zero leaves it unset and disables the stack
@@ -1258,8 +1264,9 @@ level** inside that envelope; the level count, base Yagi geometry, and
 amplitude ratio stay context. In phase-line mode the search moves the additional
 line length instead of the phase-step field. The search rejects a spacing that
 would overlap vertical-polarized levels or raise the top above the envelope.
-The feed split remains ideal, so treat the result as a solver-verified starting
-point, not a validated feed-network design.
+The splitter remains ideal and per-level matching is not modeled, so treat the
+result as a solver-verified starting point, not a validated feed-network
+design.
 
 For vertical polarization, the level spacing must be longer than the longest
 element or adjacent copies overlap on the same axis. The form shows a warning

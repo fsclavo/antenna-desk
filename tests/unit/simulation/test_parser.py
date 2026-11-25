@@ -108,3 +108,22 @@ def test_missing_frequency_is_rejected() -> None:
 def test_empty_output_is_rejected() -> None:
     with pytest.raises(Nec2ParseError, match="no frequency"):
         parse_nec2_output("")
+
+
+def test_network_connection_points_are_parsed() -> None:
+    text = """\
+FREQUENCY : 1.4100E+01 MHz
+
+     -------- STRUCTURE EXCITATION DATA AT NETWORK CONNECTION POINTS --------
+  TAG   SEG       VOLTAGE (VOLTS)          CURRENT (AMPS)          IMPEDANCE (OHMS)       ADMITTANCE (MHOS)     POWER
+  No:   No:     REAL      IMAGINARY     REAL      IMAGINARY      REAL      IMAGINARY     REAL      IMAGINARY   (WATTS)
+    2    16  1.1245E+00 -7.2518E-01  1.5923E-02 -5.0089E-03  7.7298E+01 -2.1227E+01  1.2030E-02  3.3035E-03  1.0769E-02
+    1     6  1.0000E+00  0.0000E+00  7.2196E-04  9.6979E-03  7.6341E+00 -1.0255E+02  7.2196E-04  9.6979E-03  3.6098E-04
+"""
+    parsed = parse_nec2_output(text)
+
+    network = parsed.frequencies[0].network_parameters
+    assert len(network) == 2
+    assert network[0].tag == 2
+    assert network[1].voltage_v == pytest.approx(complex(1.0, 0.0))
+    assert network[0].power_w == pytest.approx(1.0769e-2)
