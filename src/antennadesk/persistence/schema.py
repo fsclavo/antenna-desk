@@ -193,7 +193,11 @@ from ..domain.simulation.result import (
 from ..domain.simulation.run import SimulationRun
 from ..domain.simulation.segmentation import SegmentationPolicy
 from ..domain.simulation.solver import SolverMetadata
-from ..domain.simulation.spec import SimulationSpec
+from ..domain.simulation.spec import (
+    FeedNetworkKind,
+    FeedNetworkSpec,
+    SimulationSpec,
+)
 from .constants import PROJECT_FORMAT, SCHEMA_VERSION
 
 
@@ -803,6 +807,7 @@ class StackedYagiFeedPayload(StrictModel):
     characteristic_impedance_ohm: float = Field(default=50.0, gt=0.0)
     splitter_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+    splitter_design_frequency_hz: float = Field(default=0.0, ge=0.0)
 
 
 class StackedYagiParametersPayload(StrictModel):
@@ -924,6 +929,25 @@ class FarFieldRequestPayload(StrictModel):
     phi_count: int = Field(default=1, ge=1, le=1_000)
 
 
+class FeedNetworkSpecPayload(StrictModel):
+    kind: FeedNetworkKind
+    design_frequency_hz: float = Field(gt=0.0)
+    port_count: int = Field(ge=2, le=4)
+    feed_line_lengths_m: list[float] = Field(min_length=2, max_length=4)
+    feed_line_impedance_ohm: float = Field(gt=0.0)
+    velocity_factor: float = Field(gt=0.0, le=1.0)
+    splitter_excess_loss_db: float = Field(default=0.0, ge=0.0)
+    line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+
+    @model_validator(mode="after")
+    def _validate_feed_network(self) -> Self:
+        if len(self.feed_line_lengths_m) != self.port_count:
+            raise ValueError("feed_line_lengths_m must have one length per port")
+        if any(length <= 0.0 for length in self.feed_line_lengths_m):
+            raise ValueError("feed_line_lengths_m must be positive")
+        return self
+
+
 class SimulationSpecPayload(StrictModel):
     frequency_plan: FrequencyPlanPayload
     segmentation: SegmentationPolicyPayload = Field(default_factory=SegmentationPolicyPayload)
@@ -941,6 +965,7 @@ class SimulationSpecPayload(StrictModel):
     feed_network_loss_db: float = Field(default=0.0, ge=0.0)
     feed_network_line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     co_simulate_feed_network: bool = False
+    feed_network: FeedNetworkSpecPayload | None = None
     site_ground: SiteGroundPayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
@@ -2233,6 +2258,7 @@ def _stacked_yagi_parameters_from_domain(
             characteristic_impedance_ohm=value.feed.characteristic_impedance_ohm,
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
+            splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
         ),
     )
 
@@ -2402,6 +2428,20 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
         feed_network_loss_db=value.feed_network_loss_db,
         feed_network_line_loss_db_per_100m=value.feed_network_line_loss_db_per_100m,
         co_simulate_feed_network=value.co_simulate_feed_network,
+        feed_network=(
+            FeedNetworkSpecPayload(
+                kind=value.feed_network.kind,
+                design_frequency_hz=value.feed_network.design_frequency_hz,
+                port_count=value.feed_network.port_count,
+                feed_line_lengths_m=list(value.feed_network.feed_line_lengths_m),
+                feed_line_impedance_ohm=value.feed_network.feed_line_impedance_ohm,
+                velocity_factor=value.feed_network.velocity_factor,
+                splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
+                line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
+            )
+            if value.feed_network is not None
+            else None
+        ),
         site_ground=(_site_ground_from_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )
@@ -3605,6 +3645,7 @@ def _stacked_yagi_parameters_to_domain(
             characteristic_impedance_ohm=value.feed.characteristic_impedance_ohm,
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
+            splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
         ),
     )
 
@@ -3738,6 +3779,20 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
         feed_network_loss_db=value.feed_network_loss_db,
         feed_network_line_loss_db_per_100m=value.feed_network_line_loss_db_per_100m,
         co_simulate_feed_network=value.co_simulate_feed_network,
+        feed_network=(
+            FeedNetworkSpec(
+                kind=value.feed_network.kind,
+                design_frequency_hz=value.feed_network.design_frequency_hz,
+                port_count=value.feed_network.port_count,
+                feed_line_lengths_m=tuple(value.feed_network.feed_line_lengths_m),
+                feed_line_impedance_ohm=value.feed_network.feed_line_impedance_ohm,
+                velocity_factor=value.feed_network.velocity_factor,
+                splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
+                line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
+            )
+            if value.feed_network is not None
+            else None
+        ),
         site_ground=(_site_ground_to_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )

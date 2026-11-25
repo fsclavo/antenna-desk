@@ -1606,3 +1606,38 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
     assert restored.designs[0].antenna == original.designs[0].antenna
     assert restored.designs[0].antenna_type == "stacked_yagi"
     assert restored.designs[0].antenna.sources == original.designs[0].antenna.sources
+
+
+def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        stacked_yagi_parameters,
+    )
+
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=12.0,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_loss_db=0.2,
+            line_loss_db_per_100m=1.5,
+            splitter_design_frequency_hz=14_100_000.0,
+        ),
+    )
+    original = _project(parameters, "Stacked Yagi Wilkinson")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+    assert restored.designs[0].parameters.feed.splitter_design_frequency_hz == pytest.approx(
+        14_100_000.0
+    )

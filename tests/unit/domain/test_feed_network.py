@@ -11,6 +11,7 @@ import pytest
 from antennadesk.domain.antennas.feed_network import (
     NPortNetwork,
     TransmissionLineBranch,
+    n_way_wilkinson,
     solve_feed_network,
     two_way_wilkinson,
 )
@@ -163,3 +164,37 @@ def test_wilkinson_power_balance_with_mismatched_loads() -> None:
         delivered + solution.network_loss_w,
         rel=1e-12,
     )
+
+
+@pytest.mark.parametrize("port_count", [2, 3, 4])
+def test_n_way_wilkinson_is_matched_and_splits_equally(port_count: int) -> None:
+    quarter = SPEED_OF_LIGHT / FREQUENCY_HZ / 4.0
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=port_count,
+        feed_line_lengths_m=(quarter,) * port_count,
+    )
+    s = network.s_matrix(FREQUENCY_HZ)
+
+    assert s[0][0] == pytest.approx(0.0, abs=1e-5)
+    for output in range(1, port_count + 1):
+        assert s[output][output] == pytest.approx(0.0, abs=1e-5)
+        assert abs(s[output][0]) == pytest.approx(1.0 / math.sqrt(port_count), abs=1e-5)
+        for other in range(1, port_count + 1):
+            if other != output:
+                assert s[output][other] == pytest.approx(0.0, abs=1e-5)
+
+    load = [[0.0j for _ in range(port_count)] for _ in range(port_count)]
+    for index in range(port_count):
+        load[index][index] = 1.0 / 50.0 + 0.0j
+    solution = solve_feed_network(
+        network,
+        load,
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+    )
+
+    assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=0.01)
+    for power in solution.antenna_port_powers_w:
+        assert power == pytest.approx(solution.input_power_w / port_count, rel=1e-5)
+    assert solution.network_loss_w == pytest.approx(0.0, abs=1e-4)

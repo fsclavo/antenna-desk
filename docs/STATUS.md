@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-25
 **Latest published release:** `0.10.1` (2026-11-24)
-**Development schema:** `63`
+**Development schema:** `64`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
@@ -33,7 +33,7 @@
   [`ADR-0052`](ADR/0052-uniform-radial-droop.md).
 - DL6 stacked Yagi first slice is **implemented 2026-11-25** (ADR-0049):
   two to four identical Yagis on one vertical stack, ideal per-level sources,
-  schema 63, form and both catalog routes, per-port **Sources** results, front
+  schema 64, form and both catalog routes, per-port **Sources** results, front
   elevation scene, design/construction reports, multi-boom BOM, a real `nec2c`
   two-port test, a bounded spacing/phase optimizer constrained by the
   user-set maximum top height, and an optional splitter + phase-line feed
@@ -43,13 +43,14 @@
   a per-port mismatch correction applied to realized gain, and per-port network
   connection results. The
   splitter node is the primary input in network mode; the primary SWR remains
-  the lossless input. A single shared mast and optional guy set are modeled
-  once across every level, and a beta/hairpin match is modeled at every driven
-  element. A pure-Python N-port feed-network solver and the NEC antenna
-  Y-matrix extraction are validated against the standard Wilkinson, scikit-rf,
-  and the existing NEC TL co-simulation, but are not yet exposed in the
-  editor/schema. The loss-induced input-impedance shift, splitter internal
-  mismatch, per-level matching networks, folded driven elements, and per-level
+  the lossless input. A Wilkinson divider mode uses the pure-Python N-port
+  solver: equal N-way quarter-wave branches, a star of isolation resistors,
+  feed-line loss, and a reconstructed pattern from the solved port voltages.
+  Its primary SWR is the splitter input; the editor, schema 64, reports, and
+  tests expose it. A single shared mast and optional guy set are modeled once
+  across every level, and a beta/hairpin match is modeled at every driven
+  element. The loss-induced input-impedance shift, component tolerances,
+  per-level matching networks, folded driven elements, and per-level
   transformers remain unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
@@ -74,7 +75,7 @@
   work, not another standalone refactor.
 - PF1 is **closed 2026-11-24** after manual validation of the incident-scale
   project. `.antennadesk` is a deterministic ZIP container (container 1, schema
-  63) with separate project, design, run, raw-text, and optimization entries;
+  64) with separate project, design, run, raw-text, and optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
   gzip/plain-JSON reader or migration from schema 58 and older. Opening is
   lazy through a `ProjectSession`; saving and compaction copy unchanged run
@@ -95,7 +96,7 @@
 
 ## Next
 
-1. Continue DL6 with [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): expose the validated N-port solver as a user-facing Wilkinson mode (design frequency, 3–4 way, schema/UI/reports); per-level matching follows.
+1. Continue DL6 with per-level matching networks and folded driven elements on top of the Wilkinson N-port feed; component tolerances and a general S-parameter engine remain separate.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

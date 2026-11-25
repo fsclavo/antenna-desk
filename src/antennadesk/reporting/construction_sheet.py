@@ -1400,8 +1400,8 @@ def render_construction_sheet(
 <tr><th>Base boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
 <tr><th>Base boom height</th><td>{_length(yagi.height_m, display_units)}</td></tr>
 <tr><th>Top level height</th><td>{_length(parameters.highest_tip_m, display_units)}</td></tr>
-<tr><th>Phase step</th><td>{parameters.effective_phase_step_deg:.1f}°</td></tr>
-<tr><th>Additional-level ratio</th><td>{parameters.amplitude_ratio:.2f}</td></tr>
+<tr><th>Phase step</th><td>{"set by the feed network" if parameters.feed.mode is StackedYagiFeedMode.WILKINSON else f"{parameters.effective_phase_step_deg:.1f}°"}</td></tr>
+<tr><th>Additional-level ratio</th><td>{"set by the feed network" if parameters.feed.mode is StackedYagiFeedMode.WILKINSON else f"{parameters.amplitude_ratio:.2f}"}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
         match_row = ""
@@ -1413,22 +1413,74 @@ def render_construction_sheet(
 """
         if parameters.feed.mode is not StackedYagiFeedMode.IDEAL:
             is_network = parameters.feed.mode is StackedYagiFeedMode.NETWORK
+            is_wilkinson = parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+            has_line_loss = is_network or is_wilkinson
             line_rows = "".join(
                 f"<tr><th>Level {index + 1} line</th><td>"
                 f"{_length(parameters.feed.line_length_for_level(index), display_units)}"
-                f"{f' ({parameters.feed.line_loss_for_level(index):.2f} dB matched)' if is_network else ''}"
+                f"{f' ({parameters.feed.line_loss_for_level(index):.2f} dB matched)' if has_line_loss else ''}"
                 f"</td></tr>"
                 for index in range(parameters.count)
             )
+            wilkinson_rows = ""
+            if is_wilkinson:
+                branch_impedance = parameters.feed.characteristic_impedance_ohm * math.sqrt(
+                    parameters.count
+                )
+                wilkinson_rows = (
+                    f"<tr><th>Divider design frequency</th><td>"
+                    f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f} MHz</td></tr>"
+                    f"<tr><th>Branch impedance</th><td>{branch_impedance:.1f} Ω</td></tr>"
+                    f"<tr><th>Isolation resistors</th><td>{parameters.count} x "
+                    f"{parameters.feed.characteristic_impedance_ohm:.1f} Ω star</td></tr>"
+                    "<tr><th>Divider model</th><td>ideal quarter-wave branches and "
+                    "star resistors</td></tr>"
+                )
             feed_rows += f"""
-<tr><th>Feed network</th><td>{"splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>
+<tr><th>Feed network</th><td>{"Wilkinson N-port divider" if is_wilkinson else "splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>
 {line_rows}
 <tr><th>Line velocity factor</th><td>{parameters.feed.velocity_factor:.3f}</td></tr>
 <tr><th>Line Z0</th><td>{parameters.feed.characteristic_impedance_ohm:.1f} Ω</td></tr>
 <tr><th>Splitter excess loss</th><td>{parameters.feed.splitter_loss_db:.2f} dB</td></tr>
-{f"<tr><th>Matched line loss</th><td>{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m</td></tr>" if is_network else ""}
+{wilkinson_rows}
+{f"<tr><th>Matched line loss</th><td>{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m</td></tr>" if has_line_loss else ""}
 """
-            if parameters.feed.mode is StackedYagiFeedMode.NETWORK:
+            if is_wilkinson:
+                branch_impedance = parameters.feed.characteristic_impedance_ohm * math.sqrt(
+                    parameters.count
+                )
+                construction_note = _note(
+                    tr,
+                    "Build {count} identical Yagis on one vertical stack with {spacing} m "
+                    "between level booms. The splitter is an equal {count}-way Wilkinson: "
+                    "{branch} Ω quarter-wave branches and a star of {count} "
+                    "{isolation} Ω isolation resistors, designed at {design} MHz. Feed "
+                    "line lengths are {lengths}, with {velocity} velocity factor and "
+                    "{z0} Ω characteristic impedance. Record {loss} dB of splitter excess "
+                    "loss and {line_loss} dB/100 m of matched line loss plus a per-port "
+                    "mismatch correction, applied to realized gain. The N-port solver "
+                    "combines the divider with the antenna port admittance; the pattern "
+                    "is reconstructed from the solved port voltages. Branches and "
+                    "resistors are ideal; component loss, tolerance, and broadband "
+                    "behavior are not modeled. Fit each level as a complete Yagi from "
+                    "the base element table. {mast_note} Per-level matching is not "
+                    "modeled; verify the combined pattern and match.",
+                    count=parameters.count,
+                    spacing=f"{parameters.spacing_m:.4f}",
+                    branch=f"{branch_impedance:.1f}",
+                    isolation=f"{parameters.feed.characteristic_impedance_ohm:.1f}",
+                    design=f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f}",
+                    lengths=", ".join(
+                        f"L{index + 1} {parameters.feed.line_length_for_level(index):.4f} m"
+                        for index in range(parameters.count)
+                    ),
+                    velocity=f"{parameters.feed.velocity_factor:.3f}",
+                    z0=f"{parameters.feed.characteristic_impedance_ohm:.1f}",
+                    loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                    line_loss=f"{parameters.feed.line_loss_db_per_100m:.2f}",
+                    mast_note=mast_note,
+                )
+            elif parameters.feed.mode is StackedYagiFeedMode.NETWORK:
                 construction_note = _note(
                     tr,
                     "Build {count} identical Yagis on one vertical stack with {spacing} m "

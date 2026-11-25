@@ -51,7 +51,11 @@ from antennadesk.domain.antennas.vertical import ANTENNA_TYPE_VERTICAL
 from antennadesk.domain.antennas.yagi import ANTENNA_TYPE_YAGI
 from antennadesk.domain.antennas.zepp import ANTENNA_TYPE_ZEPP
 from antennadesk.domain.simulation.frequency import FrequencyPlan
-from antennadesk.domain.simulation.spec import SimulationSpec
+from antennadesk.domain.simulation.spec import (
+    FeedNetworkKind,
+    FeedNetworkSpec,
+    SimulationSpec,
+)
 from antennadesk.persistence import schema
 
 DECLARED_TYPES = (
@@ -166,3 +170,29 @@ def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
     assert restored.feed_network_loss_db == 0.4
     assert restored.feed_network_line_loss_db_per_100m == 1.5
     assert restored.co_simulate_feed_network is True
+
+
+def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
+    feed_network = FeedNetworkSpec(
+        kind=FeedNetworkKind.WILKINSON,
+        design_frequency_hz=14_100_000.0,
+        port_count=2,
+        feed_line_lengths_m=(2.0, 2.0),
+        feed_line_impedance_ohm=50.0,
+        velocity_factor=0.8,
+        splitter_excess_loss_db=0.2,
+        line_loss_db_per_100m=1.5,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(14_100_000.0),
+        feed_network=feed_network,
+    )
+
+    payload = schema._simulation_spec_from_domain(spec)
+    restored = schema._simulation_spec_to_domain(payload)
+
+    assert payload.feed_network is not None
+    assert payload.feed_network.kind is FeedNetworkKind.WILKINSON
+    assert payload.feed_network.port_count == 2
+    assert restored.feed_network == feed_network
+    assert restored.co_simulate_feed_network is False

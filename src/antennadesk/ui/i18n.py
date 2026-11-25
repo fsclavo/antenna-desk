@@ -4218,13 +4218,23 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.stacked_yagi.feed_mode": {
         Language.ENGLISH: (
             "Ideal uses the phase-step field. Splitter + phase lines derives it "
-            "from the extra line length. Co-simulated network adds NEC lines and "
-            "a per-port mismatch-corrected line loss."
+            "from the extra line length. Co-simulated network uses NEC lines. "
+            "Wilkinson solves a real divider with the N-port solver."
         ),
         Language.SPANISH: (
             "Ideal usa el escalón de fase. Divisor + líneas de fase lo deriva del "
-            "largo adicional. La red co-simulada agrega líneas NEC y pérdida de "
-            "línea corregida por desadapto."
+            "largo adicional. La red co-simulada usa líneas NEC. Wilkinson resuelve "
+            "un divisor real con el solver N-port."
+        ),
+    },
+    "help.stacked_yagi.splitter_design_frequency": {
+        Language.ENGLISH: (
+            "Frequency where the Wilkinson branches are quarter-wave; zero uses "
+            "the Yagi design frequency. The divider is narrowband."
+        ),
+        Language.SPANISH: (
+            "Frecuencia donde las ramas del Wilkinson son de cuarto de onda; cero "
+            "usa la frecuencia de diseño del Yagi. El divisor es de banda angosta."
         ),
     },
     "help.stacked_yagi.reference_line": {
@@ -11777,6 +11787,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Co-simulated TL network",
         Language.SPANISH: "Red de líneas co-simulada",
     },
+    "stacked_yagi.feed_mode.wilkinson": {
+        Language.ENGLISH: "Wilkinson divider",
+        Language.SPANISH: "Divisor Wilkinson",
+    },
     "stacked_yagi.reference_line": {
         Language.ENGLISH: "Level-1 line length",
         Language.SPANISH: "Largo de línea al nivel 1",
@@ -11801,6 +11815,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Matched line loss",
         Language.SPANISH: "Pérdida de línea adaptada",
     },
+    "stacked_yagi.splitter_design_frequency": {
+        Language.ENGLISH: "Divider design frequency",
+        Language.SPANISH: "Frecuencia de diseño del divisor",
+    },
     "stacked_yagi.derived_phase": {
         Language.ENGLISH: "Derived phase step: {phase}° per level",
         Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
@@ -11813,6 +11831,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "modo red: el nodo del divisor es un punto de alimentación numérico; "
             "las líneas discontinuas son las líneas de transmisión sin pérdidas"
+        ),
+    },
+    "stacked_yagi.wilkinson_note": {
+        Language.ENGLISH: (
+            "{count}-way Wilkinson at {design} MHz: {branch} Ω quarter-wave branches, "
+            "{isolation} Ω star isolation resistors, ideal components. Narrowband; "
+            "feed-line and splitter excess losses are applied to realized gain; "
+            "the pattern is reconstructed from the N-port port voltages."
+        ),
+        Language.SPANISH: (
+            "Wilkinson de {count} vías a {design} MHz: ramas de cuarto de onda de "
+            "{branch} Ω, resistencias de aislación en estrella de {isolation} Ω, "
+            "componentes ideales. Banda angosta; las pérdidas de línea y extra del "
+            "divisor se aplican a la ganancia realizada; el patrón se reconstruye "
+            "desde las tensiones de puerto del solver N-port."
         ),
     },
     "stacked_yagi.network_note": {
@@ -11867,10 +11900,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "is the primary feed; in network mode the numerical splitter node is "
             "the primary input and every level is a network port. The feed can be "
             "an ideal phase step, a splitter + phase-line specification, or a "
-            "co-simulated lossless TL network. Network mode applies a line loss "
-            "with a per-port mismatch correction to realized gain; splitter "
-            "internal mismatch and the loss-induced input-impedance shift are not "
-            "modeled. The optional mast and "
+            "co-simulated lossless TL network, or a bounded Wilkinson divider solved "
+            "by the N-port solver. Network mode applies a line loss with a per-port "
+            "mismatch correction to realized gain; splitter internal mismatch and "
+            "the loss-induced input-impedance shift are not modeled. The optional mast and "
             "guy wires are shared by every level, and a beta/hairpin match is "
             "built at every driven element."
         ),
@@ -11880,7 +11913,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "del divisor es la entrada principal y cada nivel es un puerto de red. "
             "La alimentación puede ser un escalón de fase ideal, una "
             "especificación de divisor + líneas de fase o una red de líneas sin "
-            "pérdidas co-simulada. El modo red aplica una pérdida de línea con "
+            "pérdidas co-simulada o un divisor Wilkinson acotado resuelto por el "
+            "solver N-port. El modo red aplica una pérdida de línea con "
             "corrección por desadapto de cada puerto a la ganancia realizada; no "
             "se modelan el desajuste interno del divisor ni el corrimiento de "
             "impedancia de entrada por la pérdida. El mástil y los vientos "
@@ -11894,9 +11928,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "solver. The optional feed specification sets the source phase and "
             "splitter excess loss; network mode also applies a line loss with a "
             "per-port mismatch correction to realized gain while the primary SWR "
-            "stays lossless. Splitter internal mismatch, the loss-induced input-"
-            "impedance shift, and per-level matching networks are not modeled. An "
-            "optional mast and "
+            "stays lossless. The Wilkinson mode solves a real N-way divider and "
+            "reconstructs the pattern from its port voltages. Splitter internal "
+            "mismatch, the loss-induced input-impedance shift, and per-level matching "
+            "networks are not modeled. An optional mast and "
             "guy wires are modeled once for the whole stack, and a beta/hairpin "
             "match is built at every driven element. In network mode the reference "
             "line and differential TL impedance transformation are included; "
@@ -11909,7 +11944,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "fase de las fuentes y la pérdida extra del divisor; el modo red "
             "también aplica una pérdida de línea con corrección por desadapto de "
             "cada puerto a la ganancia realizada mientras la ROE primaria queda "
-            "sin pérdidas. No se modelan el desajuste interno del divisor, el "
+            "sin pérdidas. El modo Wilkinson resuelve un divisor real de N vías y "
+            "reconstruye el patrón desde sus tensiones de puerto. No se modelan el "
+            "desajuste interno del divisor, el "
             "corrimiento de impedancia de entrada por la pérdida ni el ajuste por "
             "nivel. Un mástil y vientos opcionales se modelan una sola "
             "vez para toda la pila, y se arma un match beta/hairpin en cada "
@@ -11977,13 +12014,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Ideal and phase-line modes report level 1 as the primary port. "
             "Network mode reports the numerical splitter node as the primary "
-            "input; the Sources tab also lists every level port."
+            "input; Wilkinson mode reports the splitter input. The Sources tab "
+            "also lists every level port."
         ),
         Language.SPANISH: (
             "Los modos ideal y de líneas de fase informan el nivel 1 como puerto "
             "principal. El modo red informa el nodo numérico del divisor como "
-            "entrada principal; la pestaña Fuentes también lista cada puerto de "
-            "nivel."
+            "entrada principal; el modo Wilkinson informa la entrada del divisor. "
+            "La pestaña Fuentes también lista cada puerto de nivel."
         ),
     },
     "hexbeam.title": {
@@ -16838,6 +16876,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
         Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",
     },
+    "optimize.unavailable.stacked_yagi_wilkinson": {
+        Language.ENGLISH: (
+            "The Wilkinson feed mode cannot be optimized yet. Optimize in the "
+            "phase-line or network mode, then switch to Wilkinson."
+        ),
+        Language.SPANISH: (
+            "El modo Wilkinson todavía no se puede optimizar. Optimizá en modo de "
+            "líneas de fase o red y después cambiá a Wilkinson."
+        ),
+    },
     "optimize.unavailable.stacked_yagi_envelope": {
         Language.ENGLISH: (
             "Set a maximum top height in the stack editor to define the mechanical "
@@ -17956,6 +18004,44 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "diagnostic.custom.wires.overlap": {
         Language.ENGLISH: "Two wires overlap.",
         Language.SPANISH: "Dos hilos se superponen.",
+    },
+    "diagnostic.wilkinson.pattern_reconstruction": {
+        Language.ENGLISH: (
+            "Pattern reconstructed from the N-port splitter port voltages; feed-network "
+            "losses are applied to realized gain."
+        ),
+        Language.SPANISH: (
+            "Patrón reconstruido desde las tensiones de puerto del divisor N-port; las "
+            "pérdidas de la red de alimentación se aplican a la ganancia realizada."
+        ),
+    },
+    "diagnostic.wilkinson.ideal_components": {
+        Language.ENGLISH: (
+            "Wilkinson branches, isolation resistors, and feed lines are ideal; component "
+            "tolerance and loss are not modeled."
+        ),
+        Language.SPANISH: (
+            "Las ramas del Wilkinson, las resistencias de aislación y las líneas son "
+            "ideales; no se modelan tolerancia ni pérdida de componentes."
+        ),
+    },
+    "diagnostic.wilkinson.power_budget_unavailable": {
+        Language.ENGLISH: (
+            "The reconstructed multi-source power budget is not used; realized gain comes "
+            "from the N-port feed solution."
+        ),
+        Language.SPANISH: (
+            "No se usa el balance de potencia multifuente reconstruido; la ganancia "
+            "realizada proviene de la solución N-port."
+        ),
+    },
+    "diagnostic.wilkinson.port_count_mismatch": {
+        Language.ENGLISH: "The feed-network port count does not match the antenna ports.",
+        Language.SPANISH: "La cantidad de puertos de la red no coincide con los de la antena.",
+    },
+    "diagnostic.wilkinson.solve_failed": {
+        Language.ENGLISH: "The Wilkinson feed-network solve failed.",
+        Language.SPANISH: "Falló la resolución de la red Wilkinson.",
     },
     "diagnostic.normalization.negative_resistance": {
         Language.ENGLISH: (

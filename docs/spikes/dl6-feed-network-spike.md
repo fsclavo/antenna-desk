@@ -144,7 +144,7 @@ Open an ADR for a **bounded Wilkinson / corporate splitter** with:
   branch so the source/load and TL meet at the same electrical node;
 - a declared splitter design frequency;
 - a **single-TL-plus-load calibration** first, then a 2-way Wilkinson, then
-  3–4 way as a corporate network of 2-way sections;
+  3–4 way as an equal N-way Wilkinson with star isolation;
 - the current ideal/excess-loss mode kept as the default and fallback;
 - no broadband or isolation claim outside the modeled frequency range.
 
@@ -216,8 +216,9 @@ geometry.
   power ratio within 1e-3.
 - The Wilkinson with the real antenna Y-matrix satisfies the power balance.
 
-The solver is not yet exposed in the editor, schema, reports, or BOM. The
-current stacked-Yagi network mode still uses the NEC TL co-simulation.
+The solver is exposed in the stacked-Yagi **Wilkinson divider** mode (schema
+64, editor, reports, construction sheet, and reconstructed pattern). The
+existing NEC TL network mode remains available.
 
 ## Risks
 
@@ -232,6 +233,6 @@ current stacked-Yagi network mode still uses the NEC TL co-simulation.
 
 ## Next step
 
-Add the user-facing Wilkinson mode on top of the validated solver: a declared
-design frequency, three- and four-way corporate networks, schema/UI/reports,
-and a real `nec2c` regression. Per-level matching remains a follow-up.
+Add per-level matching networks and Wilkinson component tolerances on top of
+the validated solver. The user-facing Wilkinson mode, equal N-way dividers with
+star isolation, schema/UI/reports, and real `nec2c` regressions are implemented.

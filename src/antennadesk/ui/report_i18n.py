@@ -645,6 +645,18 @@ REPORT_SPANISH: dict[str, str] = {
     "Gain and efficiency": "Ganancia y eficiencia",
     "Impedance": "Impedancia",
     "Resonance": "Resonancia",
+    "Wilkinson splitter input (primary); every level is a network port": (
+        "Entrada del divisor Wilkinson (principal); cada nivel es un puerto de red"
+    ),
+    "Wilkinson N-port network": "Red Wilkinson N-port",
+    "Divider design frequency": "Frecuencia de diseño del divisor",
+    "Branch impedance": "Impedancia de rama",
+    "Isolation resistors": "Resistencias de aislación",
+    "Divider model": "Modelo del divisor",
+    "ideal quarter-wave branches and star resistors": (
+        "ramas ideales de cuarto de onda y resistencias en estrella"
+    ),
+    "set by the feed network": "fijado por la red de alimentación",
     # Result-summary rows.
     "Balun/unun loss": "Pérdida del balun/unun",
     "Feed-line loss": "Pérdida de la línea de alimentación",
@@ -837,6 +849,22 @@ REPORT_SPANISH: dict[str, str] = {
         "desajuste interno del divisor. Armá cada nivel como un Yagi completo a "
         "partir de la tabla de elementos base. {mast_note} El ajuste por nivel no "
         "está modelado; verificá el patrón combinado y el ajuste."
+    ),
+    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter is an equal {count}-way Wilkinson: {branch} Ω quarter-wave branches and a star of {count} {isolation} Ω isolation resistors, designed at {design} MHz. Feed line lengths are {lengths}, with {velocity} velocity factor and {z0} Ω characteristic impedance. Record {loss} dB of splitter excess loss and {line_loss} dB/100 m of matched line loss plus a per-port mismatch correction, applied to realized gain. The N-port solver combines the divider with the antenna port admittance; the pattern is reconstructed from the solved port voltages. Branches and resistors are ideal; component loss, tolerance, and broadband behavior are not modeled. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
+        "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
+        "entre los boms de los niveles. El divisor es un Wilkinson equilibrado de "
+        "{count} vías: ramas de cuarto de onda de {branch} Ω y una estrella de "
+        "{count} resistencias de aislación de {isolation} Ω, diseñado a "
+        "{design} MHz. Los largos de línea son {lengths}, con factor de velocidad "
+        "{velocity} e impedancia característica {z0} Ω. Registrá {loss} dB de "
+        "pérdida extra del divisor y {line_loss} dB/100 m de pérdida de línea "
+        "adaptada más una corrección por desadapto de cada puerto, aplicada a la "
+        "ganancia realizada. El solver N-port combina el divisor con la admitancia "
+        "de los puertos de la antena; el patrón se reconstruye desde las tensiones "
+        "de puerto resueltas. Las ramas y resistencias son ideales; no se modelan "
+        "pérdida, tolerancia ni comportamiento de banda ancha. Armá cada nivel como "
+        "un Yagi completo a partir de la tabla de elementos base. {mast_note} El "
+        "ajuste por nivel no está modelado; verificá el patrón combinado y el ajuste."
     ),
     "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. Level 1 is the primary feed; drive levels 2 to {last} with a {ratio} relative amplitude. Feed the levels through a {count}-way splitter and phase lines: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The line impedance transformation and line loss are not modeled; the solver uses ideal voltage sources. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "

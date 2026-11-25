@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 
+from antennadesk.application.fingerprint import model_fingerprint
 from antennadesk.application.use_cases.create_dipole_project import (
     CreateDipoleProject,
     CreateDipoleProjectCommand,
@@ -26,7 +27,6 @@ from antennadesk.domain.simulation.result import SimulationResult, SimulationSta
 from antennadesk.domain.simulation.run import SimulationRun
 from antennadesk.domain.simulation.solver import SolverMetadata
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.simulation.fingerprint import model_fingerprint
 from antennadesk.simulation.preflight import run_preflight
 
 

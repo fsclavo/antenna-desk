@@ -54,6 +54,7 @@ from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import nbs_five_element
 from antennadesk.domain.antennas.zepp import zepp_starting_parameters
+from antennadesk.domain.simulation.spec import FeedNetworkKind, FeedNetworkSpec
 
 BASIC_FORM_TYPES = {DipoleParameters, FoldedDipoleParameters, LoopParameters}
 
@@ -308,3 +309,38 @@ def test_stacked_yagi_network_mode_passes_the_line_loss() -> None:
     assert spec.co_simulate_feed_network is True
     assert spec.feed_network_loss_db == pytest.approx(0.4)
     assert spec.feed_network_line_loss_db_per_100m == pytest.approx(1.5)
+
+
+def test_stacked_yagi_wilkinson_mode_builds_a_feed_network_spec() -> None:
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=1.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_loss_db=0.2,
+            line_loss_db_per_100m=1.5,
+            splitter_design_frequency_hz=14_200_000.0,
+        ),
+    )
+
+    spec = build_typed_family_simulation_spec(parameters)
+
+    assert spec.feed_network == FeedNetworkSpec(
+        kind=FeedNetworkKind.WILKINSON,
+        design_frequency_hz=14_200_000.0,
+        port_count=2,
+        feed_line_lengths_m=(2.0, 3.0),
+        feed_line_impedance_ohm=50.0,
+        velocity_factor=0.8,
+        splitter_excess_loss_db=0.2,
+        line_loss_db_per_100m=1.5,
+    )
+    assert spec.co_simulate_feed_network is False
+    assert spec.feed_network_loss_db == pytest.approx(0.0)
+    assert spec.feed_network_line_loss_db_per_100m == pytest.approx(0.0)

@@ -1082,6 +1082,27 @@ def test_stacked_yagi_without_an_envelope_is_unavailable() -> None:
     assert availability.reason_key == "optimize.unavailable.stacked_yagi_envelope"
 
 
+def test_stacked_yagi_wilkinson_mode_is_unavailable_for_optimization() -> None:
+    parameters = StackedYagiParameters(
+        yagi=_stack_base_yagi(),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_design_frequency_hz=14_100_000.0,
+        ),
+    )
+
+    availability = optimizer_availability(parameters)
+
+    assert availability.descriptor is None
+    assert availability.reason_key == "optimize.unavailable.stacked_yagi_wilkinson"
+
+
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:
     parameters = phased_vertical_parameters(
         element_count=3,

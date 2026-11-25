@@ -21,6 +21,8 @@ def model_fingerprint(model: AntennaModel, spec: SimulationSpec) -> str:
     spec_payload.pop("matching_network_origin", None)
     if spec_payload.get("site_ground") is None:
         spec_payload.pop("site_ground", None)
+    if spec_payload.get("feed_network") is None:
+        spec_payload.pop("feed_network", None)
     payload = {
         "format": FINGERPRINT_FORMAT,
         "model": asdict(model),

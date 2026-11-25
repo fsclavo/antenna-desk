@@ -35,7 +35,7 @@ from ..antennas.phased_vertical import PhasedVerticalParameters
 from ..antennas.quad_beam import QuadBeamParameters
 from ..antennas.ringo import RingoParameters
 from ..antennas.scv import ScvParameters
-from ..antennas.stacked_yagi import StackedYagiParameters
+from ..antennas.stacked_yagi import StackedYagiFeedMode, StackedYagiParameters
 from ..antennas.t2fd import T2FDParameters
 from ..antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..antennas.trap_dipole import TrapDipoleParameters
@@ -77,6 +77,7 @@ from .families.yagi import yagi_descriptor
 
 _REASON_PENDING = "optimize.unavailable.pending_family"
 _REASON_STACKED_YAGI_ENVELOPE = "optimize.unavailable.stacked_yagi_envelope"
+_REASON_STACKED_YAGI_WILKINSON = "optimize.unavailable.stacked_yagi_wilkinson"
 _REASON_MAGNETIC_LOOP = "optimize.unavailable.magnetic_loop"
 _REASON_LOG_PERIODIC = "optimize.unavailable.log_periodic"
 _REASON_RANDOM_WIRE = "optimize.unavailable.random_wire"
@@ -143,6 +144,8 @@ def _optimizer_availability(
             )
         return OptimizerAvailability(descriptor=descriptor)
     if isinstance(parameters, StackedYagiParameters):
+        if parameters.feed.mode is StackedYagiFeedMode.WILKINSON:
+            return OptimizerAvailability(reason_key=_REASON_STACKED_YAGI_WILKINSON)
         maximum_spacing = parameters.maximum_spacing_m
         if maximum_spacing is None or maximum_spacing <= parameters.minimum_spacing_m:
             return OptimizerAvailability(reason_key=_REASON_STACKED_YAGI_ENVELOPE)

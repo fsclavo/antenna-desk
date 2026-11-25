@@ -16,6 +16,7 @@ dependency is needed. ``scikit-rf`` remains a development-only cross-check.
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..common.units import ensure_positive
@@ -50,14 +51,16 @@ def _subtract(left: Matrix, right: Matrix) -> Matrix:
 
 
 def _multiply(left: Matrix, right: Matrix) -> Matrix:
-    size = len(left)
-    result = _zero_matrix(size)
-    for row in range(size):
-        for column in range(size):
-            result[row][column] = sum(
-                left[row][index] * right[index][column] for index in range(size)
-            )
-    return result
+    rows = len(left)
+    inner = len(right)
+    columns = len(right[0]) if right else 0
+    return [
+        [
+            sum(left[row][index] * right[index][column] for index in range(inner))
+            for column in range(columns)
+        ]
+        for row in range(rows)
+    ]
 
 
 def _matvec(matrix: Matrix, vector: Vector) -> Vector:
@@ -274,6 +277,9 @@ class FeedNetworkSolution:
 
     input_impedance_ohm: complex
     port_voltages_v: tuple[complex, ...]
+    antenna_port_voltages_v: tuple[complex, ...]
+    antenna_port_currents_a: tuple[complex, ...]
+    antenna_port_impedances_ohm: tuple[complex, ...]
     antenna_port_powers_w: tuple[float, ...]
     input_power_w: float
     network_loss_w: float
@@ -320,6 +326,14 @@ def solve_feed_network(
     input_power = 0.5 * (input_voltage * input_current.conjugate()).real
     antenna_voltages = [voltage[index] for index in port_order]
     antenna_currents = _matvec(antenna_admittance, antenna_voltages)
+    antenna_impedances = tuple(
+        voltage_value / current_value if abs(current_value) > 1e-30 else complex(float("inf"), 0.0)
+        for voltage_value, current_value in zip(
+            antenna_voltages,
+            antenna_currents,
+            strict=True,
+        )
+    )
     antenna_powers = tuple(
         0.5 * (voltage_value * current_value.conjugate()).real
         for voltage_value, current_value in zip(antenna_voltages, antenna_currents, strict=True)
@@ -327,6 +341,9 @@ def solve_feed_network(
     return FeedNetworkSolution(
         input_impedance_ohm=input_voltage / input_current,
         port_voltages_v=tuple(voltage),
+        antenna_port_voltages_v=tuple(antenna_voltages),
+        antenna_port_currents_a=tuple(antenna_currents),
+        antenna_port_impedances_ohm=antenna_impedances,
         antenna_port_powers_w=antenna_powers,
         input_power_w=input_power,
         network_loss_w=input_power - sum(antenna_powers),
@@ -373,4 +390,88 @@ def two_way_wilkinson(
                 impedance_ohm=complex(2.0 * system_impedance_ohm, 0.0),
             ),
         ),
+    )
+
+
+def n_way_wilkinson(
+    *,
+    frequency_hz: float,
+    port_count: int,
+    feed_line_lengths_m: Sequence[float],
+    system_impedance_ohm: float = 50.0,
+    velocity_factor: float = 1.0,
+    branch_velocity_factor: float = 1.0,
+) -> NPortNetwork:
+    """Return an equal N-way Wilkinson with feed lines to each output.
+
+    The external ports are the input (node 0) and the N level ports (nodes
+    1..N). The splitter branches are quarter-wave at ``frequency_hz`` with
+    impedance ``system_impedance_ohm * sqrt(N)``. The isolation network is a
+    star of N resistors of ``system_impedance_ohm`` around a floating center.
+    Each splitter output then runs through a feed line of the given length and
+    the system impedance to its level port. The floating star center is
+    regularized by a very high numerical shunt; it is not a physical component.
+    """
+
+    ensure_positive(frequency_hz, name="frequency_hz")
+    if port_count < 2:
+        raise ValueError("an N-way Wilkinson needs at least two outputs")
+    if len(feed_line_lengths_m) != port_count:
+        raise ValueError("feed_line_lengths_m must have one length per output")
+    ensure_positive(system_impedance_ohm, name="system_impedance_ohm")
+    ensure_positive(velocity_factor, name="velocity_factor")
+    ensure_positive(branch_velocity_factor, name="branch_velocity_factor")
+    if velocity_factor > 1.0:
+        raise ValueError("velocity_factor must not exceed 1")
+    if branch_velocity_factor > 1.0:
+        raise ValueError("branch_velocity_factor must not exceed 1")
+    for length_m in feed_line_lengths_m:
+        ensure_positive(length_m, name="feed_line_lengths_m")
+
+    branch_length_m = _SPEED_OF_LIGHT_M_PER_S / frequency_hz / 4.0 * branch_velocity_factor
+    branch_impedance_ohm = system_impedance_ohm * math.sqrt(port_count)
+    first_splitter_node = port_count + 1
+    star_center = first_splitter_node + port_count
+    branches: list[NetworkBranch] = []
+    for output_index in range(port_count):
+        splitter_node = first_splitter_node + output_index
+        branches.append(
+            TransmissionLineBranch(
+                node_a=0,
+                node_b=splitter_node,
+                characteristic_impedance_ohm=branch_impedance_ohm,
+                length_m=branch_length_m,
+                velocity_factor=branch_velocity_factor,
+            )
+        )
+        branches.append(
+            SeriesBranch(
+                node_a=splitter_node,
+                node_b=star_center,
+                impedance_ohm=complex(system_impedance_ohm, 0.0),
+            )
+        )
+        branches.append(
+            TransmissionLineBranch(
+                node_a=splitter_node,
+                node_b=output_index + 1,
+                characteristic_impedance_ohm=system_impedance_ohm,
+                length_m=feed_line_lengths_m[output_index],
+                velocity_factor=velocity_factor,
+            )
+        )
+    # The star center has no connection to the reference, so its common mode
+    # is arbitrary and the internal nodal matrix would be singular at the
+    # equal-split frequency. A very high shunt regularizes that common mode
+    # without changing the differential split.
+    branches.append(
+        ShuntBranch(
+            node=star_center,
+            impedance_ohm=complex(1e7, 0.0),
+        )
+    )
+    return NPortNetwork(
+        port_names=("input", *(f"output-{index + 1}" for index in range(port_count))),
+        branches=tuple(branches),
+        internal_node_count=port_count + 1,
     )

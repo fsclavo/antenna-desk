@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import math
+
 from ..domain.antennas.balun import BalunLoss
 from ..domain.antennas.beverage import BeverageParameters
 from ..domain.antennas.biquad import BiquadParameters
@@ -1260,6 +1262,9 @@ def design_summary_rows(
         return tuple(rows)
     if isinstance(parameters, StackedYagiParameters):
         yagi = parameters.yagi
+        branch_impedance_ohm = parameters.feed.characteristic_impedance_ohm * math.sqrt(
+            parameters.count
+        )
         total_conductor = parameters.count * sum(element.length_m for element in yagi.elements)
         rows.extend(
             [
@@ -1270,13 +1275,25 @@ def design_summary_rows(
                 ("Base boom length", _length(parameters.boom_length_m, display_units)),
                 ("Base boom height", _length(yagi.height_m, display_units)),
                 ("Top level height", _length(parameters.highest_tip_m, display_units)),
-                ("Phase step", f"{parameters.effective_phase_step_deg:.1f}°"),
-                ("Additional-level ratio", f"{parameters.amplitude_ratio:.2f}"),
+                (
+                    "Phase step",
+                    "set by the feed network"
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    else f"{parameters.effective_phase_step_deg:.1f}°",
+                ),
+                (
+                    "Additional-level ratio",
+                    "set by the feed network"
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    else f"{parameters.amplitude_ratio:.2f}",
+                ),
                 ("Polarization", yagi.polarization.value),
                 (
                     "Feed",
                     (
-                        "splitter node (primary input); every level is a network port"
+                        "Wilkinson splitter input (primary); every level is a network port"
+                        if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                        else "splitter node (primary input); every level is a network port"
                         if parameters.feed.mode is StackedYagiFeedMode.NETWORK
                         else "level 1 (primary); additional levels are ideal sources"
                     ),
@@ -1284,7 +1301,9 @@ def design_summary_rows(
                 (
                     "Feed network",
                     (
-                        "co-simulated TL network"
+                        "Wilkinson N-port network"
+                        if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                        else "co-simulated TL network"
                         if parameters.feed.mode is StackedYagiFeedMode.NETWORK
                         else "splitter + phase lines"
                         if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
@@ -1320,6 +1339,29 @@ def design_summary_rows(
                 *(
                     [
                         (
+                            "Divider design frequency",
+                            f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f} MHz",
+                        ),
+                        (
+                            "Branch impedance",
+                            f"{branch_impedance_ohm:.1f} Ω",
+                        ),
+                        (
+                            "Isolation resistors",
+                            f"{parameters.count} x "
+                            f"{parameters.feed.characteristic_impedance_ohm:.1f} Ω star",
+                        ),
+                        (
+                            "Divider model",
+                            "ideal quarter-wave branches and star resistors",
+                        ),
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    else []
+                ),
+                *(
+                    [
+                        (
                             "Matched line loss",
                             f"{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m",
                         ),
@@ -1335,7 +1377,8 @@ def design_summary_rows(
                             ),
                         ),
                     ]
-                    if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+                    if parameters.feed.mode
+                    in {StackedYagiFeedMode.NETWORK, StackedYagiFeedMode.WILKINSON}
                     else []
                 ),
                 *(

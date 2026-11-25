@@ -1631,3 +1631,51 @@ def test_stacked_yagi_construction_sheet_lists_the_beta_match(
     assert "0.3000 m" in sheet
     assert "Hairpin spacing" in sheet
     assert "0.1200 m" in sheet
+
+
+def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_loss_db=0.2,
+            line_loss_db_per_100m=1.5,
+            splitter_design_frequency_hz=14_100_000.0,
+        ),
+    )
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0].with_parameters(stack),
+        None,
+    )
+
+    assert "Wilkinson N-port divider" in sheet
+    assert "Divider design frequency" in sheet
+    assert "14.1000 MHz" in sheet
+    assert "Branch impedance" in sheet
+    assert "70.7 Ω" in sheet
+    assert "Isolation resistors" in sheet
+    assert "quarter-wave" in sheet
+    assert "pattern is reconstructed" in sheet

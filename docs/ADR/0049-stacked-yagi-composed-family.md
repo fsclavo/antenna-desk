@@ -39,6 +39,10 @@ The first slice is implemented with these boundaries:
   level, and reports each network connection point;
 - one shared mast and optional guy set across every level, built once at the
   top-boom height instead of copied per level;
+- a Wilkinson divider mode solved by the N-port feed-network solver, with a
+  declared design frequency, equal N-way quarter-wave branches, star isolation
+  resistors, feed-line loss, and a pattern reconstructed from the solved port
+  voltages;
 - a beta/hairpin match at every driven element, built per level from the base
   Yagi's match fields;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
@@ -64,11 +68,12 @@ slices.
 
 - The family now covers form, schema, catalog, per-port results, scene,
   reports, solver coverage, the splitter/phase-line specification, the
-  co-simulated network, one shared mast/guy set, and a beta/hairpin match.
-  Line loss is a user-entered matched loss plus a per-port load-mismatch
-  correction estimated from the solved port impedances; the loss-induced
-  input-impedance shift, splitter internal mismatch, per-level matching
-  networks, folded driven elements, and per-level feed transformers remain out.
+  co-simulated network, one shared mast/guy set, a beta/hairpin match, and the
+  Wilkinson N-port feed mode. Line loss is a user-entered matched loss plus a
+  per-port load-mismatch correction estimated from the solved port impedances;
+  the loss-induced input-impedance shift, component tolerances, per-level
+  matching networks, folded driven elements, and per-level feed transformers
+  remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.

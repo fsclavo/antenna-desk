@@ -12,6 +12,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from .. import __version__
+from ..application.wilkinson_feed import WilkinsonFeedSolver
 from ..domain.projects.project import DesignVariant, Project
 from ..domain.simulation.solver import SolverMetadata
 from ..domain.simulation.spec import SimulationSpec
@@ -84,7 +85,7 @@ def main() -> int:
 
     translator = Translator(resolve_language(preferences.language))
     executable = find_nec2c()
-    solver = Nec2cSolver(executable) if executable is not None else None
+    solver = WilkinsonFeedSolver(Nec2cSolver(executable)) if executable is not None else None
     repository = ProjectContainerRepository()
     app_data = QStandardPaths.writableLocation(
         QStandardPaths.StandardLocation.AppDataLocation
@@ -101,7 +102,7 @@ def main() -> int:
         font_size_controller=font_size_controller,
         language_preference=preferences.language,
         theme_controller=theme_controller,
-        solver_factory=Nec2cSolver,
+        solver_factory=lambda path: WilkinsonFeedSolver(Nec2cSolver(path)),
         preflight_runner=run_preflight,
         nec_deck_exporter=_export_nec_deck,
     )

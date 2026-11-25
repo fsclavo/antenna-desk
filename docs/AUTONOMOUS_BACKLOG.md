@@ -66,7 +66,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 63, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver and antenna Y-matrix extraction are validated but not yet exposed. Splitter internal mismatch, per-level matching networks, folded driven elements, and per-level transformers remain explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 64, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, and a user-facing Wilkinson divider mode are implemented. Splitter component tolerances, per-level matching networks, folded driven elements, and per-level transformers remain explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
@@ -1137,7 +1137,7 @@ narrow MVP (straight cylinders) mitigate it.
 **First slice implemented (2026-11-25):**
 [`ADR-0049`](ADR/0049-stacked-yagi-composed-family.md) composes two to four
 identical Yagis with an ideal source progression. The slice delivers the
-domain model, schema 63, both catalog routes, the embedded Yagi/stack form,
+domain model, schema 64, both catalog routes, the embedded Yagi/stack form,
 per-port **Sources** results, front-elevation scene and dimensions, design and
 construction reports, a multi-boom BOM, a real `nec2c` two-port test, an
 optional splitter + phase-line feed specification, and a bounded spacing/phase
@@ -1147,11 +1147,11 @@ including the reference line, and reports every network port; a user-entered
 matched line loss plus a per-port mismatch correction is applied to realized
 gain. One shared mast and optional guy set are modeled across every level, and a
 beta/hairpin match is built at every driven element. A pure-Python N-port
-feed-network solver and NEC antenna Y-matrix extraction are validated against
-the standard Wilkinson, scikit-rf, and the existing NEC TL co-simulation; they
-are not yet exposed in the editor/schema. Splitter internal mismatch,
-per-level matching networks, folded driven elements, and the per-level
-transformer remain follow-ups. Evidence is C and no stacking gain is
+feed-network solver, NEC antenna Y-matrix extraction, and a user-facing
+Wilkinson divider mode are implemented and validated against the standard
+Wilkinson, scikit-rf, and the existing NEC TL co-simulation. Wilkinson
+component tolerances, per-level matching networks, folded driven elements, and
+the per-level transformer remain follow-ups. Evidence is C and no stacking gain is
 claimed. See also
 [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
 
@@ -1178,7 +1178,9 @@ claimed. See also
 - One shared mast and optional guy set run from ground to the top boom; the
   base Yagi's support fields are interpreted once for the whole stack.
 - An N-port feed-network solver and NEC antenna Y-matrix extraction are
-  validated; the next slice exposes the Wilkinson mode in the editor/schema.
+  validated; the Wilkinson divider mode exposes them in schema 64, the editor,
+  reports, and the construction-sheet feed-network table, with a
+  reconstructed pattern; the conductor BOM remains conductor-only.
 - The optimizer searches level spacing and either the ideal phase step or the
   phase-line increment inside the maximum top-height envelope; the level count,
   base Yagi, and amplitude ratio stay context.
@@ -1187,8 +1189,8 @@ claimed. See also
 networks, and folded driven elements with per-level feed hardware. The
 [feed-network spike](spikes/dl6-feed-network-spike.md) rejects scalar isolation
 post-processing and proposes [ADR-0054](ADR/0054-bounded-multiport-feed-network.md):
-an explicit port/reference abstraction and a bounded Wilkinson/corporate
-splitter at a declared design frequency.
+an N-port solver and a bounded equal N-way Wilkinson with star isolation at a
+declared design frequency.
 Per-level matching and folded elements stay out until the port model and a
 single-level L/Pi/T subcircuit are validated. A geometry-only T-junction probe
 came close but did not balance/isolate the outputs; Phase 1 must be an
@@ -1982,7 +1984,7 @@ decision:
 
 ## Current baseline
 
-- Schema: **63**; container version 1.
+- Schema: **64**; container version 1.
 - Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
   technical-debt closure, main-window extractions, save/load size invariant
   fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,

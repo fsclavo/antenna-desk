@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from enum import StrEnum
 
 from ..antennas.balun import BalunLoss
 from ..antennas.feed_line import FeedLine
@@ -22,6 +23,46 @@ from .segmentation import SegmentationPolicy
 
 DEFAULT_TIMEOUT_S = 180.0
 MAX_TIMEOUT_S = 3_600.0
+
+
+class FeedNetworkKind(StrEnum):
+    """The bounded feed-network model attached to a simulation spec."""
+
+    WILKINSON = "wilkinson"
+
+
+@dataclass(frozen=True, slots=True)
+class FeedNetworkSpec:
+    """A feed network solved by the N-port circuit solver."""
+
+    kind: FeedNetworkKind
+    design_frequency_hz: float
+    port_count: int
+    feed_line_lengths_m: tuple[float, ...]
+    feed_line_impedance_ohm: float
+    velocity_factor: float
+    splitter_excess_loss_db: float = 0.0
+    line_loss_db_per_100m: float = 0.0
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "kind", FeedNetworkKind(self.kind))
+        ensure_positive(self.design_frequency_hz, name="design_frequency_hz")
+        if self.port_count < 2:
+            raise ValueError("feed_network port_count must be at least 2")
+        if len(self.feed_line_lengths_m) != self.port_count:
+            raise ValueError("feed_line_lengths_m must have one length per port")
+        for length_m in self.feed_line_lengths_m:
+            ensure_positive(length_m, name="feed_line_lengths_m")
+        ensure_positive(self.feed_line_impedance_ohm, name="feed_line_impedance_ohm")
+        ensure_positive(self.velocity_factor, name="velocity_factor")
+        if self.velocity_factor > 1.0:
+            raise ValueError("velocity_factor must not exceed 1")
+        for name, value in (
+            ("splitter_excess_loss_db", self.splitter_excess_loss_db),
+            ("line_loss_db_per_100m", self.line_loss_db_per_100m),
+        ):
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +90,7 @@ class SimulationSpec:
     feed_network_loss_db: float = 0.0
     feed_network_line_loss_db_per_100m: float = 0.0
     co_simulate_feed_network: bool = False
+    feed_network: FeedNetworkSpec | None = None
     site_ground: SiteGroundProfile | None = None
     timeout_s: float = DEFAULT_TIMEOUT_S
 
@@ -65,6 +107,8 @@ class SimulationSpec:
             if not math.isfinite(value) or value < 0.0:
                 raise ValueError(f"{name} must be finite and non-negative")
         ensure_positive(self.timeout_s, name="timeout_s")
+        if self.feed_network is not None and self.co_simulate_feed_network:
+            raise ValueError("feed_network and co_simulate_feed_network are mutually exclusive")
         object.__setattr__(
             self,
             "matching_network_position",

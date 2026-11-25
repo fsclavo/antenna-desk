@@ -234,8 +234,8 @@ an additional-level voltage ratio, an optional maximum top height that bounds
 the spacing optimizer, an optional shared mast and guy set, and an optional
 feed specification: ideal splitter plus
 equal phase-line increments, reference line length, velocity factor,
-characteristic impedance, splitter excess loss, and a matched line loss per
-100 m. In network mode
+characteristic impedance, splitter excess loss, a matched line loss per 100 m,
+and an optional Wilkinson divider design frequency. In network mode
 `to_antenna()` adds a 1 cm numerical splitter-node wire 1 m above the top of
 the stack and lossless `TransmissionLine` cards from that node to every level,
 including the reference line to level 1, instead of ideal sources; NEC reports
@@ -253,15 +253,21 @@ transformation change with frequency. In ideal/phase-line mode line impedance
 transformation is not modeled; the network mode includes the reference line and
 the differential TL transformation. A user-entered matched line loss plus a
 load-mismatch correction estimated from each port impedance is applied to
-realized gain; the loss-induced input-impedance shift is not re-solved. Splitter
-internal mismatch, per-level matching networks, folded driven elements, and
-per-level feed transformers are not modeled. A beta/hairpin match is built at
-every driven element. The base Yagi's optional mast and
-guy fields are interpreted once for the whole stack: one mast runs from ground
-to the top boom and the guys attach to its top, instead of one mast per level.
-The reported
-impedance and SWR refer to the lossless primary network node: the splitter node
-in network mode and level 1 in ideal/phase-line mode. A vertical-polarized stack must space
+realized gain; the loss-induced input-impedance shift is not re-solved. In
+Wilkinson mode `to_antenna()` returns the ideal level-port geometry without a
+splitter node or TLs; `SimulationSpec.feed_network` describes the divider, and
+`WilkinsonFeedSolver` extracts the antenna Y-matrix, solves the equal N-way
+divider and feed lines, and reconstructs the pattern with ideal sources at the
+solved port voltages. The Wilkinson branches, star isolation resistors, and
+feed lines are ideal; component loss and tolerance are not modeled. Splitter
+internal mismatch in the co-simulated network mode, per-level matching
+networks, folded driven elements, and per-level feed transformers are not
+modeled. A beta/hairpin match is built at every driven element. The base Yagi's
+optional mast and guy fields are interpreted once for the whole stack: one mast
+runs from ground to the top boom and the guys attach to its top, instead of one
+mast per level. The reported impedance and SWR refer to the primary network
+node: the splitter node in network mode, the Wilkinson splitter input in
+Wilkinson mode, and level 1 in ideal/phase-line mode. A vertical-polarized stack must space
 the levels farther apart than the longest element or the wire copies overlap.
 The family is experimental and makes no stacking-gain claim.
 
@@ -277,15 +283,22 @@ has named external ports and an optional set of internal nodes:
 - `NPortNetwork.s_matrix(frequency, z0)` for equal real reference impedances;
 - `solve_feed_network(network, antenna_admittance, ...)` for the input
   impedance, per-port powers, and network loss;
-- a `two_way_wilkinson()` builder.
+- `two_way_wilkinson()` and `n_way_wilkinson()` builders with optional feed
+  lines.
 
 The antenna admittance matrix is extracted from NEC in
 `application/feed_network_y.py`: each level port is driven with 1 V while the
 other ports are held at a near-zero 1 µV source (a nec2c workaround for its
-zero-EX default), and the source currents form the short-circuit Y-matrix. The
-solver is validated against the standard Wilkinson equations, scikit-rf, and the
-existing NEC TL co-simulation, but it is not yet exposed as a feed mode in the
-editor, schema, reports, or BOM.
+zero-EX default), and the source currents form the short-circuit Y-matrix.
+`application/wilkinson_feed.py` wraps the NEC solver, solves the feed network,
+and reconstructs the combined pattern. The solver is validated against the
+standard Wilkinson equations, scikit-rf, and the existing NEC TL co-simulation.
+The stacked-Yagi **Wilkinson divider** feed mode exposes it in the editor,
+schema 64, reports, and construction sheet; the feed-network power budget is
+not reported because the reconstructed multi-source budget is ambiguous. The
+star isolation center is regularized by a very high numerical shunt in the
+solver; it is not a physical component and is not listed in the construction
+sheet.
 
 ### RingoParameters
 
@@ -906,7 +919,7 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `63`; the application writes version 63 and
+trusted. The current schema is `64`; the application writes version 64 and
 rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
 optional `site_ground: null` metadata on open; a 60 container loads vertical
 designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged; a
@@ -930,7 +943,7 @@ migration.
 
 ## Schema policy
 
-- Current version: `63`.
+- Current version: `64`.
 - Only container version 1 / schema versions 59, 60, 61, and 62 are accepted;
   59 adds `project.site_ground: null`, 60 adds the default
   `radial_droop_deg = 0` on open, 61 is the metadata-only predecessor of the

@@ -1228,13 +1228,16 @@ NBS five-element preset at the current frequency and sets a half-wave level
 spacing while keeping the level count, phase step, amplitude ratio, conductor,
 ground, and top-height envelope.
 
-Level 1 is the primary feed and the only impedance/SWR reference. Levels 2–4
-are ideal voltage sources with `(level-1) × phase step` and the configured
-voltage ratio. The **Sources** results table reports each driven level
-separately; a negative source power means that ideal source is absorbing
-power. In ideal and phase-line mode the feed split is not a coupled network;
-the feed specification sets the phase and splitter excess loss. Network mode
-co-simulates the transmission lines but still leaves per-level matching out.
+Level 1 is the primary feed in ideal and phase-line mode. Levels 2–4 are ideal
+voltage sources with `(level-1) × phase step` and the configured voltage ratio.
+The **Sources** results table reports each driven level separately; a negative
+source power means that ideal source is absorbing power. In ideal and
+phase-line mode the feed split is not a coupled network; the feed specification
+sets the phase and splitter excess loss. Network mode co-simulates the
+transmission lines; Wilkinson mode solves a real N-way divider and feed lines.
+Both network modes still leave per-level matching out. In Wilkinson mode the
+primary SWR is the splitter input and the pattern is reconstructed from the
+solved port voltages.
 The stack uses one shared mast and one guy set for every level. A beta/hairpin
 match can be applied to every driven element; folded driven elements and
 per-level feed transformers are still disabled.
@@ -1246,14 +1249,16 @@ Copying a separate mast per level is not allowed. The **Match type**,
 **Match length**, and **Match spacing** fields build the same beta/hairpin
 match at every driven element.
 
-**Feed network** selects **Ideal phase step**, **Splitter + phase lines**, or
-**Co-simulated TL network**. The ideal mode uses the phase-step field directly.
-The two line modes record a physical line from the splitter to level 1
-(**Level-1 line length**), an **Additional line per level**, **Line velocity
-factor**, **Line characteristic impedance**, and **Splitter excess loss**.
-Network mode also records **Matched line loss** in dB per 100 m. The phase step
-is derived from the additional length and velocity factor and is shown below
-the fields.
+**Feed network** selects **Ideal phase step**, **Splitter + phase lines**,
+**Co-simulated TL network**, or **Wilkinson divider**. The ideal mode uses the
+phase-step field directly. The line modes record a physical line from the
+splitter to level 1 (**Level-1 line length**), an **Additional line per level**,
+**Line velocity factor**, **Line characteristic impedance**, and **Splitter
+excess loss**. Network and Wilkinson modes also record **Matched line loss** in
+dB per 100 m. Wilkinson mode adds a **Divider design frequency**; zero uses the
+Yagi design frequency. The phase step is derived from the additional length and
+velocity factor in phase-line/network mode and is shown below the fields; in
+Wilkinson mode the feed network determines the excitation.
 
 In **Splitter + phase lines** the solver still uses ideal voltage sources: the
 line lengths only set the phase, which is computed at the design frequency and
@@ -1269,8 +1274,18 @@ applies the matched loss plus a load-mismatch correction estimated from each
 port impedance to realized gain, using each level's physical line length. The
 primary SWR remains the lossless network input; the loss-induced
 input-impedance shift, splitter internal mismatch, and per-level matching are
-not modeled. Use the line lengths for the construction
-harness and verify the match with the solver or a measurement.
+not modeled.
+
+In **Wilkinson divider** the app builds an equal N-way divider at the declared
+design frequency: each branch is a quarter-wave line of `Z0 × sqrt(count)`, the
+isolation network is a star of `count` resistors of `Z0`, and each output runs
+through the feed line to its level. The N-port solver combines the divider with
+the antenna port admittance. The primary SWR is the splitter input, the
+**Sources** table is the solved port distribution, and the pattern is
+reconstructed with ideal sources at the solved port voltages. Branches,
+resistors, and feed lines are ideal; component loss, tolerance, and broadband
+behavior are not modeled. The divider is narrowband. Use the line lengths for
+the construction harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
 an optional mechanical envelope: zero leaves it unset and disables the stack
@@ -1279,7 +1294,10 @@ level** inside that envelope; the level count, base Yagi geometry, and
 amplitude ratio stay context. In phase-line mode the search moves the additional
 line length instead of the phase-step field. The search rejects a spacing that
 would overlap vertical-polarized levels or raise the top above the envelope.
-The splitter remains ideal and per-level matching is not modeled, so treat the
+The splitter remains ideal in the co-simulated and phase-line modes; the
+Wilkinson mode adds a real divider with ideal components. Wilkinson mode is not
+optimized yet: optimize spacing and line length in phase-line or network mode,
+then switch to Wilkinson. Per-level matching is not modeled, so treat the
 result as a solver-verified starting point, not a validated feed-network
 design.
 
@@ -1289,12 +1307,13 @@ and rejects the design in that case. The family is classified **experimental**:
 mutual coupling is included by the wire solver, but no stacking gain is
 claimed. Ideal and phase-line mode are a specification layer; network mode
 co-simulates the lossless lines and applies a mismatch-corrected line loss to
-realized gain. The optional mast and guy wires are modeled once for the whole stack, not
-once per level, and a beta/hairpin match is built at each driven element.
-The loss-induced input-impedance shift, phase-line impedance transformation,
-splitter internal mismatch, per-level matching networks, and folded driven
-elements are not modeled. Verify the pattern, per-port impedance, and match with the solver
-or a measurement.
+realized gain; Wilkinson mode solves an ideal-component N-way divider and
+reconstructs the pattern. The optional mast and guy wires are modeled once for
+the whole stack, not once per level, and a beta/hairpin match is built at each
+driven element. The loss-induced input-impedance shift, Wilkinson component
+tolerances, per-level matching networks, and folded driven elements are not
+modeled. Verify the pattern, per-port impedance, and match with the solver or a
+measurement.
 
 ## Create a phased vertical array
 

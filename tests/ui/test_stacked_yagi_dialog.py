@@ -280,3 +280,28 @@ def test_loading_starting_dimensions_preserves_the_beta_match(qtbot: QtBot) -> N
     assert restored.yagi.match_type is YagiMatchType.BETA_HAIRPIN
     assert restored.yagi.match_length_m == pytest.approx(0.3)
     assert restored.yagi.match_spacing_m == pytest.approx(0.12)
+
+
+def test_dialog_builds_a_wilkinson_feed(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
+    assert index >= 0
+    form._feed_mode.setCurrentIndex(index)
+    form._reference_line_field.configure(2.0)
+    form._line_increment_field.configure(0.0)
+    form._velocity_factor.setValue(0.8)
+    form._line_z0.setValue(50.0)
+    form._splitter_loss.setValue(0.2)
+    form._line_loss.setValue(1.5)
+    form._splitter_design_frequency.setValue(14.1)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+    assert parameters.feed.splitter_design_frequency_hz == pytest.approx(14.1e6)
+    assert parameters.feed.line_loss_db_per_100m == pytest.approx(1.5)
+    assert form._splitter_design_frequency.isEnabled() is True
+    assert form._amplitude_ratio.isEnabled() is False
+    assert "Wilkinson" in form._wilkinson_note.text()

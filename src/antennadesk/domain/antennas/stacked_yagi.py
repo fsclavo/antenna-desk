@@ -36,6 +36,7 @@ class StackedYagiFeedMode(StrEnum):
     IDEAL = "ideal"
     PHASE_LINES = "phase_lines"
     NETWORK = "network"
+    WILKINSON = "wilkinson"
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +54,9 @@ class StackedYagiFeed:
     realized gain; the primary SWR remains the lossless network input and
     mismatch-dependent line loss plus the splitter's internal isolation/return
     loss are not modeled. ``splitter_loss_db`` is the excess loss beyond the
-    ideal N-way division and is applied to the realized gain.
+    ideal N-way division and is applied to the realized gain. In Wilkinson
+    mode the splitter and feed lines are solved by the N-port circuit solver at
+    ``splitter_design_frequency_hz`` instead of the NEC TL co-simulation.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -63,6 +66,7 @@ class StackedYagiFeed:
     characteristic_impedance_ohm: float = 50.0
     splitter_loss_db: float = 0.0
     line_loss_db_per_100m: float = 0.0
+    splitter_design_frequency_hz: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -77,10 +81,18 @@ class StackedYagiFeed:
         )
         ensure_non_negative(self.splitter_loss_db, name="splitter_loss_db")
         ensure_non_negative(self.line_loss_db_per_100m, name="line_loss_db_per_100m")
+        ensure_non_negative(
+            self.splitter_design_frequency_hz,
+            name="splitter_design_frequency_hz",
+        )
+        if not math.isfinite(self.splitter_design_frequency_hz):
+            raise ValueError("splitter_design_frequency_hz must be finite")
         if self.mode is StackedYagiFeedMode.NETWORK and self.line_increment_m <= 0.0:
             raise ValueError("network mode requires a positive line_increment_m")
         if self.mode is StackedYagiFeedMode.NETWORK and self.reference_length_m <= 0.0:
             raise ValueError("network mode requires a positive reference_length_m")
+        if self.mode is StackedYagiFeedMode.WILKINSON and self.reference_length_m <= 0.0:
+            raise ValueError("Wilkinson mode requires a positive reference_length_m")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m
@@ -89,6 +101,13 @@ class StackedYagiFeed:
         """Return the matched line loss for a zero-based level line."""
 
         return self.line_loss_db_per_100m * self.line_length_for_level(level_index) / 100.0
+
+    def splitter_design_frequency_for(self, default_frequency_hz: float) -> float:
+        """Return the declared Wilkinson design frequency or the default."""
+
+        if self.splitter_design_frequency_hz > 0.0:
+            return self.splitter_design_frequency_hz
+        return default_frequency_hz
 
 
 def stacked_yagi_parameters(
@@ -221,6 +240,12 @@ class StackedYagiParameters:
     @property
     def source_amplitudes(self) -> tuple[float, ...]:
         return (1.0, *((self.amplitude_ratio,) * (self.count - 1)))
+
+    @property
+    def splitter_design_frequency_hz(self) -> float:
+        """Resolved Wilkinson design frequency, defaulting to the Yagi frequency."""
+
+        return self.feed.splitter_design_frequency_for(self.frequency_hz)
 
     @property
     def wavelength_m(self) -> float:

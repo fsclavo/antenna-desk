@@ -1,7 +1,7 @@
 # ADR-0054 — N-port feed-network solver for splitter isolation and matching
 
-- **Status:** accepted 2026-11-25; bounded N-port solver prototype implemented;
-  UI/schema integration pending
+- **Status:** accepted 2026-11-25; N-port solver and stacked-Yagi Wilkinson
+  mode implemented, tested, and exposed
 - **Date:** 2026-11-25
 - **Related:** DL6, [ADR-0049](0049-stacked-yagi-composed-family.md),
   [`spikes/dl6-feed-network-spike.md`](../spikes/dl6-feed-network-spike.md),
@@ -69,11 +69,10 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
 2. **Extract the antenna Y-matrix through NEC at the existing level feed ports.**
    No NEC port geometry, ground-clearance change, or adapter port type is
    required for this feature.
-3. **Model a bounded Wilkinson/corporate splitter** at a declared design
-   frequency:
-   - a two-way Wilkinson first;
-   - then three- and four-way corporate networks built from validated two-way
-     sections.
+3. **Model a bounded equal N-way Wilkinson** at a declared design frequency:
+   - quarter-wave branches of `Z0 * sqrt(N)` and a star of `N` isolation
+     resistors of `Z0`;
+   - two-, three-, and four-way dividers share the same solver.
 4. **Keep the current ideal/excess-loss splitter as the default and fallback.**
    The Wilkinson mode is opt-in and narrowband; the UI and reports must state
    its design frequency and range limitation.
@@ -105,9 +104,20 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
     power ratio within 1e-3;
   - the Wilkinson with the real antenna Y-matrix satisfies the power balance.
 
-The solver is **not yet exposed in the editor, project schema, reports, or
-BOM**. The current stacked-Yagi network mode still uses the NEC TL
-co-simulation. The next slice adds the user-facing Wilkinson mode.
+The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
+
+- `FeedNetworkSpec` in `SimulationSpec` and schema 64;
+- `WilkinsonFeedSolver` wraps the NEC solver, extracts the antenna Y-matrix,
+  solves the N-way Wilkinson and feed lines, and reconstructs the pattern with
+  ideal sources at the solved port voltages;
+- the editor, help, design summary, and construction sheet show the divider
+  design frequency, branch impedance, isolation resistors, feed-line lengths,
+  and the ideal/narrowband limitation; the conductor BOM remains
+  conductor-only;
+- the primary SWR is the splitter input; per-level source results are the
+  solved port distribution; the reconstructed power budget is intentionally
+  omitted;
+- the existing NEC TL network mode remains available.
 
 ## Implementation phases
 
@@ -118,19 +128,19 @@ co-simulation. The next slice adds the user-facing Wilkinson mode.
 - Unit tests against the standard Wilkinson and scikit-rf.
 - Real `nec2c` cross-check against the existing TL co-simulation.
 
-### Phase 2 — Three- and four-way corporate splitter (next)
+### Phase 2 — Three- and four-way N-way divider (done)
 
-- Build three- and four-way networks from validated two-way sections.
-- Add a frequency sweep that shows the expected narrowing; make no broadband
-  claim.
+- The equal N-way Wilkinson with star isolation covers two to four outputs.
+- A frequency sweep shows the expected narrowing; no broadband claim.
 
-### Phase 3 — UI, schema, reports, and BOM
+### Phase 3 — UI, schema, reports, and BOM (done)
 
-- Add the splitter mode and design frequency to the stacked-Yagi feed
-  specification with a schema migration.
-- Show the design frequency and narrowband limitation in the editor, help,
-  design summary, construction sheet, and BOM.
-- Keep the ideal/excess-loss mode selectable and clearly labeled.
+- The Wilkinson mode and design frequency are in schema 64.
+- The editor, help, design summary, and construction sheet show the divider
+  design frequency, branch impedance, isolation resistors, feed-line lengths,
+  and the ideal/narrowband limitation; the conductor BOM remains
+  conductor-only.
+- The ideal/excess-loss mode remains selectable.
 
 ### Follow-up — Per-level matching
 
@@ -151,14 +161,14 @@ co-simulation. The next slice adds the user-facing Wilkinson mode.
 - Power balance holds with a mismatched antenna load and with the isolation
   resistor.
 
-### User-facing splitter slice
+### User-facing splitter slice (done)
 
 - Explicit input and output ports with the N-port solver.
-- A three- or four-way corporate network built from validated two-way sections.
+- Equal N-way 2–4 dividers with star isolation resistors.
 - A real `nec2c` regression for the antenna Y-matrix and feed network.
 - A frequency sweep showing the expected narrowing; no broadband claim.
 - The current ideal/excess-loss mode remains selectable.
-- The UI, reports, BOM, and documentation state the design frequency and the
+- The UI, reports, and documentation state the design frequency and the
   narrowband limitation.
 
 ### Per-level matching follow-up
@@ -179,6 +189,8 @@ co-simulation. The next slice adds the user-facing Wilkinson mode.
 - Per-level matching and folded driven elements remain unavailable until the
   follow-up slice. The beta/hairpin match remains the only per-level match.
 - A schema migration is required when the splitter fields are added.
+- The Wilkinson mode is not yet exposed to the family optimizer; optimize the
+  spacing and line length in phase-line/network mode and switch.
 
 ## Risks
 

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 from PySide6.QtCore import Signal
@@ -127,6 +128,10 @@ class StackedYagiForm(QWidget):
             translator.t("stacked_yagi.feed_mode.network"),
             StackedYagiFeedMode.NETWORK.value,
         )
+        self._feed_mode.addItem(
+            translator.t("stacked_yagi.feed_mode.wilkinson"),
+            StackedYagiFeedMode.WILKINSON.value,
+        )
         self._reference_line = QDoubleSpinBox(self)
         self._reference_line.setRange(0.0, maximum_length)
         self._reference_line.setDecimals(3)
@@ -167,6 +172,11 @@ class StackedYagiForm(QWidget):
         self._line_loss.setDecimals(2)
         self._line_loss.setSingleStep(0.1)
         self._line_loss.setSuffix(" dB/100 m")
+        self._splitter_design_frequency = QDoubleSpinBox(self)
+        self._splitter_design_frequency.setRange(0.0, 10_000.0)
+        self._splitter_design_frequency.setDecimals(4)
+        self._splitter_design_frequency.setSingleStep(0.1)
+        self._splitter_design_frequency.setSuffix(" MHz")
 
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
@@ -197,6 +207,10 @@ class StackedYagiForm(QWidget):
         self._network_note.setWordWrap(True)
         self._network_note.setStyleSheet("font-style: italic;")
         self._network_note.setVisible(False)
+        self._wilkinson_note = QLabel(self)
+        self._wilkinson_note.setWordWrap(True)
+        self._wilkinson_note.setStyleSheet("font-style: italic;")
+        self._wilkinson_note.setVisible(False)
 
         form = QFormLayout()
         form.addRow(self._labels.label("stacked_yagi.level_count"), self._level_count)
@@ -229,6 +243,10 @@ class StackedYagiForm(QWidget):
             self._splitter_loss,
         )
         form.addRow(self._labels.label("stacked_yagi.line_loss"), self._line_loss)
+        form.addRow(
+            self._labels.label("stacked_yagi.splitter_design_frequency"),
+            self._splitter_design_frequency,
+        )
         form.addRow(self._starting)
 
         layout = QVBoxLayout(self)
@@ -241,6 +259,7 @@ class StackedYagiForm(QWidget):
         layout.addWidget(self._envelope_warning)
         layout.addWidget(self._phase_note)
         layout.addWidget(self._network_note)
+        layout.addWidget(self._wilkinson_note)
         layout.addWidget(self._starting_note)
 
         for widget in (self._phase_step, self._amplitude_ratio):
@@ -253,6 +272,7 @@ class StackedYagiForm(QWidget):
             self._line_z0,
             self._splitter_loss,
             self._line_loss,
+            self._splitter_design_frequency,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._feed_mode.currentIndexChanged.connect(self._feed_mode_changed)
@@ -291,6 +311,10 @@ class StackedYagiForm(QWidget):
             2,
             self._translator.t("stacked_yagi.feed_mode.network"),
         )
+        self._feed_mode.setItemText(
+            3,
+            self._translator.t("stacked_yagi.feed_mode.wilkinson"),
+        )
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
             self._starting,
@@ -323,9 +347,11 @@ class StackedYagiForm(QWidget):
         self.changed.emit()
 
     def _update_feed_controls(self) -> None:
-        phase_lines = self._feed_mode.currentData() in {
+        mode = self._feed_mode.currentData()
+        line_mode = mode in {
             StackedYagiFeedMode.PHASE_LINES.value,
             StackedYagiFeedMode.NETWORK.value,
+            StackedYagiFeedMode.WILKINSON.value,
         }
         for widget in (
             self._reference_line,
@@ -334,11 +360,13 @@ class StackedYagiForm(QWidget):
             self._line_z0,
             self._splitter_loss,
         ):
-            widget.setEnabled(phase_lines)
+            widget.setEnabled(line_mode)
         self._line_loss.setEnabled(
-            self._feed_mode.currentData() == StackedYagiFeedMode.NETWORK.value
+            mode in {StackedYagiFeedMode.NETWORK.value, StackedYagiFeedMode.WILKINSON.value}
         )
-        self._phase_step.setEnabled(not phase_lines)
+        self._splitter_design_frequency.setEnabled(mode == StackedYagiFeedMode.WILKINSON.value)
+        self._phase_step.setEnabled(mode == StackedYagiFeedMode.IDEAL.value)
+        self._amplitude_ratio.setEnabled(mode != StackedYagiFeedMode.WILKINSON.value)
 
     def mark_starting_dimensions_pristine(self) -> None:
         self._yagi.mark_starting_dimensions_pristine()
@@ -423,6 +451,9 @@ class StackedYagiForm(QWidget):
             self._line_z0.setValue(parameters.feed.characteristic_impedance_ohm)
             self._splitter_loss.setValue(parameters.feed.splitter_loss_db)
             self._line_loss.setValue(parameters.feed.line_loss_db_per_100m)
+            self._splitter_design_frequency.setValue(
+                parameters.feed.splitter_design_frequency_hz / 1_000_000.0
+            )
             self._update_feed_controls()
         finally:
             self._updating = False
@@ -471,12 +502,15 @@ class StackedYagiForm(QWidget):
             self._translator.t("stacked_yagi.envelope_warning") if beyond_envelope else ""
         )
         self._envelope_warning.setVisible(beyond_envelope)
-        network = self._feed_mode.currentData() == StackedYagiFeedMode.NETWORK.value
-        phase_lines = self._feed_mode.currentData() in {
+        mode = self._feed_mode.currentData()
+        network = mode == StackedYagiFeedMode.NETWORK.value
+        wilkinson = mode == StackedYagiFeedMode.WILKINSON.value
+        phase_lines = mode in {
             StackedYagiFeedMode.PHASE_LINES.value,
             StackedYagiFeedMode.NETWORK.value,
+            StackedYagiFeedMode.WILKINSON.value,
         }
-        if phase_lines:
+        if phase_lines and not wilkinson:
             wavelength = 299_792_458.0 / yagi.frequency_hz
             derived = (
                 -360.0
@@ -494,6 +528,23 @@ class StackedYagiForm(QWidget):
             self._translator.t("stacked_yagi.network_note") if network else ""
         )
         self._network_note.setVisible(network)
+        if wilkinson:
+            count = self._level_count.value()
+            impedance = self._line_z0.value()
+            self._wilkinson_note.setText(
+                self._translator.t(
+                    "stacked_yagi.wilkinson_note",
+                    count=count,
+                    branch=f"{impedance * math.sqrt(count):.1f}",
+                    isolation=f"{impedance:.1f}",
+                    design=(
+                        self._splitter_design_frequency.value() or yagi.frequency_hz / 1_000_000.0
+                    ),
+                )
+            )
+        else:
+            self._wilkinson_note.clear()
+        self._wilkinson_note.setVisible(wilkinson)
 
     def parameters(self) -> StackedYagiParameters:
         return StackedYagiParameters(
@@ -511,5 +562,8 @@ class StackedYagiForm(QWidget):
                 characteristic_impedance_ohm=self._line_z0.value(),
                 splitter_loss_db=self._splitter_loss.value(),
                 line_loss_db_per_100m=self._line_loss.value(),
+                splitter_design_frequency_hz=(
+                    self._splitter_design_frequency.value() * 1_000_000.0
+                ),
             ),
         )

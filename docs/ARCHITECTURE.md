@@ -253,7 +253,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 63 is
+solver adapter does not need geometry-specific branches. Schema version 64 is
 current: parameter payloads are additive within the current container. A
 design may also store an optional analysis band plan; it is intent metadata
 and never changes the canonical geometry. Series RLC loads are
@@ -274,9 +274,12 @@ includes the reference line and the differential TL impedance transformation.
 Splitter excess loss and a matched line-loss approximation are applied to
 realized gain; mismatch-dependent line loss and splitter internal mismatch are
 not modeled. The primary SWR is the lossless network input. A pure-Python
-N-port feed-network solver (`domain/antennas/feed_network.py`) can combine a
+N-port feed-network solver (`domain/antennas/feed_network.py`) combines a
 feed-network admittance matrix with the antenna Y-matrix extracted at the level
-ports; it is validated but not yet exposed in the editor.
+ports. The Wilkinson feed mode uses it to solve an equal N-way divider and feed
+lines, then reconstructs the pattern with ideal sources at the solved port
+voltages. The solver and its input/impedance/port results are exposed in schema
+64 and the editor.
 The quad beam uses a reflector loop, a driven loop,
 and an optional director loop on a single feed. The log-periodic family uses
 one `TransmissionLine` between adjacent element centers with the generic

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
+from antennadesk.application.fingerprint import model_fingerprint
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.matching_network import MatchingNetworkOrigin
@@ -13,7 +14,6 @@ from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
 from antennadesk.domain.simulation.segmentation import SegmentationPolicy
 from antennadesk.domain.simulation.spec import SimulationSpec
-from antennadesk.simulation.fingerprint import model_fingerprint
 
 
 def _model(length_m: float = 20.0) -> AntennaModel:

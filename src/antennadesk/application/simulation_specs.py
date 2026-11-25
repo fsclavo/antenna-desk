@@ -64,7 +64,11 @@ from ..domain.simulation.segmentation import (
     aligned_policy_for_model,
     aligned_policy_for_wire_centers,
 )
-from ..domain.simulation.spec import SimulationSpec
+from ..domain.simulation.spec import (
+    FeedNetworkKind,
+    FeedNetworkSpec,
+    SimulationSpec,
+)
 from .pattern_resolution import DEFAULT_PATTERN_STEP_DEG, far_field_request
 
 DEFAULT_GENERATED_SWEEP_POINTS = 100
@@ -238,7 +242,8 @@ def _stacked_yagi_spec(
         far_field=far_field_request(context.pattern_step_deg, parameters.yagi.ground),
         feed_network_loss_db=(
             parameters.feed.splitter_loss_db
-            if parameters.feed.mode is not StackedYagiFeedMode.IDEAL
+            if parameters.feed.mode
+            in {StackedYagiFeedMode.PHASE_LINES, StackedYagiFeedMode.NETWORK}
             else 0.0
         ),
         feed_network_line_loss_db_per_100m=(
@@ -247,6 +252,23 @@ def _stacked_yagi_spec(
             else 0.0
         ),
         co_simulate_feed_network=(parameters.feed.mode is StackedYagiFeedMode.NETWORK),
+        feed_network=(
+            FeedNetworkSpec(
+                kind=FeedNetworkKind.WILKINSON,
+                design_frequency_hz=parameters.splitter_design_frequency_hz,
+                port_count=parameters.count,
+                feed_line_lengths_m=tuple(
+                    parameters.feed.line_length_for_level(index)
+                    for index in range(parameters.count)
+                ),
+                feed_line_impedance_ohm=parameters.feed.characteristic_impedance_ohm,
+                velocity_factor=parameters.feed.velocity_factor,
+                splitter_excess_loss_db=parameters.feed.splitter_loss_db,
+                line_loss_db_per_100m=parameters.feed.line_loss_db_per_100m,
+            )
+            if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+            else None
+        ),
     )
 
 

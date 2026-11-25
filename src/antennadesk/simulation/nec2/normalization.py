@@ -10,6 +10,7 @@ from dataclasses import replace
 from datetime import datetime
 
 from ...application.discretization import SegmentLayout
+from ...application.fingerprint import model_fingerprint
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.matching_network import MatchingNetworkOrigin
 from ...domain.antennas.transmission_line import mismatched_line_loss_db
@@ -26,7 +27,6 @@ from ...domain.simulation.result import (
 )
 from ...domain.simulation.solver import SolverMetadata
 from ...domain.simulation.spec import SimulationSpec
-from ..fingerprint import model_fingerprint
 from ..normalization import calculate_swr
 from .input_writer import Nec2Deck
 from .parser import (

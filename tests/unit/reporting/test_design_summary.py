@@ -1089,3 +1089,46 @@ def test_stacked_yagi_summary_reports_the_beta_match() -> None:
     assert rows["Driven element match"] == "beta_hairpin"
     assert rows["Hairpin length"] == "0.3000 m"
     assert rows["Hairpin spacing"] == "0.1200 m"
+
+
+def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_loss_db=0.2,
+            line_loss_db_per_100m=1.5,
+            splitter_design_frequency_hz=14_100_000.0,
+        ),
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Feed network"] == "Wilkinson N-port network"
+    assert rows["Feed"].startswith("Wilkinson splitter input")
+    assert rows["Divider design frequency"] == "14.1000 MHz"
+    assert rows["Branch impedance"] == "70.7 Ω"
+    assert rows["Isolation resistors"] == "2 x 50.0 Ω star"
+    assert rows["Divider model"] == "ideal quarter-wave branches and star resistors"
+    assert rows["Phase step"] == "set by the feed network"
+    assert rows["Matched line loss"] == "1.50 dB/100 m"
