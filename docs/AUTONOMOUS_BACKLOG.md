@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-24
+**Date:** 2026-11-25
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -43,6 +43,15 @@ VR1 is a vertical-geometry enhancement implemented ahead of the remaining 1.1/1.
 items. It is bounded to one uniform droop, physical radial length, schema 61, and
 family-optimizer coverage; the phased vertical is not included.
 
+UX46–UX49 are a proposed presentation-only track for 3D pattern orientation.
+Implement the three layers in the order UX46 → UX48 → UX49; UX47 is an
+additional orientation aid after UX46 and must not block the overlay or the
+camera link. UX47 is the plan mini-map, UX48 includes the large-array outline
+mode, and the shared antenna color/feed marker is introduced in UX46 and reused
+by UX47/UX48. They do not change the solver, domain model, project schema,
+pattern storage, or report format, and add no 3D engine or dependency. See §3D
+pattern orientation and comparison.
+
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
 | ID | Task | Size | Depends on | Acceptance |
@@ -57,11 +66,15 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, ideal per-level sources, schema 63, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, and a bounded spacing/phase optimizer inside the maximum top-height envelope. Splitter/phase hardware, shared mast, and folded/matched driven elements remain explicitly unavailable. Evidence C; no gain claim. See ADR-0049 and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, ideal per-level sources, schema 63, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, an optional splitter + phase-line feed specification, and a bounded spacing/phase optimizer inside the maximum top-height envelope. The solver still uses ideal sources; line loss, line impedance transformation, splitter mismatch, per-level matching, shared mast, and folded/matched driven elements remain explicitly unavailable. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
+| UX46 | 3D lobe orientation indicators | S | none | **Proposed 2026-11-25.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
+| UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Proposed 2026-11-25.** Top-view inset with the canonical footprint, feed, antenna azimuth, and max-gain azimuth; theme-aware and hidden at minimum size. No synthetic family shape and no new engine. See §UX47. |
+| UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Proposed 2026-11-25.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; front/back only for explicit families; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
+| UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Proposed 2026-11-25.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode handled explicitly. No solver, domain, schema, or report change; no new engine. See §UX49. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -597,8 +610,9 @@ metrics followed; VNA import closed the interoperability side.
 
 **Wave 2 order:** DL7's bounded cliff slice is implemented; DL4 is canceled by
 product decision. The DL6 first slice is implemented (form, schema 63, catalog,
-per-port Sources, scene, reports, and the bounded spacing/phase optimizer);
-splitter/phase hardware and a shared mast remain.
+per-port Sources, scene, reports, the splitter/phase-line feed specification,
+and the bounded spacing/phase optimizer); per-level matching and a shared mast
+remain.
 
 ### Wave rules
 
@@ -1125,11 +1139,13 @@ narrow MVP (straight cylinders) mitigate it.
 identical Yagis with an ideal source progression. The slice delivers the
 domain model, schema 63, both catalog routes, the embedded Yagi/stack form,
 per-port **Sources** results, front-elevation scene and dimensions, design and
-construction reports, a multi-boom BOM, a real `nec2c` two-port test, and a
-bounded spacing/phase optimizer inside the maximum top-height envelope. The
-splitter, phase-line hardware, splitter loss, shared mast, folded/matched
-driven elements, and per-level transformer remain follow-ups. Evidence is C and
-no stacking gain is claimed. See also
+construction reports, a multi-boom BOM, a real `nec2c` two-port test, an
+optional splitter + phase-line feed specification, and a bounded spacing/phase
+optimizer inside the maximum top-height envelope. The solver still uses ideal
+voltage sources; line loss, line impedance transformation, splitter mismatch,
+per-level matching, shared mast, folded/matched driven elements, and the
+per-level transformer remain follow-ups. Evidence is C and no stacking gain is
+claimed. See also
 [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
 
 **Delivered in the first slice:**
@@ -1142,13 +1158,16 @@ no stacking gain is claimed. See also
 - A vertical-polarized stack rejects overlapping levels.
 - The base editor cannot add a mast, guys, folded/matched driven element, or
   feed transformer inside a stack.
-- The optimizer searches level spacing and phase step inside the maximum
-  top-height envelope; the level count, base Yagi, and amplitude ratio stay
-  context.
+- Phase-line mode derives the excitation phase from the extra line length per
+  level, records the reference length, velocity factor, Z0, and splitter excess
+  loss, and applies that loss to realized gain.
+- The optimizer searches level spacing and either the ideal phase step or the
+  phase-line increment inside the maximum top-height envelope; the level count,
+  base Yagi, and amplitude ratio stay context.
 
-**Remaining work:** real splitter and phase-line hardware, splitter loss,
-shared-mast support, and folded/matched driven elements with per-level feed
-hardware.
+**Remaining work:** per-level matching, a shared mast, folded/matched driven
+elements with per-level feed hardware, and a full N-port feed co-simulation if a
+traceable model is selected.
 
 **Goal:** answer "two stacked Yagis or one bigger one?"
 
@@ -1513,6 +1532,282 @@ controller), `ui/dialogs/convergence_dialog.py`,
 `ui/dialogs/synthesis_dialog.py`, `ui/dialogs/tuning_assistant_dialog.py`,
 `ui/main_window.py`, `ui/project_io.py`, `tests/unit/ui/`, `tests/ui/`, and an
 architecture-boundary guard test.
+
+## 3D pattern orientation and comparison (proposed 2026-11-25)
+
+**Status:** proposed presentation-only track. Implement the three layers in the
+order **UX46 → UX48 → UX49**; do not start UX48 or UX49 before UX46 is green.
+UX47 is an independent orientation aid after UX46 and is not a prerequisite for
+UX48/UX49. Each slice must leave the full gate green. **Priority:** P2 UX, after
+the current DL6/DL3 slice closes. **Release:** unassigned; candidate for the 1.2
+visualization track.
+
+**Motivation:** The 3D lobe answers "how strong" but not "where relative to the
+antenna". The 2D azimuth polar already draws an antenna line; the 3D view has
+only axes, an optional ground ring, and a maximum-gain marker. The user needs a
+clear visual front/back and lobe takeoff direction without a numerical-precision
+claim. The geometry 3D view and the pattern 3D view already share a right-handed,
+Z-up frame and the same orthographic projection; their default camera angles
+differ (42°/24° vs 38°/26°). This track makes that relationship legible.
+
+**Track non-goals:** no solver, domain-model, schema, container, or pattern
+storage change; no new numerical reference; no perspective projection or height
+exaggeration in 3D; no inferred front/back from wire count or wire IDs; no
+zoom/pan synchronization; no synthetic family shape that replaces the canonical
+wires; and no new 3D engine or dependency (OpenGL, Qt3D, VTK, PyVista). Keep the
+QPainter renderer and the orthographic projection, as recorded in
+[ADR-0012](ADR/0012-geometry-presentation.md). The construction sketch, reports,
+and wire schedule keep their current contracts.
+
+**Shared frame and projection:** `GeometryView._project_3d()` in
+`ui/widgets/geometry_view.py` and the projection in
+`ui/widgets/radiation_pattern_3d_view.py` are identical today; the static report
+has a third copy in `reporting/pattern_lobe.py`. UX46 must introduce one pure
+shared helper (for example `ui/geometry/orbit_projection.py`) and use it from both
+interactive views. If adopting it in the report would change output, keep the
+report copy and add an equality test instead. The helper must be Qt-free and
+covered by a direction test, not only by pixel smoke tests.
+
+**Evidence:** n/a; presentation-only. There is no new numerical reference or
+performance claim. Angular identity is tested against the shared projection,
+not against an external reference.
+
+**Risk / mitigation:** low-to-moderate. The main risks are visual clutter, a
+false sense of scale or height, overclaiming front/back on omnidirectional
+antennas, and camera-link drift. Mitigate with opt-in defaults, explicit
+"not to scale" copy, an explicit family registry, reset propagation, projection
+equality tests, and minimum-size/theme QA. There is no solver or numerical risk.
+
+**Effort:** UX46 S (about 1–2 days), UX47 S (1–2 days), UX48 M (3–5 days), and
+UX49 S (1–2 days), including tests, help, and docs. No external dependency.
+
+**Likely files:** `ui/widgets/radiation_pattern_3d_view.py`,
+`ui/widgets/results_view.py`, `ui/widgets/geometry_view.py`, `ui/main_window.py`,
+`ui/i18n.py`, `ui/theme.py`, `ui/help.py`, a new Qt-free
+`ui/geometry/orbit_projection.py` plus an overlay/footprint helper,
+`tests/ui/test_results_view.py`, `tests/ui/test_geometry_view.py`, focused new
+UI/projection tests, and the docs listed under the cross-cutting acceptance.
+
+### UX46 — 3D lobe orientation indicators (layer 1)
+
+**Scope:** presentation only; `RadiationPattern3DView` and the data that
+`ResultsView` already has. No antenna-wire overlay yet. The live-tuning dialog
+uses `PolarPatternView`, not this widget, and is out of scope.
+
+- **Projection helper.** Extract `project_world(x, y, z, yaw_deg, pitch_deg)`
+  returning the orthographic screen-plane coordinates. Use the same yaw/pitch
+  convention, pitch clamp, and screen-Y inversion in both views. Test that a
+  set of world vectors projects to the same screen-space direction in the
+  geometry and pattern views.
+- **Azimuth reference.** Draw a faint horizontal reference ring at pattern
+  `z = 0` in both ground and free-space modes. Label it "Ground" when the design
+  uses ground and "Azimuth reference" in free space. Add small `φ=0°`, `90°`,
+  `180°`, `270°` labels around the ring; hide them at minimum sizes.
+- **Antenna azimuth.** Extract `azimuth_deg` and the vertical-orientation flag
+  from the design parameters in `ResultsView`, using the same rules as
+  `_render_azimuth_cut()`; pass them to the 3D view rather than reading the 2D
+  widget. Draw a line or arrow on the horizontal plane at the antenna azimuth.
+  For a vertical dipole/vertical orientation, draw a distinct dot/vertical
+  marker at the origin instead. For a vertical-polarized beam, keep the azimuth
+  line because the boom still defines the front/back axis. Do not label
+  "Front/Back" for a dipole, loop, vertical, or custom geometry without an
+  explicit forward axis.
+- **Explicit forward-axis registry.** Add a presentation helper that returns the
+  forward azimuth only for families whose parameters define it. Start with
+  Yagi, Moxon, quad beam, hexbeam, log-periodic, and stacked Yagi; add trap Yagi
+  only if its typed parameters expose the same convention. Do not hard-code
+  wire IDs or infer the family from wire count. All other families return
+  `None`.
+- **Maximum-gain ray.** Draw a ray from the pattern origin to the existing
+  maximum-gain marker, with an arrowhead and a label containing the selected
+  metric, gain, and takeoff angle. Add the azimuth when space allows. Reuse and
+  extend the existing max-label collision logic.
+- **Back ray and F/B.** Draw a dashed ray at the same θ and `φ + 180°`, matching
+  `front_to_back_db()` in `domain/simulation/pattern.py`. Label it "Back (same
+  elevation)" or the localized equivalent and show the front-to-back value when
+  finite. Compute the value once in `ResultsView` from the original
+  `FrequencyResult.far_field` and pass it to the view; do not recompute it from
+  the decimated or display-filtered mesh. Label it as power-gain F/B. The
+  constant power/directivity/realized metric offset cancels, so F/B stays the
+  same. Do **not** draw the exact
+  antipodal direction and call it "Back": in ground mode the exact antipodal of
+  a low-angle lobe falls below the ground plane and is not sampled. If an exact
+  antipodal reference is added later, label it "Opposite direction", not
+  "Back".
+- **Visual identity.** Add one theme-aware antenna color role and one feed-marker
+  painter used by both `GeometryView`'s 3D view and `RadiationPattern3DView`.
+  The feed marker must have the same color, shape, and radius in both. Do not
+  use the green/yellow/red gain ramp for the antenna. UX46 introduces the shared
+  painter/token; the pattern view uses it only when UX47/UX48 actually draws the
+  feed. Do not draw a feed marker at the pattern origin without the antenna
+  overlay or mini-map: the pattern origin is a phase reference, not the feed.
+- **Labels and accessibility.** Keep labels inside the safe area and avoid the
+  gain legend and max label. At compact sizes, hide secondary labels and keep a
+  compact legend. Add EN/ES strings, help entries, the help coverage manifest,
+  and an accessible description for the 3D view.
+
+**Acceptance:** with a result, the view shows the maximum-gain direction, the
+same-elevation back direction with its F/B value, and the antenna azimuth when
+available; a Yagi at azimuth 0 draws its antenna axis along +X and a Yagi at 90°
+along +Y; a dipole/loop/vertical gets no front/back claim; the F/B value equals
+`front_to_back_db()` for the selected pattern data; the feed marker is visually
+identical to the geometry 3D view; labels do not overlap at the minimum size;
+light/dark, font scaling, EN/ES, and help tests pass. No solver, domain, schema,
+or report change.
+
+### UX47 — Plan mini-map in the 3D lobe
+
+**Scope:** an optional top-down reference inset inside the 3D lobe. This is a
+parallel orientation aid after UX46, not layer 2; it may land before or after
+UX48.
+
+- Draw the canonical wire footprint in the X-Y plane, using the same top-view
+  orientation as the geometry plan (X right, Y up). No synthetic family shape.
+- Add the shared feed marker, the antenna azimuth arrow, and the maximum-gain
+  azimuth arrow. The maximum-gain arrow uses the same φ as the 3D ray; the
+  antenna arrow uses the same azimuth as UX46.
+- Place the inset in a reserved corner and hide or shrink it automatically when
+  it would overlap the max label or the gain legend. Keep it legible at the
+  minimum supported size.
+- Add a "Show plan" checkbox in the 3D lobe tab, default on. Persisting the
+  choice is optional and, if added, belongs in `UiPreferences`, not the project
+  schema.
+- Use the same antenna color/feed marker as UX46. Theme-aware, EN/ES help, and
+  accessible description are required.
+
+**Acceptance:** the inset footprint matches the canonical model's top view for a
+Yagi, a dipole, a vertical, and a custom model; the max-gain arrow uses the same
+azimuth as the 3D ray; the inset hides or shrinks without covering the lobe at
+the minimum size; no synthetic family shape; no new dependency or engine.
+
+### UX48 — Schematic antenna overlay in the 3D lobe (layer 2)
+
+**Scope:** opt-in canonical wireframe inside the 3D lobe.
+
+- Add a "Show antenna" checkbox inside the 3D lobe tab, default off. Do not add a
+  project-schema field. Pass the canonical `AntennaModel` (or a small immutable
+  presentation snapshot) from `ResultsView.set_design()` to
+  `RadiationPattern3DView`; keep `set_points()` as the pattern-data path.
+  Showing or hiding the overlay must not trigger a solver run or a new worker;
+  it reads the existing design/result snapshot.
+- Draw the canonical wires on top of the lobe wireframe with the shared antenna
+  color. This is a schematic overlay for legibility, not a depth-sorted scene;
+  do not claim occlusion or physical placement. Draw the shared feed marker. Do
+  not draw transmission lines as wires. Loads are optional; if drawn, use the
+  existing load marker language.
+- Translate the wires so the feed is at the pattern origin and apply one uniform
+  scale so the largest wire extent occupies about 35 % of the pattern unit
+  radius. No non-uniform scale, no height exaggeration, no perspective. Show a
+  visible note: "Schematic: orientation exact; size and height are not to
+  scale."
+- The NEC adapter applies `ground_clearance_offset_m()` (currently 1 cm) to the
+  solver geometry. Feed-centering cancels that translation; if a future mode
+  uses a world-origin overlay, apply the same offset and document it. Do not mix
+  model-space and solver-space z frames.
+- Front/back arrows use only the UX46 explicit registry. Do not add front/back
+  labels to dipoles, loops, verticals, or custom geometry without a declared
+  forward axis.
+- Support wires (mast/guy wires) are canonical and must not be silently dropped.
+  Full mode draws them; if they dominate, draw them thinner or dashed and say so
+  in the legend. Outline mode must state that it is a simplified view and keep
+  Full mode available.
+- **Outline mode for large arrays.** Add an "Auto / Full / Outline" selector, or
+  an "Outline" checkbox with Auto as the default. Auto uses a documented
+  wire/segment display budget (a named display constant plus help text), not
+  family inference. Outline is a derived
+  projection of the canonical endpoints (convex hull or equivalent) plus the
+  feed and forward axis; it is not a synthetic family shape and is never used in
+  the construction sketch, reports, or wire schedule. Full mode preserves every
+  canonical wire; no silent dropping.
+- The 3D-lobe PNG export uses `grab()`, so it must respect the checkbox and
+  mode. Add a test. No report-format change.
+
+**Acceptance:** a Yagi at azimuth 0 is feed-centered with the boom along +X and
+the front arrow toward +X; a dipole shows no front/back claim and its max ray is
+perpendicular to the wire; a vertical extends upward with no front/back claim; a
+custom model draws its real wires without synthesis; uniform-scale tests
+preserve endpoint distance ratios; outline tests derive the envelope from
+canonical endpoints; Full mode draws every canonical wire; transmission lines
+are absent; support-wire policy is documented and tested; no overlay is drawn
+without a design/result; theme, font scaling, minimum size, EN/ES, help, and
+accessibility pass. No solver, domain, schema, or report change; no new engine.
+
+### UX49 — Linked geometry/pattern 3D cameras (layer 3)
+
+**Scope:** opt-in camera synchronization between the geometry 3D view and the
+3D lobe.
+
+- Add a "Link 3D views" checkable action in the geometry controls row (or a
+  shared link control visible to both panels), default off. Persist only as a UI
+  preference if desired; no project-schema field.
+- Use a single shared camera source of truth (yaw, pitch) or bidirectional
+  signals with a guard flag. Sync **yaw and pitch only**; do not sync zoom or
+  pan. Keep the existing independent zoom ranges.
+- Unify the default angles. Prefer 38°/26° to match the pattern view and the
+  report, and update the geometry reset test. If another default is chosen,
+  document it and update both views.
+- Propagate resets: a double-click in either view resets both when linked;
+  `GeometryView.set_model()` resets both when linked. Define the design-change
+  reset policy explicitly so the link cannot drift.
+- On enabling the link, choose a predictable handoff (for example, the geometry
+  camera wins, or the last active view wins) and show the resulting state. Do
+  not let the view jump without explanation.
+- If the geometry view is in Construction mode, either switch it to 3D with a
+  visible state change or disable the link with an explanation. Do not silently
+  ignore the request.
+- Avoid feedback loops and stale signals. Test a bidirectional drag, reset,
+  design change, frequency change, and link off/on sequence.
+- Exactness test: with the same yaw/pitch and orthographic projection, a set of
+  world vectors projects to the same screen-space direction in both views within
+  `1e-9`; include +X, +Y, +Z, and a known beam forward vector.
+- **Export decision.** `GeometryView.three_d_image()` currently uses the live
+  camera. Decide and document whether the construction sheet uses the live
+  linked camera or a fixed camera. If fixed, add a regression test; do not change
+  exported report output silently.
+
+**Acceptance:** rotating either linked view updates the other's yaw/pitch
+exactly; unlinked views stay independent; reset/model-change propagation keeps
+the link synchronized; zoom and pan stay independent; Construction mode is
+handled explicitly; exact projection tests pass; EN/ES help, accessible state,
+light/dark, font scaling, and docs pass. No solver, domain, schema, or report
+change; no new engine.
+
+### Track order and dependencies
+
+1. **UX46 first.** It establishes the shared projection helper, the explicit
+   forward-axis registry, the azimuth/F-B data flow, and the shared visual
+   tokens. Do not start UX48 or UX49 before UX46 is green.
+2. **UX48 after UX46 (layer 2).** It introduces the overlay, the outline mode,
+   and the feed-centered schematic scale. UX47 may share drawing helpers, but it
+   is not a prerequisite.
+3. **UX49 after UX48 (layer 3).** It reuses the overlay's forward-axis helper
+   when present; the link must still work with the overlay hidden.
+4. **UX47 after UX46, in parallel with UX48/UX49.** It reuses the UX46
+   azimuth/max-gain data and visual tokens; it must not block either later
+   layer.
+
+If the shared projection helper cannot be extracted without changing output,
+keep the existing copies and add a direct equality test before UX48. Do not
+"prepare" a later layer by changing the renderer or adding a dependency early.
+Each item must leave the full gate green.
+
+### Cross-cutting acceptance for the track
+
+- Update `docs/ARCHITECTURE.md` and `docs/USER_GUIDE.md` with the 3D lobe
+  options and the "schematic, not to scale" limitation.
+- Add a note to `docs/GEOMETRY_PRESENTATION.md` only if the overlay needs a
+  clarification: the pattern overlay is not the construction sketch and does not
+  relax canonical-wire preservation. Never use the overlay to replace or hide a
+  canonical wire in the sketch, reports, or schedule.
+- Every new checkbox, selector, legend, and label has EN/ES strings, help
+  entries, the help coverage manifest, and an accessible description through
+  `ui/help.py`.
+- Theme-aware colors, light/dark, font scaling, and minimum-size layout tests.
+- No `pickle`, no new dependency, no schema migration, no solver/domain change.
+- Add a short ADR only if the shared camera/overlay helper becomes a
+  cross-layer abstraction; otherwise record the decision in
+  `docs/ARCHITECTURE.md`.
+- Add the user-visible behavior to `CHANGELOG.md` when the slice lands.
 
 ## Adaptive length display units (implemented 2026-11-18; QA closed 2026-11-24)
 

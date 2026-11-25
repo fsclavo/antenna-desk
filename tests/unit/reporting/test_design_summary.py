@@ -936,3 +936,48 @@ def test_stacked_yagi_summary_reports_levels_spacing_and_ideal_feed() -> None:
     assert rows["Additional-level ratio"] == "1.00"
     assert rows["Feed"] == "level 1 (primary); additional levels are ideal sources"
     assert rows["Total conductor"] == "40.0000 m"
+
+
+def test_stacked_yagi_phase_line_summary_reports_the_feed_network() -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    base = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    parameters = replace(
+        base,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.65,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Feed network"] == "splitter + phase lines"
+    assert rows["Reference line"] == "2.0000 m"
+    assert rows["Line increment"] == "2.6500 m"
+    assert rows["Velocity factor"] == "0.800"
+    assert rows["Line Z0"] == "75.0 Ω"
+    assert rows["Splitter excess loss"] == "0.40 dB"
+    assert rows["Phase step"].endswith("°")
+    assert rows["Phase step"] != "0.0°"

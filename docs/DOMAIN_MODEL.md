@@ -230,13 +230,19 @@ designs are experimental.
 
 A composed two-to-four-level stack of one identical `YagiParameters` per level.
 It stores the base Yagi, level count, vertical boom spacing, ideal phase step,
-an additional-level voltage ratio, and an optional maximum top height that
-bounds the spacing optimizer. `to_antenna()` copies every canonical
+an additional-level voltage ratio, an optional maximum top height that bounds
+the spacing optimizer, and an optional feed specification: ideal splitter plus
+equal phase-line increments, reference line length, velocity factor,
+characteristic impedance, and splitter excess loss. `to_antenna()` copies every
+canonical
 base-Yagi wire at each level with a `level-N-` identifier. Level 1 is the
 primary feed; levels 2–N become additional ideal `Source` excitations with
-`(level-1) × phase_step_deg` and the configured amplitude ratio. The kind is a
-composed family, not a `stack_count` field on the Yagi. The splitter, phase-line
-hardware, splitter loss, per-level matching, folded/matched driven elements,
+`(level-1) × effective_phase_step_deg` and the configured amplitude ratio. In
+phase-line mode the effective phase is `-360 × line_increment / (velocity_factor
+× wavelength)`, and the splitter excess loss is applied to realized gain. The
+kind is a composed family, not a `stack_count` field on the Yagi. The solver
+still uses ideal voltage sources: line loss, line impedance transformation,
+splitter mismatch, per-level matching, folded/matched driven elements,
 per-level feed transformers, mast, and guy wires are not modeled. The reported
 impedance and SWR refer only to level 1. A vertical-polarized stack must space
 the levels farther apart than the longest element or the wire copies overlap.
@@ -1028,8 +1034,9 @@ migration.
 - Version 61 adds the optional vertical radial-droop field.
 - Version 62 introduces the stacked-Yagi composed-family payload. Existing
   designs load unchanged.
-- Version 63 adds the optional stacked-Yagi maximum top-height envelope; zero
-  means unset and existing stacks load unchanged.
+- Version 63 adds the optional stacked-Yagi maximum top-height envelope and
+  the optional splitter/phase-line feed specification; zero defaults and the
+  ideal feed mode keep existing stacks unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads

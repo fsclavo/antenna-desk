@@ -11,7 +11,8 @@ semantics are experimental until a traceable stack reference exists.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import StrEnum
 
 from ..common.units import ensure_non_negative, ensure_positive, wavelength_m
 from ..environment.ground import FREE_SPACE, GroundModel
@@ -25,6 +26,48 @@ from .yagi import YagiMatchType, YagiParameters, nbs_five_element
 
 ANTENNA_TYPE_STACKED_YAGI = "stacked_yagi"
 STACKED_YAGI_LEVEL_PREFIX = "level-"
+
+
+class StackedYagiFeedMode(StrEnum):
+    IDEAL = "ideal"
+    PHASE_LINES = "phase_lines"
+
+
+@dataclass(frozen=True, slots=True)
+class StackedYagiFeed:
+    """Ideal splitter and phase-line specification for one stack.
+
+    ``reference_length_m`` is the splitter-to-level-1 line. Every later level
+    adds ``line_increment_m`` of the same line. The solver still receives ideal
+    voltage sources: the line lengths set the source phase at the design
+    frequency and that phase is held fixed across a frequency sweep, while line
+    loss and impedance transformation are not modeled. ``splitter_loss_db`` is
+    the excess loss beyond the ideal N-way division and is applied to the
+    realized gain.
+    """
+
+    mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
+    reference_length_m: float = 0.0
+    line_increment_m: float = 0.0
+    velocity_factor: float = 1.0
+    characteristic_impedance_ohm: float = 50.0
+    splitter_loss_db: float = 0.0
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
+        ensure_non_negative(self.reference_length_m, name="reference_length_m")
+        ensure_non_negative(self.line_increment_m, name="line_increment_m")
+        ensure_positive(self.velocity_factor, name="velocity_factor")
+        if self.velocity_factor > 1.0:
+            raise ValueError("velocity_factor must not exceed 1")
+        ensure_positive(
+            self.characteristic_impedance_ohm,
+            name="characteristic_impedance_ohm",
+        )
+        ensure_non_negative(self.splitter_loss_db, name="splitter_loss_db")
+
+    def line_length_for_level(self, level_index: int) -> float:
+        return self.reference_length_m + level_index * self.line_increment_m
 
 
 def stacked_yagi_parameters(
@@ -41,6 +84,7 @@ def stacked_yagi_parameters(
     material: ConductorMaterial = ALUMINUM,
     ground: GroundModel = FREE_SPACE,
     radius_m: float | None = None,
+    feed: StackedYagiFeed | None = None,
 ) -> StackedYagiParameters:
     """Return an NBS five-element stack with a starting half-wave spacing.
 
@@ -72,6 +116,7 @@ def stacked_yagi_parameters(
         phase_step_deg=phase_step_deg,
         amplitude_ratio=amplitude_ratio,
         max_top_height_m=max_top_height_m,
+        feed=feed or StackedYagiFeed(),
     )
 
 
@@ -85,6 +130,7 @@ class StackedYagiParameters:
     phase_step_deg: float = 0.0
     amplitude_ratio: float = 1.0
     max_top_height_m: float = 0.0
+    feed: StackedYagiFeed = field(default_factory=StackedYagiFeed)
 
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
@@ -141,8 +187,14 @@ class StackedYagiParameters:
         return self.yagi.elements[0].radius_m
 
     @property
+    def effective_phase_step_deg(self) -> float:
+        if self.feed.mode is StackedYagiFeedMode.IDEAL:
+            return self.phase_step_deg
+        return -360.0 * self.feed.line_increment_m / (self.feed.velocity_factor * self.wavelength_m)
+
+    @property
     def source_phases(self) -> tuple[float, ...]:
-        return tuple(level * self.phase_step_deg for level in range(self.count))
+        return tuple(level * self.effective_phase_step_deg for level in range(self.count))
 
     @property
     def source_amplitudes(self) -> tuple[float, ...]:
@@ -234,7 +286,7 @@ class StackedYagiParameters:
                 wire_id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-{base.feed.wire_id}",
                 offset_m=base.feed.offset_m,
                 amplitude=self.amplitude_ratio,
-                phase_deg=level * self.phase_step_deg,
+                phase_deg=level * self.effective_phase_step_deg,
             )
             for level in range(1, self.count)
         )

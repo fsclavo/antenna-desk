@@ -156,6 +156,7 @@ def link_budget(
         if network_active and network is not None
         else 0.0
     )
+    network_loss_db += spec.feed_network_loss_db
     topology_floor_swr = (
         input_shunt_l_network_swr_floor(
             network,
@@ -176,6 +177,7 @@ def link_budget(
             )
             - balun_loss_db
             - transformer_loss_db
+            - spec.feed_network_loss_db
         ),
         mismatch_loss_db=mismatch_loss_db,
         feed_line_loss_db=feed_line_loss_db,

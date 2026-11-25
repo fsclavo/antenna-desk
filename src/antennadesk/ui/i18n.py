@@ -4215,6 +4215,63 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "alimentación principal; 1,0 es una progresión de igual amplitud."
         ),
     },
+    "help.stacked_yagi.feed_mode": {
+        Language.ENGLISH: (
+            "Ideal uses the phase-step field directly. Splitter + phase lines "
+            "derives the phase from the additional line length and a velocity "
+            "factor; the solver still uses ideal voltage sources."
+        ),
+        Language.SPANISH: (
+            "Ideal usa directamente el campo de escalón de fase. Divisor + líneas "
+            "de fase deriva la fase del largo adicional de línea y el factor de "
+            "velocidad; el solver sigue usando fuentes de tensión ideales."
+        ),
+    },
+    "help.stacked_yagi.reference_line": {
+        Language.ENGLISH: (
+            "Physical splitter-to-level-1 line length. It is a construction note; "
+            "only the additional length between levels sets the phase."
+        ),
+        Language.SPANISH: (
+            "Largo físico de la línea del divisor al nivel 1. Es una nota de "
+            "construcción; solo el largo adicional entre niveles fija la fase."
+        ),
+    },
+    "help.stacked_yagi.line_increment": {
+        Language.ENGLISH: (
+            "Extra line length added for each higher level. The phase step is "
+            "-360 x increment / (velocity factor x wavelength); line loss and "
+            "impedance transformation are not modeled."
+        ),
+        Language.SPANISH: (
+            "Largo adicional de línea para cada nivel superior. El escalón de fase "
+            "es -360 x incremento / (factor de velocidad x longitud de onda); no se "
+            "modelan la pérdida de línea ni la transformación de impedancia."
+        ),
+    },
+    "help.stacked_yagi.velocity_factor": {
+        Language.ENGLISH: "Coaxial velocity factor, between 0 and 1.",
+        Language.SPANISH: "Factor de velocidad del coaxil, entre 0 y 1.",
+    },
+    "help.stacked_yagi.line_z0": {
+        Language.ENGLISH: (
+            "Nominal phase-line characteristic impedance; recorded for construction."
+        ),
+        Language.SPANISH: (
+            "Impedancia característica nominal de la línea de fase; se registra para "
+            "la construcción."
+        ),
+    },
+    "help.stacked_yagi.splitter_loss": {
+        Language.ENGLISH: (
+            "Excess loss beyond the ideal equal power division; it reduces realized "
+            "gain in phase-line mode."
+        ),
+        Language.SPANISH: (
+            "Pérdida extra más allá de la división ideal de potencia; reduce la "
+            "ganancia realizada en modo de líneas de fase."
+        ),
+    },
     "help.stacked_yagi.load_starting": {
         Language.ENGLISH: (
             "Rebuild the base Yagi from the NBS starting preset at the current "
@@ -11690,6 +11747,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Phase step per level",
         Language.SPANISH: "Escalón de fase por nivel",
     },
+    "stacked_yagi.feed_mode": {
+        Language.ENGLISH: "Feed network",
+        Language.SPANISH: "Red de alimentación",
+    },
+    "stacked_yagi.feed_mode.ideal": {
+        Language.ENGLISH: "Ideal phase step",
+        Language.SPANISH: "Escalón de fase ideal",
+    },
+    "stacked_yagi.feed_mode.phase_lines": {
+        Language.ENGLISH: "Splitter + phase lines",
+        Language.SPANISH: "Divisor + líneas de fase",
+    },
+    "stacked_yagi.reference_line": {
+        Language.ENGLISH: "Level-1 line length",
+        Language.SPANISH: "Largo de línea al nivel 1",
+    },
+    "stacked_yagi.line_increment": {
+        Language.ENGLISH: "Additional line per level",
+        Language.SPANISH: "Línea adicional por nivel",
+    },
+    "stacked_yagi.velocity_factor": {
+        Language.ENGLISH: "Line velocity factor",
+        Language.SPANISH: "Factor de velocidad de la línea",
+    },
+    "stacked_yagi.line_z0": {
+        Language.ENGLISH: "Line characteristic impedance",
+        Language.SPANISH: "Impedancia característica de la línea",
+    },
+    "stacked_yagi.splitter_loss": {
+        Language.ENGLISH: "Splitter excess loss",
+        Language.SPANISH: "Pérdida extra del divisor",
+    },
+    "stacked_yagi.derived_phase": {
+        Language.ENGLISH: "Derived phase step: {phase}° per level",
+        Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
+    },
     "stacked_yagi.amplitude_ratio": {
         Language.ENGLISH: "Additional-level voltage ratio",
         Language.SPANISH: "Relación de tensión de niveles adicionales",
@@ -11720,31 +11813,39 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "stacked_yagi.hint": {
         Language.ENGLISH: (
             "Every level is the same Yagi. Level 1 is the primary feed with unit "
-            "amplitude and zero phase; later levels use index x phase step and "
-            "the additional-level voltage ratio. The splitter, phase lines, and "
-            "per-level matching are ideal and are not modeled."
+            "amplitude and zero phase; later levels use the phase progression and "
+            "the additional-level voltage ratio. The feed can be an ideal phase "
+            "step or a splitter + phase-line specification. The solver still uses "
+            "ideal voltage sources, so line loss and line impedance transformation "
+            "are not modeled."
         ),
         Language.SPANISH: (
             "Cada nivel es el mismo Yagi. El nivel 1 es la alimentación principal "
-            "con amplitud unitaria y fase cero; los niveles siguientes usan índice "
-            "x escalón de fase y la relación de tensión indicada. El divisor, las "
-            "líneas de fase y el ajuste por nivel son ideales y no se modelan."
+            "con amplitud unitaria y fase cero; los niveles siguientes usan la "
+            "progresión de fase y la relación de tensión indicada. La alimentación "
+            "puede ser un escalón de fase ideal o una especificación de divisor + "
+            "líneas de fase. El solver sigue usando fuentes de tensión ideales, por "
+            "lo que no se modelan la pérdida de línea ni la transformación de "
+            "impedancia."
         ),
     },
     "stacked_yagi.evidence": {
         Language.ENGLISH: (
             "Experimental composed array. Mutual coupling is included by the wire "
-            "solver, but the power splitter, phase-line hardware, splitter loss, "
-            "per-level matching, and shared mast are not modeled. No stacking gain "
-            "is claimed; verify spacing, phase, and matching with the solver or a "
-            "measurement."
+            "solver. The optional feed specification sets the source phase and "
+            "splitter excess loss; line loss, line impedance transformation, "
+            "splitter mismatch, per-level matching, and the shared mast are not "
+            "modeled. No stacking gain is claimed; verify spacing, phase, and "
+            "matching with the solver or a measurement."
         ),
         Language.SPANISH: (
             "Arreglo compuesto experimental. El solver de hilos incluye el "
-            "acoplamiento mutuo, pero no se modelan el divisor de potencia, el "
-            "hardware de las líneas de fase, las pérdidas del divisor, el ajuste "
-            "por nivel ni el mástil compartido. No se declara ganancia de apilado; "
-            "verificá separación, fase y ajuste con el solver o una medición."
+            "acoplamiento mutuo. La especificación opcional de alimentación fija la "
+            "fase de las fuentes y la pérdida extra del divisor; no se modelan la "
+            "pérdida de línea, la transformación de impedancia, el desadapto del "
+            "divisor, el ajuste por nivel ni el mástil compartido. No se declara "
+            "ganancia de apilado; verificá separación, fase y ajuste con el solver "
+            "o una medición."
         ),
     },
     "stacked_yagi.scene_note": {
@@ -11762,19 +11863,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "stacked_yagi.optimizer_note": {
         Language.ENGLISH: (
-            "Spacing and phase are optimized inside the level count, base Yagi, "
-            "amplitude ratio, and maximum top height you provide. The feed split "
-            "and phase lines remain ideal."
+            "Spacing and the phase variable are optimized inside the level count, "
+            "base Yagi, amplitude ratio, and maximum top height you provide. In "
+            "phase-line mode the search moves the additional line length; the "
+            "splitter excess loss and line impedance transformation stay fixed."
         ),
         Language.SPANISH: (
-            "La separación y la fase se optimizan dentro de la cantidad de niveles, "
-            "el Yagi base, la relación de amplitud y la altura máxima que indiques. "
-            "La división de alimentación y las líneas de fase siguen siendo ideales."
+            "La separación y la variable de fase se optimizan dentro de la cantidad "
+            "de niveles, el Yagi base, la relación de amplitud y la altura máxima "
+            "indicada. En modo de líneas de fase, la búsqueda mueve el largo "
+            "adicional de línea; la pérdida extra del divisor y la transformación "
+            "de impedancia de la línea quedan fijas."
         ),
     },
     "stacked_yagi.constraint.phase": {
         Language.ENGLISH: "The phase step must stay within ±180° for the search.",
         Language.SPANISH: "El escalón de fase debe quedar dentro de ±180° para la búsqueda.",
+    },
+    "stacked_yagi.constraint.line_increment": {
+        Language.ENGLISH: (
+            "The additional phase line must stay between zero and one electrical wavelength."
+        ),
+        Language.SPANISH: (
+            "La línea de fase adicional debe quedar entre cero y una longitud de onda eléctrica."
+        ),
     },
     "stacked_yagi.constraint.amplitude_ratio": {
         Language.ENGLISH: "The additional-level voltage ratio must stay between 0.05 and 2.0.",

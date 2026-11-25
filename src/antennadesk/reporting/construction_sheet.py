@@ -37,7 +37,10 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvKind, ScvParameters
-from ..domain.antennas.stacked_yagi import StackedYagiParameters
+from ..domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
@@ -1392,25 +1395,60 @@ def render_construction_sheet(
 <tr><th>Base boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
 <tr><th>Base boom height</th><td>{_length(yagi.height_m, display_units)}</td></tr>
 <tr><th>Top level height</th><td>{_length(parameters.highest_tip_m, display_units)}</td></tr>
-<tr><th>Phase step</th><td>{parameters.phase_step_deg:.1f}°</td></tr>
+<tr><th>Phase step</th><td>{parameters.effective_phase_step_deg:.1f}°</td></tr>
 <tr><th>Additional-level ratio</th><td>{parameters.amplitude_ratio:.2f}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
-        construction_note = _note(
-            tr,
-            "Build {count} identical Yagis on one vertical stack with {spacing} m "
-            "between level booms. Level 1 is the primary feed; drive levels 2 to "
-            "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
-            "amplitude. Fit each level as a complete Yagi from the base element "
-            "table. The power splitter, phase lines, splitter loss, per-level "
-            "matching, and the shared mast are not modeled; verify the combined "
-            "pattern and match.",
-            count=parameters.count,
-            spacing=f"{parameters.spacing_m:.4f}",
-            last=parameters.count,
-            phase=f"{parameters.phase_step_deg:.1f}",
-            ratio=f"{parameters.amplitude_ratio:.2f}",
-        )
+        if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES:
+            line_rows = "".join(
+                f"<tr><th>Level {index + 1} line</th><td>"
+                f"{_length(parameters.feed.line_length_for_level(index), display_units)}</td></tr>"
+                for index in range(parameters.count)
+            )
+            feed_rows += f"""
+<tr><th>Feed network</th><td>splitter + phase lines</td></tr>
+{line_rows}
+<tr><th>Line velocity factor</th><td>{parameters.feed.velocity_factor:.3f}</td></tr>
+<tr><th>Line Z0</th><td>{parameters.feed.characteristic_impedance_ohm:.1f} Ω</td></tr>
+<tr><th>Splitter excess loss</th><td>{parameters.feed.splitter_loss_db:.2f} dB</td></tr>
+"""
+            construction_note = _note(
+                tr,
+                "Build {count} identical Yagis on one vertical stack with {spacing} m "
+                "between level booms. Level 1 is the primary feed; drive levels 2 to "
+                "{last} with a {ratio} relative amplitude. Feed the levels through a "
+                "{count}-way splitter and phase lines: level 1 is {reference} m, and "
+                "each higher level adds {increment} m of {velocity} velocity-factor "
+                "line. Record {loss} dB of splitter excess loss. The line impedance "
+                "transformation and line loss are not modeled; the solver uses ideal "
+                "voltage sources. Fit each level as a complete Yagi from the base "
+                "element table. The shared mast and per-level matching are not "
+                "modeled; verify the combined pattern and match.",
+                count=parameters.count,
+                spacing=f"{parameters.spacing_m:.4f}",
+                last=parameters.count,
+                ratio=f"{parameters.amplitude_ratio:.2f}",
+                reference=f"{parameters.feed.reference_length_m:.4f}",
+                increment=f"{parameters.feed.line_increment_m:.4f}",
+                velocity=f"{parameters.feed.velocity_factor:.3f}",
+                loss=f"{parameters.feed.splitter_loss_db:.2f}",
+            )
+        else:
+            construction_note = _note(
+                tr,
+                "Build {count} identical Yagis on one vertical stack with {spacing} m "
+                "between level booms. Level 1 is the primary feed; drive levels 2 to "
+                "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
+                "amplitude. Fit each level as a complete Yagi from the base element "
+                "table. The power splitter, phase lines, splitter loss, per-level "
+                "matching, and the shared mast are not modeled; verify the combined "
+                "pattern and match.",
+                count=parameters.count,
+                spacing=f"{parameters.spacing_m:.4f}",
+                last=parameters.count,
+                phase=f"{parameters.effective_phase_step_deg:.1f}",
+                ratio=f"{parameters.amplitude_ratio:.2f}",
+            )
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]
         folded_row = ""

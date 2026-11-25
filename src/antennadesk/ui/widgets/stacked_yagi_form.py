@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QComboBox,
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
@@ -17,6 +18,8 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
     StackedYagiParameters,
     stacked_yagi_parameters,
 )
@@ -108,6 +111,51 @@ class StackedYagiForm(QWidget):
         self._amplitude_ratio.setDecimals(2)
         self._amplitude_ratio.setSingleStep(0.05)
 
+        self._feed_mode = QComboBox(self)
+        self._feed_mode.addItem(
+            translator.t("stacked_yagi.feed_mode.ideal"),
+            StackedYagiFeedMode.IDEAL.value,
+        )
+        self._feed_mode.addItem(
+            translator.t("stacked_yagi.feed_mode.phase_lines"),
+            StackedYagiFeedMode.PHASE_LINES.value,
+        )
+        self._reference_line = QDoubleSpinBox(self)
+        self._reference_line.setRange(0.0, maximum_length)
+        self._reference_line.setDecimals(3)
+        self._reference_line.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._reference_line_field = LengthField(
+            self._reference_line,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._line_increment = QDoubleSpinBox(self)
+        self._line_increment.setRange(0.0, maximum_length)
+        self._line_increment.setDecimals(3)
+        self._line_increment.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._line_increment_field = LengthField(
+            self._line_increment,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
+        self._velocity_factor = QDoubleSpinBox(self)
+        self._velocity_factor.setRange(0.5, 1.0)
+        self._velocity_factor.setDecimals(3)
+        self._velocity_factor.setSingleStep(0.01)
+        self._velocity_factor.setValue(1.0)
+        self._line_z0 = QDoubleSpinBox(self)
+        self._line_z0.setRange(10.0, 600.0)
+        self._line_z0.setDecimals(1)
+        self._line_z0.setSuffix(" Ω")
+        self._line_z0.setValue(50.0)
+        self._splitter_loss = QDoubleSpinBox(self)
+        self._splitter_loss.setRange(0.0, 20.0)
+        self._splitter_loss.setDecimals(2)
+        self._splitter_loss.setSingleStep(0.05)
+        self._splitter_loss.setSuffix(" dB")
+
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
             self,
@@ -130,6 +178,9 @@ class StackedYagiForm(QWidget):
         self._envelope_warning.setWordWrap(True)
         self._envelope_warning.setStyleSheet("color: #9a6700;")
         self._envelope_warning.setVisible(False)
+        self._phase_note = QLabel(self)
+        self._phase_note.setWordWrap(True)
+        self._phase_note.setVisible(False)
 
         form = QFormLayout()
         form.addRow(self._labels.label("stacked_yagi.level_count"), self._level_count)
@@ -143,6 +194,24 @@ class StackedYagiForm(QWidget):
             self._labels.label("stacked_yagi.amplitude_ratio"),
             self._amplitude_ratio,
         )
+        form.addRow(self._labels.label("stacked_yagi.feed_mode"), self._feed_mode)
+        form.addRow(
+            self._labels.label("stacked_yagi.reference_line"),
+            self._reference_line,
+        )
+        form.addRow(
+            self._labels.label("stacked_yagi.line_increment"),
+            self._line_increment,
+        )
+        form.addRow(
+            self._labels.label("stacked_yagi.velocity_factor"),
+            self._velocity_factor,
+        )
+        form.addRow(self._labels.label("stacked_yagi.line_z0"), self._line_z0)
+        form.addRow(
+            self._labels.label("stacked_yagi.splitter_loss"),
+            self._splitter_loss,
+        )
         form.addRow(self._starting)
 
         layout = QVBoxLayout(self)
@@ -153,11 +222,21 @@ class StackedYagiForm(QWidget):
         layout.addWidget(self._geometry)
         layout.addWidget(self._overlap_warning)
         layout.addWidget(self._envelope_warning)
+        layout.addWidget(self._phase_note)
         layout.addWidget(self._starting_note)
 
         for widget in (self._phase_step, self._amplitude_ratio):
             widget.valueChanged.connect(self._managed_field_changed)
         self._max_top_height.valueChanged.connect(self._emit_changed)
+        for widget in (
+            self._reference_line,
+            self._line_increment,
+            self._velocity_factor,
+            self._line_z0,
+            self._splitter_loss,
+        ):
+            widget.valueChanged.connect(self._emit_changed)
+        self._feed_mode.currentIndexChanged.connect(self._feed_mode_changed)
         self._level_count.valueChanged.connect(self._managed_field_changed)
         self._spacing.valueChanged.connect(self._managed_field_changed)
         self._yagi.changed.connect(self._on_yagi_changed)
@@ -178,11 +257,17 @@ class StackedYagiForm(QWidget):
         self.set_parameters(initial)
         if parameters is None:
             self.mark_starting_dimensions_pristine()
+        self._update_feed_controls()
         self._update_geometry()
 
     def retranslate(self) -> None:
         self._labels.retranslate()
         self._yagi.retranslate()
+        self._feed_mode.setItemText(0, self._translator.t("stacked_yagi.feed_mode.ideal"))
+        self._feed_mode.setItemText(
+            1,
+            self._translator.t("stacked_yagi.feed_mode.phase_lines"),
+        )
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
             self._starting,
@@ -206,6 +291,25 @@ class StackedYagiForm(QWidget):
 
     def _on_yagi_changed(self) -> None:
         self._emit_changed()
+
+    def _feed_mode_changed(self, *_args: object) -> None:
+        if self._updating:
+            return
+        self._update_feed_controls()
+        self._update_geometry()
+        self.changed.emit()
+
+    def _update_feed_controls(self) -> None:
+        phase_lines = self._feed_mode.currentData() == StackedYagiFeedMode.PHASE_LINES.value
+        for widget in (
+            self._reference_line,
+            self._line_increment,
+            self._velocity_factor,
+            self._line_z0,
+            self._splitter_loss,
+        ):
+            widget.setEnabled(phase_lines)
+        self._phase_step.setEnabled(not phase_lines)
 
     def mark_starting_dimensions_pristine(self) -> None:
         self._yagi.mark_starting_dimensions_pristine()
@@ -255,6 +359,8 @@ class StackedYagiForm(QWidget):
         )
         self._spacing_field.set_display_units(self._display_units)
         self._max_top_height_field.set_display_units(self._display_units)
+        self._reference_line_field.set_display_units(self._display_units)
+        self._line_increment_field.set_display_units(self._display_units)
         self._yagi.set_unit_system(unit_system)
         if was_pristine:
             self.mark_starting_dimensions_pristine()
@@ -268,6 +374,15 @@ class StackedYagiForm(QWidget):
             self._max_top_height_field.configure(parameters.max_top_height_m)
             self._phase_step.setValue(parameters.phase_step_deg)
             self._amplitude_ratio.setValue(parameters.amplitude_ratio)
+            mode_index = self._feed_mode.findData(parameters.feed.mode.value)
+            if mode_index >= 0:
+                self._feed_mode.setCurrentIndex(mode_index)
+            self._reference_line_field.configure(parameters.feed.reference_length_m)
+            self._line_increment_field.configure(parameters.feed.line_increment_m)
+            self._velocity_factor.setValue(parameters.feed.velocity_factor)
+            self._line_z0.setValue(parameters.feed.characteristic_impedance_ohm)
+            self._splitter_loss.setValue(parameters.feed.splitter_loss_db)
+            self._update_feed_controls()
         finally:
             self._updating = False
         self._starting_state.mark_non_pristine()
@@ -315,6 +430,20 @@ class StackedYagiForm(QWidget):
             self._translator.t("stacked_yagi.envelope_warning") if beyond_envelope else ""
         )
         self._envelope_warning.setVisible(beyond_envelope)
+        if self._feed_mode.currentData() == StackedYagiFeedMode.PHASE_LINES.value:
+            wavelength = 299_792_458.0 / yagi.frequency_hz
+            derived = (
+                -360.0
+                * self._line_increment_field.value_m()
+                / (self._velocity_factor.value() * wavelength)
+            )
+            self._phase_note.setText(
+                self._translator.t("stacked_yagi.derived_phase", phase=f"{derived:.1f}")
+            )
+            self._phase_note.setVisible(True)
+        else:
+            self._phase_note.clear()
+            self._phase_note.setVisible(False)
 
     def parameters(self) -> StackedYagiParameters:
         return StackedYagiParameters(
@@ -324,4 +453,12 @@ class StackedYagiForm(QWidget):
             phase_step_deg=self._phase_step.value(),
             amplitude_ratio=self._amplitude_ratio.value(),
             max_top_height_m=self._max_top_height_field.value_m(),
+            feed=StackedYagiFeed(
+                mode=StackedYagiFeedMode(self._feed_mode.currentData()),
+                reference_length_m=self._reference_line_field.value_m(),
+                line_increment_m=self._line_increment_field.value_m(),
+                velocity_factor=self._velocity_factor.value(),
+                characteristic_impedance_ohm=self._line_z0.value(),
+                splitter_loss_db=self._splitter_loss.value(),
+            ),
         )

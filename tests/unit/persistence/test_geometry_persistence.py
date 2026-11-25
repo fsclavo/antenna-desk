@@ -1559,7 +1559,11 @@ def test_transmission_lines_round_trip_through_the_schema() -> None:
 
 
 def test_stacked_yagi_round_trips_through_the_schema() -> None:
-    from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        stacked_yagi_parameters,
+    )
 
     parameters = stacked_yagi_parameters(
         frequency_hz=14_100_000.0,
@@ -1568,6 +1572,14 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
         spacing_m=10.6,
         phase_step_deg=180.0,
         max_top_height_m=25.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.65,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
     )
     original = _project(parameters, "Stacked Yagi")
 

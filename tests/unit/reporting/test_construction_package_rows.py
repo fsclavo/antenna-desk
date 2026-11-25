@@ -7,6 +7,12 @@ from __future__ import annotations
 from uuid import uuid4
 
 from antennadesk.domain.antennas.load import ParallelLoad, SeriesLoad
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
+from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.projects.construction import (
     AsBuiltDimension,
     ConstructionChecklistItem,
@@ -92,3 +98,38 @@ def test_as_built_and_checklist_rows(sample_project: Project) -> None:
     assert dimensions[0][4] == "Short by 10 cm"
     assert checklist["Measure SWR and resonance with the installed feed line."] is True
     assert checklist["Check every dimension against the design before cutting."] is False
+
+
+def test_stacked_yagi_phase_line_bom_adds_splitter_and_coax(
+    sample_project: Project,
+) -> None:
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+    design = sample_project.designs[0].with_parameters(stack)
+
+    rows = dict(
+        (item, (quantity, unit, note))
+        for item, quantity, unit, note in hardware_bom_rows(sample_project, design)
+    )
+
+    assert rows["Splitter"][0] == "1"
+    assert rows["Phase-line coax"][0] == "6.50"
+    assert "feed network" in rows["Phase-line coax"][2].lower()

@@ -105,6 +105,8 @@ from ..domain.antennas.scv import (
 )
 from ..domain.antennas.stacked_yagi import (
     ANTENNA_TYPE_STACKED_YAGI,
+    StackedYagiFeed,
+    StackedYagiFeedMode,
     StackedYagiParameters,
 )
 from ..domain.antennas.t2fd import ANTENNA_TYPE_T2FD, T2FDParameters
@@ -793,6 +795,15 @@ class YagiParametersPayload(StrictModel):
     guy_diameter_m: float = Field(default=0.0, ge=0.0)
 
 
+class StackedYagiFeedPayload(StrictModel):
+    mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
+    reference_length_m: float = Field(default=0.0, ge=0.0)
+    line_increment_m: float = Field(default=0.0, ge=0.0)
+    velocity_factor: float = Field(default=1.0, gt=0.0, le=1.0)
+    characteristic_impedance_ohm: float = Field(default=50.0, gt=0.0)
+    splitter_loss_db: float = Field(default=0.0, ge=0.0)
+
+
 class StackedYagiParametersPayload(StrictModel):
     yagi: YagiParametersPayload
     count: int = Field(default=2, ge=2, le=4)
@@ -800,6 +811,7 @@ class StackedYagiParametersPayload(StrictModel):
     phase_step_deg: float = Field(default=0.0, ge=-360.0, le=360.0)
     amplitude_ratio: float = Field(default=1.0, gt=0.0)
     max_top_height_m: float = Field(default=0.0, ge=0.0)
+    feed: StackedYagiFeedPayload = Field(default_factory=StackedYagiFeedPayload)
 
     @model_validator(mode="after")
     def _validate_stack(self) -> Self:
@@ -929,6 +941,7 @@ class SimulationSpecPayload(StrictModel):
     balun_loss: BalunLossPayload | None = None
     transformer_loss: BalunLossPayload | None = None
     feed_transformer_ratio: float = Field(default=1.0, gt=0.0)
+    feed_network_loss_db: float = Field(default=0.0, ge=0.0)
     site_ground: SiteGroundPayload | None = None
     timeout_s: float = Field(default=60.0, gt=0.0)
 
@@ -2213,6 +2226,14 @@ def _stacked_yagi_parameters_from_domain(
         phase_step_deg=value.phase_step_deg,
         amplitude_ratio=value.amplitude_ratio,
         max_top_height_m=value.max_top_height_m,
+        feed=StackedYagiFeedPayload(
+            mode=value.feed.mode,
+            reference_length_m=value.feed.reference_length_m,
+            line_increment_m=value.feed.line_increment_m,
+            velocity_factor=value.feed.velocity_factor,
+            characteristic_impedance_ohm=value.feed.characteristic_impedance_ohm,
+            splitter_loss_db=value.feed.splitter_loss_db,
+        ),
     )
 
 
@@ -2378,6 +2399,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
             _balun_loss_from_domain(value.transformer_loss) if value.transformer_loss else None
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
+        feed_network_loss_db=value.feed_network_loss_db,
         site_ground=(_site_ground_from_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )
@@ -3573,6 +3595,14 @@ def _stacked_yagi_parameters_to_domain(
         phase_step_deg=value.phase_step_deg,
         amplitude_ratio=value.amplitude_ratio,
         max_top_height_m=value.max_top_height_m,
+        feed=StackedYagiFeed(
+            mode=value.feed.mode,
+            reference_length_m=value.feed.reference_length_m,
+            line_increment_m=value.feed.line_increment_m,
+            velocity_factor=value.feed.velocity_factor,
+            characteristic_impedance_ohm=value.feed.characteristic_impedance_ohm,
+            splitter_loss_db=value.feed.splitter_loss_db,
+        ),
     )
 
 
@@ -3702,6 +3732,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
             _balun_loss_to_domain(value.transformer_loss) if value.transformer_loss else None
         ),
         feed_transformer_ratio=value.feed_transformer_ratio,
+        feed_network_loss_db=value.feed_network_loss_db,
         site_ground=(_site_ground_to_domain(value.site_ground) if value.site_ground else None),
         timeout_s=value.timeout_s,
     )

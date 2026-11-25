@@ -1462,3 +1462,54 @@ def test_stacked_yagi_construction_sheet_lists_the_ideal_feed(
     assert "Build 2 identical Yagis" in sheet
     assert "ideal sources" in sheet
     assert "power splitter" in sheet
+
+
+def test_stacked_yagi_phase_line_construction_sheet_lists_the_feed(
+    sample_project: Project,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    base = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=3,
+        spacing_m=10.6,
+    )
+    stack = sample_project.designs[0].with_parameters(
+        replace(
+            base,
+            feed=StackedYagiFeed(
+                mode=StackedYagiFeedMode.PHASE_LINES,
+                reference_length_m=2.0,
+                line_increment_m=2.65,
+                velocity_factor=0.8,
+                characteristic_impedance_ohm=75.0,
+                splitter_loss_db=0.4,
+            ),
+        )
+    )
+    sheet = render_construction_sheet(sample_project, stack, None)
+
+    assert "Feed network" in sheet
+    assert "splitter + phase lines" in sheet
+    assert "Level 1 line" in sheet
+    assert "Level 3 line" in sheet
+    assert "2.0000 m" in sheet
+    assert "7.3000 m" in sheet
+    assert "0.800" in sheet
+    assert "75.0 Ω" in sheet
+    assert "0.40 dB" in sheet
+    assert "phase lines: level 1" in sheet

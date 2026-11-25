@@ -50,6 +50,8 @@ from antennadesk.domain.antennas.trap_yagi import ANTENNA_TYPE_TRAP_YAGI
 from antennadesk.domain.antennas.vertical import ANTENNA_TYPE_VERTICAL
 from antennadesk.domain.antennas.yagi import ANTENNA_TYPE_YAGI
 from antennadesk.domain.antennas.zepp import ANTENNA_TYPE_ZEPP
+from antennadesk.domain.simulation.frequency import FrequencyPlan
+from antennadesk.domain.simulation.spec import SimulationSpec
 from antennadesk.persistence import schema
 
 DECLARED_TYPES = (
@@ -145,3 +147,16 @@ def test_doublet_payload_must_match_the_declared_preset() -> None:
 
     with pytest.raises(ValueError, match="doublet preset"):
         schema._parameters_to_domain(payload)  # type: ignore[arg-type]
+
+
+def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(14_100_000.0),
+        feed_network_loss_db=0.4,
+    )
+
+    payload = schema._simulation_spec_from_domain(spec)
+    restored = schema._simulation_spec_to_domain(payload)
+
+    assert payload.feed_network_loss_db == 0.4
+    assert restored.feed_network_loss_db == 0.4

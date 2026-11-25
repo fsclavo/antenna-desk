@@ -45,7 +45,11 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import QuadBeamParameters, quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -372,6 +376,20 @@ def _typed_samples() -> list[AntennaDesignParameters]:
             spacing_m=10.6,
             max_top_height_m=25.0,
         ),
+        StackedYagiParameters(
+            yagi=_stack_base_yagi(),
+            count=2,
+            spacing_m=10.6,
+            max_top_height_m=25.0,
+            feed=StackedYagiFeed(
+                mode=StackedYagiFeedMode.PHASE_LINES,
+                reference_length_m=2.0,
+                line_increment_m=2.5,
+                velocity_factor=0.8,
+                characteristic_impedance_ohm=75.0,
+                splitter_loss_db=0.4,
+            ),
+        ),
         quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
@@ -507,6 +525,7 @@ _CONTEXT_FIELDS = {
     "guy_anchor_radius_m",
     "guy_diameter_m",
     "yagi",
+    "feed",
 }
 
 
@@ -1013,6 +1032,40 @@ def test_stacked_yagi_optimizer_uses_the_top_height_envelope() -> None:
     assert any(
         item.message_key == "stacked_yagi.constraint.phase"
         for item in descriptor.validate(bad_phase)
+    )
+
+
+def test_stacked_yagi_phase_line_optimizer_moves_the_line_increment() -> None:
+    feed = StackedYagiFeed(
+        mode=StackedYagiFeedMode.PHASE_LINES,
+        reference_length_m=2.0,
+        line_increment_m=2.0,
+        velocity_factor=0.8,
+        characteristic_impedance_ohm=75.0,
+        splitter_loss_db=0.4,
+    )
+    parameters = StackedYagiParameters(
+        yagi=_stack_base_yagi(),
+        count=2,
+        spacing_m=10.6,
+        max_top_height_m=25.0,
+        feed=feed,
+    )
+    descriptor = optimizer_availability(parameters).descriptor
+    assert descriptor is not None
+
+    variables = {variable.name: variable for variable in descriptor.variables}
+    assert "line_increment_m" in variables
+    assert "phase_step_deg" in variables
+    assert variables["phase_step_deg"].locked_by_default
+    assert descriptor.build_parameters(descriptor.initial_values) == parameters
+    assert descriptor.validate(descriptor.initial_values) == ()
+
+    too_long = dict(descriptor.initial_values)
+    too_long["line_increment_m"] = variables["line_increment_m"].maximum + 0.1
+    assert any(
+        item.message_key == "stacked_yagi.constraint.line_increment"
+        for item in descriptor.validate(too_long)
     )
 
 

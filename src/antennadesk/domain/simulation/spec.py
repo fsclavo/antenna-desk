@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 from ..antennas.balun import BalunLoss
@@ -45,12 +46,15 @@ class SimulationSpec:
     balun_loss: BalunLoss | None = None
     transformer_loss: BalunLoss | None = None
     feed_transformer_ratio: float = 1.0
+    feed_network_loss_db: float = 0.0
     site_ground: SiteGroundProfile | None = None
     timeout_s: float = DEFAULT_TIMEOUT_S
 
     def __post_init__(self) -> None:
         ensure_positive(self.reference_impedance_ohm, name="reference_impedance_ohm")
         ensure_positive(self.feed_transformer_ratio, name="feed_transformer_ratio")
+        if not math.isfinite(self.feed_network_loss_db) or self.feed_network_loss_db < 0.0:
+            raise ValueError("feed_network_loss_db must be finite and non-negative")
         ensure_positive(self.timeout_s, name="timeout_s")
         object.__setattr__(
             self,

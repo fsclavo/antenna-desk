@@ -38,7 +38,11 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
-from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    stacked_yagi_parameters,
+)
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -256,3 +260,27 @@ def test_every_registered_builder_produces_a_spec(
 
     assert spec.frequency_plan.count >= 1
     assert spec.segmentation.min_segments_per_wire >= 1
+
+
+def test_stacked_yagi_phase_lines_apply_the_splitter_loss() -> None:
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.65,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+
+    spec = build_typed_family_simulation_spec(parameters)
+
+    assert spec.feed_network_loss_db == pytest.approx(0.4)
+    assert parameters.to_antenna().sources[0].phase_deg == pytest.approx(
+        360.0 - 360.0 * 2.65 / (0.8 * parameters.wavelength_m)
+    )

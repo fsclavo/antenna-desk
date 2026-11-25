@@ -551,7 +551,7 @@ and new catalog presets) waits until this track closes.
 | 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, attachments, and hardware deferred pending ADR/spike | M–L | B/C | narrowed 2026-11-24 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Managed length/non-length dimensions and optional coarse pattern preview implemented; Apply closes; optional non-modal remains | M–L | n/a | implemented 2026-11-24 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | Canceled 2026-11-24; not relevant to the amateur design workflow | — | — | canceled |
-| 1.2 Site and exploration | DL6 | Stacked Yagi arrays | First slice done 2026-11-25: form, schema 63, catalog, per-port sources, scene/reports, and bounded spacing/phase optimization; ideal split; splitter/phase hardware and shared mast remain | L | C | partial 2026-11-25 |
+| 1.2 Site and exploration | DL6 | Stacked Yagi arrays | First slice done 2026-11-25: form, schema 63, catalog, per-port sources, scene/reports, splitter + phase-line feed specification, and bounded spacing/phase optimization; the solver sources remain ideal; per-level matching and shared mast remain | L | C | partial 2026-11-25 |
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | Bounded cliff/second-medium far-field profile implemented; native screen still unvalidated for SWR | M–L | B/C | implemented 2026-11-24 |
 | post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
 
@@ -585,9 +585,9 @@ Product track:
    first slice (bounded tuner check, E12/E24, Q loss, limiting part, L/Pi/T
    best effort, bypass, band-center rows, and port ratings) is done; only
    per-component branch ratings remain optional. DL5 is narrowed. Wave 2 is in
-   progress: DL3 is partial, DL6 has its first slice implemented (splitter and
-   phase hardware remain), and DL7 is implemented as a bounded cliff slice;
-   DL4 is canceled by product decision. DL8 stays
+   progress: DL3 is partial, DL6 has its first slice implemented (per-level
+   matching and a shared mast remain), and DL7 is implemented as a bounded
+   cliff slice; DL4 is canceled by product decision. DL8 stays
    post-1.2 until a validated terrain ADR exists. Execution and acceptance criteria are in
    [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave).
 

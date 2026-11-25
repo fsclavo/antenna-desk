@@ -14,16 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   step, and additional-level voltage ratio. Level 1 remains the primary
   impedance/SWR reference; the **Sources** table reports every driven level.
   The embedded Yagi editor disables mast/guy wires, folded or matched driven
-  elements, and per-level transformers until a shared support and feed model
-  exists. Schema 62 adds the composed payload with a metadata-only 61→62
-  migration; schema 63 adds the optional maximum top height. The slice includes
+  elements, and per-level transformers until a shared support model and
+  per-level feed hardware exist. Schema 62 adds the composed payload with a metadata-only 61→62
+  migration; schema 63 adds the optional maximum top height and splitter/
+  phase-line feed specification. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
   spacing and phase step inside the optional maximum top-height envelope; the
-  level count, base Yagi, and amplitude ratio stay context. The power splitter,
-  phase-line hardware, splitter loss, shared mast, and folded/matched driven
-  elements remain unavailable. Evidence is C and no stacking gain is claimed. See
+  level count, base Yagi, and amplitude ratio stay context. Phase-line mode
+  derives the excitation phase from a reference line and an additional length
+  per level, records the velocity factor and characteristic impedance, and
+  applies the splitter excess loss to realized gain; the line phase is fixed
+  at the design frequency across a sweep. The solver still uses ideal voltage
+  sources and does not model line loss or line impedance transformation. Per-level matching, a shared mast, folded/matched driven
+  elements, and a full N-port co-simulation remain unavailable. Evidence is C
+  and no stacking gain is claimed. See
   [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
 
 ### Changed

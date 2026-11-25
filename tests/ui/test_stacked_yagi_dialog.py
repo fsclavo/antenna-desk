@@ -9,7 +9,10 @@ from PySide6.QtWidgets import QDialog, QLabel
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.polarization import Polarization
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.ui.dialogs.stacked_yagi_dialog import StackedYagiDialog
 from antennadesk.ui.i18n import Language, Translator
@@ -131,3 +134,27 @@ def test_envelope_limits_the_stack_top_height(qtbot: QtBot) -> None:
     assert form._envelope_warning.text()
     with pytest.raises(ValueError, match="max_top_height_m"):
         form.parameters()
+
+
+def test_phase_line_feed_derives_the_phase_and_applies_the_splitter_loss(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    mode_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
+    assert mode_index >= 0
+    form._feed_mode.setCurrentIndex(mode_index)
+    form._line_increment_field.configure(2.5)
+    form._velocity_factor.setValue(0.8)
+    form._splitter_loss.setValue(0.4)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+    assert parameters.feed.line_increment_m == pytest.approx(2.5, abs=1e-3)
+    assert parameters.feed.splitter_loss_db == pytest.approx(0.4, abs=1e-6)
+    assert parameters.effective_phase_step_deg < 0.0
+    assert "Derived phase step" in form._phase_note.text()
+    assert form._phase_step.isEnabled() is False
+    assert form._line_increment.isEnabled() is True

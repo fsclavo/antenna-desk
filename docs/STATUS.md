@@ -35,10 +35,13 @@
   two to four identical Yagis on one vertical stack, ideal per-level sources,
   schema 63, form and both catalog routes, per-port **Sources** results, front
   elevation scene, design/construction reports, multi-boom BOM, a real `nec2c`
-  two-port test, and a bounded spacing/phase optimizer constrained by the
-  user-set maximum top height. The splitter/phase-line hardware,
-  folded/matched driven elements, per-level transformer, and shared mast
-  remain explicitly unavailable. Evidence is C; no stacking gain is claimed.
+  two-port test, a bounded spacing/phase optimizer constrained by the
+  user-set maximum top height, and an optional splitter + phase-line feed
+  (reference/increment lengths, velocity factor, Z0, and splitter excess loss).
+  The solver still uses ideal voltage sources: line loss, line impedance
+  transformation, splitter mismatch, per-level matching, folded/matched driven
+  elements, and a shared mast remain unavailable. Evidence is C; no stacking
+  gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -82,7 +85,7 @@
 
 ## Next
 
-1. Continue DL6 with splitter/phase-line hardware and a shared mast.
+1. Continue DL6 with per-level matching, a shared mast, and a full feed-network co-simulation if a traceable model is selected.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

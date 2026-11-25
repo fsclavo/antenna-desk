@@ -42,7 +42,9 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
-from ..domain.antennas.stacked_yagi import StackedYagiParameters
+from ..domain.antennas.stacked_yagi import (
+    StackedYagiParameters,
+)
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -233,6 +235,9 @@ def _stacked_yagi_spec(
             SegmentationPolicy(min_segments_per_wire=1),
         ),
         far_field=far_field_request(context.pattern_step_deg, parameters.yagi.ground),
+        feed_network_loss_db=(
+            parameters.feed.splitter_loss_db if parameters.feed.mode.value == "phase_lines" else 0.0
+        ),
     )
 
 

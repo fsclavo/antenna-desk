@@ -284,3 +284,16 @@ def test_input_shunt_network_reports_its_topology_floor() -> None:
         ),
     )
     assert matched.matching_network_topology_floor_swr is None
+
+
+def test_feed_network_loss_reduces_transducer_gain_and_is_audited() -> None:
+    budget = link_budget(
+        antenna_impedance_ohm=complex(50.0, 0.0),
+        frequency_hz=FREQUENCY_HZ,
+        spec=_spec(feed_network_loss_db=0.4),
+    )
+
+    assert budget.transducer_gain_db == pytest.approx(-0.4)
+    assert budget.network_loss_db == pytest.approx(0.4)
+    assert budget.total_loss_db == pytest.approx(0.4)
+    assert budget.loss_balance_db == pytest.approx(0.0)

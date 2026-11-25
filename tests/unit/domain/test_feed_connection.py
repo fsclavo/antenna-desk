@@ -15,7 +15,11 @@ from antennadesk.domain.antennas.feed_connection import (
 )
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.antennas.wire import Wire
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
@@ -184,3 +188,23 @@ def test_stacked_yagi_reports_a_multi_port_ideal_feed() -> None:
     assert detail.topology is FeedTopology.MULTI_PORT
     assert detail.interface is FeedInterface.MULTI_PORT
     assert "Level 1 is the primary port" in (detail.match_hardware or "")
+
+
+def test_stacked_yagi_phase_lines_report_the_splitter_feed() -> None:
+    parameters = StackedYagiParameters(
+        yagi=_yagi(),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    assert "splitter + phase lines" in (detail.match_hardware or "")

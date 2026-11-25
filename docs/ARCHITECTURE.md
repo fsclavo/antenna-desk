@@ -264,7 +264,10 @@ while the primary feed remains the impedance/SWR reference port. The phased
 vertical array family uses that multi-source model with an ideal linear phase
 and amplitude progression. The stacked Yagi composes two to four identical
 Yagi level models with the same multi-source model; level 1 is the primary
-port, while the splitter and phase-line hardware are ideal and not modeled.
+port. An optional feed specification derives the source phase from equal
+phase-line increments and applies splitter excess loss to realized gain; the
+solver still uses ideal voltage sources, and line loss plus impedance
+transformation are not modeled.
 The quad beam uses a reflector loop, a driven loop,
 and an optional director loop on a single feed. The log-periodic family uses
 one `TransmissionLine` between adjacent element centers with the generic

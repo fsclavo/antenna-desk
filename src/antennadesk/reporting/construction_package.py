@@ -7,6 +7,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..domain.antennas.load import ParallelLoad, SeriesLoad
+from ..domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from ..domain.environment.ground import GroundKind
 from ..domain.projects.construction import (
     CONSTRUCTION_CHECKLIST_KEYS,
@@ -91,6 +95,12 @@ def hardware_bom_items(
     radial_count = int(getattr(parameters, "radial_count", 0) or 0)
     ground = getattr(parameters, "ground", None)
     ground_rod = "1" if ground is not None and ground.kind is GroundKind.FINITE else "0"
+    phase_line_length_m = (
+        sum(parameters.feed.line_length_for_level(index) for index in range(parameters.count))
+        if isinstance(parameters, StackedYagiParameters)
+        and parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+        else 0.0
+    )
     rows: list[HardwareBomRow] = [
         HardwareBomRow(
             key="antenna_conductor",
@@ -116,6 +126,27 @@ def hardware_bom_items(
             ),
             unit="pcs",
             note="Starting estimate" if beam else "—",
+        ),
+        *(
+            [
+                HardwareBomRow(
+                    key="splitter",
+                    label="Splitter",
+                    quantity="1",
+                    unit="pcs",
+                    note="Ideal N-way splitter" if beam else "—",
+                ),
+                HardwareBomRow(
+                    key="phase_line",
+                    label="Phase-line coax",
+                    quantity=f"{phase_line_length_m:.2f}",
+                    unit="m",
+                    note="From the feed network",
+                ),
+            ]
+            if isinstance(parameters, StackedYagiParameters)
+            and parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+            else []
         ),
         HardwareBomRow(
             key="feedpoint_support",

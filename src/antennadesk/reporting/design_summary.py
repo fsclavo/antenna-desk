@@ -44,7 +44,10 @@ from ..domain.antennas.polarization import Polarization
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
-from ..domain.antennas.stacked_yagi import StackedYagiParameters
+from ..domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line import TransmissionLine
 from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletParameters
@@ -1267,12 +1270,46 @@ def design_summary_rows(
                 ("Base boom length", _length(parameters.boom_length_m, display_units)),
                 ("Base boom height", _length(yagi.height_m, display_units)),
                 ("Top level height", _length(parameters.highest_tip_m, display_units)),
-                ("Phase step", f"{parameters.phase_step_deg:.1f}°"),
+                ("Phase step", f"{parameters.effective_phase_step_deg:.1f}°"),
                 ("Additional-level ratio", f"{parameters.amplitude_ratio:.2f}"),
                 ("Polarization", yagi.polarization.value),
                 (
                     "Feed",
                     "level 1 (primary); additional levels are ideal sources",
+                ),
+                (
+                    "Feed network",
+                    (
+                        "splitter + phase lines"
+                        if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+                        else "ideal phase step"
+                    ),
+                ),
+                *(
+                    [
+                        (
+                            "Reference line",
+                            _length(parameters.feed.reference_length_m, display_units),
+                        ),
+                        (
+                            "Line increment",
+                            _length(parameters.feed.line_increment_m, display_units),
+                        ),
+                        (
+                            "Velocity factor",
+                            f"{parameters.feed.velocity_factor:.3f}",
+                        ),
+                        (
+                            "Line Z0",
+                            f"{parameters.feed.characteristic_impedance_ohm:.1f} Ω",
+                        ),
+                        (
+                            "Splitter excess loss",
+                            f"{parameters.feed.splitter_loss_db:.2f} dB",
+                        ),
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+                    else []
                 ),
                 ("Total conductor", _length(total_conductor, display_units)),
                 ("Material", material_text(yagi.material, labeler)),

@@ -1232,24 +1232,42 @@ Level 1 is the primary feed and the only impedance/SWR reference. Levels 2–4
 are ideal voltage sources with `(level-1) × phase step` and the configured
 voltage ratio. The **Sources** results table reports each driven level
 separately; a negative source power means that ideal source is absorbing
-power. The splitter, phase-line hardware, splitter loss, and per-level matching
-are not modeled. The base editor also disables mast/guy wires, folded or matched
-driven elements, and feed transformers inside a stack.
+power. The feed split and per-level matching are not solved as a coupled
+network; the feed specification below sets the phase and splitter excess loss.
+The base editor also disables mast/guy wires, folded or matched driven elements,
+and feed transformers inside a stack.
+
+**Feed network** selects **Ideal phase step** or **Splitter + phase lines**.
+The ideal mode uses the phase-step field directly. Phase-line mode records a
+physical line from the splitter to level 1 (**Level-1 line length**), an
+**Additional line per level**, **Line velocity factor**, **Line characteristic
+impedance**, and **Splitter excess loss**. The phase step is derived from the
+additional length and velocity factor and is shown below the fields. The
+splitter is an ideal N-way divider; the excess loss reduces realized gain. The
+solver still uses ideal voltage sources, so line loss, line impedance
+transformation, splitter mismatch, and per-level matching are not modeled. The
+line phase is computed at the design frequency and held fixed across a
+frequency sweep; a real line changes phase with frequency. Use the line lengths
+for the construction harness and verify the match with the solver or a
+measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
 an optional mechanical envelope: zero leaves it unset and disables the stack
 optimizer. **Optimize...** searches **Level spacing** and **Phase step per
 level** inside that envelope; the level count, base Yagi geometry, and
-amplitude ratio stay context. The search rejects a spacing that would overlap
-vertical-polarized levels or raise the top above the envelope. The feed split
-and phase lines remain ideal, so treat the result as a solver-verified starting
+amplitude ratio stay context. In phase-line mode the search moves the additional
+line length instead of the phase-step field. The search rejects a spacing that
+would overlap vertical-polarized levels or raise the top above the envelope.
+The feed split remains ideal, so treat the result as a solver-verified starting
 point, not a validated feed-network design.
 
 For vertical polarization, the level spacing must be longer than the longest
 element or adjacent copies overlap on the same axis. The form shows a warning
 and rejects the design in that case. The family is classified **experimental**:
 mutual coupling is included by the wire solver, but no stacking gain is
-claimed, and the feed network and shared mast are not modeled. Verify the
+claimed, and the feed network is a specification layer rather than a full
+N-port co-simulation. Line loss, line impedance transformation, splitter
+mismatch, per-level matching, and the shared mast are not modeled. Verify the
 pattern, per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array

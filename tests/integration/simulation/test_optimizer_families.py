@@ -31,7 +31,11 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
     doublet_starting_parameters,
@@ -338,3 +342,53 @@ def test_multiband_hexbeam_selected_band_optimizer_runs_against_nec2c(
     assert best.turning_radius_m == pytest.approx(parameters.turning_radius_m)
     model = best.to_antenna(active_band="15m")
     assert model.feed.wire_id == "hexbeam-band2-feed"
+
+
+def test_stacked_yagi_phase_line_optimizer_runs_against_nec2c(
+    solver: Nec2cSolver,
+) -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        max_top_height_m=25.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.PHASE_LINES,
+            reference_length_m=2.0,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+            splitter_loss_db=0.4,
+        ),
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        include_conductor_losses=False,
+        far_field=FarFieldRequest(enabled=False),
+        feed_network_loss_db=parameters.feed.splitter_loss_db,
+    )
+
+    result = OptimizeAntenna(solver).execute(
+        OptimizeAntennaCommand(
+            descriptor=availability.descriptor,
+            base_spec=spec,
+            objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+            budget=OptimizationBudget(4, 4, 2),
+            seed=9,
+        )
+    )
+
+    assert result.best_parameters is not None
+    assert result.best_score is not None
+    assert math.isfinite(result.best_score)
+    assert result.evaluations

@@ -156,12 +156,15 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         ),
         tolerance="Not applicable (structural)",
         limitation=(
-            "Mutual coupling is included by the wire solver, but the power "
-            "splitter, phase-line hardware, splitter loss, per-level matching, "
-            "and the shared mast are not modeled. The reported impedance and SWR "
-            "refer only to level 1. The additional levels are ideal voltage "
-            "sources. No stacking gain is claimed; verify spacing, phase, and "
-            "matching with the solver or a measurement."
+            "Mutual coupling is included by the wire solver. The feed network can "
+            "be specified as an ideal N-way splitter plus equal phase-line "
+            "increments; the phase is derived at the design frequency and held "
+            "fixed across a sweep. The solver still uses ideal voltage sources, "
+            "and line loss, line impedance transformation, splitter mismatch, "
+            "per-level matching, and the shared mast are not modeled. Splitter "
+            "excess loss is applied to realized gain. The reported impedance and SWR refer "
+            "only to level 1. No stacking gain is claimed; verify spacing, phase, "
+            "and matching with the solver or a measurement."
         ),
     ),
     "log_periodic": EvidenceEntry(

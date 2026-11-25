@@ -9,7 +9,11 @@ from dataclasses import replace
 import pytest
 
 from antennadesk.domain.antennas.polarization import Polarization
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.yagi import YagiMatchType, nbs_five_element
 
 
@@ -109,3 +113,42 @@ def test_stack_rejects_folded_matched_or_transformed_driven_elements_for_now() -
             count=2,
             spacing_m=3.0,
         )
+
+
+def test_phase_line_feed_derives_the_source_phase_from_the_line_increment() -> None:
+    yagi = nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0)
+    wavelength = yagi.wavelength_m
+    feed = StackedYagiFeed(
+        mode=StackedYagiFeedMode.PHASE_LINES,
+        reference_length_m=2.0,
+        line_increment_m=wavelength / 4.0,
+        velocity_factor=0.8,
+        characteristic_impedance_ohm=75.0,
+        splitter_loss_db=0.4,
+    )
+    stack = StackedYagiParameters(
+        yagi=yagi,
+        count=3,
+        spacing_m=10.0,
+        phase_step_deg=90.0,
+        feed=feed,
+    )
+
+    assert stack.effective_phase_step_deg == pytest.approx(-112.5)
+    assert feed.line_length_for_level(0) == pytest.approx(2.0)
+    assert feed.line_length_for_level(2) == pytest.approx(2.0 + 2 * wavelength / 4.0)
+    model = stack.to_antenna()
+    assert [source.phase_deg for source in model.sources] == pytest.approx([247.5, 135.0])
+
+
+def test_phase_line_feed_rejects_invalid_lines_and_loss() -> None:
+    with pytest.raises(ValueError):
+        StackedYagiFeed(velocity_factor=0.0)
+    with pytest.raises(ValueError):
+        StackedYagiFeed(velocity_factor=1.1)
+    with pytest.raises(ValueError):
+        StackedYagiFeed(characteristic_impedance_ohm=0.0)
+    with pytest.raises(ValueError):
+        StackedYagiFeed(line_increment_m=-0.1)
+    with pytest.raises(ValueError):
+        StackedYagiFeed(splitter_loss_db=-0.1)

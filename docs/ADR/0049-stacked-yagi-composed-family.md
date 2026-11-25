@@ -30,8 +30,11 @@ The first slice is implemented with these boundaries:
   primary port remains the SWR reference;
 - a front-elevation scene contract, design summary, construction sheet, and a
   multi-boom BOM;
+- an optional splitter + phase-line feed: a reference line length, a line
+  increment per level, velocity factor, characteristic impedance, and splitter
+  excess loss; the phase step is derived from the increment;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
-  envelope; the level count, base Yagi, and amplitude ratio stay context;
+  envelope; in phase-line mode the search moves the line increment;
 - a real `nec2c` two-level, two-source test.
 
 The base Yagi editor in the stack disables folded/matched driven elements,
@@ -58,6 +61,10 @@ distinction explicit and leaves room for a real splitter/phase-line slice.
   feed transformer is rejected until the stack owns one shared support and
   feed model; copying them per level would create floating or double-counted
   hardware.
-- Splitter loss, phase lines, and a shared mast are follow-ups. The spacing/
-  phase optimizer is available once a maximum top height is set; it uses the
-  ideal source model and makes no gain claim.
+- The feed network is a specification layer, not a full N-port co-simulation:
+  the solver still uses ideal voltage sources, and the line phase is fixed at
+  the design frequency across a sweep. Line loss, line impedance
+  transformation, splitter mismatch, per-level matching, and a shared mast are
+  follow-ups. The splitter excess loss is applied to realized gain. The
+  spacing/phase optimizer is available once a maximum top height is set and
+  makes no gain claim.

@@ -8,7 +8,10 @@ from collections.abc import Mapping
 from dataclasses import replace
 
 from ...antennas.polarization import Polarization
-from ...antennas.stacked_yagi import StackedYagiParameters
+from ...antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from ..constraints import ConstraintViolation
 from ..descriptor import AntennaOptimizerDescriptor, FamilyOptimizationObjective
 from ..variables import OptimizationVariable, VariableKind
@@ -25,6 +28,47 @@ def stacked_yagi_descriptor(
     if maximum_spacing <= minimum_spacing:
         raise ValueError("the stack top-height envelope leaves no searchable spacing")
 
+    phase_lines = parameters.feed.mode is StackedYagiFeedMode.PHASE_LINES
+    max_increment = max(
+        parameters.feed.velocity_factor * parameters.wavelength_m,
+        parameters.feed.line_increment_m,
+    )
+    phase_variable = (
+        OptimizationVariable(
+            "phase_step_deg",
+            "stacked_yagi.phase_step",
+            "optimize.group.feed",
+            -180.0,
+            180.0,
+            unit="deg",
+            step=0.5,
+        )
+        if not phase_lines
+        else OptimizationVariable(
+            "line_increment_m",
+            "stacked_yagi.line_increment",
+            "optimize.group.feed",
+            0.0,
+            max_increment,
+            step=max(0.001, max_increment / 100.0),
+        )
+    )
+    phase_context = (
+        ()
+        if not phase_lines
+        else (
+            OptimizationVariable(
+                "phase_step_deg",
+                "stacked_yagi.phase_step",
+                "optimize.group.feed",
+                -360.0,
+                360.0,
+                unit="deg",
+                step=0.5,
+                locked_by_default=True,
+            ),
+        )
+    )
     variables = (
         OptimizationVariable(
             "spacing_m",
@@ -34,15 +78,8 @@ def stacked_yagi_descriptor(
             maximum_spacing,
             step=relative_step(minimum_spacing, maximum_spacing),
         ),
-        OptimizationVariable(
-            "phase_step_deg",
-            "stacked_yagi.phase_step",
-            "optimize.group.feed",
-            -180.0,
-            180.0,
-            unit="deg",
-            step=0.5,
-        ),
+        phase_variable,
+        *phase_context,
         OptimizationVariable(
             "amplitude_ratio",
             "stacked_yagi.amplitude_ratio",
@@ -76,13 +113,29 @@ def stacked_yagi_descriptor(
     )
     initial = {
         "spacing_m": parameters.spacing_m,
-        "phase_step_deg": parameters.phase_step_deg,
         "amplitude_ratio": parameters.amplitude_ratio,
         "count": float(parameters.count),
         "max_top_height_m": parameters.max_top_height_m,
     }
+    if phase_lines:
+        initial["line_increment_m"] = parameters.feed.line_increment_m
+        initial["phase_step_deg"] = parameters.phase_step_deg
+    else:
+        initial["phase_step_deg"] = parameters.phase_step_deg
 
     def build(values: Mapping[str, float]) -> StackedYagiParameters:
+        if phase_lines:
+            return replace(
+                parameters,
+                count=round(values["count"]),
+                spacing_m=values["spacing_m"],
+                amplitude_ratio=values["amplitude_ratio"],
+                max_top_height_m=values["max_top_height_m"],
+                feed=replace(
+                    parameters.feed,
+                    line_increment_m=values["line_increment_m"],
+                ),
+            )
         return replace(
             parameters,
             count=round(values["count"]),
@@ -125,6 +178,19 @@ def stacked_yagi_descriptor(
                 else None
             ),
             (
+                violation(
+                    "line_increment_m",
+                    max(
+                        -values["line_increment_m"],
+                        values["line_increment_m"] - max_increment,
+                    ),
+                    "stacked_yagi.constraint.line_increment",
+                )
+                if phase_lines and not 0.0 <= values["line_increment_m"] <= max_increment
+                else None
+            )
+            if phase_lines
+            else (
                 violation(
                     "phase_step_deg",
                     abs(values["phase_step_deg"]) - 180.0,
