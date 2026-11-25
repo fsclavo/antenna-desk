@@ -65,6 +65,8 @@ of truth before adding another planning document.
   exploratory NEC-2 radial-screen and cliff ground spike; decision and limits.
 - [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md) —
   stacked-Yagi composition, feed-network, and first-slice architecture.
+- [`spikes/dl6-feed-network-spike.md`](spikes/dl6-feed-network-spike.md) —
+  splitter isolation, explicit network ports, and per-level matching options.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,
@@ -141,6 +143,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0051 — Bounded cliff/second-medium site ground](ADR/0051-bounded-cliff-site-ground.md)
 - [ADR-0052 — Uniform radial droop for verticals](ADR/0052-uniform-radial-droop.md)
 - [ADR-0053 — One lifecycle owner for Qt worker tasks](ADR/0053-qt-worker-task-lifecycle.md)
+- [ADR-0054 — Bounded multiport feed-network ports and Wilkinson splitter](ADR/0054-bounded-multiport-feed-network.md)
 
 ## Archive
 

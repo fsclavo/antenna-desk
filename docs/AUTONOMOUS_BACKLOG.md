@@ -1179,7 +1179,13 @@ claimed. See also
   base Yagi, and amplitude ratio stay context.
 
 **Remaining work:** a splitter S-parameter/isolation model, per-level matching
-networks, and folded driven elements with per-level feed hardware.
+networks, and folded driven elements with per-level feed hardware. The
+[feed-network spike](spikes/dl6-feed-network-spike.md) rejects scalar isolation
+post-processing and proposes [ADR-0054](ADR/0054-bounded-multiport-feed-network.md):
+an explicit port/reference abstraction and a bounded Wilkinson/corporate
+splitter at a declared design frequency.
+Per-level matching and folded elements stay out until the port model and a
+single-level L/Pi/T subcircuit are validated.
 
 **Goal:** answer "two stacked Yagis or one bigger one?"
 

@@ -78,6 +78,11 @@ slices.
   rejected. A beta/hairpin match is copied to every level. The mast and guy
   fields are interpreted as one shared support for the whole stack; copying a
   mast per level would create floating or double-counted hardware.
+- Splitter isolation and per-level matching are not modeled. A
+  [feed-network spike](../spikes/dl6-feed-network-spike.md) rejects scalar
+  isolation post-processing; [ADR-0054](0054-bounded-multiport-feed-network.md)
+  proposes an explicit port/reference abstraction and a bounded
+  Wilkinson/corporate splitter as the next physical step.
 - The feed network is a bounded co-simulation, not a full N-port circuit model:
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent
