@@ -4174,6 +4174,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "divide por este valor en los informes."
         ),
     },
+    "help.stacked_yagi.max_top_height": {
+        Language.ENGLISH: (
+            "Optional mechanical ceiling for the highest conductor. The optimizer "
+            "uses it as the upper bound for level spacing; zero leaves it unset."
+        ),
+        Language.SPANISH: (
+            "Techo mecánico opcional para el conductor más alto. El optimizador lo "
+            "usa como límite superior de la separación entre niveles; cero lo deja "
+            "sin definir."
+        ),
+    },
     "help.stacked_yagi.level_count": {
         Language.ENGLISH: "Number of identical Yagi levels; two to four.",
         Language.SPANISH: "Cantidad de niveles Yagi idénticos; de dos a cuatro.",
@@ -11745,6 +11756,40 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "principal · división de alimentación ideal"
         ),
     },
+    "stacked_yagi.max_top_height": {
+        Language.ENGLISH: "Maximum top height",
+        Language.SPANISH: "Altura máxima de la pila",
+    },
+    "stacked_yagi.optimizer_note": {
+        Language.ENGLISH: (
+            "Spacing and phase are optimized inside the level count, base Yagi, "
+            "amplitude ratio, and maximum top height you provide. The feed split "
+            "and phase lines remain ideal."
+        ),
+        Language.SPANISH: (
+            "La separación y la fase se optimizan dentro de la cantidad de niveles, "
+            "el Yagi base, la relación de amplitud y la altura máxima que indiques. "
+            "La división de alimentación y las líneas de fase siguen siendo ideales."
+        ),
+    },
+    "stacked_yagi.constraint.phase": {
+        Language.ENGLISH: "The phase step must stay within ±180° for the search.",
+        Language.SPANISH: "El escalón de fase debe quedar dentro de ±180° para la búsqueda.",
+    },
+    "stacked_yagi.constraint.amplitude_ratio": {
+        Language.ENGLISH: "The additional-level voltage ratio must stay between 0.05 and 2.0.",
+        Language.SPANISH: "La relación de tensión adicional debe quedar entre 0,05 y 2,0.",
+    },
+    "stacked_yagi.envelope_warning": {
+        Language.ENGLISH: (
+            "The current stack top is above the maximum top height. Raise the "
+            "envelope or reduce the level spacing."
+        ),
+        Language.SPANISH: (
+            "La parte superior actual de la pila supera la altura máxima. Aumentá "
+            "la envolvente o reducí la separación entre niveles."
+        ),
+    },
     "stacked_yagi.feed_note": {
         Language.ENGLISH: (
             "Level 1 is the primary port and the only impedance/SWR reference. "
@@ -16486,6 +16531,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "The conductor spacing is too small for the wire diameter.",
         Language.SPANISH: "La separación entre conductores es demasiado pequeña para el diámetro del hilo.",
     },
+    "optimize.constraint.stacked_yagi_overlap": {
+        Language.ENGLISH: (
+            "The level spacing does not clear the longest element; vertical-polarized "
+            "levels would overlap."
+        ),
+        Language.SPANISH: (
+            "La separación entre niveles no supera el elemento más largo; los "
+            "niveles con polarización vertical se superpondrían."
+        ),
+    },
+    "optimize.constraint.stacked_yagi_envelope": {
+        Language.ENGLISH: "The level spacing exceeds the maximum top-height envelope.",
+        Language.SPANISH: "La separación entre niveles supera la envolvente de altura máxima.",
+    },
     "optimize.constraint.reflector_spacing": {
         Language.ENGLISH: "The reflector spacing is too small for the wire diameter.",
         Language.SPANISH: "La separación del reflector es demasiado pequeña para el diámetro del hilo.",
@@ -16594,16 +16653,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
         Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",
     },
-    "optimize.unavailable.stacked_yagi": {
+    "optimize.unavailable.stacked_yagi_envelope": {
         Language.ENGLISH: (
-            "The stack feed split, phase lines, and shared mast are ideal; "
-            "optimize the base Yagi first, then verify spacing and phase with "
-            "the solver."
+            "Set a maximum top height in the stack editor to define the mechanical "
+            "envelope; spacing and phase optimization needs that limit."
         ),
         Language.SPANISH: (
-            "La división de alimentación, las líneas de fase y el mástil compartido "
-            "son ideales; optimizá primero el Yagi base y luego verificá la "
-            "separación y la fase con el solver."
+            "Fijá una altura máxima en el editor de la pila para definir la "
+            "envolvente mecánica; la optimización de separación y fase necesita "
+            "ese límite."
         ),
     },
     "optimize.unavailable.magnetic_loop": {

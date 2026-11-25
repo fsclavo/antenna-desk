@@ -16,11 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The embedded Yagi editor disables mast/guy wires, folded or matched driven
   elements, and per-level transformers until a shared support and feed model
   exists. Schema 62 adds the composed payload with a metadata-only 61→62
-  migration. The slice includes both catalog routes, a front-elevation scene
-  with level spacing, design and construction reports, a multi-boom BOM, a
-  vertical-polarization overlap guard, and a real `nec2c` two-port test. The
-  power splitter, phase-line hardware, splitter loss, and optimizer are
-  explicitly unavailable; evidence is C and no stacking gain is claimed. See
+  migration; schema 63 adds the optional maximum top height. The slice includes
+  both catalog routes, a front-elevation scene with level spacing, design and
+  construction reports, a multi-boom BOM, a vertical-polarization overlap
+  guard, and a real `nec2c` two-port test. A bounded optimizer searches level
+  spacing and phase step inside the optional maximum top-height envelope; the
+  level count, base Yagi, and amplitude ratio stay context. The power splitter,
+  phase-line hardware, splitter loss, shared mast, and folded/matched driven
+  elements remain unavailable. Evidence is C and no stacking gain is claimed. See
   [`ADR-0049`](docs/ADR/0049-stacked-yagi-composed-family.md).
 
 ### Changed

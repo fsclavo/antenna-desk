@@ -89,6 +89,16 @@ class StackedYagiForm(QWidget):
             translator,
             self._display_units,
         )
+        self._max_top_height = QDoubleSpinBox(self)
+        self._max_top_height.setRange(0.0, maximum_length)
+        self._max_top_height.setDecimals(3)
+        self._max_top_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._max_top_height_field = LengthField(
+            self._max_top_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
         self._phase_step = QDoubleSpinBox(self)
         self._phase_step.setRange(-360.0, 360.0)
         self._phase_step.setDecimals(1)
@@ -116,10 +126,18 @@ class StackedYagiForm(QWidget):
         self._overlap_warning.setWordWrap(True)
         self._overlap_warning.setStyleSheet("color: #9a6700;")
         self._overlap_warning.setVisible(False)
+        self._envelope_warning = QLabel(self)
+        self._envelope_warning.setWordWrap(True)
+        self._envelope_warning.setStyleSheet("color: #9a6700;")
+        self._envelope_warning.setVisible(False)
 
         form = QFormLayout()
         form.addRow(self._labels.label("stacked_yagi.level_count"), self._level_count)
         form.addRow(self._labels.label("stacked_yagi.spacing"), self._spacing)
+        form.addRow(
+            self._labels.label("stacked_yagi.max_top_height"),
+            self._max_top_height,
+        )
         form.addRow(self._labels.label("stacked_yagi.phase_step"), self._phase_step)
         form.addRow(
             self._labels.label("stacked_yagi.amplitude_ratio"),
@@ -134,10 +152,12 @@ class StackedYagiForm(QWidget):
         layout.addLayout(form)
         layout.addWidget(self._geometry)
         layout.addWidget(self._overlap_warning)
+        layout.addWidget(self._envelope_warning)
         layout.addWidget(self._starting_note)
 
         for widget in (self._phase_step, self._amplitude_ratio):
             widget.valueChanged.connect(self._managed_field_changed)
+        self._max_top_height.valueChanged.connect(self._emit_changed)
         self._level_count.valueChanged.connect(self._managed_field_changed)
         self._spacing.valueChanged.connect(self._managed_field_changed)
         self._yagi.changed.connect(self._on_yagi_changed)
@@ -234,6 +254,7 @@ class StackedYagiForm(QWidget):
             self._display_units.length_policy,
         )
         self._spacing_field.set_display_units(self._display_units)
+        self._max_top_height_field.set_display_units(self._display_units)
         self._yagi.set_unit_system(unit_system)
         if was_pristine:
             self.mark_starting_dimensions_pristine()
@@ -244,6 +265,7 @@ class StackedYagiForm(QWidget):
             self._yagi.set_parameters(parameters.yagi)
             self._level_count.setValue(parameters.count)
             self._spacing_field.configure(parameters.spacing_m)
+            self._max_top_height_field.configure(parameters.max_top_height_m)
             self._phase_step.setValue(parameters.phase_step_deg)
             self._amplitude_ratio.setValue(parameters.amplitude_ratio)
         finally:
@@ -264,23 +286,35 @@ class StackedYagiForm(QWidget):
         count = self._level_count.value()
         spacing_m = self._spacing_field.value_m()
         top_height_m = yagi.height_m + (count - 1) * spacing_m
+        span = max(element.length_m for element in yagi.elements)
+        top_tip_m = top_height_m + (
+            span / 2.0 if yagi.polarization is Polarization.VERTICAL else 0.0
+        )
         unit = self._translator.t(length_unit_key(self._unit_system))
         self._geometry.setText(
             self._translator.t(
                 "stacked_yagi.geometry",
                 count=count,
                 spacing=f"{length_from_m(spacing_m, self._unit_system):.3f}",
-                top=f"{length_from_m(top_height_m, self._unit_system):.3f}",
+                top=f"{length_from_m(top_tip_m, self._unit_system):.3f}",
                 phase=f"{self._phase_step.value():.1f}",
                 unit=unit,
             )
         )
-        span = max(element.length_m for element in yagi.elements)
         overlap = yagi.polarization is Polarization.VERTICAL and spacing_m <= span
         self._overlap_warning.setText(
             self._translator.t("stacked_yagi.overlap_warning") if overlap else ""
         )
         self._overlap_warning.setVisible(overlap)
+        top_tip_m = top_height_m + (
+            span / 2.0 if yagi.polarization is Polarization.VERTICAL else 0.0
+        )
+        maximum_top_m = self._max_top_height_field.value_m()
+        beyond_envelope = maximum_top_m > 0.0 and top_tip_m > maximum_top_m + 1e-6
+        self._envelope_warning.setText(
+            self._translator.t("stacked_yagi.envelope_warning") if beyond_envelope else ""
+        )
+        self._envelope_warning.setVisible(beyond_envelope)
 
     def parameters(self) -> StackedYagiParameters:
         return StackedYagiParameters(
@@ -289,4 +323,5 @@ class StackedYagiForm(QWidget):
             spacing_m=self._spacing_field.value_m(),
             phase_step_deg=self._phase_step.value(),
             amplitude_ratio=self._amplitude_ratio.value(),
+            max_top_height_m=self._max_top_height_field.value_m(),
         )

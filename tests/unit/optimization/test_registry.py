@@ -45,6 +45,7 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import QuadBeamParameters, quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -100,6 +101,17 @@ def _yagi() -> YagiParameters:
         match_type=YagiMatchType.BETA_HAIRPIN,
         match_length_m=0.2,
         match_spacing_m=0.1,
+    )
+
+
+def _stack_base_yagi() -> YagiParameters:
+    return YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+            YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+        ),
+        height_m=10.0,
     )
 
 
@@ -354,6 +366,12 @@ def _typed_samples() -> list[AntennaDesignParameters]:
         trap_yagi_parameters(),
         published_hexbeam_parameters(),
         phased_vertical_parameters(),
+        StackedYagiParameters(
+            yagi=_stack_base_yagi(),
+            count=2,
+            spacing_m=10.6,
+            max_top_height_m=25.0,
+        ),
         quad_beam_parameters(element_count=3),
         OCFDParameters(frequency_hz=7_100_000.0, total_length_m=40.0),
         EndFedParameters(
@@ -488,6 +506,7 @@ _CONTEXT_FIELDS = {
     "guy_count",
     "guy_anchor_radius_m",
     "guy_diameter_m",
+    "yagi",
 }
 
 
@@ -944,6 +963,70 @@ def test_vertical_optimizer_bounds_include_a_droop_at_the_tip_limit() -> None:
         parameters.radial_droop_deg
     )
     assert variable.minimum <= descriptor.initial_values["radial_droop_deg"] <= variable.maximum
+
+
+def test_stacked_yagi_optimizer_uses_the_top_height_envelope() -> None:
+    parameters = StackedYagiParameters(
+        yagi=_stack_base_yagi(),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=90.0,
+        max_top_height_m=25.0,
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    descriptor = availability.descriptor
+
+    variables = {variable.name: variable for variable in descriptor.variables}
+    assert set(variables) == {
+        "spacing_m",
+        "phase_step_deg",
+        "amplitude_ratio",
+        "count",
+        "max_top_height_m",
+    }
+    assert variables["spacing_m"].minimum == pytest.approx(parameters.minimum_spacing_m)
+    assert variables["spacing_m"].maximum == pytest.approx(parameters.maximum_spacing_m)
+    assert variables["phase_step_deg"].minimum == pytest.approx(-180.0)
+    assert variables["phase_step_deg"].maximum == pytest.approx(180.0)
+    assert variables["amplitude_ratio"].locked_by_default
+    assert variables["count"].locked_by_default
+    assert variables["max_top_height_m"].locked_by_default
+    assert descriptor.build_parameters(descriptor.initial_values) == parameters
+
+    too_wide = dict(descriptor.initial_values)
+    too_wide["spacing_m"] = parameters.maximum_spacing_m + 0.5
+    violations = descriptor.validate(too_wide)
+    assert any(
+        item.message_key == "optimize.constraint.stacked_yagi_envelope" for item in violations
+    )
+
+    too_tight = dict(descriptor.initial_values)
+    too_tight["spacing_m"] = parameters.minimum_spacing_m - 0.5
+    assert any(
+        item.message_key == "optimize.constraint.stacked_yagi_overlap"
+        for item in descriptor.validate(too_tight)
+    )
+
+    bad_phase = dict(descriptor.initial_values)
+    bad_phase["phase_step_deg"] = 200.0
+    assert any(
+        item.message_key == "stacked_yagi.constraint.phase"
+        for item in descriptor.validate(bad_phase)
+    )
+
+
+def test_stacked_yagi_without_an_envelope_is_unavailable() -> None:
+    parameters = StackedYagiParameters(
+        yagi=_stack_base_yagi(),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    availability = optimizer_availability(parameters)
+
+    assert availability.descriptor is None
+    assert availability.reason_key == "optimize.unavailable.stacked_yagi_envelope"
 
 
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:

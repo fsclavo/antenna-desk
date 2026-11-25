@@ -61,7 +61,7 @@ FORMS = (
     ),
     (InvertedVForm, ("_apex_height", "_leg_length")),
     (YagiForm, ("_height",)),
-    (StackedYagiForm, ("_spacing",)),
+    (StackedYagiForm, ("_spacing", "_max_top_height")),
     (MoxonForm, ("_width", "_depth", "_reflector_tip", "_driven_tip", "_height")),
     (FanDipoleForm, ("_apex_height",)),
     (TrapDipoleForm, ("_inner_length", "_outer_length", "_height")),

@@ -46,6 +46,7 @@ from ..antennas.zepp import ZeppParameters
 from .descriptor import AntennaOptimizerDescriptor, OptimizerBoundsError
 from .families.dipole import dipole_descriptor
 from .families.scv import scv_descriptor
+from .families.stacked_yagi import stacked_yagi_descriptor
 from .families.typed import (
     beverage_descriptor,
     biquad_descriptor,
@@ -75,7 +76,7 @@ from .families.vertical import vertical_descriptor
 from .families.yagi import yagi_descriptor
 
 _REASON_PENDING = "optimize.unavailable.pending_family"
-_REASON_STACKED_YAGI = "optimize.unavailable.stacked_yagi"
+_REASON_STACKED_YAGI_ENVELOPE = "optimize.unavailable.stacked_yagi_envelope"
 _REASON_MAGNETIC_LOOP = "optimize.unavailable.magnetic_loop"
 _REASON_LOG_PERIODIC = "optimize.unavailable.log_periodic"
 _REASON_RANDOM_WIRE = "optimize.unavailable.random_wire"
@@ -142,7 +143,10 @@ def _optimizer_availability(
             )
         return OptimizerAvailability(descriptor=descriptor)
     if isinstance(parameters, StackedYagiParameters):
-        return OptimizerAvailability(reason_key=_REASON_STACKED_YAGI)
+        maximum_spacing = parameters.maximum_spacing_m
+        if maximum_spacing is None or maximum_spacing <= parameters.minimum_spacing_m:
+            return OptimizerAvailability(reason_key=_REASON_STACKED_YAGI_ENVELOPE)
+        return OptimizerAvailability(descriptor=stacked_yagi_descriptor(parameters))
     if isinstance(parameters, ScvParameters):
         return OptimizerAvailability(descriptor=scv_descriptor(parameters))
     if isinstance(parameters, BiquadParameters):
@@ -239,6 +243,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         MoxonParameters,
         TransmissionLineDoubletParameters,
         ZeppParameters,
+        StackedYagiParameters,
     }
 )
 
@@ -246,7 +251,6 @@ KNOWN_UNAVAILABLE_TYPES = frozenset(
     {
         MagneticLoopParameters,
         LogPeriodicParameters,
-        StackedYagiParameters,
         CustomAntennaParameters,
     }
 )
@@ -257,7 +261,7 @@ KNOWN_PARAMETER_TYPES = SUPPORTED_OPTIMIZER_TYPES | KNOWN_UNAVAILABLE_TYPES
 OPTIMIZER_REASON_KEYS = frozenset(
     {
         _REASON_PENDING,
-        _REASON_STACKED_YAGI,
+        _REASON_STACKED_YAGI_ENVELOPE,
         _REASON_MAGNETIC_LOOP,
         _REASON_LOG_PERIODIC,
         _REASON_RANDOM_WIRE,

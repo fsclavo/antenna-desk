@@ -472,7 +472,7 @@ class ProjectContainerRepository:
             raise ProjectFormatError(
                 f"unsupported project container version {manifest.container_version}"
             )
-        if manifest.schema_version not in (59, 60, 61, SCHEMA_VERSION):
+        if manifest.schema_version not in (59, 60, 61, 62, SCHEMA_VERSION):
             raise UnsupportedSchemaVersion(
                 found=manifest.schema_version,
                 supported=SCHEMA_VERSION,
@@ -864,7 +864,7 @@ class ProjectContainerRepository:
             data = json.loads(payload)
         except (json.JSONDecodeError, UnicodeDecodeError):
             return payload
-        if not isinstance(data, dict) or data.get("schema_version") not in (59, 60, 61):
+        if not isinstance(data, dict) or data.get("schema_version") not in (59, 60, 61, 62):
             return payload
         migrated_from = data["schema_version"]
         data["schema_version"] = SCHEMA_VERSION

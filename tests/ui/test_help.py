@@ -60,6 +60,7 @@ def test_family_specific_labels_resolve_help() -> None:
     assert "Number of identical Yagi levels" in (
         help_text(translator, "stacked_yagi.level_count") or ""
     )
+    assert "mechanical ceiling" in (help_text(translator, "stacked_yagi.max_top_height") or "")
     assert "loading-coil" in (help_text(translator, "endfed.loading_coil_inductance") or "")
     assert "matching line" in (help_text(translator, "g5rv.line_impedance") or "")
     assert "Vertical polarization" in (

@@ -13,7 +13,7 @@ from antennadesk.persistence.container import ProjectContainerRepository
 
 
 def test_schema_version_is_current() -> None:
-    assert SCHEMA_VERSION == 62
+    assert SCHEMA_VERSION == 63
 
 
 def test_bom_costs_round_trip(

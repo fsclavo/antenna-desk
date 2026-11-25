@@ -799,6 +799,7 @@ class StackedYagiParametersPayload(StrictModel):
     spacing_m: float = Field(gt=0.0)
     phase_step_deg: float = Field(default=0.0, ge=-360.0, le=360.0)
     amplitude_ratio: float = Field(default=1.0, gt=0.0)
+    max_top_height_m: float = Field(default=0.0, ge=0.0)
 
     @model_validator(mode="after")
     def _validate_stack(self) -> Self:
@@ -810,11 +811,16 @@ class StackedYagiParametersPayload(StrictModel):
             )
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
-        if self.yagi.polarization is Polarization.VERTICAL:
-            span = max(element.length_m for element in self.yagi.elements)
-            if self.spacing_m <= span:
+        span = max(element.length_m for element in self.yagi.elements)
+        if self.yagi.polarization is Polarization.VERTICAL and self.spacing_m <= span:
+            raise ValueError("vertical-polarized stack levels would overlap; increase spacing_m")
+        if self.max_top_height_m > 0.0:
+            highest = self.yagi.height_m + (self.count - 1) * self.spacing_m
+            if self.yagi.polarization is Polarization.VERTICAL:
+                highest += span / 2.0
+            if self.max_top_height_m < highest:
                 raise ValueError(
-                    "vertical-polarized stack levels would overlap; increase spacing_m"
+                    "max_top_height_m must be at least the current highest conductor point"
                 )
         return self
 
@@ -2206,6 +2212,7 @@ def _stacked_yagi_parameters_from_domain(
         spacing_m=value.spacing_m,
         phase_step_deg=value.phase_step_deg,
         amplitude_ratio=value.amplitude_ratio,
+        max_top_height_m=value.max_top_height_m,
     )
 
 
@@ -3565,6 +3572,7 @@ def _stacked_yagi_parameters_to_domain(
         spacing_m=value.spacing_m,
         phase_step_deg=value.phase_step_deg,
         amplitude_ratio=value.amplitude_ratio,
+        max_top_height_m=value.max_top_height_m,
     )
 
 

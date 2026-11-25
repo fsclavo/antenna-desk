@@ -2497,8 +2497,8 @@ def _add_stacked_yagi_dimensions(
                 factory.vertical_dimension(
                     x_scene,
                     0.0,
-                    parameters.top_height_m,
-                    parameters.top_height_m,
+                    parameters.highest_tip_m,
+                    parameters.highest_tip_m,
                     side="left",
                     priority=60,
                 )

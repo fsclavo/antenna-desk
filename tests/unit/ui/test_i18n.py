@@ -169,6 +169,7 @@ HELP_MANIFEST = frozenset(
         "help.trap_yagi.load_starting",
         "help.phased_vertical.load_starting",
         "help.stacked_yagi.level_count",
+        "help.stacked_yagi.max_top_height",
         "help.stacked_yagi.spacing",
         "help.stacked_yagi.phase_step",
         "help.stacked_yagi.amplitude_ratio",

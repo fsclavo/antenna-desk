@@ -1221,11 +1221,12 @@ measurement.
 
 Choose **File → New Antenna... → Stacked Yagi** to compose two to four
 identical Yagis on one vertical stack. The editor contains the complete base
-Yagi table and installation fields plus **Levels**, **Level spacing**, **Phase
-step per level**, and **Additional-level voltage ratio**. **Load starting
-dimensions** rebuilds the base Yagi from the NBS five-element preset at the
-current frequency and sets a half-wave level spacing while keeping the level
-count, phase step, amplitude ratio, conductor, and ground.
+Yagi table and installation fields plus **Levels**, **Level spacing**,
+**Maximum top height**, **Phase step per level**, and **Additional-level
+voltage ratio**. **Load starting dimensions** rebuilds the base Yagi from the
+NBS five-element preset at the current frequency and sets a half-wave level
+spacing while keeping the level count, phase step, amplitude ratio, conductor,
+ground, and top-height envelope.
 
 Level 1 is the primary feed and the only impedance/SWR reference. Levels 2–4
 are ideal voltage sources with `(level-1) × phase step` and the configured
@@ -1233,10 +1234,16 @@ voltage ratio. The **Sources** results table reports each driven level
 separately; a negative source power means that ideal source is absorbing
 power. The splitter, phase-line hardware, splitter loss, and per-level matching
 are not modeled. The base editor also disables mast/guy wires, folded or matched
-driven elements, and feed transformers inside a stack. Use **Optimize...** on
-the base Yagi as a separate design first, then verify the stack spacing and
-phase with the solver; the stack itself returns an explicit optimizer-unavailable
-reason.
+driven elements, and feed transformers inside a stack.
+
+Set **Maximum top height** to the highest conductor your support allows. It is
+an optional mechanical envelope: zero leaves it unset and disables the stack
+optimizer. **Optimize...** searches **Level spacing** and **Phase step per
+level** inside that envelope; the level count, base Yagi geometry, and
+amplitude ratio stay context. The search rejects a spacing that would overlap
+vertical-polarized levels or raise the top above the envelope. The feed split
+and phase lines remain ideal, so treat the result as a solver-verified starting
+point, not a validated feed-network design.
 
 For vertical polarization, the level spacing must be longer than the longest
 element or adjacent copies overlap on the same axis. The form shows a warning

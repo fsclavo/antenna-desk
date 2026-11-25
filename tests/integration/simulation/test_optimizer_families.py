@@ -31,6 +31,7 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.phased_vertical import phased_vertical_parameters
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
     doublet_starting_parameters,
@@ -160,6 +161,19 @@ def _samples() -> list[object]:
                 YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
             ),
             height_m=10.0,
+        ),
+        StackedYagiParameters(
+            yagi=YagiParameters(
+                frequency_hz=14_100_000.0,
+                elements=(
+                    YagiElement(position_m=0.0, length_m=10.0, radius_m=0.001),
+                    YagiElement(position_m=2.0, length_m=9.5, radius_m=0.001),
+                ),
+                height_m=10.0,
+            ),
+            count=2,
+            spacing_m=10.6,
+            max_top_height_m=25.0,
         ),
         MoxonParameters(
             frequency_hz=14_100_000.0,

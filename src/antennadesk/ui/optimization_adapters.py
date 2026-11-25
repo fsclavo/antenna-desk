@@ -32,6 +32,7 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
+from ..domain.antennas.stacked_yagi import StackedYagiParameters
 from ..domain.antennas.t2fd import T2FDParameters
 from ..domain.antennas.transmission_line_doublet import (
     TransmissionLineDoubletParameters,
@@ -106,6 +107,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     PhasedVerticalParameters: OptimizationUiAdapter(
         lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._phased_vertical_form.set_parameters(parameters),
+    ),
+    StackedYagiParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._typed_simulation_spec(parameters),
+        lambda window, parameters: window._stacked_yagi_form.set_parameters(parameters),
     ),
     QuadBeamParameters: OptimizationUiAdapter(
         lambda window, parameters: window._typed_simulation_spec(parameters),

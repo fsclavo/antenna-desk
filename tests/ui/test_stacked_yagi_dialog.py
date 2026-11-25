@@ -114,3 +114,20 @@ def test_dialog_retranslates_and_switches_units(qtbot: QtBot) -> None:
     restored = dialog.parameters()
     assert restored.spacing_m == pytest.approx(parameters.spacing_m, abs=1e-3)
     assert dialog.result() == QDialog.DialogCode.Rejected
+
+
+def test_envelope_limits_the_stack_top_height(qtbot: QtBot) -> None:
+    parameters = _parameters()
+    dialog = _dialog(qtbot, parameters=parameters)
+    form = dialog._form
+    form._max_top_height_field.configure(21.0)
+
+    restored = dialog.parameters()
+    assert restored.max_top_height_m == pytest.approx(21.0, abs=1e-3)
+    assert restored.maximum_spacing_m == pytest.approx(11.0, abs=1e-3)
+
+    form._max_top_height_field.configure(15.0)
+    form._update_geometry()
+    assert form._envelope_warning.text()
+    with pytest.raises(ValueError, match="max_top_height_m"):
+        form.parameters()

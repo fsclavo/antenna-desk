@@ -881,7 +881,7 @@ def test_stacked_yagi_preset_uses_the_inline_editor(window: MainWindow) -> None:
     assert restored.phase_step_deg == pytest.approx(90.0, abs=1e-3)
     assert len(window._project.designs[0].antenna.sources) == 2
     assert window._optimize_action.isEnabled() is False
-    assert "ideal" in window._optimize_action.toolTip()
+    assert "maximum top height" in window._optimize_action.toolTip()
     window._dirty = False
 
 
@@ -1219,3 +1219,34 @@ def test_new_delta_and_quad_loop_pass_the_expected_side_count(
 
     assert captured["antenna_type"] == "loop"
     assert captured["initial_sides"] == 4
+
+
+def test_stacked_yagi_optimizer_adapter_applies_spacing_and_phase(
+    window: MainWindow,
+) -> None:
+    from dataclasses import replace
+
+    from main_window_support import use_parameters
+
+    from antennadesk.domain.antennas.stacked_yagi import stacked_yagi_parameters
+    from antennadesk.ui.optimization_adapters import adapter_for
+
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        max_top_height_m=25.0,
+    )
+    use_parameters(window, parameters)
+    assert window._optimize_action.isEnabled() is True
+    optimized = replace(parameters, spacing_m=11.0, phase_step_deg=45.0)
+    adapter = adapter_for(parameters)
+    assert adapter is not None
+
+    adapter.apply_parameters(window, optimized)
+
+    selected = window._stacked_yagi_form.parameters()
+    assert selected.spacing_m == pytest.approx(11.0, abs=1e-3)
+    assert selected.phase_step_deg == pytest.approx(45.0, abs=1e-3)
+    window._dirty = False

@@ -30,8 +30,8 @@ The first slice is implemented with these boundaries:
   primary port remains the SWR reference;
 - a front-elevation scene contract, design summary, construction sheet, and a
   multi-boom BOM;
-- an explicit optimizer-unavailable reason because the feed split and
-  mechanical envelope are not validated;
+- a bounded spacing/phase optimizer inside a user-set maximum top-height
+  envelope; the level count, base Yagi, and amplitude ratio stay context;
 - a real `nec2c` two-level, two-source test.
 
 The base Yagi editor in the stack disables folded/matched driven elements,
@@ -58,4 +58,6 @@ distinction explicit and leaves room for a real splitter/phase-line slice.
   feed transformer is rejected until the stack owns one shared support and
   feed model; copying them per level would create floating or double-counted
   hardware.
-- Optimizer, splitter loss, phase lines, and a shared mast are follow-ups.
+- Splitter loss, phase lines, and a shared mast are follow-ups. The spacing/
+  phase optimizer is available once a maximum top height is set; it uses the
+  ideal source model and makes no gain claim.

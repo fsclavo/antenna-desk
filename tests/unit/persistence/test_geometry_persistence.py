@@ -1567,6 +1567,7 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
         height_m=12.0,
         spacing_m=10.6,
         phase_step_deg=180.0,
+        max_top_height_m=25.0,
     )
     original = _project(parameters, "Stacked Yagi")
 

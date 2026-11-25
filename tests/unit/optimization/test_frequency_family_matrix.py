@@ -33,6 +33,7 @@ from antennadesk.domain.antennas.phased_vertical import phased_vertical_paramete
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
 from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
+from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
 from antennadesk.domain.antennas.t2fd import T2FDParameters
 from antennadesk.domain.antennas.transmission_line_doublet import (
     DoubletPreset,
@@ -249,6 +250,20 @@ def _yagi(frequency_hz: float) -> AntennaDesignParameters:
     )
 
 
+def _stacked_yagi(frequency_hz: float) -> AntennaDesignParameters:
+    wavelength = _wavelength(frequency_hz)
+    yagi = _yagi(frequency_hz)
+    assert isinstance(yagi, YagiParameters)
+    spacing = 0.5 * wavelength
+    return StackedYagiParameters(
+        yagi=yagi,
+        count=2,
+        spacing_m=spacing,
+        phase_step_deg=90.0,
+        max_top_height_m=yagi.height_m + spacing + 0.5 * wavelength,
+    )
+
+
 def _biquad(frequency_hz: float) -> AntennaDesignParameters:
     return biquad_parameters(
         BiquadKind.SINGLE,
@@ -445,6 +460,7 @@ CASES = (
     _MatrixCase("t2fd", _t2fd, LOW_VHF_FREQUENCIES),
     _MatrixCase("zepp", _zepp, ALL_FREQUENCIES),
     _MatrixCase("phased-vertical", _phased_vertical, FREQUENCIES_HZ[:8]),
+    _MatrixCase("stacked-yagi", _stacked_yagi, ALL_FREQUENCIES),
     _MatrixCase("hexbeam", _hexbeam, (7_000_000.0, 14_000_000.0, 28_000_000.0, 50_000_000.0)),
     _MatrixCase("scv-half-square", _scv, LOW_VHF_FREQUENCIES),
     _MatrixCase("beverage", _beverage, HF_FREQUENCIES),

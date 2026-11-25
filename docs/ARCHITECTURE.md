@@ -253,7 +253,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 62 is
+solver adapter does not need geometry-specific branches. Schema version 63 is
 current: parameter payloads are additive within the current container. A
 design may also store an optional analysis band plan; it is intent metadata
 and never changes the canonical geometry. Series RLC loads are
@@ -363,7 +363,7 @@ keeps schema concerns out of the domain while still rejecting malformed or
 untrusted files.
 
 Project files use the `antennadesk.project` ZIP container with container
-version 1 and schema version 62. Saves are atomic: build the container in
+version 1 and schema version 63. Saves are atomic: build the container in
 memory, write a temporary file in the target directory, flush and `fsync`,
 then replace the destination with `os.replace`. Autosave uses the
 application-data recovery folder: it writes a design-only project container
@@ -379,7 +379,7 @@ place on open.
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored in optional separate entries so it can be omitted without
 rewriting the normalized result. Project files are versioned ZIP containers
-(container version 1, schema version 62) with a manifest, project metadata,
+(container version 1, schema version 63) with a manifest, project metadata,
 designs, runs, raw text, and optimization summaries as separate validated
 entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
 container above 64 MB, blocks total expanded entries above 256 MB, and offers

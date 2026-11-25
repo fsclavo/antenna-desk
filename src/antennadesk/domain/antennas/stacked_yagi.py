@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from ..common.units import ensure_positive, wavelength_m
+from ..common.units import ensure_non_negative, ensure_positive, wavelength_m
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .feed import FeedPoint, Source
@@ -35,6 +35,7 @@ def stacked_yagi_parameters(
     spacing_m: float | None = None,
     phase_step_deg: float = 0.0,
     amplitude_ratio: float = 1.0,
+    max_top_height_m: float = 0.0,
     azimuth_deg: float = 0.0,
     polarization: Polarization = Polarization.HORIZONTAL,
     material: ConductorMaterial = ALUMINUM,
@@ -70,6 +71,7 @@ def stacked_yagi_parameters(
         spacing_m=spacing,
         phase_step_deg=phase_step_deg,
         amplitude_ratio=amplitude_ratio,
+        max_top_height_m=max_top_height_m,
     )
 
 
@@ -82,6 +84,7 @@ class StackedYagiParameters:
     spacing_m: float = 0.0
     phase_step_deg: float = 0.0
     amplitude_ratio: float = 1.0
+    max_top_height_m: float = 0.0
 
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
@@ -96,6 +99,7 @@ class StackedYagiParameters:
             raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_positive(self.amplitude_ratio, name="amplitude_ratio")
+        ensure_non_negative(self.max_top_height_m, name="max_top_height_m")
         if not math.isfinite(self.phase_step_deg):
             raise ValueError("phase_step_deg must be finite")
         if (
@@ -103,6 +107,10 @@ class StackedYagiParameters:
             and self.spacing_m <= self.element_span_m
         ):
             raise ValueError("vertical-polarized stack levels would overlap; increase spacing_m")
+        if self.max_top_height_m > 0.0 and self.max_top_height_m < self.highest_tip_m:
+            raise ValueError(
+                "max_top_height_m must be at least the current highest conductor point"
+            )
 
     @property
     def template_name(self) -> str:
@@ -155,6 +163,25 @@ class StackedYagiParameters:
         """Distance from the reflector to the last element."""
 
         return max(element.position_m for element in self.yagi.elements)
+
+    @property
+    def minimum_spacing_m(self) -> float:
+        """Smallest spacing that keeps adjacent levels from overlapping."""
+
+        if self.yagi.polarization is Polarization.VERTICAL:
+            return self.element_span_m + 0.001
+        return 0.001
+
+    @property
+    def maximum_spacing_m(self) -> float | None:
+        """Largest spacing allowed by the mechanical top-height envelope."""
+
+        if self.max_top_height_m <= 0.0:
+            return None
+        highest_offset = (
+            self.element_span_m / 2.0 if self.yagi.polarization is Polarization.VERTICAL else 0.0
+        )
+        return (self.max_top_height_m - self.yagi.height_m - highest_offset) / (self.count - 1)
 
     @property
     def top_height_m(self) -> float:
