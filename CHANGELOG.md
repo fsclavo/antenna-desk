@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Changed
+## [0.10.1] - 2026-11-24
+
+### Fixed
 
 - **Live tuning worker handoff.** Preview results are now queued back to the
   dialog's GUI thread, and closing while a preview is running detaches a
   still-running worker instead of destroying its `QThread`. This removes the
   unsafe cross-thread widget updates that caused the Windows 3.12/3.13 UI
   suite to hang or abort.
+
+### Changed
+
 - **Application icon refresh.** Replaced the flat antenna badge with a larger,
   higher-contrast Yagi emblem on a deep blue gradient, keeping the orange feed
   point. The SVG master, 256 px PNG, and multi-resolution Windows ICO were
@@ -2511,7 +2516,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project documentation: blueprint, ADR-0001, project decisions, and solver
   evaluation.
 
-[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.1
 [0.10.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.0
 [0.2.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.2.0
 [0.1.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.1.0

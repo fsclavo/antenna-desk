@@ -138,5 +138,8 @@ themselves are unaffected.
 - Experimental and heuristic templates keep their documented evidence levels;
   this release adds no new numerical reference.
 - The phased vertical does not share the VR1 droop field.
+- **Fixed in 0.10.1:** live-tuning preview results were delivered on the worker
+  thread, which could hang or abort the Windows UI suite. 0.10.1 queues them on
+  the GUI thread and makes worker teardown safe.
 - PF2 (streaming container write), PF3 (pattern-level lazy loading), and UX45
   (shared Qt worker lifecycle) remain optional maintenance items.

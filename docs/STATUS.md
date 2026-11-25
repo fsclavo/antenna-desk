@@ -2,14 +2,16 @@
 
 **Updated:** 2026-11-24
 **Latest published release:** `0.10.0` (2026-11-24)
+**Release candidate:** `0.10.1` (prepared 2026-11-24)
 **Development schema:** `61`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
 
 - 0.10.0 is published (2026-11-24). The tag CI Windows jobs exposed a
-  Unix-only test guard and one UI stall; the test guard is fixed and the main
-  CI rerun is green. The Release workflow built and smoke-tested every artifact.
+  Unix-only test guard and a live-tuning cross-thread UI bug; both are fixed on
+  main, Windows 3.12/3.13 now pass, and the Release workflow built and
+  smoke-tested every artifact. 0.10.1 packages the icon refresh and the fix.
 - 1.0 Confidence is complete (TS1–TS7, DL9).
 - DL1 Smith chart and DL2 tuner matchability are complete.
 - DL5 support structures are **explicitly narrowed**: the Yagi mast and guy
@@ -68,7 +70,8 @@
 
 ## Next
 
-1. Continue DL6 from the domain prototype to form, schema, and per-port UI.
+1. Publish 0.10.1 and verify its artifacts.
+2. Continue DL6 from the domain prototype to form, schema, and per-port UI.
 2. Choose the next release slice after the 0.10.0 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 and UX45 maintenance items separate from the
