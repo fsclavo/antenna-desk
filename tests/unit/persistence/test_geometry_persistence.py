@@ -1609,11 +1609,15 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
 
 
 def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
     from antennadesk.domain.antennas.stacked_yagi import (
         StackedYagiFeed,
         StackedYagiFeedMode,
         stacked_yagi_parameters,
     )
+
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
 
     parameters = stacked_yagi_parameters(
         frequency_hz=14_100_000.0,
@@ -1629,6 +1633,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
+            level_matching_network=matching,
         ),
     )
     original = _project(parameters, "Stacked Yagi Wilkinson")
@@ -1641,3 +1646,4 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
     assert restored.designs[0].parameters.feed.splitter_design_frequency_hz == pytest.approx(
         14_100_000.0
     )
+    assert restored.designs[0].parameters.feed.level_matching_network == matching

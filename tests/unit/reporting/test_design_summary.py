@@ -1092,6 +1092,7 @@ def test_stacked_yagi_summary_reports_the_beta_match() -> None:
 
 
 def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
     from antennadesk.domain.antennas.stacked_yagi import (
         StackedYagiFeed,
         StackedYagiFeedMode,
@@ -1099,6 +1100,8 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     )
     from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
     parameters = StackedYagiParameters(
         yagi=YagiParameters(
             frequency_hz=14_100_000.0,
@@ -1119,6 +1122,7 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
+            level_matching_network=matching,
         ),
     )
 
@@ -1132,3 +1136,4 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert rows["Divider model"] == "ideal quarter-wave branches and star resistors"
     assert rows["Phase step"] == "set by the feed network"
     assert rows["Matched line loss"] == "1.50 dB/100 m"
+    assert rows["Level matching"].startswith("L network (series")

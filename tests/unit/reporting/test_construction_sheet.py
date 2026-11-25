@@ -1636,6 +1636,7 @@ def test_stacked_yagi_construction_sheet_lists_the_beta_match(
 def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     sample_project: Project,
 ) -> None:
+    from antennadesk.domain.antennas.matching_network import design_l_network
     from antennadesk.domain.antennas.stacked_yagi import (
         StackedYagiFeed,
         StackedYagiFeedMode,
@@ -1643,6 +1644,8 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     )
     from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
     stack = StackedYagiParameters(
         yagi=YagiParameters(
             frequency_hz=14_100_000.0,
@@ -1663,6 +1666,7 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
+            level_matching_network=matching,
         ),
     )
     sheet = render_construction_sheet(
@@ -1679,3 +1683,5 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "Isolation resistors" in sheet
     assert "quarter-wave" in sheet
     assert "pattern is reconstructed" in sheet
+    assert "Level matching" in sheet
+    assert "L network" in sheet

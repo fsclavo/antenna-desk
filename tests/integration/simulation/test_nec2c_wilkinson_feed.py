@@ -15,6 +15,7 @@ from antennadesk.application.feed_network_y import extract_antenna_y_matrix
 from antennadesk.application.simulation_specs import build_typed_family_simulation_spec
 from antennadesk.application.wilkinson_feed import WilkinsonFeedSolver
 from antennadesk.domain.antennas.feed_network import n_way_wilkinson, solve_feed_network
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeed,
     StackedYagiFeedMode,
@@ -144,3 +145,55 @@ def test_wilkinson_wrapper_handles_three_ports_and_a_sweep() -> None:
         delivered = sum(source.power_w for source in point.source_results)
         assert delivered > 0.0
         assert delivered <= point.input_power_w + 1e-9
+
+
+def test_wilkinson_wrapper_with_level_matching_improves_the_input_swr() -> None:
+    base_parameters = _parameters()
+    base_spec = replace(
+        build_typed_family_simulation_spec(base_parameters),
+        frequency_plan=FrequencyPlan.single(FREQUENCY_HZ),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+    base_solver = Nec2cSolver(Path(os.environ["NEC2C"]))
+    antenna_spec = replace(
+        base_spec,
+        feed_network=None,
+        co_simulate_feed_network=False,
+    )
+    antenna_y = extract_antenna_y_matrix(
+        base_solver,
+        base_parameters.to_antenna(),
+        antenna_spec,
+    )
+    matching = design_l_network(
+        1.0 / antenna_y.matrix[0][0],
+        FREQUENCY_HZ,
+        source_impedance_ohm=50.0,
+    )
+    assert matching is not None
+    matched_parameters = replace(
+        base_parameters,
+        feed=replace(
+            base_parameters.feed,
+            level_matching_network=matching,
+        ),
+    )
+    matched_spec = replace(
+        build_typed_family_simulation_spec(matched_parameters),
+        frequency_plan=FrequencyPlan.single(FREQUENCY_HZ),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+    wrapper = WilkinsonFeedSolver(base_solver)
+
+    base_result = wrapper.run(base_parameters.to_antenna(), base_spec)
+    matched_result = wrapper.run(matched_parameters.to_antenna(), matched_spec)
+
+    assert base_result.frequencies
+    assert matched_result.frequencies
+    base_point = base_result.frequencies[0]
+    matched_point = matched_result.frequencies[0]
+    assert matched_point.swr < base_point.swr
+    assert matched_point.swr < 1.2
+    assert matched_point.far_field
+    assert len(matched_point.source_results) == 2
+    assert matched_point.realized_gain_db is not None

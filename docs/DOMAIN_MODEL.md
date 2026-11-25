@@ -235,7 +235,8 @@ the spacing optimizer, an optional shared mast and guy set, and an optional
 feed specification: ideal splitter plus
 equal phase-line increments, reference line length, velocity factor,
 characteristic impedance, splitter excess loss, a matched line loss per 100 m,
-and an optional Wilkinson divider design frequency. In network mode
+an optional Wilkinson divider design frequency, and an optional common per-level
+L/Pi/T matching network. In network mode
 `to_antenna()` adds a 1 cm numerical splitter-node wire 1 m above the top of
 the stack and lossless `TransmissionLine` cards from that node to every level,
 including the reference line to level 1, instead of ideal sources; NEC reports
@@ -258,11 +259,12 @@ Wilkinson mode `to_antenna()` returns the ideal level-port geometry without a
 splitter node or TLs; `SimulationSpec.feed_network` describes the divider, and
 `WilkinsonFeedSolver` extracts the antenna Y-matrix, solves the equal N-way
 divider and feed lines, and reconstructs the pattern with ideal sources at the
-solved port voltages. The Wilkinson branches, star isolation resistors, and
-feed lines are ideal; component loss and tolerance are not modeled. Splitter
-internal mismatch in the co-simulated network mode, per-level matching
-networks, folded driven elements, and per-level feed transformers are not
-modeled. A beta/hairpin match is built at every driven element. The base Yagi's
+solved port voltages. The Wilkinson branches, star isolation resistors, feed
+lines, and the common per-level L/Pi/T matching network are ideal unless the
+matching network specifies Q; component tolerance is not modeled. Splitter
+internal mismatch in the co-simulated network mode, individual per-level
+matching values, folded driven elements, and per-level feed transformers are
+not modeled. A beta/hairpin match is built at every driven element. The base Yagi's
 optional mast and guy fields are interpreted once for the whole stack: one mast
 runs from ground to the top boom and the guys attach to its top, instead of one
 mast per level. The reported impedance and SWR refer to the primary network
@@ -295,13 +297,13 @@ zero-EX default), and the source currents form the short-circuit Y-matrix.
 and reconstructs the combined pattern. The solver is validated against the
 standard Wilkinson equations, scikit-rf, and the existing NEC TL co-simulation.
 The stacked-Yagi **Wilkinson divider** feed mode exposes it in the editor,
-schema 64, reports, and construction sheet; the feed-network power budget is
+schema 65, reports, and construction sheet; the feed-network power budget is
 not reported because the reconstructed multi-source budget is ambiguous. The
 star isolation center is regularized by a very high numerical shunt in the
 solver; it is not a physical component and is not listed in the construction
-sheet. A `TwoPortBranch` can insert a common L/Pi/T matching network between
-each feed line and its level port; the solver branch is validated, but the
-editor/schema fields are pending.
+sheet. A `TwoPortBranch` inserts the common L/Pi/T matching network between
+each feed line and its level port; the editor, schema 65, reports, and
+construction sheet expose it.
 
 ### RingoParameters
 
@@ -922,13 +924,15 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `64`; the application writes version 64 and
+trusted. The current schema is `65`; the application writes version 65 and
 rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
 optional `site_ground: null` metadata on open; a 60 container loads vertical
 designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged; a
 61 container loads unchanged because the stacked-Yagi payload is optional; a 62
-container adds the optional stack top-height envelope at zero. The
-project has not shipped to users, so no legacy reader is retained. The complete example
+container adds the optional stack top-height envelope at zero; a 64
+container loads unchanged because the common per-level matching network is
+optional. The project has not shipped to users, so no legacy reader is
+retained. The complete example
 lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
 and is written in the current container format.
 
@@ -946,12 +950,14 @@ migration.
 
 ## Schema policy
 
-- Current version: `64`.
-- Only container version 1 / schema versions 59, 60, 61, and 62 are accepted;
-  59 adds `project.site_ground: null`, 60 adds the default
+- Current version: `65`.
+- Container version 1 and schema versions 59 through 64 are accepted. A 59
+  container adds `project.site_ground: null`, a 60 container adds the default
   `radial_droop_deg = 0` on open, 61 is the metadata-only predecessor of the
-  optional stacked-Yagi payload, and 62 is the metadata-only predecessor of
-  the optional stack top-height envelope. The list below is a historical record of
+  optional stacked-Yagi payload, 62 is the metadata-only predecessor of the
+  optional stack top-height envelope, 63 adds the optional splitter/phase-line
+  feed specification, 64 adds the Wilkinson feed network, and 65 adds the
+  common per-level matching network. The list below is a historical record of
   earlier development schemas; those readers and migrations were removed on
   2026-11-20.
 
@@ -1092,6 +1098,10 @@ migration.
 - Version 63 adds the optional stacked-Yagi maximum top-height envelope and
   the optional splitter/phase-line feed specification; zero defaults and the
   ideal feed mode keep existing stacks unchanged.
+- Version 64 adds the optional Wilkinson feed network and its design frequency;
+  the ideal feed mode remains the default.
+- Version 65 adds the optional common per-level L/Pi/T matching network;
+  missing values leave the Wilkinson feed path unchanged.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -1101,7 +1111,7 @@ migration.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
-- Only the current schema is accepted; older versions are rejected.
+- Only the current schema and the listed 59→65 migration path are accepted.
 - Saves are atomic and deterministic, with per-entry and total size limits.
 
 ## Current limitations

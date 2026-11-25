@@ -10,6 +10,7 @@ import pytest
 from PySide6.QtWidgets import QDialog, QLabel
 from pytestqt.qtbot import QtBot
 
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeedMode,
@@ -305,3 +306,28 @@ def test_dialog_builds_a_wilkinson_feed(qtbot: QtBot) -> None:
     assert form._splitter_design_frequency.isEnabled() is True
     assert form._amplitude_ratio.isEnabled() is False
     assert "Wilkinson" in form._wilkinson_note.text()
+
+
+def test_dialog_sets_a_common_level_matching_network(qtbot: QtBot) -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
+    form._feed_mode.setCurrentIndex(index)
+    form._reference_line_field.configure(2.0)
+    form._line_increment_field.configure(0.0)
+    form._level_matching.setEnabled(True)
+    form.set_level_matching_network(matching)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.level_matching_network == matching
+    assert "L network" in form._level_matching_summary.text()
+    assert form._level_matching.isEnabled() is True
+    phase_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
+    form._feed_mode.setCurrentIndex(phase_index)
+    form._update_feed_controls()
+    assert form._level_matching.isEnabled() is False
+    assert form._level_matching_summary.text() == "Wilkinson mode only"

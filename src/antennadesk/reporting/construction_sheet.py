@@ -78,6 +78,7 @@ from .design_summary import (
     hexbeam_band_set_label,
     installation_profile_rows,
     load_summary_rows,
+    matching_network_description,
     optimization_summary_rows,
     transmission_line_summary_rows,
 )
@@ -1427,6 +1428,13 @@ def render_construction_sheet(
                 branch_impedance = parameters.feed.characteristic_impedance_ohm * math.sqrt(
                     parameters.count
                 )
+                level_matching_row = (
+                    f"<tr><th>Level matching</th><td>"
+                    f"{_escape(matching_network_description(parameters.feed.level_matching_network, tr))}"
+                    f"</td></tr>"
+                    if parameters.feed.level_matching_network is not None
+                    else ""
+                )
                 wilkinson_rows = (
                     f"<tr><th>Divider design frequency</th><td>"
                     f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f} MHz</td></tr>"
@@ -1435,6 +1443,7 @@ def render_construction_sheet(
                     f"{parameters.feed.characteristic_impedance_ohm:.1f} Ω star</td></tr>"
                     "<tr><th>Divider model</th><td>ideal quarter-wave branches and "
                     "star resistors</td></tr>"
+                    f"{level_matching_row}"
                 )
             feed_rows += f"""
 <tr><th>Feed network</th><td>{"Wilkinson N-port divider" if is_wilkinson else "splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>

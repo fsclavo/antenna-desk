@@ -808,6 +808,7 @@ class StackedYagiFeedPayload(StrictModel):
     splitter_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     splitter_design_frequency_hz: float = Field(default=0.0, ge=0.0)
+    level_matching_network: LNetworkPayload | None = None
 
 
 class StackedYagiParametersPayload(StrictModel):
@@ -938,6 +939,7 @@ class FeedNetworkSpecPayload(StrictModel):
     velocity_factor: float = Field(gt=0.0, le=1.0)
     splitter_excess_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+    level_matching_network: LNetworkPayload | None = None
 
     @model_validator(mode="after")
     def _validate_feed_network(self) -> Self:
@@ -2259,6 +2261,11 @@ def _stacked_yagi_parameters_from_domain(
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
             splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
+            level_matching_network=(
+                _matching_network_from_domain(value.feed.level_matching_network)
+                if value.feed.level_matching_network is not None
+                else None
+            ),
         ),
     )
 
@@ -2438,6 +2445,11 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
                 velocity_factor=value.feed_network.velocity_factor,
                 splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
                 line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
+                level_matching_network=(
+                    _matching_network_from_domain(value.feed_network.level_matching_network)
+                    if value.feed_network.level_matching_network is not None
+                    else None
+                ),
             )
             if value.feed_network is not None
             else None
@@ -3646,6 +3658,11 @@ def _stacked_yagi_parameters_to_domain(
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
             splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
+            level_matching_network=(
+                _matching_network_to_domain(value.feed.level_matching_network)
+                if value.feed.level_matching_network is not None
+                else None
+            ),
         ),
     )
 
@@ -3789,6 +3806,11 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
                 velocity_factor=value.feed_network.velocity_factor,
                 splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
                 line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
+                level_matching_network=(
+                    _matching_network_to_domain(value.feed_network.level_matching_network)
+                    if value.feed_network.level_matching_network is not None
+                    else None
+                ),
             )
             if value.feed_network is not None
             else None

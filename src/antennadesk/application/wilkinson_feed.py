@@ -201,6 +201,7 @@ class WilkinsonFeedSolver:
             feed_line_lengths_m=feed.feed_line_lengths_m,
             system_impedance_ohm=feed.feed_line_impedance_ohm,
             velocity_factor=feed.velocity_factor,
+            level_matching_network=feed.level_matching_network,
         )
         solution = solve_feed_network(
             network,
@@ -303,7 +304,7 @@ class WilkinsonFeedSolver:
         input_power_actual = input_power * scale
         efficiency = min(1.0, max(0.0, delivered_power / input_power)) if input_power > 0.0 else 0.0
         efficiency_db = 10.0 * math.log10(max(efficiency, 1e-12))
-        line_loss_db = _weighted_line_loss(solution, feed)
+        line_loss_db = _weighted_line_loss(solution, feed, point.frequency_hz)
         splitter_loss_db = feed.splitter_excess_loss_db
         try:
             gamma = calculate_reflection_coefficient(
@@ -355,7 +356,11 @@ class WilkinsonFeedSolver:
         )
 
 
-def _weighted_line_loss(solution: FeedNetworkSolution, feed: FeedNetworkSpec) -> float:
+def _weighted_line_loss(
+    solution: FeedNetworkSolution,
+    feed: FeedNetworkSpec,
+    frequency_hz: float,
+) -> float:
     lengths = feed.feed_line_lengths_m
     total_power = 0.0
     input_power = 0.0
@@ -368,11 +373,16 @@ def _weighted_line_loss(solution: FeedNetworkSolution, feed: FeedNetworkSpec) ->
     ):
         if power <= 0.0 or not math.isfinite(impedance.real):
             continue
+        load_impedance = (
+            feed.level_matching_network.abcd(frequency_hz).input_impedance(impedance)
+            if feed.level_matching_network is not None
+            else impedance
+        )
         loss_db = mismatched_line_loss_db(
             length_m=lengths[index],
             loss_db_per_100m=feed.line_loss_db_per_100m,
             characteristic_impedance_ohm=feed.feed_line_impedance_ohm,
-            load_impedance_ohm=impedance,
+            load_impedance_ohm=load_impedance,
         )
         total_power += power
         input_power += power * 10.0 ** (loss_db / 10.0)

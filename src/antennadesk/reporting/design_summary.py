@@ -1362,6 +1362,20 @@ def design_summary_rows(
                 *(
                     [
                         (
+                            "Level matching",
+                            matching_network_description(
+                                parameters.feed.level_matching_network,
+                                tr,
+                            ),
+                        )
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    and parameters.feed.level_matching_network is not None
+                    else []
+                ),
+                *(
+                    [
+                        (
                             "Matched line loss",
                             f"{parameters.feed.line_loss_db_per_100m:.2f} dB/100 m",
                         ),

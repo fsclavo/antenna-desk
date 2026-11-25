@@ -11,9 +11,12 @@ from enum import StrEnum
 from ..antennas.balun import BalunLoss
 from ..antennas.feed_line import FeedLine
 from ..antennas.matching_network import (
+    LNetwork,
     MatchingNetwork,
     MatchingNetworkOrigin,
     MatchingNetworkPosition,
+    PiNetwork,
+    TNetwork,
 )
 from ..common.units import ensure_positive
 from ..environment.site_ground import SiteGroundProfile
@@ -43,6 +46,7 @@ class FeedNetworkSpec:
     velocity_factor: float
     splitter_excess_loss_db: float = 0.0
     line_loss_db_per_100m: float = 0.0
+    level_matching_network: MatchingNetwork | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "kind", FeedNetworkKind(self.kind))
@@ -63,6 +67,11 @@ class FeedNetworkSpec:
         ):
             if not math.isfinite(value) or value < 0.0:
                 raise ValueError(f"{name} must be finite and non-negative")
+        if self.level_matching_network is not None and not isinstance(
+            self.level_matching_network,
+            (LNetwork, PiNetwork, TNetwork),
+        ):
+            raise ValueError("per-level matching supports L, Pi, or T networks only")
 
 
 @dataclass(frozen=True, slots=True)

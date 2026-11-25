@@ -1013,6 +1013,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Preferences...",
         Language.SPANISH: "Preferencias...",
     },
+    "action.edit_level_matching": {
+        Language.ENGLISH: "Edit level matching...",
+        Language.SPANISH: "Editar matching por nivel...",
+    },
     "action.load_starting_dimensions": {
         Language.ENGLISH: "Load starting dimensions",
         Language.SPANISH: "Cargar dimensiones iniciales",
@@ -4235,6 +4239,17 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: (
             "Frecuencia donde las ramas del Wilkinson son de cuarto de onda; cero "
             "usa la frecuencia de diseño del Yagi. El divisor es de banda angosta."
+        ),
+    },
+    "help.stacked_yagi.level_matching": {
+        Language.ENGLISH: (
+            "A common L, Pi, or T network between each Wilkinson feed line and its "
+            "level. Opens the matching-network editor; the network is applied to "
+            "every level."
+        ),
+        Language.SPANISH: (
+            "Una red L, Pi o T común entre cada línea del Wilkinson y su nivel. Abre "
+            "el editor de red de adaptación; la red se aplica a todos los niveles."
         ),
     },
     "help.stacked_yagi.reference_line": {
@@ -11818,6 +11833,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "stacked_yagi.splitter_design_frequency": {
         Language.ENGLISH: "Divider design frequency",
         Language.SPANISH: "Frecuencia de diseño del divisor",
+    },
+    "stacked_yagi.level_matching": {
+        Language.ENGLISH: "Per-level matching",
+        Language.SPANISH: "Matching por nivel",
+    },
+    "stacked_yagi.level_matching_none": {
+        Language.ENGLISH: "none",
+        Language.SPANISH: "ninguno",
+    },
+    "stacked_yagi.level_matching_l": {
+        Language.ENGLISH: "L network on every level",
+        Language.SPANISH: "Red L en cada nivel",
+    },
+    "stacked_yagi.level_matching_pi": {
+        Language.ENGLISH: "Pi network on every level",
+        Language.SPANISH: "Red Pi en cada nivel",
+    },
+    "stacked_yagi.level_matching_t": {
+        Language.ENGLISH: "T network on every level",
+        Language.SPANISH: "Red T en cada nivel",
+    },
+    "stacked_yagi.level_matching_inactive": {
+        Language.ENGLISH: "Wilkinson mode only",
+        Language.SPANISH: "Solo modo Wilkinson",
     },
     "stacked_yagi.derived_phase": {
         Language.ENGLISH: "Derived phase step: {phase}° per level",

@@ -19,6 +19,7 @@ from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
 from .feed import FeedPoint, Source
 from .geometry import Point3D
+from .matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 from .materials import ALUMINUM, ConductorMaterial
 from .polarization import Polarization
 from .transmission_line import TransmissionLine
@@ -67,6 +68,7 @@ class StackedYagiFeed:
     splitter_loss_db: float = 0.0
     line_loss_db_per_100m: float = 0.0
     splitter_design_frequency_hz: float = 0.0
+    level_matching_network: MatchingNetwork | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -93,6 +95,11 @@ class StackedYagiFeed:
             raise ValueError("network mode requires a positive reference_length_m")
         if self.mode is StackedYagiFeedMode.WILKINSON and self.reference_length_m <= 0.0:
             raise ValueError("Wilkinson mode requires a positive reference_length_m")
+        if self.level_matching_network is not None and not isinstance(
+            self.level_matching_network,
+            (LNetwork, PiNetwork, TNetwork),
+        ):
+            raise ValueError("per-level matching supports L, Pi, or T networks only")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m

@@ -28,6 +28,7 @@ from antennadesk.domain.antennas.j_pole import ANTENNA_TYPE_J_POLE
 from antennadesk.domain.antennas.loaded_dipole import ANTENNA_TYPE_LOADED_DIPOLE
 from antennadesk.domain.antennas.loop import ANTENNA_TYPE_LOOP
 from antennadesk.domain.antennas.magnetic_loop import ANTENNA_TYPE_MAGNETIC_LOOP
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.moxon import ANTENNA_TYPE_MOXON
 from antennadesk.domain.antennas.ocfd import ANTENNA_TYPE_OCFD
 from antennadesk.domain.antennas.phased_vertical import ANTENNA_TYPE_PHASED_VERTICAL
@@ -173,6 +174,8 @@ def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
 
 
 def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
     feed_network = FeedNetworkSpec(
         kind=FeedNetworkKind.WILKINSON,
         design_frequency_hz=14_100_000.0,
@@ -182,6 +185,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
         velocity_factor=0.8,
         splitter_excess_loss_db=0.2,
         line_loss_db_per_100m=1.5,
+        level_matching_network=matching,
     )
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.single(14_100_000.0),
@@ -194,5 +198,6 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
     assert payload.feed_network is not None
     assert payload.feed_network.kind is FeedNetworkKind.WILKINSON
     assert payload.feed_network.port_count == 2
+    assert payload.feed_network.level_matching_network is not None
     assert restored.feed_network == feed_network
     assert restored.co_simulate_feed_network is False

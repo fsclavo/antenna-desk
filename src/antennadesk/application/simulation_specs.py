@@ -265,6 +265,7 @@ def _stacked_yagi_spec(
                 velocity_factor=parameters.feed.velocity_factor,
                 splitter_excess_loss_db=parameters.feed.splitter_loss_db,
                 line_loss_db_per_100m=parameters.feed.line_loss_db_per_100m,
+                level_matching_network=parameters.feed.level_matching_network,
             )
             if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
             else None

@@ -10,6 +10,7 @@ from dataclasses import replace
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
@@ -19,6 +20,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...domain.antennas.matching_network import (
+    LNetwork,
+    MatchingNetwork,
+    MatchingNetworkPosition,
+    PiNetwork,
+    TNetwork,
+)
 from ...domain.antennas.polarization import Polarization
 from ...domain.antennas.stacked_yagi import (
     StackedYagiFeed,
@@ -27,6 +35,7 @@ from ...domain.antennas.stacked_yagi import (
     stacked_yagi_parameters,
 )
 from ...domain.antennas.yagi import nbs_five_element
+from ..dialogs.matching_network_dialog import MatchingNetworkDialog
 from ..help import apply_help
 from ..i18n import Translator
 from ..units import (
@@ -177,6 +186,15 @@ class StackedYagiForm(QWidget):
         self._splitter_design_frequency.setDecimals(4)
         self._splitter_design_frequency.setSingleStep(0.1)
         self._splitter_design_frequency.setSuffix(" MHz")
+        self._level_matching_network: MatchingNetwork | None = None
+        self._level_matching = QPushButton(
+            translator.t("action.edit_level_matching"),
+            self,
+        )
+        self._level_matching.clicked.connect(self._edit_level_matching)
+        apply_help(self._level_matching, translator, "level_matching", family="stacked_yagi")
+        self._level_matching_summary = QLabel(self)
+        self._level_matching_summary.setWordWrap(True)
 
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
@@ -247,6 +265,11 @@ class StackedYagiForm(QWidget):
             self._labels.label("stacked_yagi.splitter_design_frequency"),
             self._splitter_design_frequency,
         )
+        form.addRow(
+            self._labels.label("stacked_yagi.level_matching"),
+            self._level_matching,
+        )
+        form.addRow("", self._level_matching_summary)
         form.addRow(self._starting)
 
         layout = QVBoxLayout(self)
@@ -315,6 +338,8 @@ class StackedYagiForm(QWidget):
             3,
             self._translator.t("stacked_yagi.feed_mode.wilkinson"),
         )
+        self._level_matching.setText(self._translator.t("action.edit_level_matching"))
+        self._update_level_matching_summary()
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
             self._starting,
@@ -364,9 +389,12 @@ class StackedYagiForm(QWidget):
         self._line_loss.setEnabled(
             mode in {StackedYagiFeedMode.NETWORK.value, StackedYagiFeedMode.WILKINSON.value}
         )
-        self._splitter_design_frequency.setEnabled(mode == StackedYagiFeedMode.WILKINSON.value)
+        wilkinson = mode == StackedYagiFeedMode.WILKINSON.value
+        self._splitter_design_frequency.setEnabled(wilkinson)
+        self._level_matching.setEnabled(wilkinson)
         self._phase_step.setEnabled(mode == StackedYagiFeedMode.IDEAL.value)
-        self._amplitude_ratio.setEnabled(mode != StackedYagiFeedMode.WILKINSON.value)
+        self._amplitude_ratio.setEnabled(not wilkinson)
+        self._update_level_matching_summary()
 
     def mark_starting_dimensions_pristine(self) -> None:
         self._yagi.mark_starting_dimensions_pristine()
@@ -454,11 +482,49 @@ class StackedYagiForm(QWidget):
             self._splitter_design_frequency.setValue(
                 parameters.feed.splitter_design_frequency_hz / 1_000_000.0
             )
+            self._level_matching_network = parameters.feed.level_matching_network
             self._update_feed_controls()
         finally:
             self._updating = False
         self._starting_state.mark_non_pristine()
         self._update_geometry()
+
+    def set_level_matching_network(self, network: MatchingNetwork | None) -> None:
+        self._level_matching_network = network
+        self._update_level_matching_summary()
+        self._emit_changed()
+
+    def _edit_level_matching(self) -> None:
+        try:
+            frequency_hz = self._yagi.parameters().frequency_hz
+        except (ValueError, TypeError):
+            return
+        dialog = MatchingNetworkDialog(
+            self._translator,
+            self._level_matching_network,
+            self,
+            frequency_hz=frequency_hz,
+            position=MatchingNetworkPosition.FEEDPOINT,
+        )
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._level_matching_network = dialog.network()
+            self._update_level_matching_summary()
+            self._emit_changed()
+
+    def _update_level_matching_summary(self) -> None:
+        if self._feed_mode.currentData() != StackedYagiFeedMode.WILKINSON.value:
+            key = "stacked_yagi.level_matching_inactive"
+        elif self._level_matching_network is None:
+            key = "stacked_yagi.level_matching_none"
+        elif isinstance(self._level_matching_network, PiNetwork):
+            key = "stacked_yagi.level_matching_pi"
+        elif isinstance(self._level_matching_network, TNetwork):
+            key = "stacked_yagi.level_matching_t"
+        elif isinstance(self._level_matching_network, LNetwork):
+            key = "stacked_yagi.level_matching_l"
+        else:
+            key = "stacked_yagi.level_matching_none"
+        self._level_matching_summary.setText(self._translator.t(key))
 
     def set_frequency_hz(self, frequency_hz: float) -> None:
         self._yagi.set_frequency_hz(frequency_hz)
@@ -565,5 +631,6 @@ class StackedYagiForm(QWidget):
                 splitter_design_frequency_hz=(
                     self._splitter_design_frequency.value() * 1_000_000.0
                 ),
+                level_matching_network=self._level_matching_network,
             ),
         )

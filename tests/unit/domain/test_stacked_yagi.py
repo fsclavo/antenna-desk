@@ -8,6 +8,7 @@ from dataclasses import replace
 
 import pytest
 
+from antennadesk.domain.antennas.matching_network import TransformerNetwork
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.stacked_yagi import (
     STACKED_YAGI_SPLITTER_NODE_ID,
@@ -193,6 +194,12 @@ def test_phase_line_feed_rejects_invalid_lines_and_loss() -> None:
         StackedYagiFeed(splitter_loss_db=-0.1)
     with pytest.raises(ValueError):
         StackedYagiFeed(line_loss_db_per_100m=-0.1)
+    with pytest.raises(ValueError, match="L, Pi, or T"):
+        StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            level_matching_network=TransformerNetwork(series_inductance_h=1e-6),
+        )
 
 
 def test_network_mode_builds_lossless_phase_lines_and_no_ideal_sources() -> None:

@@ -18,8 +18,8 @@ The current DL6 feed model is a bounded co-simulation:
   impedance.
 
 It does **not** model splitter return loss, port-to-port isolation, internal
-S-parameters, per-level matching networks, folded driven elements, or per-level
-transformers.
+S-parameters, individual per-level matching networks, folded driven elements,
+or per-level transformers.
 
 A scalar "isolation loss" or a post-processing return-loss correction is not
 acceptable. Isolation is not a through-path loss, and a scalar correction would
@@ -106,7 +106,8 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
 
 The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
 
-- `FeedNetworkSpec` in `SimulationSpec` and schema 64;
+- `FeedNetworkSpec` in `SimulationSpec` and schema 64 (schema 65 adds the
+  common per-level matching network);
 - `WilkinsonFeedSolver` wraps the NEC solver, extracts the antenna Y-matrix,
   solves the N-way Wilkinson and feed lines, and reconstructs the pattern with
   ideal sources at the solved port voltages;
@@ -123,7 +124,8 @@ The solver-side per-level matching branch is also validated: a `TwoPortBranch`
 inserts an L/Pi/T network between each feed line and its level port. A common
 L-network designed from the real antenna port self-impedance reduced the
 two-level stack input SWR from about 14.7 to 1.09 in the real NEC Y-matrix
-test. The editor/schema fields for per-level matching remain pending.
+test. The editor, schema 65, reports, and construction sheet expose one common
+network for every level; individual per-level values remain pending.
 
 ## Implementation phases
 
@@ -141,22 +143,24 @@ test. The editor/schema fields for per-level matching remain pending.
 
 ### Phase 3 — UI, schema, reports, and BOM (done)
 
-- The Wilkinson mode and design frequency are in schema 64.
+- The Wilkinson mode and design frequency are in schema 64; the common
+  per-level matching network is in schema 65.
 - The editor, help, design summary, and construction sheet show the divider
   design frequency, branch impedance, isolation resistors, feed-line lengths,
   and the ideal/narrowband limitation; the conductor BOM remains
   conductor-only.
 - The ideal/excess-loss mode remains selectable.
 
-### Follow-up — Per-level matching (solver validated; UI pending)
+### Follow-up — Per-level matching (common network implemented)
 
 - Reuse the N-port solver and antenna Y-matrix.
 - A `TwoPortBranch` inserts one L/Pi/T network between a feed line and a level
-  port; the same network can be applied to every level.
+  port; the same network is applied to every level.
 - The branch is validated against the analytic matching-network two-port and
   scikit-rf; a real two-level stack test reduced the input SWR from about 14.7
   to 1.09 with a common L-network.
-- The editor/schema fields, per-level values, and optimizer integration remain
+- The editor, schema 65, reports, and construction sheet expose the common
+  network. Individual per-level values and optimizer integration remain
   pending.
 
 ## Acceptance criteria

@@ -253,7 +253,7 @@ The second slice adds two multi-wire templates:
 `AntennaDesignParameters` is the union of the supported parameter types.
 `DesignVariant` stores the union and validates that `antenna_type` matches the
 parameters. The canonical model remains the shared `AntennaModel`, so the
-solver adapter does not need geometry-specific branches. Schema version 64 is
+solver adapter does not need geometry-specific branches. Schema version 65 is
 current: parameter payloads are additive within the current container. A
 design may also store an optional analysis band plan; it is intent metadata
 and never changes the canonical geometry. Series RLC loads are

@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   migration; schema 63 adds the optional maximum top height and the splitter/
   phase-line feed specification, including a matched line loss and a per-port
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
-  design frequency. The slice includes
+  design frequency; schema 65 adds the optional common per-level matching
+  network. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -51,12 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resistors, and the feed lines to each level. The primary SWR is the splitter
   input; the per-level source results come from the solved port distribution,
   and the combined pattern is reconstructed with ideal sources at the solved
-  port voltages. The editor, schema 64, reports, and construction sheet show
+  port voltages. The editor, schema 65, reports, and construction sheet show
   the divider design frequency, branch impedance, isolation resistors, and the
   ideal/narrowband limitation. Branches, resistors, and feed lines are ideal;
-  component loss, tolerance, broadband behavior, and per-level matching remain
-  unavailable. The existing ideal, phase-line, and co-simulated NEC modes
-  remain selectable.
+  component loss, tolerance, and broadband behavior remain unavailable. A
+  common per-level L/Pi/T matching network can be inserted between every feed
+  line and its level; individual per-level values remain unavailable. The
+  existing ideal, phase-line, and co-simulated NEC modes remain selectable.
 
 ### Changed
 
