@@ -8,7 +8,7 @@ import math
 import time
 from enum import StrEnum
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -72,6 +72,7 @@ from ..units import DisplayUnits, LengthPolicy, UnitSystem
 from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.family_optimization_worker import FamilyOptimizationWorker
+from ..workers.task_runner import TaskRunner
 
 _OBJECTIVE_KEYS = {
     FamilyOptimizationObjective.TARGET_IMPEDANCE: "optimize.target_impedance_objective",
@@ -132,8 +133,10 @@ class FamilyOptimizationDialog(QDialog):
         self._band_plan_bands = max(1, band_plan_bands)
         self._operating_frequencies_hz = tuple(operating_frequencies_hz)
         self._last_summary = last_summary
-        self._thread: QThread | None = None
-        self._worker: FamilyOptimizationWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
+        self._runner.finished.connect(self._on_thread_finished)
         self._cancel_token: EventCancelToken | None = None
         self._result: OptimizeAntennaResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
@@ -899,7 +902,7 @@ class FamilyOptimizationDialog(QDialog):
         self._update_controls()
 
     def _update_controls(self) -> None:
-        running = self._thread is not None
+        running = self._runner.is_running
         selected = len(self._selected_indices())
         self._run.setEnabled(not running and selected > 0)
         self._cancel.setEnabled(running)
@@ -960,7 +963,7 @@ class FamilyOptimizationDialog(QDialog):
         )
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         selected = self._selected_indices()
         if not selected:
@@ -1063,24 +1066,10 @@ class FamilyOptimizationDialog(QDialog):
             self._run_estimated_evaluations,
             "optimize.running",
         )
-        thread = QThread(self)
         worker = FamilyOptimizationWorker(self._solver, command)
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.progress.connect(self._on_progress)
-        worker.finished.connect(self._on_finished)
-        worker.failed.connect(self._on_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        # The dialog owns the thread, and Python owns the worker until the
-        # finished slot drops the reference after the event loop has stopped.
-        # Deleting the worker explicitly from its own thread's finished signal
-        # can race with Shiboken wrapper destruction on some PySide6 versions.
-        thread.finished.connect(self._on_thread_finished)
-        self._thread = thread
-        self._worker = worker
         self._update_controls()
-        thread.start()
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _cancel_run(self) -> None:
         if self._cancel_token is not None:
@@ -1127,8 +1116,6 @@ class FamilyOptimizationDialog(QDialog):
         )
 
     def _on_thread_finished(self) -> None:
-        self._thread = None
-        self._worker = None
         self._cancel_token = None
         self._update_controls()
 
@@ -1321,9 +1308,8 @@ class FamilyOptimizationDialog(QDialog):
         return self._result
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
-            if self._cancel_token is not None:
-                self._cancel_token.cancel()
+        if self._runner.is_running:
+            self._runner.cancel()
             QMessageBox.information(
                 self,
                 self.windowTitle(),

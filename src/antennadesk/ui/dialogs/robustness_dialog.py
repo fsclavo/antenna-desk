@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 
 import pyqtgraph as pg
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -57,6 +57,7 @@ from ..units import (
 )
 from ..widgets.task_progress import TaskProgressBar
 from ..workers.robustness_worker import RobustnessWorker
+from ..workers.task_runner import TaskRunner
 
 
 class RobustnessDialog(QDialog):
@@ -87,8 +88,9 @@ class RobustnessDialog(QDialog):
         self._base_spec = base_spec
         self._colors = theme_colors(self.palette())
         self._result: RobustnessResult | None = None
-        self._thread: QThread | None = None
-        self._worker: RobustnessWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
         self._cancel_token: EventCancelToken | None = None
         self._variables = tuple(
             variable
@@ -310,7 +312,7 @@ class RobustnessDialog(QDialog):
             if spec.total_runs > 100
             else ""
         )
-        self._run.setEnabled(self._thread is None)
+        self._run.setEnabled(not self._runner.is_running)
 
     def _set_running(self, running: bool) -> None:
         for widget in (
@@ -327,7 +329,7 @@ class RobustnessDialog(QDialog):
         self._cancel.setEnabled(running)
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         spec = self._spec()
         if spec is None:
@@ -351,16 +353,10 @@ class RobustnessDialog(QDialog):
             spec=spec,
             cancel_token=self._cancel_token,
         )
-        self._thread = QThread(self)
-        self._worker = RobustnessWorker(self._solver, command)
-        self._worker.moveToThread(self._thread)
-        self._thread.started.connect(self._worker.run)
-        self._worker.progress.connect(self._on_progress)
-        self._worker.finished.connect(self._on_finished)
-        self._worker.failed.connect(self._on_failed)
-        self._thread.finished.connect(self._cleanup)
+        worker = RobustnessWorker(self._solver, command)
+        worker.progress.connect(self._on_progress)
         self._set_running(True)
-        self._thread.start()
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _on_progress(self, completed: int, total: int) -> None:
         self._progress.set_progress(
@@ -378,23 +374,12 @@ class RobustnessDialog(QDialog):
         else:
             self._progress.complete("robustness.progress_done")
         self._set_running(False)
-        if self._thread is not None:
-            self._thread.quit()
+        self._cancel_token = None
 
     def _on_failed(self, message: str) -> None:
         self._summary.setText(f"{self._translator.t('robustness.failed')} {message}")
         self._progress.fail("robustness.failed")
         self._set_running(False)
-        if self._thread is not None:
-            self._thread.quit()
-
-    def _cleanup(self) -> None:
-        if self._worker is not None:
-            self._worker.deleteLater()
-        if self._thread is not None:
-            self._thread.deleteLater()
-        self._worker = None
-        self._thread = None
         self._cancel_token = None
 
     def _cancel_run(self) -> None:
@@ -626,13 +611,13 @@ class RobustnessDialog(QDialog):
             self._update_budget()
 
     def reject(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             return
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             event.ignore()
             return

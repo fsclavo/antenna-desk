@@ -159,3 +159,19 @@ def test_ui_adapter_imports_are_allowlisted() -> None:
         f"new UI adapter imports: {sorted(found - ALLOWED_UI_ADAPTER_IMPORTS)}; "
         f"stale allowlist entries: {sorted(ALLOWED_UI_ADAPTER_IMPORTS - found)}"
     )
+
+
+def test_qthread_lifecycle_is_owned_by_the_task_runner() -> None:
+    """UI code must not copy the QThread create/cleanup sequence."""
+
+    violations: list[str] = []
+    controller = SOURCE / "ui" / "workers" / "task_runner.py"
+    for path in sorted((SOURCE / "ui").rglob("*.py")):
+        if path == controller or "__pycache__" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for marker in ("QThread(", ".moveToThread("):
+            if marker in text:
+                violations.append(f"{path.relative_to(ROOT)}: {marker}")
+
+    assert not violations, "\n".join(violations)

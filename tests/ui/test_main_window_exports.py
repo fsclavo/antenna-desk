@@ -40,7 +40,7 @@ def _simulate(window: MainWindow, qtbot: QtBot) -> None:
     del qtbot
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 

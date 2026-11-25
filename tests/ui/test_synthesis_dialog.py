@@ -128,7 +128,7 @@ def test_synthesis_dialog_finds_ocfd_dimensions(qtbot: QtBot) -> None:
     assert dialog._task_progress.state is TaskProgressState.RUNNING
     assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
 
-    wait_for_condition(lambda: dialog._thread is None, timeout_ms=5_000)
+    wait_for_condition(lambda: not dialog._runner.is_running, timeout_ms=5_000)
 
     assert dialog._task_progress.state is TaskProgressState.COMPLETED
     assert dialog._result is not None

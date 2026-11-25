@@ -64,7 +64,9 @@ def test_new_custom_antenna_is_editable_and_simulatable(
     assert window._typed_simulation_spec(parameters).frequency_plan.count == 100
 
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
 
     assert window._results._table.rowCount() == 1
     assert window._status_label.text() == "Simulation completed"

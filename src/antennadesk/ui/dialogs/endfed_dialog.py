@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QEventLoop, Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -40,6 +40,7 @@ from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.endfed_form import EndFedForm
 from ..workers.endfed_convergence_worker import EndFedConvergenceWorker
+from ..workers.task_runner import run_worker_blocking
 from .band_analysis_dialog import BandAnalysisDialog
 
 
@@ -177,48 +178,23 @@ class EndFedDialog(QDialog):
         progress.setAutoClose(False)
         progress.setAutoReset(False)
         progress.setValue(0)
-        thread = QThread(self)
         worker = EndFedConvergenceWorker(CheckEndFedConvergence(self._solver), command)
-        worker.moveToThread(thread)
-        result: dict[str, object] = {}
-        loop = QEventLoop()
-
-        def finished(value: object) -> None:
-            result["result"] = value
-            loop.quit()
-
-        def failed(message: str) -> None:
-            result["error"] = message
-            loop.quit()
-
-        worker.finished.connect(finished)
-        worker.failed.connect(failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.started.connect(worker.run)
-        thread.finished.connect(loop.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
         try:
-            loop.exec()
+            result = run_worker_blocking(self, worker)
+        except ValueError as exc:
+            QMessageBox.critical(self, self.windowTitle(), str(exc))
+            return
         finally:
-            thread.quit()
-            thread.wait()
             progress.close()
 
-        error = result.get("error")
-        if isinstance(error, str):
-            QMessageBox.critical(self, self.windowTitle(), error)
-            return
-        convergence = result.get("result")
-        if not isinstance(convergence, EndFedConvergenceResult):
+        if not isinstance(result, EndFedConvergenceResult):
             QMessageBox.critical(
                 self,
                 self.windowTitle(),
                 self._translator.t("error.solver"),
             )
             return
+        convergence = result
         if convergence.error is not None:
             QMessageBox.critical(self, self.windowTitle(), convergence.error)
             return

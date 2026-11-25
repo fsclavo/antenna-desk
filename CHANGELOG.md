@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run
+  through one `TaskRunner` controller. It queues worker results to the GUI
+  thread, ignores late results from abandoned tasks, emits terminal signals
+  only after the thread stops, cancels cooperatively, and closes with a bounded
+  wait. A worker that does not stop in time is detached and deletes itself
+  instead of destroying a running thread. The modal project open/save and
+  end-fed convergence paths use the same controller. An architecture test now
+  forbids direct `QThread`/`moveToThread` use outside the controller. No
+  schema, solver, domain, or project-format change. See
+  [`ADR-0053`](docs/ADR/0053-qt-worker-task-lifecycle.md).
+
 ## [0.10.1] - 2026-11-24
 
 ### Fixed

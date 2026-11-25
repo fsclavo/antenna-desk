@@ -42,7 +42,7 @@ def test_optimize_length_applies_and_simulates(
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -105,7 +105,7 @@ def test_optimize_endfed_applies_to_the_endfed_form(
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -529,7 +529,7 @@ def test_optimize_ocfd_applies_to_the_ocfd_form(
     assert window._optimize_action.isEnabled() is True
     window.optimize_length()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -592,7 +592,7 @@ def test_synthesize_dimensions_applies_and_simulates(
     assert window._optimize_action.isEnabled() is True
     window.synthesize_dimensions()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -634,7 +634,7 @@ def test_optimize_loop_applies_circumference_and_simulates(
 
     window.optimize_length()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -787,7 +787,7 @@ def test_fan_optimizer_opens_on_the_selected_band(
     window.new_antenna_from_key("fan_dipole")
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
     window._results._bands_table.selectRow(1)

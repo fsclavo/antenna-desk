@@ -6,9 +6,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
 
-from PySide6.QtCore import QEventLoop, QObject, Qt, QThread
+from PySide6.QtCore import QObject, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -25,6 +24,7 @@ from ..domain.projects.project import Project
 from .i18n import Translator
 from .workers.open_project_worker import OpenProjectWorker
 from .workers.save_project_worker import SaveProjectWorker
+from .workers.task_runner import run_worker_blocking
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,39 +140,4 @@ class ProjectIO:
         return dialog
 
     def _run_worker(self, worker: QObject, success_signal: str) -> object:
-        thread = QThread(self.parent)
-        worker.moveToThread(thread)
-        result: dict[str, object] = {}
-        loop = QEventLoop()
-
-        def finished(value: object) -> None:
-            result["value"] = value
-            loop.quit()
-
-        def failed(message: str) -> None:
-            result["error"] = message
-            loop.quit()
-
-        worker_object = cast(Any, worker)
-        success = getattr(worker_object, success_signal)
-        failure = worker_object.failed
-        success.connect(finished)
-        failure.connect(failed)
-        success.connect(thread.quit)
-        failure.connect(thread.quit)
-        thread.started.connect(worker_object.run)
-        thread.finished.connect(loop.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
-        try:
-            loop.exec()
-        finally:
-            thread.quit()
-            thread.wait()
-        error = result.get("error")
-        if isinstance(error, BaseException):
-            raise error
-        if isinstance(error, str):
-            raise ValueError(error)
-        return result.get("value")
+        return run_worker_blocking(self.parent, worker, success_signal=success_signal)

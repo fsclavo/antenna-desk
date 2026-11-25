@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -48,6 +48,7 @@ from ..units import (
     length_unit_key,
 )
 from ..widgets.task_progress import TaskProgressBar
+from ..workers.task_runner import TaskRunner
 from ..workers.tuning_worker import TuningWorker
 
 
@@ -74,8 +75,9 @@ class TuningAssistantDialog(QDialog):
         self._current_dimension_m = primary_dimension_m(design.parameters)
         self._result: TuningProposal | None = None
         self._result_parameters: AntennaDesignParameters | None = None
-        self._thread: QThread | None = None
-        self._worker: TuningWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
         self._cancel_token: EventCancelToken | None = None
         self.setWindowTitle(translator.t("tuning.title"))
         self.resize(*scaled_dialog_size(920, 760))
@@ -244,7 +246,7 @@ class TuningAssistantDialog(QDialog):
         self._message.setStyleSheet("color: #b54708;" if warning else "")
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         self._result = None
         self._result_parameters = None
@@ -272,15 +274,9 @@ class TuningAssistantDialog(QDialog):
             ),
             cancel_token=self._cancel_token,
         )
-        self._thread = QThread(self)
-        self._worker = TuningWorker(self._solver, command)
-        self._worker.moveToThread(self._thread)
-        self._thread.started.connect(self._worker.run)
-        self._worker.progress.connect(self._on_progress)
-        self._worker.finished.connect(self._on_finished)
-        self._worker.failed.connect(self._on_failed)
-        self._thread.finished.connect(self._cleanup)
-        self._thread.start()
+        worker = TuningWorker(self._solver, command)
+        worker.progress.connect(self._on_progress)
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _on_progress(self, completed: int, total: int) -> None:
         self._progress.set_progress(
@@ -300,31 +296,20 @@ class TuningAssistantDialog(QDialog):
         else:
             self._progress.complete("tuning.progress_done")
         self._restore_controls()
-        if self._thread is not None:
-            self._thread.quit()
+        self._cancel_token = None
 
     def _on_failed(self, message: str) -> None:
         self._show_message("tuning.message.error", warning=True)
         self._message.setText(f"{self._translator.t('tuning.message.error')} {message}")
         self._progress.fail("tuning.failed")
         self._restore_controls()
-        if self._thread is not None:
-            self._thread.quit()
+        self._cancel_token = None
 
     def _restore_controls(self) -> None:
         self._analyze.setEnabled(True)
         self._cancel.setEnabled(False)
         self._target.setEnabled(True)
         self._max_adjustment.setEnabled(True)
-
-    def _cleanup(self) -> None:
-        if self._worker is not None:
-            self._worker.deleteLater()
-        if self._thread is not None:
-            self._thread.deleteLater()
-        self._worker = None
-        self._thread = None
-        self._cancel_token = None
 
     def _cancel_run(self) -> None:
         if self._cancel_token is None:
@@ -442,13 +427,13 @@ class TuningAssistantDialog(QDialog):
         self.accept()
 
     def reject(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             return
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             event.ignore()
             return

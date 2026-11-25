@@ -111,7 +111,7 @@ def test_family_dialog_runs_the_multiband_hexbeam_band_optimizer(qtbot: QtBot) -
     )
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     assert dialog.selected_result() is not None
     selected = dialog.selected_parameters()
@@ -182,7 +182,7 @@ def test_family_dialog_blocks_an_unlocked_out_of_bounds_variable(
     assert messages
     assert "height_m" in messages[0]
     assert "outside" in messages[0].lower()
-    assert dialog._thread is None
+    assert not dialog._runner.is_running
 
 
 def test_family_dialog_shows_moxon_quality_and_guards_near_limit_apply(
@@ -325,7 +325,7 @@ def test_family_dialog_runs_and_applies_best(qtbot: QtBot) -> None:
     assert dialog._task_progress.state is TaskProgressState.RUNNING
     assert dialog._task_progress.progress_maximum == dialog._run_estimated_evaluations
 
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     assert dialog._task_progress.state is TaskProgressState.COMPLETED
     assert "Completed" in dialog._task_progress.text
@@ -594,7 +594,7 @@ def test_family_dialog_runs_band_aware_mode(qtbot: QtBot) -> None:
     dialog._mode.setCurrentIndex(dialog._mode.findData(OptimizationMode.BAND_AWARE.value))
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=20_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=20_000)
 
     result = dialog.selected_result()
     assert result is not None
@@ -852,3 +852,23 @@ def test_family_dialog_uses_per_field_units_when_auto(qtbot: QtBot) -> None:
     dialog._max_boom_field.configure(2.0)
 
     assert dialog._max_boom_field.unit == "m"
+
+
+def test_family_dialog_ignores_a_second_start(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dialog = _dialog()
+    qtbot.addWidget(dialog)
+    dialog._start()
+    calls: list[object] = []
+    monkeypatch.setattr(
+        dialog._runner,
+        "start",
+        lambda *args, **kwargs: calls.append(args) or False,
+    )
+
+    dialog._start()
+
+    assert calls == []
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=20_000)

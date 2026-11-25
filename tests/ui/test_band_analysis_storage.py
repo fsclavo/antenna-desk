@@ -67,7 +67,7 @@ def test_band_analysis_blocks_above_the_hard_project_limit(
 
     assert errors
     assert "project limit" in errors[0].lower()
-    assert window._thread is None
+    assert not window._runner.is_running
     assert window._simulating is False
     window._dirty = False
 
@@ -97,6 +97,6 @@ def test_band_analysis_can_be_cancelled_at_the_warning_threshold(
 
     window._start_band_analysis(design, _plan())
 
-    assert window._thread is None
+    assert not window._runner.is_running
     assert window._simulating is False
     window._dirty = False

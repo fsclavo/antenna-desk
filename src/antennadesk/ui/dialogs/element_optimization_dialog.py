@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QComboBox,
@@ -52,6 +52,7 @@ from ..i18n import Translator
 from ..units import UnitSystem, length_from_m, length_unit_key
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.element_optimization_worker import ElementOptimizationWorker
+from ..workers.task_runner import TaskRunner
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,8 +121,10 @@ class ElementOptimizationDialog(QDialog):
         self._objectives = objectives
         self._bands = bands
         self._bands_by_id = {band.band_id: band for band in bands}
-        self._thread: QThread | None = None
-        self._worker: ElementOptimizationWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
+        self._runner.finished.connect(self._on_thread_finished)
         self._cancel_token: EventCancelToken | None = None
         self._result: BoundedResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
@@ -573,7 +576,7 @@ class ElementOptimizationDialog(QDialog):
         )
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         try:
             variables, starts = self._variables()
@@ -613,22 +616,10 @@ class ElementOptimizationDialog(QDialog):
             self._run_estimated_evaluations,
             "element_optimize.running",
         )
-        thread = QThread(self)
         worker = ElementOptimizationWorker(self._solver, command)
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.progress.connect(self._on_progress)
-        worker.finished.connect(self._on_finished)
-        worker.failed.connect(self._on_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        # Keep ownership in the dialog and Python. Explicit deleteLater calls
-        # from the finished signal can race with Shiboken wrapper destruction.
-        thread.finished.connect(self._on_thread_finished)
-        self._thread = thread
-        self._worker = worker
         self._update_controls()
-        thread.start()
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _cancel_run(self) -> None:
         if self._cancel_token is not None:
@@ -664,13 +655,11 @@ class ElementOptimizationDialog(QDialog):
         )
 
     def _on_thread_finished(self) -> None:
-        self._thread = None
-        self._worker = None
         self._cancel_token = None
         self._update_controls()
 
     def _update_controls(self) -> None:
-        running = self._thread is not None
+        running = self._runner.is_running
         controls: list[QWidget] = [
             self._objective,
             self._frequency,
@@ -819,9 +808,8 @@ class ElementOptimizationDialog(QDialog):
         return self._selected_parameters
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
-            if self._cancel_token is not None:
-                self._cancel_token.cancel()
+        if self._runner.is_running:
+            self._runner.cancel()
             QMessageBox.information(
                 self,
                 self.windowTitle(),

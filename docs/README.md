@@ -140,6 +140,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0050 — ZIP project container and honest size contract](ADR/0050-zip-project-container.md)
 - [ADR-0051 — Bounded cliff/second-medium site ground](ADR/0051-bounded-cliff-site-ground.md)
 - [ADR-0052 — Uniform radial droop for verticals](ADR/0052-uniform-radial-droop.md)
+- [ADR-0053 — One lifecycle owner for Qt worker tasks](ADR/0053-qt-worker-task-lifecycle.md)
 
 ## Archive
 

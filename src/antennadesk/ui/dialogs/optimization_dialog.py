@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 import time
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QComboBox,
@@ -55,6 +55,7 @@ from ..units import (
 from ..widgets.form_units import LengthField, LengthFieldSpec
 from ..widgets.task_progress import TaskProgressBar, TaskProgressState
 from ..workers.optimization_worker import OptimizationWorker
+from ..workers.task_runner import TaskRunner
 
 
 class OptimizationDialog(QDialog):
@@ -87,8 +88,10 @@ class OptimizationDialog(QDialog):
         self._matching_override_warning.setStyleSheet("color: #8a5a00;")
         self._matching_override_warning.setVisible(base_spec.matching_network_override)
         apply_help(self._matching_override_warning, translator, "feed_matching.override")
-        self._thread: QThread | None = None
-        self._worker: OptimizationWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
+        self._runner.finished.connect(self._on_thread_finished)
         self._cancel_token: EventCancelToken | None = None
         self._result: LengthOptimizationResult | None = None
         self._selected_length_m: float | None = None
@@ -425,7 +428,7 @@ class OptimizationDialog(QDialog):
         )
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         if (
             self._objective_value() is OptimizationObjective.MAX_BANDWIDTH
@@ -481,22 +484,10 @@ class OptimizationDialog(QDialog):
             self._run_estimated_evaluations,
             "optimize.running",
         )
-        thread = QThread(self)
         worker = OptimizationWorker(self._solver, command)
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.progress.connect(self._on_progress)
-        worker.finished.connect(self._on_finished)
-        worker.failed.connect(self._on_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        # Keep ownership in the dialog and Python. Explicit deleteLater calls
-        # from the finished signal can race with Shiboken wrapper destruction.
-        thread.finished.connect(self._on_thread_finished)
-        self._thread = thread
-        self._worker = worker
         self._update_controls()
-        thread.start()
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _cancel_run(self) -> None:
         if self._cancel_token is not None:
@@ -532,13 +523,11 @@ class OptimizationDialog(QDialog):
         )
 
     def _on_thread_finished(self) -> None:
-        self._thread = None
-        self._worker = None
         self._cancel_token = None
         self._update_controls()
 
     def _update_controls(self) -> None:
-        running = self._thread is not None
+        running = self._runner.is_running
         for widget in (
             self._objective,
             self._min_length,
@@ -728,9 +717,8 @@ class OptimizationDialog(QDialog):
         return self._selected_length_m
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
-            if self._cancel_token is not None:
-                self._cancel_token.cancel()
+        if self._runner.is_running:
+            self._runner.cancel()
             QMessageBox.information(
                 self,
                 self._translator.t("optimize.title"),

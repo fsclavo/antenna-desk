@@ -568,7 +568,7 @@ def test_variant_switch_restores_the_cached_result(
 ) -> None:
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
     assert window._results._table.rowCount() == 1
@@ -746,7 +746,9 @@ def test_save_can_choose_design_only_for_an_oversized_project(
     tmp_path: Path,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 1
     path = tmp_path / "design-only.antennadesk"
@@ -783,9 +785,13 @@ def test_save_offers_compaction_for_an_oversized_expanded_project(
     tmp_path: Path,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 2
 
@@ -820,9 +826,13 @@ def test_compacting_simulation_history_keeps_the_latest_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 2
     assert window._compact_history_action.isEnabled() is True
@@ -847,9 +857,13 @@ def test_open_project_keeps_runs_lazy(
     tmp_path: Path,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 2
     source = tmp_path / "lazy-open.antennadesk"
@@ -939,7 +953,9 @@ def test_save_design_only_action_drops_runs_and_optimizations(
     tmp_path: Path,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     assert window._project is not None
     assert len(window._project.simulation_runs) == 1
     path = tmp_path / "explicit-design-only.antennadesk"
@@ -968,9 +984,13 @@ def test_compaction_with_a_lazy_session_does_not_materialize(
     tmp_path: Path,
 ) -> None:
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
     source = tmp_path / "compact-lazy.antennadesk"
     assert window._save_to(source) is True
 
@@ -1061,7 +1081,9 @@ def test_simulation_spec_carries_the_project_site_ground(
     )
 
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None, timeout_ms=15_000)
+    wait_for_condition(
+        lambda: not window._simulating and not window._runner.is_running, timeout_ms=15_000
+    )
 
     assert window._last_result is not None
     assert window._last_result.spec.site_ground == profile

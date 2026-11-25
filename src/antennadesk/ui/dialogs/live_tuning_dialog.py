@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, QThread, QTimer, Slot
+from PySide6.QtCore import Qt, QTimer, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -39,6 +39,7 @@ from ..help import apply_help
 from ..i18n import Translator
 from ..widgets.polar_pattern_view import PolarPatternView
 from ..workers.simulation_worker import SimulationWorker
+from ..workers.task_runner import TaskRunner
 
 
 class LiveTuningDialog(QDialog):
@@ -72,9 +73,10 @@ class LiveTuningDialog(QDialog):
         self._busy = False
         self._pending: float | None = None
         self._token: EventCancelToken | None = None
-        self._thread: QThread | None = None
-        self._worker: SimulationWorker | None = None
         self._thread_request_id = 0
+        self._runner = TaskRunner(self, close_timeout_ms=500)
+        self._runner.succeeded.connect(self._on_worker_finished)
+        self._runner.failed.connect(self._on_worker_failed)
         self.setWindowTitle(translator.t("live.title"))
         self.resize(*scaled_dialog_size(640, 620))
         self._debounce = QTimer(self)
@@ -269,24 +271,8 @@ class LiveTuningDialog(QDialog):
         self._update_buttons()
         token = EventCancelToken()
         self._token = token
-        thread = QThread(self)
         worker = SimulationWorker(self._solver, model, spec, token)
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
-        # The worker lives in another thread; queue its result back to the
-        # dialog's GUI thread before touching widgets.
-        worker.finished.connect(
-            self._on_worker_finished,
-            Qt.ConnectionType.QueuedConnection,
-        )
-        worker.failed.connect(
-            self._on_worker_failed,
-            Qt.ConnectionType.QueuedConnection,
-        )
-        thread.finished.connect(thread.deleteLater)
-        self._thread = thread
-        self._worker = worker
-        thread.start()
+        self._runner.start(worker, cancel=token)
 
     @Slot(object)
     def _on_worker_finished(self, result: SimulationResult) -> None:
@@ -358,23 +344,9 @@ class LiveTuningDialog(QDialog):
         self._update_buttons()
 
     def _cleanup_thread(self) -> None:
-        thread = self._thread
-        worker = self._worker
-        self._thread = None
-        self._worker = None
-        if worker is not None:
-            worker.deleteLater()
-        if thread is not None:
-            thread.quit()
-            if thread.wait(500):
-                thread.deleteLater()
-                return
-            # A QThread must never be destroyed while it is still running. If
-            # the solver has not stopped yet, detach the thread from the dialog
-            # and let it finish and delete itself; the dialog can close safely.
-            thread.setParent(None)
-            thread.requestInterruption()
-            thread.finished.connect(thread.deleteLater)
+        # The runner keeps the thread alive and detaches a solver that is still
+        # stopping; the dialog can close safely.
+        self._runner.close(500)
 
     def _update_buttons(self) -> None:
         self._apply.setEnabled(not self._busy)

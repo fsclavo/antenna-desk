@@ -8,7 +8,7 @@ import math
 from dataclasses import dataclass
 
 import pyqtgraph as pg
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QCloseEvent, QColor
 from PySide6.QtWidgets import (
     QComboBox,
@@ -60,6 +60,7 @@ from ..units import (
 )
 from ..widgets.task_progress import TaskProgressBar
 from ..workers.parameter_sweep_worker import ParameterSweepWorker
+from ..workers.task_runner import TaskRunner
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,8 +101,9 @@ class ParameterSweepDialog(QDialog):
         self._result: ParameterSweepResult | None = None
         self._selected_parameters: AntennaDesignParameters | None = None
         self._selected_point: SweepPoint | None = None
-        self._thread: QThread | None = None
-        self._worker: ParameterSweepWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
         self._cancel_token: EventCancelToken | None = None
         self._updating_axes = False
         self._sweep_variables = tuple(
@@ -543,7 +545,7 @@ class ParameterSweepDialog(QDialog):
             if plan.point_count > 100
             else ""
         )
-        self._run.setEnabled(self._thread is None)
+        self._run.setEnabled(not self._runner.is_running)
 
     def _x_variable_changed(self) -> None:
         if self._updating_axes:
@@ -593,7 +595,7 @@ class ParameterSweepDialog(QDialog):
         )
 
     def _start(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             return
         plan = self._plan()
         if plan is None:
@@ -624,16 +626,10 @@ class ParameterSweepDialog(QDialog):
             plan=plan,
             cancel_token=self._cancel_token,
         )
-        self._thread = QThread(self)
-        self._worker = ParameterSweepWorker(self._solver, command)
-        self._worker.moveToThread(self._thread)
-        self._thread.started.connect(self._worker.run)
-        self._worker.progress.connect(self._on_progress)
-        self._worker.finished.connect(self._on_finished)
-        self._worker.failed.connect(self._on_failed)
-        self._thread.finished.connect(self._cleanup)
+        worker = ParameterSweepWorker(self._solver, command)
+        worker.progress.connect(self._on_progress)
         self._set_running(True)
-        self._thread.start()
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _on_progress(self, completed: int, total: int) -> None:
         self._progress.set_progress(
@@ -651,23 +647,12 @@ class ParameterSweepDialog(QDialog):
         else:
             self._progress.complete("sweep.progress_done")
         self._set_running(False)
-        if self._thread is not None:
-            self._thread.quit()
+        self._cancel_token = None
 
     def _on_failed(self, message: str) -> None:
         self._summary.setText(f"{self._translator.t('sweep.failed')} {message}")
         self._progress.fail("sweep.failed")
         self._set_running(False)
-        if self._thread is not None:
-            self._thread.quit()
-
-    def _cleanup(self) -> None:
-        if self._worker is not None:
-            self._worker.deleteLater()
-        if self._thread is not None:
-            self._thread.deleteLater()
-        self._worker = None
-        self._thread = None
         self._cancel_token = None
 
     def _cancel_run(self) -> None:
@@ -980,7 +965,7 @@ class ParameterSweepDialog(QDialog):
         else:
             self._selected_parameters = None
         self._apply_selected.setEnabled(
-            self._selected_parameters is not None and self._thread is None
+            self._selected_parameters is not None and not self._runner.is_running
         )
 
     def _apply_selected_point(self) -> None:
@@ -1069,13 +1054,13 @@ class ParameterSweepDialog(QDialog):
             self._update_budget()
 
     def reject(self) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             return
         super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None:
+        if self._runner.is_running:
             self._cancel_run()
             event.ignore()
             return

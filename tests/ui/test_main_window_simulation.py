@@ -246,7 +246,7 @@ def test_simulate_shows_indeterminate_progress_then_resets(window: MainWindow) -
     finally:
         solver.release.set()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
     assert window._task_progress.isHidden() is True
@@ -270,7 +270,7 @@ def test_cancel_simulation_marks_progress_cancelling(window: MainWindow) -> None
     finally:
         solver.release.set()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
     assert window._task_progress.isHidden() is True
@@ -287,7 +287,7 @@ def test_simulation_failure_resets_progress(
 
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
 
@@ -322,7 +322,7 @@ def test_band_analysis_shows_a_determinate_progress_bar(window: MainWindow) -> N
     finally:
         solver.release.set()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
     assert window._task_progress.isHidden() is True
@@ -451,7 +451,7 @@ def test_remove_project_matching_network_restores_the_internal_network(
 def test_simulate_updates_results(window: MainWindow, qtbot: QtBot) -> None:
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -482,7 +482,7 @@ def test_simulate_saves_the_form_before_running(
 
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -501,7 +501,7 @@ def test_export_csv_and_html_from_the_current_result(
 ) -> None:
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
     assert window._export_csv_action.isEnabled() is True
@@ -536,7 +536,7 @@ def test_simulation_results_persist_across_save_and_open(
 
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
     assert window._project is not None
@@ -787,7 +787,7 @@ def test_analyze_bands_runs_the_selected_band_set(
 
     window.analyze_bands()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
 
@@ -843,7 +843,7 @@ def test_band_analysis_respects_the_pattern_frequency_count(
 
     window.analyze_bands()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
 
@@ -886,7 +886,7 @@ def test_band_analysis_reopens_from_a_saved_project(
     monkeypatch.setattr(main_window_module, "BandAnalysisDialog", FakeBandDialog)
     window.analyze_bands()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
     path = tmp_path / "bands.antennadesk"
@@ -965,7 +965,7 @@ def test_custom_sweep_overrides_a_generated_template(
     assert window._sweep_start.isEnabled() is True
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -1060,7 +1060,7 @@ def test_fan_dipole_simulate_covers_all_element_bands(
 
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=5_000,
     )
 

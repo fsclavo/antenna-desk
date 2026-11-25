@@ -68,7 +68,7 @@ def test_simulation_runs_survive_undo_of_a_design_edit(
     window._form._length.setValue(21.0)
     window.apply_design()
     window.simulate()
-    wait_for_condition(lambda: not window._simulating and window._thread is None)
+    wait_for_condition(lambda: not window._simulating and not window._runner.is_running)
     assert window._project is not None
     runs_after_simulation = len(window._project.simulation_runs)
     assert runs_after_simulation >= 1

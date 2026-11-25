@@ -230,7 +230,7 @@ def test_band_aware_apply_best_analyzes_every_selected_band(
 
     window.optimize_current_design()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 
@@ -268,7 +268,7 @@ def test_single_mode_apply_best_keeps_the_single_band_simulation(
 
     window.optimize_current_design()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 

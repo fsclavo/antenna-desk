@@ -4,8 +4,10 @@
 
 from __future__ import annotations
 
+import threading
 from uuid import UUID
 
+import pytest
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
@@ -93,6 +95,7 @@ def _dialog(
     qtbot: QtBot,
     *,
     language: Language = Language.ENGLISH,
+    solver: object | None = None,
     preset_plan: SweepPlan | None = None,
     guide: SweepGuide | None = None,
 ) -> ParameterSweepDialog:
@@ -113,7 +116,7 @@ def _dialog(
     dialog = ParameterSweepDialog(
         Translator(language),
         UnitSystem.METRIC,
-        _SweepSolver(),
+        _SweepSolver() if solver is None else solver,  # type: ignore[arg-type]
         availability.descriptor,
         design,
         SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
@@ -138,7 +141,7 @@ def test_dialog_runs_a_1d_sweep_and_applies_a_selected_point(qtbot: QtBot) -> No
     dialog = _dialog(qtbot)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     result = dialog.sweep_result()
     assert result is not None
@@ -157,7 +160,7 @@ def test_dialog_uses_roe_labels_in_spanish(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot, language=Language.SPANISH)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     assert dialog._plot.getAxis("left").labelText == "ROE"
     assert dialog._table.horizontalHeaderItem(1).text() == "ROE"
@@ -172,7 +175,7 @@ def test_dialog_runs_a_2d_sweep_and_selects_a_cell(qtbot: QtBot) -> None:
     dialog._y_count.setValue(3)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     result = dialog.sweep_result()
     assert result is not None
@@ -270,3 +273,55 @@ def test_dialog_retranslates(qtbot: QtBot) -> None:
     assert dialog._run.text() == "Ejecutar barrido"
     assert dialog._metric.itemText(0) == "ROE"
     assert dialog._y_variable.itemText(0) == "Ninguna (barrido 1D)"
+
+
+def test_sweep_dialog_ignores_a_second_start(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dialog = _dialog(qtbot)
+    dialog._start()
+    calls: list[object] = []
+    monkeypatch.setattr(
+        dialog._runner,
+        "start",
+        lambda *args, **kwargs: calls.append(args) or False,
+    )
+
+    dialog._start()
+
+    assert calls == []
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
+
+
+def test_sweep_dialog_cancels_and_closes_after_a_running_sweep(qtbot: QtBot) -> None:
+    class BlockingSolver(_SweepSolver):
+        def __init__(self) -> None:
+            super().__init__()
+            self.started = threading.Event()
+            self.release = threading.Event()
+
+        def run(self, model, spec, *, progress_callback=None, cancel_token=None):
+            self.started.set()
+            self.release.wait(5.0)
+            return super().run(
+                model,
+                spec,
+                progress_callback=progress_callback,
+                cancel_token=cancel_token,
+            )
+
+    solver = BlockingSolver()
+    dialog = _dialog(qtbot, solver=solver)
+    dialog.show()
+    dialog._start()
+    qtbot.waitUntil(solver.started.is_set, timeout=5_000)
+
+    assert dialog.close() is False
+    assert dialog.isVisible() is True
+
+    dialog._cancel_run()
+    solver.release.set()
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
+
+    assert dialog.close() is True

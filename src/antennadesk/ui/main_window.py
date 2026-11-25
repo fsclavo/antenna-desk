@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 from uuid import UUID
 
-from PySide6.QtCore import Qt, QThread, QTimer
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -389,6 +389,7 @@ from .workers.project_bundle_worker import (
     ProjectBundleImportWorker,
 )
 from .workers.simulation_worker import SimulationWorker
+from .workers.task_runner import TaskRunner
 from .workflow import NextStepKind, WorkflowContext, WorkflowMode, next_step
 
 VNA_SUFFIXES = frozenset({".csv", ".txt", ".s1p", ".s2p"})
@@ -498,8 +499,11 @@ class MainWindow(QMainWindow):
         self._custom_last_budget: PatternBudget | None = None
         self._pending_pattern_diagnostic: Diagnostic | None = None
         self._last_status_key = "status.ready"
-        self._thread: QThread | None = None
-        self._worker: SimulationWorker | BandAnalysisWorker | ComparisonWorker | None = None
+        self._active_task: str | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_worker_succeeded)
+        self._runner.failed.connect(self._on_worker_failed)
+        self._runner.finished.connect(self._on_worker_thread_finished)
         self._cancel_token: EventCancelToken | None = None
         self._comparison_dialog: ComparisonDialog | None = None
         self._comparison_basis: ComparisonBasis | None = None
@@ -4219,26 +4223,15 @@ class MainWindow(QMainWindow):
         self._update_status_text()
         self._start_indeterminate_progress("progress.preparing")
 
-        thread = QThread(self)
         worker = SimulationWorker(
             self._solver,
             design.antenna,
             spec,
             self._cancel_token,
         )
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.phase.connect(self._on_simulation_phase)
-        worker.finished.connect(self._on_simulation_finished)
-        worker.failed.connect(self._on_simulation_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(self._on_worker_thread_finished)
-        self._thread = thread
-        self._worker = worker
-        thread.start()
+        self._active_task = "simulation"
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def run_convergence_study(self) -> None:
         if self._simulating:
@@ -4399,7 +4392,6 @@ class MainWindow(QMainWindow):
         self._update_status_text()
         self._start_determinate_progress(len(requests), "progress.analyzing_bands")
 
-        thread = QThread(self)
         worker = BandAnalysisWorker(
             self._solver,
             design.id,
@@ -4408,19 +4400,9 @@ class MainWindow(QMainWindow):
             self._cancel_token,
             parallel_workers=parallel_workers,
         )
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.progress.connect(self._on_band_analysis_progress)
-        worker.finished.connect(self._on_band_analysis_finished)
-        worker.failed.connect(self._on_simulation_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(self._on_worker_thread_finished)
-        self._thread = thread
-        self._worker = worker
-        thread.start()
+        self._active_task = "band_analysis"
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _on_band_analysis_progress(self, index: int, total: int, band: str) -> None:
         self._task_progress.set_progress(
@@ -4562,9 +4544,23 @@ class MainWindow(QMainWindow):
         self._status_label.setText(self._translator.t("status.error"))
         self._show_error(self._translator.t("error.simulation", message=message))
 
+    def _on_worker_succeeded(self, result: object) -> None:
+        kind = self._active_task
+        if kind == "simulation":
+            self._on_simulation_finished(result)  # type: ignore[arg-type]
+        elif kind == "band_analysis":
+            self._on_band_analysis_finished(result)  # type: ignore[arg-type]
+        elif kind == "comparison":
+            self._on_comparison_finished(result)
+
+    def _on_worker_failed(self, message: object) -> None:
+        if self._active_task == "comparison":
+            self._on_comparison_failed(str(message))
+        else:
+            self._on_simulation_failed(str(message))
+
     def _on_worker_thread_finished(self) -> None:
-        self._thread = None
-        self._worker = None
+        self._active_task = None
 
     def cancel_simulation(self) -> None:
         if not self._simulating or self._cancel_token is None:
@@ -7215,7 +7211,6 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status_text()
         self._start_determinate_progress(len(runs), "status.comparing")
-        thread = QThread(self)
         worker = ComparisonWorker(
             self._solver,
             CompareDesignsCommand(
@@ -7223,19 +7218,9 @@ class MainWindow(QMainWindow):
                 cancel_token=self._cancel_token,
             ),
         )
-        worker.moveToThread(thread)
-        thread.started.connect(worker.run)
         worker.progress.connect(self._on_comparison_progress)
-        worker.finished.connect(self._on_comparison_finished)
-        worker.failed.connect(self._on_comparison_failed)
-        worker.finished.connect(thread.quit)
-        worker.failed.connect(thread.quit)
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
-        thread.finished.connect(self._on_worker_thread_finished)
-        self._thread = thread
-        self._worker = worker
-        thread.start()
+        self._active_task = "comparison"
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _on_comparison_progress(self, index: int, total: int, name: str) -> None:
         self._task_progress.set_progress(
@@ -7290,7 +7275,7 @@ class MainWindow(QMainWindow):
         self._show_error(self._translator.t("error.simulation", message=message))
 
     def _cancel_comparison_if_running(self) -> None:
-        if self._simulating and isinstance(self._worker, ComparisonWorker):
+        if self._simulating and self._active_task == "comparison":
             self.cancel_simulation()
 
     def _current_export_data(
@@ -7892,11 +7877,7 @@ class MainWindow(QMainWindow):
             )
             event.ignore()
             return
-        if self._thread is not None:
-            self._thread.quit()
-            self._thread.wait(5_000)
-            self._thread = None
-            self._worker = None
+        self._runner.close(5_000)
         if self._maybe_save_changes():
             self._recovery_controller.stop()
             self._recovery_controller.clear()

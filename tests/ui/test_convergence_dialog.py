@@ -72,3 +72,21 @@ def test_convergence_dialog_exports_csv(
     assert text.startswith("density_lambda,total_segments,resistance_ohm,")
     assert "converged" in text
     dialog.accept()
+
+
+def test_convergence_dialog_ignores_a_second_start(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dialog = _dialog(qtbot)
+    calls: list[object] = []
+    monkeypatch.setattr(
+        dialog._runner,
+        "start",
+        lambda *args, **kwargs: calls.append(args) or False,
+    )
+
+    dialog._start()
+
+    assert calls == []
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)

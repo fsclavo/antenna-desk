@@ -81,7 +81,7 @@ def test_simulation_result_does_not_trigger_autosave(
     window._autosave_pending = False
     window.simulate()
     wait_for_condition(
-        lambda: not window._simulating and window._thread is None,
+        lambda: not window._simulating and not window._runner.is_running,
         timeout_ms=15_000,
     )
 

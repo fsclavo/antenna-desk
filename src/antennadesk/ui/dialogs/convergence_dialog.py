@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -33,6 +33,7 @@ from ...domain.simulation.convergence import ConvergenceResult, convergence_csv
 from ...domain.simulation.spec import SimulationSpec
 from ..i18n import Translator
 from ..workers.convergence_worker import ConvergenceWorker
+from ..workers.task_runner import TaskRunner
 
 _COLUMNS = (
     "convergence.column.density",
@@ -63,8 +64,9 @@ class ConvergenceDialog(QDialog):
         self._solver = solver
         self._result: ConvergenceResult | None = None
         self._cancel_token = EventCancelToken()
-        self._thread: QThread | None = None
-        self._worker: ConvergenceWorker | None = None
+        self._runner = TaskRunner(self)
+        self._runner.succeeded.connect(self._on_finished)
+        self._runner.failed.connect(self._on_failed)
 
         self.setWindowTitle(translator.t("convergence.title"))
         self.resize(980, 520)
@@ -108,31 +110,15 @@ class ConvergenceDialog(QDialog):
         self._start()
 
     def _start(self) -> None:
+        if self._runner.is_running:
+            return
         command = RunConvergenceStudyCommand(
             model=self._model,
             base_spec=self._spec,
             cancel_token=self._cancel_token,
         )
-        self._thread = QThread(self)
-        self._worker = ConvergenceWorker(
-            RunConvergenceStudy(self._solver),
-            command,
-            self,
-        )
-        self._worker.moveToThread(self._thread)
-        self._thread.started.connect(self._worker.run)
-        self._worker.finished.connect(self._on_finished)
-        self._worker.failed.connect(self._on_failed)
-        self._worker.finished.connect(self._thread.quit)
-        self._worker.failed.connect(self._thread.quit)
-        self._thread.finished.connect(self._worker.deleteLater)
-        self._thread.finished.connect(self._thread.deleteLater)
-        self._thread.finished.connect(self._thread_finished)
-        self._thread.start()
-
-    def _thread_finished(self) -> None:
-        self._thread = None
-        self._worker = None
+        worker = ConvergenceWorker(RunConvergenceStudy(self._solver), command)
+        self._runner.start(worker, cancel=self._cancel_token)
 
     def _cancel(self) -> None:
         self._cancel_token.cancel()
@@ -223,8 +209,5 @@ class ConvergenceDialog(QDialog):
             )
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if self._thread is not None and self._thread.isRunning():
-            self._cancel_token.cancel()
-            self._thread.quit()
-            self._thread.wait(5_000)
+        self._runner.close(5_000)
         event.accept()

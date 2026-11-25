@@ -67,6 +67,26 @@ project bundles. The domain is no longer dipole-only.
 - UI widgets never perform electromagnetic calculations. Simulation runs in a
   `QThread` worker and returns a normalized `SimulationResult`.
 
+### Qt worker lifecycle
+
+Background UI work goes through one controller,
+`ui/workers/task_runner.TaskRunner` (see
+[ADR-0053](ADR/0053-qt-worker-task-lifecycle.md)). The controller:
+
+- owns one `QThread` and one worker at a time;
+- queues every worker-to-controller signal to the GUI thread and carries a
+  generation so a late result from an abandoned task is ignored;
+- emits `succeeded`, `failed`, `cancelled`, and `finished` only after the
+  thread has stopped, so a handler may start the next task;
+- cancels cooperatively and closes with a bounded wait; if the worker does not
+  stop in time, the thread is detached, keeps its worker alive, and deletes
+  both when it finishes;
+- provides `run_worker_blocking()` for the modal project-I/O and end-fed paths,
+  built on the same controller instead of a second thread lifecycle.
+
+`QThread(` and `moveToThread(` are forbidden outside `task_runner.py`; an
+architecture test enforces the boundary.
+
 ## Project creation and persistence flow
 
 ```text

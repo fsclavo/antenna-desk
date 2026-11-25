@@ -7,6 +7,7 @@ from __future__ import annotations
 from uuid import UUID
 
 import pyqtgraph as pg
+import pytest
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -130,7 +131,7 @@ def test_dialog_runs_corners_and_monte_carlo(qtbot: QtBot) -> None:
     dialog._variables_list.item(2).setCheckState(Qt.CheckState.Unchecked)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     result = dialog.robustness_result()
     assert result is not None
@@ -153,7 +154,7 @@ def test_dialog_can_run_nominal_only_and_retranslates(qtbot: QtBot) -> None:
     assert dialog.windowTitle() == "Tolerancia y robustez"
     assert dialog._run.text() == "Ejecutar análisis"
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     result = dialog.robustness_result()
     assert result is not None
@@ -168,7 +169,7 @@ def test_dialog_uses_roe_labels_in_spanish(qtbot: QtBot) -> None:
     dialog._samples.setValue(0)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     assert dialog._plot.getAxis("bottom").labelText == "ROE"
     assert dialog._table.horizontalHeaderItem(2).text() == "ROE"
@@ -196,3 +197,22 @@ def test_robustness_dialog_formats_lengths_with_auto_units(qtbot: QtBot) -> None
 
     assert "cm" in text
     assert "25.00" in text
+
+
+def test_robustness_dialog_ignores_a_second_start(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dialog = _dialog(qtbot)
+    dialog._start()
+    calls: list[object] = []
+    monkeypatch.setattr(
+        dialog._runner,
+        "start",
+        lambda *args, **kwargs: calls.append(args) or False,
+    )
+
+    dialog._start()
+
+    assert calls == []
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)

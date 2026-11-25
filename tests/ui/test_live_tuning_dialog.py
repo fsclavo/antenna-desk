@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import UTC, datetime
 
 from PySide6.QtCore import QThread
@@ -324,3 +325,65 @@ def test_live_tuning_delivers_results_on_the_gui_thread(qtbot: QtBot) -> None:
 
     assert all(thread is dialog.thread() for thread in finished_threads)
     dialog.close()
+
+
+def test_live_tuning_close_detaches_a_running_preview(qtbot: QtBot) -> None:
+    class SlowSolver(_FakeSolver):
+        def __init__(self) -> None:
+            super().__init__()
+            self.started = threading.Event()
+            self.release = threading.Event()
+            self.done = threading.Event()
+
+        def run(self, model, spec, *, cancel_token=None):
+            self.started.set()
+            try:
+                self.release.wait(5.0)
+                return super().run(model, spec, cancel_token=cancel_token)
+            finally:
+                self.done.set()
+
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    solver = SlowSolver()
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        solver,
+        lambda updated: None,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(solver.started.is_set, timeout=3_000)
+
+    dialog.close()
+    solver.release.set()
+    qtbot.waitUntil(solver.done.is_set, timeout=5_000)
+    qtbot.wait(100)
+
+    assert dialog.isVisible() is False
+
+
+def test_live_tuning_repeated_close_during_a_preview_is_stable(qtbot: QtBot) -> None:
+    class DelayedSolver(_FakeSolver):
+        def run(self, model, spec, *, cancel_token=None):
+            QThread.msleep(20)
+            return super().run(model, spec, cancel_token=cancel_token)
+
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    for _ in range(10):
+        dialog = LiveTuningDialog(
+            Translator(Language.ENGLISH),
+            parameters,
+            spec,
+            DelayedSolver(),
+            lambda updated: None,
+        )
+        qtbot.addWidget(dialog)
+        dialog._debounce.setInterval(1)
+        dialog.show()
+        qtbot.waitUntil(lambda current=dialog: current._busy, timeout=3_000)
+        dialog.close()
+        qtbot.wait(30)

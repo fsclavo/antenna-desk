@@ -229,7 +229,7 @@ def test_dialog_runs_the_worker_and_accepts(qtbot: QtBot) -> None:
     dialog = _dialog(qtbot)
 
     dialog._start()
-    qtbot.waitUntil(lambda: dialog._thread is None, timeout=15_000)
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
 
     proposal = dialog.proposal()
     assert proposal is not None
@@ -237,3 +237,22 @@ def test_dialog_runs_the_worker_and_accepts(qtbot: QtBot) -> None:
     assert dialog._apply.isEnabled() is True
     dialog._apply_result()
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_tuning_dialog_ignores_a_second_start(
+    qtbot: QtBot,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dialog = _dialog(qtbot)
+    dialog._start()
+    calls: list[object] = []
+    monkeypatch.setattr(
+        dialog._runner,
+        "start",
+        lambda *args, **kwargs: calls.append(args) or False,
+    )
+
+    dialog._start()
+
+    assert calls == []
+    qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)

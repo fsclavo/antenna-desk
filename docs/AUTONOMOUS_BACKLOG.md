@@ -61,7 +61,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
-| UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Proposed; not started.** Replace the 14 copied `QThread`/worker setups with one controller that owns start, cancellation, completion, error, and teardown. Migrate every worker site with close-while-running, double-start, stale-result, and modal project-I/O tests. Not release-blocking. See §UX45. |
+| UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -1330,11 +1330,31 @@ current 1.1/1.2 priorities.
 
 ## UX45 — Shared Qt worker lifecycle
 
-**Status:** proposed 2026-11-24; not started. **Priority:** maintenance and
+**Status:** **done 2026-11-25.** Implemented through
+[ADR-0053](ADR/0053-qt-worker-task-lifecycle.md). **Priority:** maintenance and
 reliability, not release-blocking. **Trigger:** the 2026-11-24 QA pass fixed a
 stale-result and debounce race inside `LiveTuningDialog`; the same lifecycle
-logic exists in other dialogs, so a future fix would not propagate. See
+logic existed in other dialogs, so a future fix would not propagate. See
 [`archive/qa/QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md).
+
+**Delivered:** `ui/workers/task_runner.py` owns one `QThread` and one worker at
+a time, queues every worker signal to the GUI thread, carries a generation for
+stale-result rejection, emits terminal signals after the thread stops, cancels
+cooperatively, closes with a bounded wait, and detaches a stuck worker with a
+guard that keeps it alive until it finishes. `run_worker_blocking()` preserves
+the modal project-I/O and end-fed behavior on the same controller. All 14 sites
+were migrated; `QThread(` and `moveToThread(` are now forbidden outside the
+controller by an architecture test. No schema, solver, domain, or
+project-format change.
+
+**Follow-ups:** none required. The detach path deliberately lets a stuck solver
+outlive its dialog; a future process-exit policy can wait for detached tasks if
+the solver ever needs a hard shutdown guarantee.
+
+The migration followed the recommendations below, which are retained as the
+record of the original plan; the migration order was convergence, sweep and
+tuning dialogs, optimizer dialogs, live tuning, main-window workers, and the
+modal project-I/O/end-fed adapters.
 
 **Goal:** replace the copied `QThread`/worker setup with one small, testable
 controller that owns thread creation, cancellation, completion, error handling,

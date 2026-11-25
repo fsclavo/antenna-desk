@@ -1,6 +1,6 @@
 # Project status
 
-**Updated:** 2026-11-24
+**Updated:** 2026-11-25
 **Latest published release:** `0.10.1` (2026-11-24)
 **Development schema:** `61`
 **Current product track:** 1.2 Site and exploration
@@ -10,6 +10,13 @@
 - 0.10.1 is published (2026-11-24) with the refreshed application icon and
   the live-tuning GUI-thread worker fix. Windows 3.11/3.12/3.13 and Linux CI
   pass; the Release workflow built and checksum-verified every artifact.
+- UX45 is **closed 2026-11-25**. Every UI `QThread` site now runs through
+  `ui/workers/task_runner.TaskRunner`: one controller owns start, queued
+  delivery, generation checks, cancellation, completion, failure, bounded
+  close, and detached teardown. The modal project-I/O and end-fed paths use
+  the same controller through `run_worker_blocking()`. An architecture test
+  forbids `QThread(` and `moveToThread(` outside the controller. See
+  [`ADR-0053`](ADR/0053-qt-worker-task-lifecycle.md).
 - 1.0 Confidence is complete (TS1–TS7, DL9).
 - DL1 Smith chart and DL2 tuner matchability are complete.
 - DL5 support structures are **explicitly narrowed**: the Yagi mast and guy
@@ -64,15 +71,14 @@
   claims, two live-tuning preview races, the vertical-optimizer droop bound at
   the tip-clearance limit, and the multiband benchmark import. See
   [`archive/qa/QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md). The
-  remaining Qt worker-lifecycle duplication is queued as UX45.
+  Qt worker-lifecycle duplication found there became UX45 and is now closed.
 
 ## Next
 
 1. Continue DL6 from the domain prototype to form, schema, and per-port UI.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
-4. Keep the optional PF2/PF3 and UX45 maintenance items separate from the
-   release gate.
+4. Keep the optional PF2/PF3 maintenance items separate from the release gate.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in
