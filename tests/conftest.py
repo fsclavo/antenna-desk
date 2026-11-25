@@ -58,7 +58,11 @@ def _collect_garbage_after_each_test(request):
         # and palette events.
         app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
         app.processEvents()
-    gc.collect()
+    # A forced collection while Qt wrappers are being deleted can corrupt the
+    # native heap on Windows. Keep it on Linux, where it prevents a shutdown
+    # crash after the full UI suite (ADR-0025).
+    if os.name != "nt":
+        gc.collect()
 
 
 @pytest.fixture
