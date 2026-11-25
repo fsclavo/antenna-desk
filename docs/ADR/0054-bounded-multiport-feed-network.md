@@ -35,9 +35,11 @@ but loaded to about 37.8 + 2.4j Ω with the 100 Ω isolation resistor; the outpu
 ports were not balanced/isolated. The numbers are diagnostics, not references.
 
 The topology is expressible with NEC TLs and a resistor, but a geometry-only
-port builder is not sufficient. The canonical model needs an **adapter-level
-port/reference abstraction** that defines the node, reference, polarity, and
-network branch before a splitter can be built correctly.
+port builder is not sufficient. A later clean 10 cm T-junction probe also
+produced a negative input resistance and an invalid passive model. The
+canonical model needs an **adapter-level port/reference abstraction** that
+defines the node, reference, polarity, and network branch before a splitter can
+be built correctly. A geometry-only builder is rejected.
 
 ## Reference
 

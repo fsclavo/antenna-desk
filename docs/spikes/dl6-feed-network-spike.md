@@ -121,6 +121,11 @@ is not explicit, and the network table reports the TL ports without a reliable
 common reference. A geometry-only builder cannot guarantee that the source,
 load, TL, and reference meet at the same electrical node.
 
+A later clean 10 cm T-junction probe with the isolation wire routed away from
+the input node still produced a negative input resistance and an invalid
+passive model. That closes the geometry-only path for this feature. The port
+model must be adapter-level or circuit-level, not a set of extra wires.
+
 ## Splitter options
 
 | Option | What it gives | Cost / risk | Verdict |
