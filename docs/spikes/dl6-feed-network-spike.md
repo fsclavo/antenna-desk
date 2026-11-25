@@ -98,6 +98,29 @@ Wilkinson measurement, and is not used as a reference.
 canonical model needs an explicit **port/reference abstraction** before a
 splitter can be built correctly. Reusing the antenna feed hack is not enough.
 
+## Second probe: T-junction node ports
+
+A second temporary probe moved to a perfect ground plane and a T-junction node:
+
+- 2 cm vertical port wires from ground to the node;
+- source/load on the port wire, with separate 1 cm branch wires for the TLs;
+- two quarter-wave 70.71 Ω TLs between the input and output branch ends;
+- a 100 Ω isolation resistor on a wire between the output nodes;
+- 50 Ω output terminations.
+
+With the isolation resistor effectively open (1 MΩ), the input impedance
+approached 49.8 + 3.2j Ω (SWR about 1.07). With the 100 Ω isolation resistor,
+the input fell to about 37.8 + 2.4j Ω. The outputs were not balanced/isolated in
+the NEC network table, so the probe is **not** a validated Wilkinson. The
+numbers are diagnostics, not references.
+
+This is closer than the first probe, but it still fails the acceptance test.
+The remaining problem is not the TL equation; it is the port definition:
+source/load and TL connections land on different segments, the branch polarity
+is not explicit, and the network table reports the TL ports without a reliable
+common reference. A geometry-only builder cannot guarantee that the source,
+load, TL, and reference meet at the same electrical node.
+
 ## Splitter options
 
 | Option | What it gives | Cost / risk | Verdict |
@@ -111,12 +134,18 @@ splitter can be built correctly. Reusing the antenna feed hack is not enough.
 
 Open an ADR for a **bounded Wilkinson / corporate splitter** with:
 
-- explicit network ports between a node and a common reference;
+- an **adapter-level port/reference abstraction**, not a geometry-only set of
+  extra wires. A port must define its node, reference, polarity, and network
+  branch so the source/load and TL meet at the same electrical node;
 - a declared splitter design frequency;
-- a 2-way Wilkinson prototype first, then 3–4 way as a corporate network of
-  2-way sections;
+- a **single-TL-plus-load calibration** first, then a 2-way Wilkinson, then
+  3–4 way as a corporate network of 2-way sections;
 - the current ideal/excess-loss mode kept as the default and fallback;
 - no broadband or isolation claim outside the modeled frequency range.
+
+A small N-port circuit solver may be simpler and more accurate than forcing
+NEC's wire/segment model to behave as a circuit simulator. That choice needs a
+separate cost/license/benefit ADR if it adds a dependency.
 
 The prototype must be compared with the standard Wilkinson equations or a
 trusted circuit solver. The acceptance tolerance must come from that reference;
@@ -211,7 +240,7 @@ pass.
 
 1. Approve the recommendation to keep the current ideal/excess-loss splitter
    as the default and **not** add a scalar isolation/return-loss correction.
-2. Approve opening ADR-0054 for the bounded Wilkinson/corporate splitter and
-   the explicit port/reference abstraction.
+2. Approve ADR-0054's port/reference work as an **adapter-level** model, not a
+   geometry-only builder. Add the single-TL calibration before the Wilkinson.
 3. Keep per-level matching, folded driven elements, and per-level transformers
    out until the port model and the single-level matching prototype exist.

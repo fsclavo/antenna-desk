@@ -92,7 +92,7 @@
 
 ## Next
 
-1. Continue DL6 with [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): prototype explicit network ports and a bounded Wilkinson splitter before any isolation code.
+1. Continue DL6 with [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): implement the adapter-level port/reference and calibrate a single TL before the Wilkinson; the geometry-only probes did not balance the outputs.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

@@ -1185,7 +1185,9 @@ post-processing and proposes [ADR-0054](ADR/0054-bounded-multiport-feed-network.
 an explicit port/reference abstraction and a bounded Wilkinson/corporate
 splitter at a declared design frequency.
 Per-level matching and folded elements stay out until the port model and a
-single-level L/Pi/T subcircuit are validated.
+single-level L/Pi/T subcircuit are validated. A geometry-only T-junction probe
+came close but did not balance/isolate the outputs; Phase 1 must be an
+adapter-level port model, with a single-TL calibration before the Wilkinson.
 
 **Goal:** answer "two stacked Yagis or one bigger one?"
 

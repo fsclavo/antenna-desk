@@ -29,8 +29,15 @@ would be a number, not a model.
 The feed-network spike found that a temporary two-way Wilkinson probe using the
 current canonical model was invalid: the ground-clearance rule lifted the node
 wires and the 50 Ω loads sat in series in floating wires instead of across
-explicit ports. The topology is expressible with NEC TLs and a resistor, but
-the canonical model needs an explicit port/reference abstraction first.
+explicit ports. A second T-junction probe on a perfect ground plane came close
+to a match with the isolation resistor effectively open (about 49.8 + 3.2j Ω)
+but loaded to about 37.8 + 2.4j Ω with the 100 Ω isolation resistor; the output
+ports were not balanced/isolated. The numbers are diagnostics, not references.
+
+The topology is expressible with NEC TLs and a resistor, but a geometry-only
+port builder is not sufficient. The canonical model needs an **adapter-level
+port/reference abstraction** that defines the node, reference, polarity, and
+network branch before a splitter can be built correctly.
 
 ## Reference
 
@@ -67,20 +74,27 @@ invented here.
 
 ### Phase 1 — Port/reference abstraction
 
-- Add a canonical port type or an explicit reference-node convention.
+- Add a canonical port type or an explicit reference-node convention at the
+  **adapter** level, not as extra geometry alone.
+- Define the port node, reference, polarity, and network branch so a source,
+  load, and TL can meet at the same electrical node.
 - Make the NEC adapter emit the reference without the ground-clearance lift
   breaking the circuit.
 - Keep the existing antenna feed, splitter node, and TL behavior unchanged when
   the new abstraction is unused.
 
-### Phase 2 — Two-way Wilkinson prototype
+### Phase 2 — Single-TL calibration, then two-way Wilkinson
 
-- Build a two-way divider from two quarter-wave TLs and one isolation resistor.
+- First build a single TL with a source and a 50 Ω load on explicit ports and
+  compare its input impedance with the analytic two-port result. This isolates
+  the port model from the splitter topology.
+- Then build a two-way divider from two quarter-wave TLs and one isolation
+  resistor.
 - Compare the input impedance, output power split, and isolation with the
   standard Wilkinson equations or a trusted circuit solver.
 - Derive the acceptance tolerance from that reference; do not invent a numeric
   tolerance.
-- Add a real `nec2c` regression for the prototype.
+- Add a real `nec2c` regression for both the single line and the divider.
 
 ### Phase 3 — Three- and four-way corporate splitter
 
@@ -111,6 +125,7 @@ invented here.
 ### Splitter slice
 
 - Explicit input and output ports with a common reference.
+- A single TL with a 50 Ω load calibrated against the analytic two-port.
 - A two-way Wilkinson compared with the standard equations or a trusted circuit
   solver; tolerance derived from that reference.
 - A three- or four-way corporate network built from validated two-way sections.
