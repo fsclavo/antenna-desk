@@ -94,6 +94,28 @@ Revisit this exclusion when PySide6 or pyqtgraph is upgraded, or when a minimal
 reproducer identifies the failing native object lifetime. Do not treat verbose
 output or a retry as a fix.
 
+## Windows 3.12/3.13 live-tuning teardown (2026-11-24)
+
+The Windows UI jobs exposed a second native failure after the 0.10.0 release:
+the live-tuning batch hung and later aborted while pytest-qt processed events.
+
+Root cause: `SimulationWorker.finished` and `.failed` were connected to lambdas
+without a QObject receiver, so the handlers ran in the worker thread. Those
+handlers updated widgets and closed or deleted `QThread` objects from that
+thread. The failure moved between Windows 3.12 and 3.13 as timing changed.
+
+The fix:
+
+- connect worker results to dialog slots with `QueuedConnection`;
+- keep widget updates and worker cleanup on the GUI thread;
+- if a running `QThread` does not stop within 500 ms, detach it from the dialog
+  and let it finish and delete itself instead of destroying it with the dialog;
+- split geometry, journal, and live-tuning UI files into separate CI processes
+  with per-batch timeouts.
+
+The full Windows 3.12 and 3.13 UI suites passed after the fix. The Windows 3.11
+exclusion remains unchanged and should be revisited under the same conditions.
+
 ## Alternatives considered
 
 | Alternative | Reason for rejection |
