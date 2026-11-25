@@ -11869,7 +11869,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "co-simulated lossless TL network. Network mode applies the matched "
             "line loss to realized gain; mismatch-dependent line loss and "
             "splitter internal mismatch are not modeled. The optional mast and "
-            "guy wires are shared by every level."
+            "guy wires are shared by every level, and a beta/hairpin match is "
+            "built at every driven element."
         ),
         Language.SPANISH: (
             "Cada nivel es el mismo Yagi. En modos ideal y de líneas de fase, el "
@@ -11880,7 +11881,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "pérdidas co-simulada. El modo red aplica la pérdida de línea "
             "adaptada a la ganancia realizada; no se modelan la pérdida "
             "dependiente del desadapto ni el desajuste interno del divisor. El "
-            "mástil y los vientos opcionales son compartidos por todos los niveles."
+            "mástil y los vientos opcionales son compartidos por todos los niveles, "
+            "y se arma un match beta/hairpin en cada elemento excitado."
         ),
     },
     "stacked_yagi.evidence": {
@@ -11890,8 +11892,9 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "splitter excess loss; network mode also applies a matched line loss "
             "to realized gain while the primary SWR stays lossless. "
             "Mismatch-dependent line loss, splitter internal mismatch, and "
-            "per-level matching are not modeled. An optional mast and guy wires "
-            "are modeled once for the whole stack. In network mode the reference "
+            "per-level matching networks are not modeled. An optional mast and "
+            "guy wires are modeled once for the whole stack, and a beta/hairpin "
+            "match is built at every driven element. In network mode the reference "
             "line and differential TL impedance transformation are included; "
             "phase-line mode does not include them. No stacking gain is claimed; "
             "verify spacing, phase, and matching with the solver or a measurement."
@@ -11904,7 +11907,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "mientras la ROE primaria queda sin pérdidas. No se modelan la pérdida "
             "dependiente del desadapto, el desajuste interno del divisor ni el "
             "ajuste por nivel. Un mástil y vientos opcionales se modelan una sola "
-            "vez para toda la pila. En modo red se incluyen la línea de referencia "
+            "vez para toda la pila, y se arma un match beta/hairpin en cada "
+            "elemento excitado. En modo red se incluyen la línea de referencia "
             "y la transformación de impedancia de las líneas diferenciales; el modo "
             "de líneas de fase no las incluye. No se declara ganancia de apilado; "
             "verificá separación, fase y ajuste con el solver o una medición."

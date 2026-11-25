@@ -16,7 +16,11 @@ from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeedMode,
     StackedYagiParameters,
 )
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.yagi import (
+    YagiElement,
+    YagiMatchType,
+    YagiParameters,
+)
 from antennadesk.domain.environment.ground import GroundModel
 from antennadesk.domain.simulation.far_field import FarFieldRequest
 from antennadesk.domain.simulation.frequency import FrequencyPlan
@@ -210,3 +214,40 @@ def test_stacked_yagi_shared_mast_runs_once() -> None:
     assert math.isfinite(point.impedance_ohm.imag)
     assert len([wire for wire in model.wires if wire.id == "mast"]) == 1
     assert len([wire for wire in model.wires if wire.id.startswith("guy-")]) == 3
+
+
+def test_stacked_yagi_beta_match_runs_on_every_level() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    model = parameters.to_antenna()
+    result = Nec2cSolver(Path(os.environ["NEC2C"])).run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    point = result.frequencies[0]
+    assert math.isfinite(point.impedance_ohm.real)
+    assert model.feed.wire_id == "level-1-element-2-feed"
+    assert model.sources[0].wire_id == "level-2-element-2-feed"
+    for level in (1, 2):
+        wire_ids = {wire.id for wire in model.wires}
+        assert f"level-{level}-element-2-hairpin-short" in wire_ids

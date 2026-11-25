@@ -73,11 +73,13 @@ class YagiForm(QWidget):
         display_units: DisplayUnits | None = None,
         include_support_structures: bool = True,
         include_feed_hardware: bool = True,
+        include_match_hardware: bool = True,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._include_support_structures = include_support_structures
         self._include_feed_hardware = include_feed_hardware
+        self._include_match_hardware = include_match_hardware
         self._labels = FormLabels(translator, self, family="yagi")
         self._unit_system = unit_system
         self._display_units = display_units or DisplayUnits(
@@ -324,10 +326,11 @@ class YagiForm(QWidget):
             form.addRow(self._driven_folded)
             form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
             form.addRow(self._transformer_label, self._transformer)
+        if include_feed_hardware or include_match_hardware:
             form.addRow(self._labels.label("yagi.match_type"), self._match_type)
             form.addRow(self._labels.label("yagi.match_length"), self._match_length)
             form.addRow(self._labels.label("yagi.match_spacing"), self._match_spacing)
-        else:
+        if not include_feed_hardware:
             self._match_note.setVisible(False)
 
         element_buttons = QHBoxLayout()
@@ -906,7 +909,7 @@ class YagiForm(QWidget):
             ),
             driven_fold_spacing_m=self._driven_fold_spacing_field.value_m(),
             match_type=(
-                self._selected_match_type() if self._include_feed_hardware else YagiMatchType.NONE
+                self._selected_match_type() if self._include_match_hardware else YagiMatchType.NONE
             ),
             match_length_m=self._match_length_field.value_m(),
             match_spacing_m=self._match_spacing_field.value_m(),

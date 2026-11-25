@@ -43,8 +43,9 @@
   value applied to realized gain, and per-port network connection results. The
   splitter node is the primary input in network mode; the primary SWR remains
   the lossless input. A single shared mast and optional guy set are modeled
-  once across every level. Mismatch-dependent line loss, splitter internal
-  mismatch, per-level matching, and folded/matched driven elements remain
+  once across every level, and a beta/hairpin match is modeled at every driven
+  element. Mismatch-dependent line loss, splitter internal mismatch, per-level
+  matching networks, folded driven elements, and per-level transformers remain
   unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile

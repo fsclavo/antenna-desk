@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   is the primary impedance/SWR reference; the **Sources** table reports every
   driven level.
   The embedded Yagi editor uses its mast/guy fields as one shared support model
-  across every level; folded or matched driven elements and per-level
-  transformers stay disabled. Schema 62 adds the composed payload with a metadata-only 61→62
+  across every level. A beta/hairpin match is built at every driven element;
+  folded driven elements and per-level transformers stay disabled. Schema 62 adds the composed payload with a metadata-only 61→62
   migration; schema 63 adds the optional maximum top height and the splitter/
   phase-line feed specification, including a matched line-loss value. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
@@ -30,7 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   at the design frequency across a sweep. In this mode the solver still uses
   ideal voltage sources and does not model line loss or line impedance
   transformation. One shared mast and optional guy set are modeled across all
-  levels. Per-level matching and folded/matched driven elements remain
+  levels, and a beta/hairpin match is built at every driven element. Per-level
+  matching networks, folded driven elements, and per-level transformers remain
   unavailable. A network mode adds a 1 cm numerical splitter
   node and co-simulates lossless NEC TL cards from that node to every level,
   including the reference line; it reports every network connection point. The

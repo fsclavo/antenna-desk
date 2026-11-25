@@ -116,23 +116,42 @@ def test_vertical_polarized_levels_must_not_overlap() -> None:
     assert stack.highest_tip_m == pytest.approx(30.0 + span + 0.1 + span / 2.0)
 
 
-def test_stack_rejects_folded_matched_or_transformed_driven_elements_for_now() -> None:
+def test_stack_rejects_folded_or_transformed_driven_elements_for_now() -> None:
     yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
 
-    with pytest.raises(ValueError, match="folded or matched"):
+    with pytest.raises(ValueError, match="folded driven"):
         StackedYagiParameters(replace(yagi, driven_folded=True), count=2, spacing_m=3.0)
-    with pytest.raises(ValueError, match="folded or matched"):
-        StackedYagiParameters(
-            replace(yagi, match_type=YagiMatchType.BETA_HAIRPIN),
-            count=2,
-            spacing_m=3.0,
-        )
     with pytest.raises(ValueError, match="transformer"):
         StackedYagiParameters(
             replace(yagi, transformer_ratio=4.0),
             count=2,
             spacing_m=3.0,
         )
+
+
+def test_stack_builds_a_beta_match_at_every_level() -> None:
+    yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
+    matched = replace(
+        yagi,
+        match_type=YagiMatchType.BETA_HAIRPIN,
+        match_length_m=0.3,
+        match_spacing_m=0.12,
+    )
+    stack = StackedYagiParameters(matched, count=2, spacing_m=3.0)
+
+    model = stack.to_antenna()
+
+    assert model.feed.wire_id == "level-1-element-2-feed"
+    assert model.sources[0].wire_id == "level-2-element-2-feed"
+    for level in (1, 2):
+        prefix = f"level-{level}-element-2"
+        ids = {wire.id for wire in model.wires}
+        assert f"{prefix}-left" in ids
+        assert f"{prefix}-right" in ids
+        assert f"{prefix}-feed" in ids
+        assert f"{prefix}-hairpin-a" in ids
+        assert f"{prefix}-hairpin-b" in ids
+        assert f"{prefix}-hairpin-short" in ids
 
 
 def test_phase_line_feed_derives_the_source_phase_from_the_line_increment() -> None:

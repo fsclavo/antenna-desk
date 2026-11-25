@@ -1235,13 +1235,16 @@ separately; a negative source power means that ideal source is absorbing
 power. In ideal and phase-line mode the feed split is not a coupled network;
 the feed specification sets the phase and splitter excess loss. Network mode
 co-simulates the transmission lines but still leaves per-level matching out.
-The stack uses one shared mast and one guy set for every level; the base editor
-still disables folded or matched driven elements and feed transformers.
+The stack uses one shared mast and one guy set for every level. A beta/hairpin
+match can be applied to every driven element; folded driven elements and
+per-level feed transformers are still disabled.
 
 The **Mast diameter**, **Mast offset**, **Guy count**, **Guy anchor**, and
 **Guy diameter** fields describe one shared support: the mast runs from ground
 through every level and the guys attach to its top. Zero disables the support.
-Copying a separate mast per level is not allowed.
+Copying a separate mast per level is not allowed. The **Match type**,
+**Match length**, and **Match spacing** fields build the same beta/hairpin
+match at every driven element.
 
 **Feed network** selects **Ideal phase step**, **Splitter + phase lines**, or
 **Co-simulated TL network**. The ideal mode uses the phase-step field directly.
@@ -1286,10 +1289,11 @@ mutual coupling is included by the wire solver, but no stacking gain is
 claimed. Ideal and phase-line mode are a specification layer; network mode
 co-simulates the lossless lines and applies a matched line loss to realized
 gain. The optional mast and guy wires are modeled once for the whole stack, not
-once per level. Mismatch-dependent line loss, phase-line impedance
-transformation, splitter internal mismatch, and per-level matching are not
-modeled. Verify the pattern, per-port impedance, and match with the solver or a
-measurement.
+once per level, and a beta/hairpin match is built at each driven element.
+Mismatch-dependent line loss, phase-line impedance transformation, splitter
+internal mismatch, per-level matching networks, and folded driven elements are
+not modeled. Verify the pattern, per-port impedance, and match with the solver
+or a measurement.
 
 ## Create a phased vertical array
 

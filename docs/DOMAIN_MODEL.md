@@ -253,8 +253,9 @@ transformation change with frequency. In ideal/phase-line mode line impedance
 transformation is not modeled; the network mode includes the reference line and
 the differential TL transformation. A user-entered matched line loss is applied
 to realized gain; mismatch-dependent line loss is not captured. Splitter
-internal mismatch, per-level matching, folded/matched driven elements, and
-per-level feed transformers are not modeled. The base Yagi's optional mast and
+internal mismatch, per-level matching networks, folded driven elements, and
+per-level feed transformers are not modeled. A beta/hairpin match is built at
+every driven element. The base Yagi's optional mast and
 guy fields are interpreted once for the whole stack: one mast runs from ground
 to the top boom and the guys attach to its top, instead of one mast per level.
 The reported

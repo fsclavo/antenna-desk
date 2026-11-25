@@ -15,7 +15,7 @@ from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeedMode,
     StackedYagiParameters,
 )
-from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.ui.dialogs.stacked_yagi_dialog import StackedYagiDialog
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.units import UnitSystem
@@ -239,3 +239,44 @@ def test_loading_starting_dimensions_preserves_the_shared_mast(qtbot: QtBot) -> 
     assert restored.yagi.guy_count == 3
     assert restored.yagi.guy_anchor_radius_m == pytest.approx(4.0)
     assert restored.yagi.guy_diameter_m == pytest.approx(0.004)
+
+
+def test_dialog_sets_a_beta_match_on_every_level(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._yagi._match_type.findData(YagiMatchType.BETA_HAIRPIN.value)
+    assert index >= 0
+    form._yagi._match_type.setCurrentIndex(index)
+    form._yagi._match_length_field.configure(0.3)
+    form._yagi._match_spacing_field.configure(0.12)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+    model = parameters.to_antenna()
+
+    assert parameters.yagi.match_type is YagiMatchType.BETA_HAIRPIN
+    assert parameters.yagi.match_length_m == pytest.approx(0.3)
+    assert parameters.yagi.match_spacing_m == pytest.approx(0.12)
+    assert model.feed.wire_id == "level-1-element-2-feed"
+    assert model.sources[0].wire_id == "level-2-element-2-feed"
+
+
+def test_loading_starting_dimensions_preserves_the_beta_match(qtbot: QtBot) -> None:
+    parameters = _parameters()
+    parameters = replace(
+        parameters,
+        yagi=replace(
+            parameters.yagi,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
+        ),
+    )
+    dialog = _dialog(qtbot, parameters=parameters)
+
+    dialog._form.load_starting_dimensions()
+    restored = dialog.parameters()
+
+    assert restored.yagi.match_type is YagiMatchType.BETA_HAIRPIN
+    assert restored.yagi.match_length_m == pytest.approx(0.3)
+    assert restored.yagi.match_spacing_m == pytest.approx(0.12)

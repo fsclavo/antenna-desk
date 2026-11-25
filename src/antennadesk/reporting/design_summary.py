@@ -1352,6 +1352,15 @@ def design_summary_rows(
                     if yagi.mast_diameter_m > 0.0
                     else []
                 ),
+                ("Driven element match", yagi.match_type.value),
+                *(
+                    [
+                        ("Hairpin length", _length(yagi.match_length_m, display_units)),
+                        ("Hairpin spacing", _length(yagi.match_spacing_m, display_units)),
+                    ]
+                    if yagi.match_type.value == "beta_hairpin"
+                    else []
+                ),
                 ("Total conductor", _length(total_conductor, display_units)),
                 ("Material", material_text(yagi.material, labeler)),
                 ("Ground", ground_text(yagi.ground, labeler)),

@@ -1366,3 +1366,27 @@ def test_stacked_yagi_shared_mast_draws_once() -> None:
         wire.id.startswith("level-") and ("mast" in wire.id or "guy" in wire.id)
         for wire in model.wires
     )
+
+
+def test_stacked_yagi_beta_match_draws_every_level_stub() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    model = parameters.to_antenna()
+    scene = _scene(parameters, "stacked_yagi", GeometryViewMode.ELEVATION)
+
+    assert len(scene.polylines) == len(model.wires)
+    assert sum("hairpin-short" in wire.id for wire in model.wires) == 2

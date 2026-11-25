@@ -75,6 +75,7 @@ class StackedYagiForm(QWidget):
             display_units=self._display_units,
             include_support_structures=True,
             include_feed_hardware=False,
+            include_match_hardware=True,
         )
 
         # The embedded Yagi form owns the shared material and radius controls;
@@ -362,6 +363,9 @@ class StackedYagiForm(QWidget):
                 guy_count=current.guy_count,
                 guy_anchor_radius_m=current.guy_anchor_radius_m,
                 guy_diameter_m=current.guy_diameter_m,
+                match_type=current.match_type,
+                match_length_m=current.match_length_m,
+                match_spacing_m=current.match_spacing_m,
             )
         except ValueError as exc:
             self._starting_note.setText(str(exc))

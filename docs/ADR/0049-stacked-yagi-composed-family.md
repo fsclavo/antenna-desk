@@ -39,15 +39,18 @@ The first slice is implemented with these boundaries:
   level, and reports each network connection point;
 - one shared mast and optional guy set across every level, built once at the
   top-boom height instead of copied per level;
+- a beta/hairpin match at every driven element, built per level from the base
+  Yagi's match fields;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;
-- real `nec2c` tests for an ideal two-level stack and a co-simulated
-  three-level network.
+- real `nec2c` tests for an ideal two-level stack, a co-simulated three-level
+  network, one shared mast, and a per-level beta match.
 
-The base Yagi editor in the stack disables folded/matched driven elements and
-per-level feed transformers. Its mast and guy fields form one shared support
-model: a single mast runs from ground through every level and one guy set
-attaches to its top. Copying a mast per level is rejected.
+The base Yagi editor in the stack disables folded driven elements and per-level
+feed transformers. A beta/hairpin match is available on every driven element.
+The mast and guy fields form one shared support model: a single mast runs from
+ground through every level and one guy set attaches to its top. Copying a mast
+per level is rejected.
 
 ## Why
 
@@ -60,19 +63,20 @@ slices.
 ## Consequences
 
 - The family now covers form, schema, catalog, per-port results, scene,
-  reports, solver coverage, the splitter/phase-line specification, and the
-  co-simulated network, and one shared mast/guy set. Line loss is a user-entered
-  matched-loss value; feed hardware, splitter internal mismatch, and per-level
-  matching remain out.
+  reports, solver coverage, the splitter/phase-line specification, the
+  co-simulated network, one shared mast/guy set, and a beta/hairpin match.
+  Line loss is a user-entered matched-loss value; splitter internal mismatch,
+  per-level matching networks, folded driven elements, and per-level feed
+  transformers remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
 - A count of one is not a stack; use `YagiParameters` directly. The family
   accepts two to four levels.
-- A Yagi with a folded/matched driven element or per-level feed transformer is
-  rejected. Its mast and guy fields are interpreted as one shared support for
-  the whole stack; copying a mast per level would create floating or
-  double-counted hardware.
+- A Yagi with a folded driven element or per-level feed transformer is
+  rejected. A beta/hairpin match is copied to every level. The mast and guy
+  fields are interpreted as one shared support for the whole stack; copying a
+  mast per level would create floating or double-counted hardware.
 - The feed network is a bounded co-simulation, not a full N-port circuit model:
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent

@@ -1592,3 +1592,42 @@ def test_stacked_yagi_construction_sheet_mentions_the_shared_mast(
 
     assert "One shared mast runs from ground to the top boom" in sheet
     assert "The shared mast and guys are not modeled" not in sheet
+
+
+def test_stacked_yagi_construction_sheet_lists_the_beta_match(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import (
+        YagiElement,
+        YagiMatchType,
+        YagiParameters,
+    )
+
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0].with_parameters(stack),
+        None,
+    )
+
+    assert "Feed match" in sheet
+    assert "beta / hairpin" in sheet
+    assert "Hairpin length" in sheet
+    assert "0.3000 m" in sheet
+    assert "Hairpin spacing" in sheet
+    assert "0.1200 m" in sheet

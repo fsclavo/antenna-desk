@@ -1564,6 +1564,7 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
         StackedYagiFeedMode,
         stacked_yagi_parameters,
     )
+    from antennadesk.domain.antennas.yagi import YagiMatchType
 
     parameters = stacked_yagi_parameters(
         frequency_hz=14_100_000.0,
@@ -1591,6 +1592,9 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
             guy_count=3,
             guy_anchor_radius_m=4.0,
             guy_diameter_m=0.004,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
         ),
     )
     original = _project(parameters, "Stacked Yagi")

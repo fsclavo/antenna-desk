@@ -23,7 +23,7 @@ from .materials import ALUMINUM, ConductorMaterial
 from .polarization import Polarization
 from .transmission_line import TransmissionLine
 from .wire import Wire
-from .yagi import YagiMatchType, YagiParameters, nbs_five_element
+from .yagi import YagiParameters, nbs_five_element
 
 ANTENNA_TYPE_STACKED_YAGI = "stacked_yagi"
 STACKED_YAGI_LEVEL_PREFIX = "level-"
@@ -147,6 +147,7 @@ class StackedYagiParameters:
 
     The base Yagi's optional mast and guy fields describe one shared support:
     the mast runs from ground to the top boom and the guys attach to its top.
+    A beta/hairpin match is built at every driven element.
     """
 
     yagi: YagiParameters
@@ -160,10 +161,8 @@ class StackedYagiParameters:
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
             raise ValueError("a stacked Yagi requires 2 to 4 levels")
-        if self.yagi.driven_folded or self.yagi.match_type is not YagiMatchType.NONE:
-            raise ValueError(
-                "a stacked Yagi does not support folded or matched driven elements yet"
-            )
+        if self.yagi.driven_folded:
+            raise ValueError("a stacked Yagi does not support folded driven elements yet")
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
         ensure_positive(self.spacing_m, name="spacing_m")

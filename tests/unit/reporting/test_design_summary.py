@@ -1057,3 +1057,34 @@ def test_stacked_yagi_summary_reports_one_shared_mast() -> None:
     assert "0.0500 m" in rows["Mast"]
     assert "1.5000 m" in rows["Mast"]
     assert rows["Guy wires"].startswith("3 at 4.0000 m")
+
+
+def test_stacked_yagi_summary_reports_the_beta_match() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import (
+        YagiElement,
+        YagiMatchType,
+        YagiParameters,
+    )
+
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            match_type=YagiMatchType.BETA_HAIRPIN,
+            match_length_m=0.3,
+            match_spacing_m=0.12,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Driven element match"] == "beta_hairpin"
+    assert rows["Hairpin length"] == "0.3000 m"
+    assert rows["Hairpin spacing"] == "0.1200 m"

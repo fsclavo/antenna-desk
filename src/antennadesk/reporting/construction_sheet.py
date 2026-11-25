@@ -1404,6 +1404,13 @@ def render_construction_sheet(
 <tr><th>Additional-level ratio</th><td>{parameters.amplitude_ratio:.2f}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
 """
+        match_row = ""
+        if yagi.match_type.value == "beta_hairpin":
+            match_row = f"""
+<tr><th>Feed match</th><td>beta / hairpin</td></tr>
+<tr><th>Hairpin length</th><td>{_length(yagi.match_length_m, display_units)}</td></tr>
+<tr><th>Hairpin spacing</th><td>{_length(yagi.match_spacing_m, display_units)}</td></tr>
+"""
         if parameters.feed.mode is not StackedYagiFeedMode.IDEAL:
             is_network = parameters.feed.mode is StackedYagiFeedMode.NETWORK
             line_rows = "".join(
@@ -1487,6 +1494,7 @@ def render_construction_sheet(
                 ratio=f"{parameters.amplitude_ratio:.2f}",
                 mast_note=mast_note,
             )
+        feed_rows += match_row
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]
         folded_row = ""
