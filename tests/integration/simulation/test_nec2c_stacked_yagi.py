@@ -117,12 +117,14 @@ def test_stacked_yagi_network_mode_co_simulates_every_tl_port() -> None:
     assert result.status is SimulationStatus.COMPLETED
     point = result.frequencies[0]
     assert math.isfinite(point.impedance_ohm.real)
-    assert len(point.source_results) == 3
-    assert {source.wire_id.split("-")[1] for source in point.source_results} == {
-        "1",
-        "2",
-        "3",
+    assert len(point.source_results) == 4
+    level_prefixes = {
+        source.wire_id.split("-")[1]
+        for source in point.source_results
+        if source.wire_id.startswith("level-")
     }
+    assert level_prefixes == {"1", "2", "3"}
+    assert point.source_results[0].wire_id == "splitter-node"
     assert all(math.isfinite(source.power_w) for source in point.source_results)
     assert point.far_field
-    assert result.raw_input.count("TL ") == 2
+    assert result.raw_input.count("TL ") == 3

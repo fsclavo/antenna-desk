@@ -24,7 +24,11 @@ from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.ringo import RingoParameters
-from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiMatchType, YagiParameters
 from antennadesk.ui.geometry.builder import build_scene, effective_antenna_type
@@ -1303,3 +1307,32 @@ def test_stacked_yagi_preserves_levels_and_labels_additional_sources() -> None:
     }
     assert any("180°" in label and "80%" in label for label in source_labels)
     assert any(dimension.text == "10.60 m" for dimension in scene.dimensions)
+
+
+def test_stacked_yagi_network_mode_draws_the_node_and_explains_it() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
+            line_increment_m=2.5,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=75.0,
+        ),
+    )
+
+    scene = _scene(parameters, "stacked_yagi", GeometryViewMode.ELEVATION)
+
+    model = parameters.to_antenna()
+    assert len(scene.polylines) == len(model.wires) + len(model.transmission_lines)
+    assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
+    assert any("numerical feed point" in note for note in scene.notes)

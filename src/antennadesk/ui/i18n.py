@@ -11787,17 +11787,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Derived phase step: {phase}° per level",
         Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
     },
+    "stacked_yagi.network_scene_note": {
+        Language.ENGLISH: (
+            "network mode: the splitter node is a numerical feed point; the "
+            "transmission lines are not drawn"
+        ),
+        Language.SPANISH: (
+            "modo red: el nodo del divisor es un punto de alimentación numérico; "
+            "las líneas de transmisión no se dibujan"
+        ),
+    },
     "stacked_yagi.network_note": {
         Language.ENGLISH: (
             "The lossless TL network is co-simulated by NEC; the per-port table "
-            "comes from the network connection points. Line loss and the "
-            "reference-line impedance transformation are not modeled."
+            "comes from the network connection points. The reference line is "
+            "included; line loss and the splitter's internal mismatch are not "
+            "modeled."
         ),
         Language.SPANISH: (
             "La red de líneas sin pérdidas se co-simula en NEC; la tabla por "
-            "puerto viene de los puntos de conexión de la red. No se modelan la "
-            "pérdida de línea ni la transformación de impedancia de la línea de "
-            "referencia."
+            "puerto viene de los puntos de conexión de la red. La línea de "
+            "referencia está incluida; no se modelan la pérdida de línea ni el "
+            "desajuste interno del divisor."
         ),
     },
     "stacked_yagi.amplitude_ratio": {
@@ -11829,40 +11840,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "stacked_yagi.hint": {
         Language.ENGLISH: (
-            "Every level is the same Yagi. Level 1 is the primary feed with unit "
-            "amplitude and zero phase; later levels use the phase progression and "
-            "the additional-level voltage ratio. The feed can be an ideal phase "
-            "step, a splitter + phase-line specification, or a co-simulated "
-            "lossless TL network. Line loss and the reference-line impedance "
-            "transformation are not modeled."
+            "Every level is the same Yagi. In ideal and phase-line modes level 1 "
+            "is the primary feed; in network mode the numerical splitter node is "
+            "the primary input and every level is a network port. The feed can be "
+            "an ideal phase step, a splitter + phase-line specification, or a "
+            "co-simulated lossless TL network. Line loss and splitter internal "
+            "mismatch are not modeled."
         ),
         Language.SPANISH: (
-            "Cada nivel es el mismo Yagi. El nivel 1 es la alimentación principal "
-            "con amplitud unitaria y fase cero; los niveles siguientes usan la "
-            "progresión de fase y la relación de tensión indicada. La alimentación "
-            "puede ser un escalón de fase ideal o una especificación de divisor + "
-            "líneas de fase. El solver sigue usando fuentes de tensión ideales, por "
-            "lo que no se modelan la pérdida de línea ni la transformación de "
-            "impedancia."
+            "Cada nivel es el mismo Yagi. En modos ideal y de líneas de fase, el "
+            "nivel 1 es la alimentación principal; en modo red, el nodo numérico "
+            "del divisor es la entrada principal y cada nivel es un puerto de red. "
+            "La alimentación puede ser un escalón de fase ideal, una "
+            "especificación de divisor + líneas de fase o una red de líneas sin "
+            "pérdidas co-simulada. No se modelan la pérdida de línea ni el "
+            "desajuste interno del divisor."
         ),
     },
     "stacked_yagi.evidence": {
         Language.ENGLISH: (
             "Experimental composed array. Mutual coupling is included by the wire "
             "solver. The optional feed specification sets the source phase and "
-            "splitter excess loss; line loss, line impedance transformation, "
-            "splitter mismatch, per-level matching, and the shared mast are not "
-            "modeled. In network mode the differential TL impedance "
-            "transformation is included; phase-line mode does not include it. "
-            "No stacking gain is claimed; verify spacing, phase, and matching "
-            "with the solver or a measurement."
+            "splitter excess loss; line loss, splitter internal mismatch, "
+            "per-level matching, and the shared mast are not modeled. In network "
+            "mode the reference line and differential TL impedance transformation "
+            "are included; phase-line mode does not include them. No stacking gain "
+            "is claimed; verify spacing, phase, and matching with the solver or a "
+            "measurement."
         ),
         Language.SPANISH: (
             "Arreglo compuesto experimental. El solver de hilos incluye el "
             "acoplamiento mutuo. La especificación opcional de alimentación fija la "
             "fase de las fuentes y la pérdida extra del divisor; no se modelan la "
-            "pérdida de línea, la transformación de impedancia, el desadapto del "
-            "divisor, el ajuste por nivel ni el mástil compartido. No se declara "
+            "pérdida de línea, el desajuste interno del divisor, el ajuste por "
+            "nivel ni el mástil compartido. En modo red se incluyen la línea de "
+            "referencia y la transformación de impedancia de las líneas "
+            "diferenciales; el modo de líneas de fase no las incluye. No se declara "
             "ganancia de apilado; verificá separación, fase y ajuste con el solver "
             "o una medición."
         ),
@@ -11923,13 +11936,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "stacked_yagi.feed_note": {
         Language.ENGLISH: (
-            "Level 1 is the primary port and the only impedance/SWR reference. "
-            "The Sources tab reports every driven level separately."
+            "Ideal and phase-line modes report level 1 as the primary port. "
+            "Network mode reports the numerical splitter node as the primary "
+            "input; the Sources tab also lists every level port."
         ),
         Language.SPANISH: (
-            "El nivel 1 es el puerto principal y la única referencia de "
-            "impedancia/ROE. La pestaña Fuentes informa cada nivel excitado por "
-            "separado."
+            "Los modos ideal y de líneas de fase informan el nivel 1 como puerto "
+            "principal. El modo red informa el nodo numérico del divisor como "
+            "entrada principal; la pestaña Fuentes también lista cada puerto de "
+            "nivel."
         ),
     },
     "hexbeam.title": {

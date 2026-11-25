@@ -814,18 +814,19 @@ REPORT_SPANISH: dict[str, str] = {
         "montaje en el boom, la pérdida de la trampa, la línea de alimentación y "
         "la red de adaptación no están modelados."
     ),
-    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. Level 1 is the primary feed; feed levels 2 to {last} through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The solver co-simulates the network and reports every port; line loss and the reference-line impedance transformation are not modeled. Fit each level as a complete Yagi from the base element table. The shared mast and per-level matching are not modeled; verify the combined pattern and match.": (  # noqa: E501
+    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter node is a 1 cm numerical feed point above the level-1 element, not an antenna conductor. Feed every level through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The solver co-simulates the network and reports every port; line loss and the splitter internal mismatch are not modeled. Fit each level as a complete Yagi from the base element table. The shared mast and per-level matching are not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
-        "entre los boms de los niveles. El nivel 1 es la alimentación principal; "
-        "alimentá los niveles 2 a {last} mediante un divisor de {count} vías y una "
-        "red de líneas de transmisión sin pérdidas: el nivel 1 tiene {reference} m y "
-        "cada nivel superior agrega {increment} m de línea con factor de velocidad "
-        "{velocity}. Registrá {loss} dB de pérdida extra del divisor. El solver "
-        "co-simula la red e informa cada puerto; no se modelan la pérdida de línea "
-        "ni la transformación de impedancia de la línea de referencia. Armá cada "
-        "nivel como un Yagi completo a partir de la tabla de elementos base. El "
-        "mástil compartido y el ajuste por nivel no están modelados; verificá el "
-        "patrón combinado y el ajuste."
+        "entre los boms de los niveles. El nodo del divisor es un punto de "
+        "alimentación numérico de 1 cm sobre el elemento del nivel 1, no un "
+        "conductor de antena. Alimentá cada nivel mediante un divisor de {count} "
+        "vías y una red de líneas de transmisión sin pérdidas: el nivel 1 tiene "
+        "{reference} m y cada nivel superior agrega {increment} m de línea con "
+        "factor de velocidad {velocity}. Registrá {loss} dB de pérdida extra del "
+        "divisor. El solver co-simula la red e informa cada puerto; no se modelan "
+        "la pérdida de línea ni el desajuste interno del divisor. Armá cada nivel "
+        "como un Yagi completo a partir de la tabla de elementos base. El mástil "
+        "compartido y el ajuste por nivel no están modelados; verificá el patrón "
+        "combinado y el ajuste."
     ),
     "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. Level 1 is the primary feed; drive levels 2 to {last} with a {ratio} relative amplitude. Feed the levels through a {count}-way splitter and phase lines: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The line impedance transformation and line loss are not modeled; the solver uses ideal voltage sources. Fit each level as a complete Yagi from the base element table. The shared mast and per-level matching are not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "

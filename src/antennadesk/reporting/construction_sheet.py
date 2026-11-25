@@ -1416,18 +1416,19 @@ def render_construction_sheet(
                 construction_note = _note(
                     tr,
                     "Build {count} identical Yagis on one vertical stack with {spacing} m "
-                    "between level booms. Level 1 is the primary feed; feed levels 2 to "
-                    "{last} through a {count}-way splitter and a lossless transmission-line "
-                    "network: level 1 is {reference} m, and each higher level adds "
-                    "{increment} m of {velocity} velocity-factor line. Record {loss} dB of "
-                    "splitter excess loss. The solver co-simulates the network and reports "
-                    "every port; line loss and the reference-line impedance transformation "
-                    "are not modeled. Fit each level as a complete Yagi from the base "
-                    "element table. The shared mast and per-level matching are not modeled; "
-                    "verify the combined pattern and match.",
+                    "between level booms. The splitter node is a 1 cm numerical feed "
+                    "point above the level-1 element, not an antenna conductor. Feed "
+                    "every level through a {count}-way splitter and a lossless "
+                    "transmission-line network: level 1 is {reference} m, and each "
+                    "higher level adds {increment} m of {velocity} velocity-factor "
+                    "line. Record {loss} dB of splitter excess loss. The solver "
+                    "co-simulates the network and reports every port; line loss and the "
+                    "splitter internal mismatch are not modeled. Fit each level as a "
+                    "complete Yagi from the base element table. The shared mast and "
+                    "per-level matching are not modeled; verify the combined pattern "
+                    "and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
-                    last=parameters.count,
                     reference=f"{parameters.feed.reference_length_m:.4f}",
                     increment=f"{parameters.feed.line_increment_m:.4f}",
                     velocity=f"{parameters.feed.velocity_factor:.3f}",

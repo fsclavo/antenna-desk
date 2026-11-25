@@ -2516,13 +2516,16 @@ def _add_stacked_yagi_dimensions(
                         priority=70,
                     )
                 )
-            notes.append(
-                translator.t(
-                    "stacked_yagi.scene_note",
-                    count=parameters.count,
-                    phase=f"{parameters.phase_step_deg:.1f}",
+            if parameters.feed.mode.value == "network":
+                notes.append(translator.t("stacked_yagi.network_scene_note"))
+            else:
+                notes.append(
+                    translator.t(
+                        "stacked_yagi.scene_note",
+                        count=parameters.count,
+                        phase=f"{parameters.effective_phase_step_deg:.1f}",
+                    )
                 )
-            )
     else:
         notes.append(translator.t("geometry.stacked_yagi_plan_note"))
 

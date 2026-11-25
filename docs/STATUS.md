@@ -38,10 +38,11 @@
   two-port test, a bounded spacing/phase optimizer constrained by the
   user-set maximum top height, and an optional splitter + phase-line feed
   (reference/increment lengths, velocity factor, Z0, and splitter excess loss),
-  plus a co-simulated network mode with lossless NEC TL cards and per-port
-  network connection results. The reference line, line loss, splitter
-  mismatch, per-level matching, folded/matched driven elements, and a shared
-  mast remain unavailable. Evidence is C; no stacking
+  plus a co-simulated network mode with a 1 cm numerical splitter node,
+  lossless NEC TL cards including the reference line, and per-port network
+  connection results. The splitter node is the primary input in network mode. Line loss,
+  splitter internal mismatch, per-level matching, folded/matched driven
+  elements, and a shared mast remain unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,

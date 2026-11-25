@@ -217,6 +217,7 @@ def test_stacked_yagi_network_mode_reports_the_co_simulated_feed() -> None:
         spacing_m=10.6,
         feed=StackedYagiFeed(
             mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
             line_increment_m=2.5,
             velocity_factor=0.8,
             characteristic_impedance_ohm=75.0,
@@ -225,4 +226,4 @@ def test_stacked_yagi_network_mode_reports_the_co_simulated_feed() -> None:
 
     detail = feed_connection_detail(parameters, parameters.to_antenna())
 
-    assert "co-simulated" in (detail.match_hardware or "")
+    assert "Splitter node is the primary input" in (detail.match_hardware or "")

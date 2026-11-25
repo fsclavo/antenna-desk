@@ -1253,9 +1253,11 @@ network, the primary SWR is the network input at the level-1 splitter node, and
 the **Sources** table comes from the network connection points. The TL cards
 use the physical line length at every solver frequency, so the electrical phase
 changes with frequency. The splitter is an ideal N-way divider; the excess loss
-reduces realized gain. The reference line, line loss, splitter mismatch, and
-per-level matching are not modeled. Use the line lengths for the construction
-harness and verify the match with the solver or a measurement.
+reduces realized gain. The reference line is modeled as a lossless TL; line
+loss, splitter internal mismatch, and per-level matching are not modeled. The
+primary SWR is the splitter-node input in network mode. Use the line lengths
+for the construction harness and verify the match with the solver or a
+measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
 an optional mechanical envelope: zero leaves it unset and disables the stack

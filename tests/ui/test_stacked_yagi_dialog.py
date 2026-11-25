@@ -144,6 +144,7 @@ def test_phase_line_feed_derives_the_phase_and_applies_the_splitter_loss(
     mode_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
     assert mode_index >= 0
     form._feed_mode.setCurrentIndex(mode_index)
+    form._reference_line_field.configure(2.0)
     form._line_increment_field.configure(2.5)
     form._velocity_factor.setValue(0.8)
     form._splitter_loss.setValue(0.4)
@@ -166,6 +167,7 @@ def test_network_feed_mode_builds_lossless_phase_lines(qtbot: QtBot) -> None:
     mode_index = form._feed_mode.findData(StackedYagiFeedMode.NETWORK.value)
     assert mode_index >= 0
     form._feed_mode.setCurrentIndex(mode_index)
+    form._reference_line_field.configure(2.0)
     form._line_increment_field.configure(2.5)
     form._velocity_factor.setValue(0.8)
     form._splitter_loss.setValue(0.4)
@@ -176,7 +178,7 @@ def test_network_feed_mode_builds_lossless_phase_lines(qtbot: QtBot) -> None:
 
     assert parameters.feed.mode is StackedYagiFeedMode.NETWORK
     assert model.sources == ()
-    assert len(model.transmission_lines) == parameters.count - 1
+    assert len(model.transmission_lines) == parameters.count
     assert form._phase_step.isEnabled() is False
     assert form._network_note.isVisibleTo(form) or form._network_note.text()
     assert "co-simulated" in form._network_note.text().lower()

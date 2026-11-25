@@ -1009,6 +1009,7 @@ def test_stacked_yagi_network_mode_summary_names_the_co_simulation() -> None:
         base,
         feed=StackedYagiFeed(
             mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
             line_increment_m=2.65,
             velocity_factor=0.8,
             characteristic_impedance_ohm=75.0,
@@ -1018,4 +1019,5 @@ def test_stacked_yagi_network_mode_summary_names_the_co_simulation() -> None:
     rows = dict(design_summary_rows(parameters))
 
     assert rows["Feed network"] == "co-simulated TL network"
+    assert rows["Feed"] == "splitter node (primary input); every level is a network port"
     assert rows["Line increment"] == "2.6500 m"

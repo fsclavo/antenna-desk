@@ -27,6 +27,9 @@ from .yagi import YagiMatchType, YagiParameters, nbs_five_element
 
 ANTENNA_TYPE_STACKED_YAGI = "stacked_yagi"
 STACKED_YAGI_LEVEL_PREFIX = "level-"
+STACKED_YAGI_SPLITTER_NODE_ID = "splitter-node"
+SPLITTER_NODE_LENGTH_M = 0.01
+SPLITTER_NODE_RADIUS_M = 0.0005
 
 
 class StackedYagiFeedMode(StrEnum):
@@ -44,9 +47,11 @@ class StackedYagiFeed:
     voltage sources: in phase-line mode the line lengths set the source phase
     at the design frequency and that phase is held fixed across a frequency
     sweep; in network mode NEC's lossless TL cards use the physical length at
-    every solver frequency. Line loss and the reference-line impedance
-    transformation are not modeled. ``splitter_loss_db`` is the excess loss
-    beyond the ideal N-way division and is applied to the realized gain.
+    every solver frequency. The splitter is an ideal parallel junction at a
+    numerical node; the reference line is included as a lossless TL to level 1.
+    Line loss and the splitter's internal isolation/return loss are not
+    modeled. ``splitter_loss_db`` is the excess loss beyond the ideal N-way
+    division and is applied to the realized gain.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -70,6 +75,8 @@ class StackedYagiFeed:
         ensure_non_negative(self.splitter_loss_db, name="splitter_loss_db")
         if self.mode is StackedYagiFeedMode.NETWORK and self.line_increment_m <= 0.0:
             raise ValueError("network mode requires a positive line_increment_m")
+        if self.mode is StackedYagiFeedMode.NETWORK and self.reference_length_m <= 0.0:
+            raise ValueError("network mode requires a positive reference_length_m")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m
@@ -287,21 +294,39 @@ class StackedYagiParameters:
                 )
         primary_wire = f"{STACKED_YAGI_LEVEL_PREFIX}1-{base.feed.wire_id}"
         if self.feed.mode is StackedYagiFeedMode.NETWORK:
+            feed_wire = base.feed_wire
+            node_x = (feed_wire.start.x_m + feed_wire.end.x_m) / 2.0
+            node_y = (feed_wire.start.y_m + feed_wire.end.y_m) / 2.0
+            node_z = self.highest_tip_m + 1.0
+            node = Wire(
+                id=STACKED_YAGI_SPLITTER_NODE_ID,
+                start=Point3D(node_x, node_y, node_z),
+                end=Point3D(node_x, node_y, node_z + SPLITTER_NODE_LENGTH_M),
+                radius_m=SPLITTER_NODE_RADIUS_M,
+                material=self.yagi.material,
+            )
+            wires.append(node)
+            node_offset = SPLITTER_NODE_LENGTH_M / 2.0
             sources: tuple[Source, ...] = ()
             phase_lines = tuple(
                 TransmissionLine(
                     id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-phase-line",
-                    start_wire_id=primary_wire,
-                    start_offset_m=base.feed.offset_m,
+                    start_wire_id=STACKED_YAGI_SPLITTER_NODE_ID,
+                    start_offset_m=node_offset,
                     end_wire_id=f"{STACKED_YAGI_LEVEL_PREFIX}{level + 1}-{base.feed.wire_id}",
                     end_offset_m=base.feed.offset_m,
                     characteristic_impedance_ohm=self.feed.characteristic_impedance_ohm,
-                    length_m=level * self.feed.line_increment_m,
+                    length_m=self.feed.reference_length_m + level * self.feed.line_increment_m,
                     velocity_factor=self.feed.velocity_factor,
                 )
-                for level in range(1, self.count)
+                for level in range(self.count)
+            )
+            primary_feed = FeedPoint(
+                wire_id=STACKED_YAGI_SPLITTER_NODE_ID,
+                offset_m=node_offset,
             )
         else:
+            primary_feed = FeedPoint(wire_id=primary_wire, offset_m=base.feed.offset_m)
             phase_lines = ()
             sources = tuple(
                 Source(
@@ -316,7 +341,7 @@ class StackedYagiParameters:
             name=name or self.template_name,
             design_frequency_hz=base.design_frequency_hz,
             wires=tuple(wires),
-            feed=FeedPoint(wire_id=primary_wire, offset_m=base.feed.offset_m),
+            feed=primary_feed,
             environment=base.environment,
             sources=sources,
             transmission_lines=base.transmission_lines + phase_lines,

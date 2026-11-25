@@ -10,6 +10,7 @@ import pytest
 
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.stacked_yagi import (
+    STACKED_YAGI_SPLITTER_NODE_ID,
     StackedYagiFeed,
     StackedYagiFeedMode,
     StackedYagiParameters,
@@ -174,13 +175,26 @@ def test_network_mode_builds_lossless_phase_lines_and_no_ideal_sources() -> None
     model = stack.to_antenna()
 
     assert model.sources == ()
-    assert len(model.transmission_lines) == 2
-    assert [line.length_m for line in model.transmission_lines] == pytest.approx([2.65, 5.3])
+    assert len(model.transmission_lines) == 3
+    assert [line.length_m for line in model.transmission_lines] == pytest.approx([2.0, 4.65, 7.3])
     assert all(
         line.characteristic_impedance_ohm == pytest.approx(75.0)
         for line in model.transmission_lines
     )
-    assert all(line.start_wire_id.startswith("level-1-") for line in model.transmission_lines)
+    assert all(
+        line.start_wire_id == STACKED_YAGI_SPLITTER_NODE_ID for line in model.transmission_lines
+    )
+    assert model.feed.wire_id == STACKED_YAGI_SPLITTER_NODE_ID
+    assert any(wire.id == STACKED_YAGI_SPLITTER_NODE_ID for wire in model.wires)
 
     with pytest.raises(ValueError, match="positive line_increment"):
-        StackedYagiFeed(mode=StackedYagiFeedMode.NETWORK, line_increment_m=0.0)
+        StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+        )
+    with pytest.raises(ValueError, match="positive reference_length"):
+        StackedYagiFeed(
+            mode=StackedYagiFeedMode.NETWORK,
+            line_increment_m=2.0,
+        )

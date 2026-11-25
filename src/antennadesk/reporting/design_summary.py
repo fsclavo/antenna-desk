@@ -1275,7 +1275,11 @@ def design_summary_rows(
                 ("Polarization", yagi.polarization.value),
                 (
                     "Feed",
-                    "level 1 (primary); additional levels are ideal sources",
+                    (
+                        "splitter node (primary input); every level is a network port"
+                        if parameters.feed.mode is StackedYagiFeedMode.NETWORK
+                        else "level 1 (primary); additional levels are ideal sources"
+                    ),
                 ),
                 (
                     "Feed network",

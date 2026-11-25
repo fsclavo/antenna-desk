@@ -160,11 +160,12 @@ EVIDENCE: dict[str, EvidenceEntry] = {
             "be specified as an ideal N-way splitter plus equal phase-line "
             "increments; phase-line mode fixes the derived phase at the design "
             "frequency, while network mode co-simulates lossless NEC TL cards "
-            "with frequency-dependent electrical length and their differential "
-            "impedance transformation. The reference line, line loss, splitter "
-            "mismatch, per-level matching, and the shared mast are not modeled. Splitter "
-            "excess loss is applied to realized gain. The reported impedance and SWR refer "
-            "only to level 1. No stacking gain is claimed; verify spacing, phase, "
+            "with frequency-dependent electrical length, the reference line, "
+            "and their differential impedance transformation. Line loss, splitter "
+            "internal mismatch, per-level matching, and the shared mast are not "
+            "modeled. Splitter excess loss is applied to realized gain. The reported "
+            "impedance and SWR refer to the primary network node (the splitter node "
+            "in network mode). No stacking gain is claimed; verify spacing, phase, "
             "and matching with the solver or a measurement."
         ),
     ),
