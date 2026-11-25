@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 from PySide6.QtWidgets import QDialog, QLabel
 from pytestqt.qtbot import QtBot
@@ -187,3 +189,53 @@ def test_network_feed_mode_builds_lossless_phase_lines(qtbot: QtBot) -> None:
     assert form._phase_step.isEnabled() is False
     assert form._network_note.isVisibleTo(form) or form._network_note.text()
     assert "co-simulated" in form._network_note.text().lower()
+
+
+def test_dialog_edits_one_shared_mast_for_every_level(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    form._yagi._mast_diameter_field.configure(0.05)
+    form._yagi._mast_offset_field.configure(1.5)
+    form._yagi._guy_count.setCurrentIndex(form._yagi._guy_count.findData(3))
+    form._yagi._guy_anchor_field.configure(4.0)
+    form._yagi._guy_diameter_field.configure(0.004)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+    model = parameters.to_antenna()
+
+    assert parameters.yagi.mast_diameter_m == pytest.approx(0.05)
+    assert parameters.yagi.guy_count == 3
+    mast_wires = [wire for wire in model.wires if wire.id == "mast"]
+    assert len(mast_wires) == 1
+    assert mast_wires[0].end.z_m == pytest.approx(parameters.top_height_m)
+    assert len([wire for wire in model.wires if wire.id.startswith("guy-")]) == 3
+    assert not any(
+        wire.id.startswith("level-") and ("mast" in wire.id or "guy" in wire.id)
+        for wire in model.wires
+    )
+
+
+def test_loading_starting_dimensions_preserves_the_shared_mast(qtbot: QtBot) -> None:
+    parameters = _parameters()
+    parameters = replace(
+        parameters,
+        yagi=replace(
+            parameters.yagi,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+    )
+    dialog = _dialog(qtbot, parameters=parameters)
+
+    dialog._form.load_starting_dimensions()
+    restored = dialog.parameters()
+
+    assert restored.yagi.mast_diameter_m == pytest.approx(0.05)
+    assert restored.yagi.mast_offset_m == pytest.approx(1.5)
+    assert restored.yagi.guy_count == 3
+    assert restored.yagi.guy_anchor_radius_m == pytest.approx(4.0)
+    assert restored.yagi.guy_diameter_m == pytest.approx(0.004)

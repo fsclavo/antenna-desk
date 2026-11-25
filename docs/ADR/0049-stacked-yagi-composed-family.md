@@ -27,7 +27,8 @@ The first slice is implemented with these boundaries:
 - a stacked-Yagi form and catalog routes for **New Antenna** and **Change
   Template**;
 - the generic **Sources** results table reports every driven level, while the
-  primary port remains the SWR reference;
+  primary port remains the SWR reference (level 1, or the splitter node in
+  network mode);
 - a front-elevation scene contract, design summary, construction sheet, and a
   multi-boom BOM;
 - an optional splitter + phase-line feed: a reference line length, a line
@@ -36,14 +37,17 @@ The first slice is implemented with these boundaries:
 - a co-simulated network mode that adds a 1 cm numerical splitter node, a
   lossless reference line to level 1, lossless NEC TL cards to every higher
   level, and reports each network connection point;
+- one shared mast and optional guy set across every level, built once at the
+  top-boom height instead of copied per level;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;
 - real `nec2c` tests for an ideal two-level stack and a co-simulated
   three-level network.
 
-The base Yagi editor in the stack disables folded/matched driven elements,
-per-level feed transformers, mast, and guy wires. Those geometries remain
-unavailable until the feed network and one shared support model exist.
+The base Yagi editor in the stack disables folded/matched driven elements and
+per-level feed transformers. Its mast and guy fields form one shared support
+model: a single mast runs from ground through every level and one guy set
+attaches to its top. Copying a mast per level is rejected.
 
 ## Why
 
@@ -57,25 +61,25 @@ slices.
 
 - The family now covers form, schema, catalog, per-port results, scene,
   reports, solver coverage, the splitter/phase-line specification, and the
-  co-simulated network. Line loss is a user-entered matched-loss value; the
-  hardware, splitter internal mismatch, and per-level matching remain out.
+  co-simulated network, and one shared mast/guy set. Line loss is a user-entered
+  matched-loss value; feed hardware, splitter internal mismatch, and per-level
+  matching remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
 - A count of one is not a stack; use `YagiParameters` directly. The family
   accepts two to four levels.
-- A Yagi with a mast, guy wires, folded/matched driven element, or per-level
-  feed transformer is rejected until the stack owns one shared support and
-  feed model; copying them per level would create floating or double-counted
-  hardware.
-- The feed network is a specification layer, not a full N-port co-simulation:
+- A Yagi with a folded/matched driven element or per-level feed transformer is
+  rejected. Its mast and guy fields are interpreted as one shared support for
+  the whole stack; copying a mast per level would create floating or
+  double-counted hardware.
+- The feed network is a bounded co-simulation, not a full N-port circuit model:
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent
   electrical length, the reference line, and its differential impedance
   transformation. A matched line-loss value is applied to realized gain; the
   primary SWR remains the lossless network input, so mismatch-dependent line
-  loss is not captured. Splitter internal mismatch, per-level matching, and a
-  shared mast remain follow-ups. The splitter excess loss is applied to
-  realized gain. The
+  loss is not captured. Splitter internal mismatch and per-level matching
+  remain follow-ups. The splitter excess loss is applied to realized gain. The
   spacing/phase optimizer is available once a maximum top height is set and
   makes no gain claim.

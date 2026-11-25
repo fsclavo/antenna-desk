@@ -1336,3 +1336,33 @@ def test_stacked_yagi_network_mode_draws_the_node_and_explains_it() -> None:
     assert len(scene.polylines) == len(model.wires) + len(model.transmission_lines)
     assert any(polyline.role == "transmission-line" for polyline in scene.polylines)
     assert any("numerical feed point" in note for note in scene.notes)
+
+
+def test_stacked_yagi_shared_mast_draws_once() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    model = parameters.to_antenna()
+    scene = _scene(parameters, "stacked_yagi", GeometryViewMode.ELEVATION)
+
+    assert len([wire for wire in model.wires if wire.id == "mast"]) == 1
+    assert len(scene.polylines) == len(model.wires)
+    assert not any(
+        wire.id.startswith("level-") and ("mast" in wire.id or "guy" in wire.id)
+        for wire in model.wires
+    )

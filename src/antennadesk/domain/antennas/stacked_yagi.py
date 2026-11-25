@@ -143,7 +143,11 @@ def stacked_yagi_parameters(
 
 @dataclass(frozen=True, slots=True)
 class StackedYagiParameters:
-    """Two to four identical Yagis on a vertical stack."""
+    """Two to four identical Yagis on a vertical stack.
+
+    The base Yagi's optional mast and guy fields describe one shared support:
+    the mast runs from ground to the top boom and the guys attach to its top.
+    """
 
     yagi: YagiParameters
     count: int = 2
@@ -156,8 +160,6 @@ class StackedYagiParameters:
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
             raise ValueError("a stacked Yagi requires 2 to 4 levels")
-        if self.yagi.mast_diameter_m > 0.0 or self.yagi.guy_count > 0:
-            raise ValueError("a stacked Yagi does not support mast or guy wires yet")
         if self.yagi.driven_folded or self.yagi.match_type is not YagiMatchType.NONE:
             raise ValueError(
                 "a stacked Yagi does not support folded or matched driven elements yet"
@@ -279,7 +281,7 @@ class StackedYagiParameters:
         return self.top_height_m + self.element_span_m / 2.0
 
     def to_antenna(self, *, name: str | None = None) -> AntennaModel:
-        base = self.yagi.to_antenna()
+        base = self.yagi.to_antenna(include_support=False)
         wires: list[Wire] = []
         for level in range(self.count):
             z_offset = level * self.spacing_m
@@ -301,6 +303,7 @@ class StackedYagiParameters:
                         material=wire.material,
                     )
                 )
+        wires.extend(self.yagi.support_wires(top_height_m=self.top_height_m))
         primary_wire = f"{STACKED_YAGI_LEVEL_PREFIX}1-{base.feed.wire_id}"
         if self.feed.mode is StackedYagiFeedMode.NETWORK:
             feed_wire = base.feed_wire

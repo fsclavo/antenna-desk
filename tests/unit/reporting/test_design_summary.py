@@ -1026,3 +1026,34 @@ def test_stacked_yagi_network_mode_summary_names_the_co_simulation() -> None:
     assert "L1" in rows["Line losses"]
     assert rows["Feed"] == "splitter node (primary input); every level is a network port"
     assert rows["Line increment"] == "2.6500 m"
+
+
+def test_stacked_yagi_summary_reports_one_shared_mast() -> None:
+
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert "one shared mast" in rows["Mast"]
+    assert "0.0500 m" in rows["Mast"]
+    assert "1.5000 m" in rows["Mast"]
+    assert rows["Guy wires"].startswith("3 at 4.0000 m")

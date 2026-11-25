@@ -231,7 +231,8 @@ designs are experimental.
 A composed two-to-four-level stack of one identical `YagiParameters` per level.
 It stores the base Yagi, level count, vertical boom spacing, ideal phase step,
 an additional-level voltage ratio, an optional maximum top height that bounds
-the spacing optimizer, and an optional feed specification: ideal splitter plus
+the spacing optimizer, an optional shared mast and guy set, and an optional
+feed specification: ideal splitter plus
 equal phase-line increments, reference line length, velocity factor,
 characteristic impedance, splitter excess loss, and a matched line loss per
 100 m. In network mode
@@ -239,8 +240,8 @@ characteristic impedance, splitter excess loss, and a matched line loss per
 the stack and lossless `TransmissionLine` cards from that node to every level,
 including the reference line to level 1, instead of ideal sources; NEC reports
 every network connection point. The node is a modeling feed point, not an
-antenna conductor. `to_antenna()` copies every canonical
-base-Yagi wire at each level with a `level-N-` identifier. In ideal and
+antenna conductor. `to_antenna()` copies the base-Yagi element wires at each
+level with a `level-N-` identifier and builds the shared support once. In ideal and
 phase-line mode level 1 is the primary feed; levels 2–N become additional ideal
 `Source` excitations with `(level-1) × effective_phase_step_deg` and the
 configured amplitude ratio. In
@@ -252,8 +253,11 @@ transformation change with frequency. In ideal/phase-line mode line impedance
 transformation is not modeled; the network mode includes the reference line and
 the differential TL transformation. A user-entered matched line loss is applied
 to realized gain; mismatch-dependent line loss is not captured. Splitter
-internal mismatch, per-level matching, folded/matched driven elements,
-per-level feed transformers, mast, and guy wires are not modeled. The reported
+internal mismatch, per-level matching, folded/matched driven elements, and
+per-level feed transformers are not modeled. The base Yagi's optional mast and
+guy fields are interpreted once for the whole stack: one mast runs from ground
+to the top boom and the guys attach to its top, instead of one mast per level.
+The reported
 impedance and SWR refer to the lossless primary network node: the splitter node
 in network mode and level 1 in ideal/phase-line mode. A vertical-polarized stack must space
 the levels farther apart than the longest element or the wire copies overlap.

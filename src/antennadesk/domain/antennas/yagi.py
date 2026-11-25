@@ -30,6 +30,19 @@ YAGI_GROSS_LENGTH_MAX_FACTOR = 0.80
 YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO = 4.0
 
 
+def _yagi_rotation(azimuth_deg: float) -> tuple[float, float]:
+    angle = units.degrees_to_radians(azimuth_deg)
+    return math.cos(angle), math.sin(angle)
+
+
+def _rotate_yagi_point(local: Point3D, cos_angle: float, sin_angle: float) -> Point3D:
+    return Point3D(
+        x_m=local.x_m * cos_angle - local.y_m * sin_angle,
+        y_m=local.x_m * sin_angle + local.y_m * cos_angle,
+        z_m=local.z_m,
+    )
+
+
 class YagiMatchType(StrEnum):
     NONE = "none"
     BETA_HAIRPIN = "beta_hairpin"
@@ -524,20 +537,70 @@ class YagiParameters:
             transformer_ratio=parameters.feed_transformer_ratio,
         )
 
-    def to_antenna(self, *, name: str = "Yagi") -> AntennaModel:
-        return self.to_custom_parameters().to_antenna(name=name)
+    def to_antenna(
+        self,
+        *,
+        name: str = "Yagi",
+        include_support: bool = True,
+    ) -> AntennaModel:
+        return self.to_custom_parameters(include_support=include_support).to_antenna(name=name)
 
-    def to_custom_parameters(self) -> CustomAntennaParameters:
-        angle = units.degrees_to_radians(self.azimuth_deg)
-        cos_angle = math.cos(angle)
-        sin_angle = math.sin(angle)
+    def support_wires(self, *, top_height_m: float | None = None) -> tuple[Wire, ...]:
+        """Return the optional mast and guy wires up to ``top_height_m``.
+
+        A single Yagi uses its boom height. A stack calls this once with the
+        top boom height so every level shares one mast instead of copying one
+        per level.
+        """
+
+        if self.mast_diameter_m <= 0.0:
+            return ()
+        top = self.height_m if top_height_m is None else top_height_m
+        ensure_positive(top, name="top_height_m")
+        cos_angle, sin_angle = _yagi_rotation(self.azimuth_deg)
+
+        def wire(wire_id: str, local_start: Point3D, local_end: Point3D, radius: float) -> Wire:
+            return Wire(
+                id=wire_id,
+                start=_rotate_yagi_point(local_start, cos_angle, sin_angle),
+                end=_rotate_yagi_point(local_end, cos_angle, sin_angle),
+                radius_m=radius,
+                material=self.material,
+            )
+
+        mast_x = min(element.position_m for element in self.elements) - self.mast_offset_m
+        wires = [
+            wire(
+                "mast",
+                Point3D(mast_x, 0.0, 0.0),
+                Point3D(mast_x, 0.0, top),
+                self.mast_diameter_m / 2.0,
+            )
+        ]
+        if self.guy_count > 0:
+            mast_top = Point3D(mast_x, 0.0, top)
+            for index in range(self.guy_count):
+                guy_angle = math.tau * index / self.guy_count
+                anchor = Point3D(
+                    mast_x + self.guy_anchor_radius_m * math.cos(guy_angle),
+                    self.guy_anchor_radius_m * math.sin(guy_angle),
+                    0.0,
+                )
+                wires.append(
+                    wire(
+                        f"guy-{index + 1}",
+                        mast_top,
+                        anchor,
+                        self.guy_diameter_m / 2.0,
+                    )
+                )
+        return tuple(wires)
+
+    def to_custom_parameters(self, *, include_support: bool = True) -> CustomAntennaParameters:
+        cos_angle, sin_angle = _yagi_rotation(self.azimuth_deg)
 
         def rotate(local: Point3D) -> Point3D:
-            return Point3D(
-                x_m=local.x_m * cos_angle - local.y_m * sin_angle,
-                y_m=local.x_m * sin_angle + local.y_m * cos_angle,
-                z_m=local.z_m,
-            )
+            return _rotate_yagi_point(local, cos_angle, sin_angle)
 
         def wire(wire_id: str, local_start: Point3D, local_end: Point3D, radius: float) -> Wire:
             return Wire(
@@ -742,34 +805,8 @@ class YagiParameters:
             if index == self.driven_index:
                 driven_wire_id = wire_id
 
-        if self.mast_diameter_m > 0.0:
-            mast_x = min(element.position_m for element in self.elements) - self.mast_offset_m
-            wires.append(
-                wire(
-                    "mast",
-                    Point3D(mast_x, 0.0, 0.0),
-                    Point3D(mast_x, 0.0, self.height_m),
-                    self.mast_diameter_m / 2.0,
-                )
-            )
-        if self.guy_count > 0:
-            mast_x = min(element.position_m for element in self.elements) - self.mast_offset_m
-            top = Point3D(mast_x, 0.0, self.height_m)
-            for index in range(self.guy_count):
-                angle = math.tau * index / self.guy_count
-                anchor = Point3D(
-                    mast_x + self.guy_anchor_radius_m * math.cos(angle),
-                    self.guy_anchor_radius_m * math.sin(angle),
-                    0.0,
-                )
-                wires.append(
-                    wire(
-                        f"guy-{index + 1}",
-                        top,
-                        anchor,
-                        self.guy_diameter_m / 2.0,
-                    )
-                )
+        if include_support:
+            wires.extend(self.support_wires())
         driven = next(wire for wire in wires if wire.id == driven_wire_id)
         return CustomAntennaParameters(
             frequency_hz=self.frequency_hz,

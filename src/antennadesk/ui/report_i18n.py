@@ -816,7 +816,13 @@ REPORT_SPANISH: dict[str, str] = {
         "montaje en el boom, la pérdida de la trampa, la línea de alimentación y "
         "la red de adaptación no están modelados."
     ),
-    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter node is a 1 cm numerical feed point above the stack, not an antenna conductor. Feed every level through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss and {line_loss} dB/100 m of matched line loss, applied to realized gain. The solver co-simulates the network and reports every port; the primary SWR is the lossless network input and splitter internal mismatch is not modeled. Fit each level as a complete Yagi from the base element table. The shared mast and per-level matching are not modeled; verify the combined pattern and match.": (  # noqa: E501
+    "One shared mast runs from ground to the top boom and the guys attach to its top.": (
+        "Un mástil compartido va del suelo al boom superior y los vientos se anclan a su punta."
+    ),
+    "The shared mast and guys are not modeled.": (
+        "El mástil compartido y los vientos no están modelados."
+    ),
+    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. The splitter node is a 1 cm numerical feed point above the stack, not an antenna conductor. Feed every level through a {count}-way splitter and a lossless transmission-line network: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss and {line_loss} dB/100 m of matched line loss, applied to realized gain. The solver co-simulates the network and reports every port; the primary SWR is the lossless network input and splitter internal mismatch is not modeled. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
         "entre los boms de los niveles. El nodo del divisor es un punto de "
         "alimentación numérico de 1 cm sobre la pila, no un "
@@ -828,10 +834,10 @@ REPORT_SPANISH: dict[str, str] = {
         "la ganancia realizada. El solver co-simula la red e informa cada puerto; "
         "la ROE primaria es la entrada de la red sin pérdidas y no se modela el "
         "desajuste interno del divisor. Armá cada nivel como un Yagi completo a "
-        "partir de la tabla de elementos base. El mástil compartido y el ajuste "
-        "por nivel no están modelados; verificá el patrón combinado y el ajuste."
+        "partir de la tabla de elementos base. {mast_note} El ajuste por nivel no "
+        "está modelado; verificá el patrón combinado y el ajuste."
     ),
-    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. Level 1 is the primary feed; drive levels 2 to {last} with a {ratio} relative amplitude. Feed the levels through a {count}-way splitter and phase lines: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The line impedance transformation and line loss are not modeled; the solver uses ideal voltage sources. Fit each level as a complete Yagi from the base element table. The shared mast and per-level matching are not modeled; verify the combined pattern and match.": (  # noqa: E501
+    "Build {count} identical Yagis on one vertical stack with {spacing} m between level booms. Level 1 is the primary feed; drive levels 2 to {last} with a {ratio} relative amplitude. Feed the levels through a {count}-way splitter and phase lines: level 1 is {reference} m, and each higher level adds {increment} m of {velocity} velocity-factor line. Record {loss} dB of splitter excess loss. The line impedance transformation and line loss are not modeled; the solver uses ideal voltage sources. Fit each level as a complete Yagi from the base element table. {mast_note} Per-level matching is not modeled; verify the combined pattern and match.": (  # noqa: E501
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
         "entre los boms de los niveles. El nivel 1 es la alimentación principal; "
         "excitá los niveles 2 a {last} con una amplitud relativa de {ratio}. "
@@ -841,25 +847,24 @@ REPORT_SPANISH: dict[str, str] = {
         "{loss} dB de pérdida extra del divisor. La transformación de "
         "impedancia y la pérdida de línea no están modeladas; el solver usa "
         "fuentes de tensión ideales. Armá cada nivel como un Yagi completo a "
-        "partir de la tabla de elementos base. El mástil compartido y el "
-        "ajuste por nivel no están modelados; verificá el patrón combinado y "
-        "el ajuste."
+        "partir de la tabla de elementos base. {mast_note} El ajuste por nivel no "
+        "está modelado; verificá el patrón combinado y el ajuste."
     ),
     "Build {count} identical Yagis on one vertical stack with {spacing} m "
     "between level booms. Level 1 is the primary feed; drive levels 2 to "
     "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
     "amplitude. Fit each level as a complete Yagi from the base element "
-    "table. The power splitter, phase lines, splitter loss, per-level "
-    "matching, and the shared mast are not modeled; verify the combined "
-    "pattern and match.": (
+    "table. The power splitter, phase lines, splitter loss, and per-level "
+    "matching are not modeled. {mast_note} Verify the combined pattern and "
+    "match.": (
         "Construí {count} Yagis idénticos en una pila vertical con {spacing} m "
         "entre los boms de los niveles. El nivel 1 es la alimentación principal; "
         "excitá los niveles 2 a {last} como fuentes ideales con un escalón de fase "
         "de {phase}° y una amplitud relativa de {ratio}. Armá cada nivel como un "
         "Yagi completo a partir de la tabla de elementos base. El divisor de "
-        "potencia, las líneas de fase, las pérdidas del divisor, el ajuste por "
-        "nivel y el mástil compartido no están modelados; verificá el patrón "
-        "combinado y el ajuste."
+        "potencia, las líneas de fase, las pérdidas del divisor y el ajuste por "
+        "nivel no están modelados. {mast_note} Verificá el patrón combinado y el "
+        "ajuste."
     ),
     "Build {count} cone wires from the apex at {apex} m down to a base ring of {radius} m radius at {base} m. Add {count} disc wires of {disc} m above the apex with a {gap} m feed gap. Feed across that gap. The cone and disc are wire approximations; the coax, mast, and solid surfaces are not modeled.": (  # noqa: E501
         "Construí {count} hilos de cono desde el vértice a {apex} m hasta un "

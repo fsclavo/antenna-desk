@@ -1582,6 +1582,17 @@ def test_stacked_yagi_round_trips_through_the_schema() -> None:
             line_loss_db_per_100m=1.5,
         ),
     )
+    parameters = replace(
+        parameters,
+        yagi=replace(
+            parameters.yagi,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+    )
     original = _project(parameters, "Stacked Yagi")
 
     document = document_from_project(original)

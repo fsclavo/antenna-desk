@@ -264,10 +264,12 @@ while the primary feed remains the impedance/SWR reference port. The phased
 vertical array family uses that multi-source model with an ideal linear phase
 and amplitude progression. The stacked Yagi composes two to four identical
 Yagi level models with the same multi-source model; level 1 is the primary
-port. An optional feed specification derives the source phase from equal
-phase-line increments; a network mode adds a 1 cm numerical splitter node and
-co-simulates lossless NEC TL cards from that node to every level, including the
-reference line, and reads the per-port network connection table. Network mode
+port in ideal/phase-line mode. One shared mast and optional guy set are built
+once for the whole stack. An optional feed specification derives the source
+phase from equal phase-line increments; a network mode adds a 1 cm numerical
+splitter node and co-simulates lossless NEC TL cards from that node to every
+level, including the reference line, and reads the per-port network connection
+table. The splitter node is the primary input in network mode. Network mode
 includes the reference line and the differential TL impedance transformation.
 Splitter excess loss and a matched line-loss approximation are applied to
 realized gain; mismatch-dependent line loss and splitter internal mismatch are

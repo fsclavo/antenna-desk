@@ -816,8 +816,6 @@ class StackedYagiParametersPayload(StrictModel):
 
     @model_validator(mode="after")
     def _validate_stack(self) -> Self:
-        if self.yagi.mast_diameter_m > 0.0 or self.yagi.guy_count > 0:
-            raise ValueError("a stacked Yagi does not support mast or guy wires yet")
         if self.yagi.driven_folded or self.yagi.match_type is not YagiMatchType.NONE:
             raise ValueError(
                 "a stacked Yagi does not support folded or matched driven elements yet"

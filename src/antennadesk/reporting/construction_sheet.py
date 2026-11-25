@@ -1387,6 +1387,11 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, StackedYagiParameters):
         yagi = parameters.yagi
+        mast_note = (
+            " One shared mast runs from ground to the top boom and the guys attach to its top."
+            if yagi.mast_diameter_m > 0.0
+            else " The shared mast and guys are not modeled."
+        )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Levels</th><td>{parameters.count}</td></tr>
@@ -1430,8 +1435,8 @@ def render_construction_sheet(
                     "co-simulates the network and reports every port; the primary SWR is "
                     "the lossless network input and splitter internal mismatch is not "
                     "modeled. Fit each level as a "
-                    "complete Yagi from the base element table. The shared mast and "
-                    "per-level matching are not modeled; verify the combined pattern "
+                    "complete Yagi from the base element table. {mast_note} "
+                    "Per-level matching is not modeled; verify the combined pattern "
                     "and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
@@ -1440,6 +1445,7 @@ def render_construction_sheet(
                     velocity=f"{parameters.feed.velocity_factor:.3f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
                     line_loss=f"{parameters.feed.line_loss_db_per_100m:.2f}",
+                    mast_note=mast_note,
                 )
             else:
                 construction_note = _note(
@@ -1452,8 +1458,8 @@ def render_construction_sheet(
                     "line. Record {loss} dB of splitter excess loss. The line impedance "
                     "transformation and line loss are not modeled; the solver uses ideal "
                     "voltage sources. Fit each level as a complete Yagi from the base "
-                    "element table. The shared mast and per-level matching are not "
-                    "modeled; verify the combined pattern and match.",
+                    "element table. {mast_note} Per-level matching is not modeled; "
+                    "verify the combined pattern and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
                     last=parameters.count,
@@ -1462,6 +1468,7 @@ def render_construction_sheet(
                     increment=f"{parameters.feed.line_increment_m:.4f}",
                     velocity=f"{parameters.feed.velocity_factor:.3f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                    mast_note=mast_note,
                 )
         else:
             construction_note = _note(
@@ -1470,14 +1477,15 @@ def render_construction_sheet(
                 "between level booms. Level 1 is the primary feed; drive levels 2 to "
                 "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
                 "amplitude. Fit each level as a complete Yagi from the base element "
-                "table. The power splitter, phase lines, splitter loss, per-level "
-                "matching, and the shared mast are not modeled; verify the combined "
-                "pattern and match.",
+                "table. The power splitter, phase lines, splitter loss, and per-level "
+                "matching are not modeled. {mast_note} Verify the combined pattern "
+                "and match.",
                 count=parameters.count,
                 spacing=f"{parameters.spacing_m:.4f}",
                 last=parameters.count,
                 phase=f"{parameters.effective_phase_step_deg:.1f}",
                 ratio=f"{parameters.amplitude_ratio:.2f}",
+                mast_note=mast_note,
             )
     elif isinstance(parameters, YagiParameters):
         positions = [element.position_m for element in parameters.elements]

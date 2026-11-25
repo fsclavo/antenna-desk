@@ -1559,3 +1559,36 @@ def test_stacked_yagi_network_construction_sheet_mentions_co_simulation(
     assert "Matched line loss" in sheet
     assert "co-simulates the network" in sheet
     assert "every port" in sheet
+
+
+def test_stacked_yagi_construction_sheet_mentions_the_shared_mast(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0].with_parameters(stack),
+        None,
+    )
+
+    assert "One shared mast runs from ground to the top boom" in sheet
+    assert "The shared mast and guys are not modeled" not in sheet

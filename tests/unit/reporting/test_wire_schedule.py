@@ -201,3 +201,36 @@ def test_wire_schedule_html_and_pdf_lines_include_the_feed(
     assert design.antenna.wires[0].id in html_rows[0]
     assert any("Feed:" in line for line in lines)
     assert any(design.antenna.feed.wire_id in line for line in lines)
+
+
+def test_wire_schedule_lists_one_shared_stack_mast() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    model = stack.to_antenna()
+    rows = wire_schedule_rows(model)
+    ids = {row.wire_id for row in rows}
+
+    assert "mast" in ids
+    assert {f"guy-{index}" for index in range(1, 4)} <= ids
+    assert not any(
+        wire_id.startswith("level-") and ("mast" in wire_id or "guy" in wire_id) for wire_id in ids
+    )
+    assert sum(row.wire_count for row in conductor_bom_rows(model)) == len(model.wires)

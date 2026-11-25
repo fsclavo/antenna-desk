@@ -1235,8 +1235,13 @@ separately; a negative source power means that ideal source is absorbing
 power. In ideal and phase-line mode the feed split is not a coupled network;
 the feed specification sets the phase and splitter excess loss. Network mode
 co-simulates the transmission lines but still leaves per-level matching out.
-The base editor also disables mast/guy wires, folded or matched driven elements,
-and feed transformers inside a stack.
+The stack uses one shared mast and one guy set for every level; the base editor
+still disables folded or matched driven elements and feed transformers.
+
+The **Mast diameter**, **Mast offset**, **Guy count**, **Guy anchor**, and
+**Guy diameter** fields describe one shared support: the mast runs from ground
+through every level and the guys attach to its top. Zero disables the support.
+Copying a separate mast per level is not allowed.
 
 **Feed network** selects **Ideal phase step**, **Splitter + phase lines**, or
 **Co-simulated TL network**. The ideal mode uses the phase-step field directly.
@@ -1280,8 +1285,9 @@ and rejects the design in that case. The family is classified **experimental**:
 mutual coupling is included by the wire solver, but no stacking gain is
 claimed. Ideal and phase-line mode are a specification layer; network mode
 co-simulates the lossless lines and applies a matched line loss to realized
-gain. Mismatch-dependent line loss, phase-line impedance transformation,
-splitter internal mismatch, per-level matching, and the shared mast are not
+gain. The optional mast and guy wires are modeled once for the whole stack, not
+once per level. Mismatch-dependent line loss, phase-line impedance
+transformation, splitter internal mismatch, and per-level matching are not
 modeled. Verify the pattern, per-port impedance, and match with the solver or a
 measurement.
 

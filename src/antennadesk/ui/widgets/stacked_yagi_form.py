@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -71,7 +73,7 @@ class StackedYagiForm(QWidget):
             None if parameters is None else parameters.yagi,
             self,
             display_units=self._display_units,
-            include_support_structures=False,
+            include_support_structures=True,
             include_feed_hardware=False,
         )
 
@@ -352,6 +354,14 @@ class StackedYagiForm(QWidget):
                 material=current.material,
                 ground=current.ground,
                 radius_m=current.elements[0].radius_m,
+            )
+            yagi = replace(
+                yagi,
+                mast_diameter_m=current.mast_diameter_m,
+                mast_offset_m=current.mast_offset_m,
+                guy_count=current.guy_count,
+                guy_anchor_radius_m=current.guy_anchor_radius_m,
+                guy_diameter_m=current.guy_diameter_m,
             )
         except ValueError as exc:
             self._starting_note.setText(str(exc))

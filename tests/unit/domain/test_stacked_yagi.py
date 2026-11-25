@@ -49,12 +49,31 @@ def test_stack_requires_two_to_four_levels_and_positive_spacing() -> None:
         StackedYagiParameters(yagi, count=2, spacing_m=0.0)
 
 
-def test_stack_rejects_support_structures_until_they_are_shared() -> None:
+def test_stack_builds_one_shared_mast_and_guy_set() -> None:
     yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
-    with_mast = replace(yagi, mast_diameter_m=0.05, mast_offset_m=1.5)
+    with_mast = replace(
+        yagi,
+        mast_diameter_m=0.05,
+        mast_offset_m=1.5,
+        guy_count=3,
+        guy_anchor_radius_m=4.0,
+        guy_diameter_m=0.004,
+    )
+    stack = StackedYagiParameters(with_mast, count=3, spacing_m=3.0)
 
-    with pytest.raises(ValueError, match="mast or guy"):
-        StackedYagiParameters(with_mast, count=2, spacing_m=3.0)
+    model = stack.to_antenna()
+
+    mast_wires = [wire for wire in model.wires if wire.id == "mast"]
+    assert len(mast_wires) == 1
+    assert mast_wires[0].start.z_m == pytest.approx(0.0)
+    assert mast_wires[0].end.z_m == pytest.approx(stack.top_height_m)
+    assert mast_wires[0].start.x_m == pytest.approx(-1.5)
+    assert len([wire for wire in model.wires if wire.id.startswith("guy-")]) == 3
+    assert not any(
+        wire.id.startswith("level-") and ("mast" in wire.id or "guy" in wire.id)
+        for wire in model.wires
+    )
+    assert yagi.to_antenna().wires[-1].end.z_m == pytest.approx(yagi.height_m)
 
 
 def test_stack_reports_its_vertical_and_boom_envelope() -> None:

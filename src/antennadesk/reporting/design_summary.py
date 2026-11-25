@@ -1334,6 +1334,24 @@ def design_summary_rows(
                     if parameters.feed.mode is StackedYagiFeedMode.NETWORK
                     else []
                 ),
+                *(
+                    [
+                        (
+                            "Mast",
+                            "one shared mast, "
+                            f"{_length(yagi.mast_diameter_m, display_units)} diameter, "
+                            f"{_length(yagi.mast_offset_m, display_units)} behind reflector",
+                        ),
+                        (
+                            "Guy wires",
+                            f"{yagi.guy_count} at "
+                            f"{_length(yagi.guy_anchor_radius_m, display_units)} "
+                            "anchor radius from the shared mast",
+                        ),
+                    ]
+                    if yagi.mast_diameter_m > 0.0
+                    else []
+                ),
                 ("Total conductor", _length(total_conductor, display_units)),
                 ("Material", material_text(yagi.material, labeler)),
                 ("Ground", ground_text(yagi.ground, labeler)),

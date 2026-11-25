@@ -173,3 +173,40 @@ def test_stacked_yagi_line_loss_reduces_realized_gain_only() -> None:
     assert with_loss.realized_gain_db < baseline.realized_gain_db
     assert with_loss.feed_line_loss_db is not None
     assert with_loss.feed_line_loss_db > 0.0
+
+
+def test_stacked_yagi_shared_mast_runs_once() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            mast_diameter_m=0.05,
+            mast_offset_m=1.5,
+            guy_count=3,
+            guy_anchor_radius_m=4.0,
+            guy_diameter_m=0.004,
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=FarFieldRequest(enabled=False),
+    )
+
+    model = parameters.to_antenna()
+    result = Nec2cSolver(Path(os.environ["NEC2C"])).run(model, spec)
+
+    assert result.status is SimulationStatus.COMPLETED
+    assert result.frequencies
+    point = result.frequencies[0]
+    assert math.isfinite(point.impedance_ohm.real)
+    assert math.isfinite(point.impedance_ohm.imag)
+    assert len([wire for wire in model.wires if wire.id == "mast"]) == 1
+    assert len([wire for wire in model.wires if wire.id.startswith("guy-")]) == 3

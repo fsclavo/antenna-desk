@@ -11868,7 +11868,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "an ideal phase step, a splitter + phase-line specification, or a "
             "co-simulated lossless TL network. Network mode applies the matched "
             "line loss to realized gain; mismatch-dependent line loss and "
-            "splitter internal mismatch are not modeled."
+            "splitter internal mismatch are not modeled. The optional mast and "
+            "guy wires are shared by every level."
         ),
         Language.SPANISH: (
             "Cada nivel es el mismo Yagi. En modos ideal y de líneas de fase, el "
@@ -11878,7 +11879,8 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "especificación de divisor + líneas de fase o una red de líneas sin "
             "pérdidas co-simulada. El modo red aplica la pérdida de línea "
             "adaptada a la ganancia realizada; no se modelan la pérdida "
-            "dependiente del desadapto ni el desajuste interno del divisor."
+            "dependiente del desadapto ni el desajuste interno del divisor. El "
+            "mástil y los vientos opcionales son compartidos por todos los niveles."
         ),
     },
     "stacked_yagi.evidence": {
@@ -11887,12 +11889,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "solver. The optional feed specification sets the source phase and "
             "splitter excess loss; network mode also applies a matched line loss "
             "to realized gain while the primary SWR stays lossless. "
-            "Mismatch-dependent line loss, splitter internal mismatch, per-level "
-            "matching, and the shared mast are not modeled. In network mode the "
-            "reference line and differential TL impedance transformation are "
-            "included; phase-line mode does not include them. No stacking gain is "
-            "claimed; verify spacing, phase, and matching with the solver or a "
-            "measurement."
+            "Mismatch-dependent line loss, splitter internal mismatch, and "
+            "per-level matching are not modeled. An optional mast and guy wires "
+            "are modeled once for the whole stack. In network mode the reference "
+            "line and differential TL impedance transformation are included; "
+            "phase-line mode does not include them. No stacking gain is claimed; "
+            "verify spacing, phase, and matching with the solver or a measurement."
         ),
         Language.SPANISH: (
             "Arreglo compuesto experimental. El solver de hilos incluye el "
@@ -11900,12 +11902,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "fase de las fuentes y la pérdida extra del divisor; el modo red "
             "también aplica una pérdida de línea adaptada a la ganancia realizada "
             "mientras la ROE primaria queda sin pérdidas. No se modelan la pérdida "
-            "dependiente del desadapto, el desajuste interno del divisor, el ajuste "
-            "por nivel ni el mástil compartido. En modo red se incluyen la línea de "
-            "referencia y la transformación de impedancia de las líneas "
-            "diferenciales; el modo de líneas de fase no las incluye. No se declara "
-            "ganancia de apilado; verificá separación, fase y ajuste con el solver "
-            "o una medición."
+            "dependiente del desadapto, el desajuste interno del divisor ni el "
+            "ajuste por nivel. Un mástil y vientos opcionales se modelan una sola "
+            "vez para toda la pila. En modo red se incluyen la línea de referencia "
+            "y la transformación de impedancia de las líneas diferenciales; el modo "
+            "de líneas de fase no las incluye. No se declara ganancia de apilado; "
+            "verificá separación, fase y ajuste con el solver o una medición."
         ),
     },
     "stacked_yagi.scene_note": {

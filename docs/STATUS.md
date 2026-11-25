@@ -42,8 +42,9 @@
   lossless NEC TL cards including the reference line, a matched line-loss
   value applied to realized gain, and per-port network connection results. The
   splitter node is the primary input in network mode; the primary SWR remains
-  the lossless input. Mismatch-dependent line loss, splitter internal mismatch,
-  per-level matching, folded/matched driven elements, and a shared mast remain
+  the lossless input. A single shared mast and optional guy set are modeled
+  once across every level. Mismatch-dependent line loss, splitter internal
+  mismatch, per-level matching, and folded/matched driven elements remain
   unavailable. Evidence is C; no stacking
   gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
@@ -89,7 +90,7 @@
 
 ## Next
 
-1. Continue DL6 with a splitter S-parameter/isolation model, per-level matching, and a shared mast if a traceable model is selected.
+1. Continue DL6 with a splitter S-parameter/isolation model and per-level matching if a traceable model is selected.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.
