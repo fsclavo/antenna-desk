@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **Live tuning worker handoff.** Preview results are now queued back to the
+  dialog's GUI thread, and closing while a preview is running detaches a
+  still-running worker instead of destroying its `QThread`. This removes the
+  unsafe cross-thread widget updates that caused the Windows 3.12/3.13 UI
+  suite to hang or abort.
 - **Application icon refresh.** Replaced the flat antenna badge with a larger,
   higher-contrast Yagi emblem on a deep blue gradient, keeping the orange feed
   point. The SVG master, 256 px PNG, and multi-resolution Windows ICO were
