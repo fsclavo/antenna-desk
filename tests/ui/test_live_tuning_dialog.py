@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QDialog
 from pytestqt.qtbot import QtBot
 
@@ -298,3 +299,28 @@ def test_live_tuning_apply_stops_a_pending_debounce(qtbot: QtBot) -> None:
     assert dialog._debounce.isActive() is False
     qtbot.wait(400)
     assert len(solver.calls) == 1
+
+
+def test_live_tuning_delivers_results_on_the_gui_thread(qtbot: QtBot) -> None:
+    parameters = DipoleParameters(frequency_hz=7_000_000.0, total_length_m=20.0, height_m=10.0)
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(7_000_000.0))
+    finished_threads: list[QThread] = []
+
+    class ThreadCheckingDialog(LiveTuningDialog):
+        def _finished(self, request_id, result):
+            finished_threads.append(QThread.currentThread())
+            super()._finished(request_id, result)
+
+    dialog = ThreadCheckingDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        _FakeSolver(),
+        lambda parameters: None,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(lambda: bool(finished_threads), timeout=3000)
+
+    assert all(thread is dialog.thread() for thread in finished_threads)
+    dialog.close()
