@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, QTimer
@@ -17,6 +18,7 @@ from PySide6.QtGui import (
     QPainterPath,
     QPaintEvent,
     QPen,
+    QPolygonF,
     QWheelEvent,
 )
 from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
@@ -27,6 +29,13 @@ from ..geometry.projection import project_world
 from ..help import apply_help
 from ..i18n import Translator
 from ..paint import draw_feed_marker
+from ..pattern_overlay import (
+    AUTO_FULL_WIRE_LIMIT,
+    AntennaOverlay,
+    OverlayMode,
+    convex_hull,
+    overlay_scale,
+)
 from ..theme import theme_colors
 
 GAIN_COLOR_BINS = 24
@@ -405,6 +414,9 @@ class RadiationPattern3DView(QWidget):
         self._footprint_segments: tuple[tuple[float, float, float, float], ...] = ()
         self._feed_point: tuple[float, float] | None = None
         self._points: tuple[tuple[float, float, float], ...] = ()
+        self._overlay: AntennaOverlay | None = None
+        self._overlay_visible = False
+        self._overlay_mode = OverlayMode.AUTO
         self._full_mesh: _Mesh | None = None
         self._interactive_mesh: _Mesh | None = None
         self._ground = False
@@ -463,6 +475,25 @@ class RadiationPattern3DView(QWidget):
         self._stop_interaction_timer()
         self._interacting = False
         self.update()
+
+    def set_overlay(self, overlay: AntennaOverlay | None) -> None:
+        self._overlay = overlay
+        self.update()
+
+    def set_overlay_visible(self, visible: bool) -> None:
+        self._overlay_visible = bool(visible)
+        self.update()
+
+    def set_overlay_mode(self, mode: OverlayMode) -> None:
+        self._overlay_mode = OverlayMode(mode)
+        self.update()
+
+    def _effective_overlay_mode(self) -> OverlayMode:
+        if self._overlay_mode is not OverlayMode.AUTO:
+            return self._overlay_mode
+        if self._overlay is not None and self._overlay.wire_count > AUTO_FULL_WIRE_LIMIT:
+            return OverlayMode.OUTLINE
+        return OverlayMode.FULL
 
     def reset_view(self) -> None:
         self._stop_interaction_timer()
@@ -682,6 +713,64 @@ class RadiationPattern3DView(QWidget):
                 center.y() - radius * 0.82 * math.sin(angle),
             )
             self._draw_arrow(painter, center, max_end, self._colors.feed, width=1.2)
+
+    def _overlay_note(self) -> str:
+        if self._effective_overlay_mode() is OverlayMode.OUTLINE:
+            return self._translator.t("pattern.overlay_outline")
+        note = self._translator.t("pattern.overlay_schematic")
+        if self._overlay is not None and any(wire.support for wire in self._overlay.wires):
+            note = f"{note} {self._translator.t('pattern.overlay_supports')}"
+        return note
+
+    def _draw_overlay(
+        self,
+        painter: QPainter,
+        screen_world: Callable[[float, float, float], QPointF],
+    ) -> None:
+        if not self._overlay_visible or self._overlay is None:
+            return
+        overlay = self._overlay
+        feed = overlay.feed
+        scale = overlay_scale(overlay)
+
+        def point(value: tuple[float, float, float]) -> QPointF:
+            return screen_world(
+                (value[0] - feed[0]) * scale,
+                (value[1] - feed[1]) * scale,
+                (value[2] - feed[2]) * scale,
+            )
+
+        mode = self._effective_overlay_mode()
+        if mode is OverlayMode.FULL:
+            for wire in overlay.wires:
+                pen = (
+                    QPen(self._colors.secondary_text, 1.0, Qt.PenStyle.DashLine)
+                    if wire.support
+                    else QPen(self._colors.antenna, 1.8)
+                )
+                painter.setPen(pen)
+                painter.drawLine(point(wire.start), point(wire.end))
+        else:
+            projected = [point(value) for wire in overlay.wires for value in (wire.start, wire.end)]
+            hull = convex_hull(tuple((value.x(), value.y()) for value in projected))
+            if len(hull) >= 2:
+                painter.setPen(QPen(self._colors.antenna, 1.5, Qt.PenStyle.DashLine))
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.drawPolygon(QPolygonF([QPointF(x, y) for x, y in hull]))
+        draw_feed_marker(painter, screen_world(0.0, 0.0, 0.0), self._colors.feed, radius=4.0)
+        painter.setFont(scaled_font(7))
+        painter.setPen(self._colors.secondary_text)
+        metrics = painter.fontMetrics()
+        text = metrics.elidedText(
+            self._overlay_note(),
+            Qt.TextElideMode.ElideRight,
+            max(int(self.width()) - 32, 0),
+        )
+        painter.drawText(
+            QRectF(16.0, self.height() - 40.0, self.width() - 32.0, 14.0),
+            Qt.AlignmentFlag.AlignCenter,
+            text,
+        )
 
     @staticmethod
     def _draw_arrow(
@@ -989,6 +1078,8 @@ class RadiationPattern3DView(QWidget):
                 axis_label,
             )
             painter.setPen(QPen(self._colors.axis, 1.5))
+
+        self._draw_overlay(painter, screen_world)
 
         occupied: list[QRectF] = []
         if draw_rect.width() >= 360.0 and draw_rect.height() >= 180.0:

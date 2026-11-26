@@ -79,7 +79,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
-| UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Proposed 2026-11-25.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; front/back only for explicit families; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
+| UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Implemented 2026-11-26.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; support wires thinner/dashed; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
 | UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Proposed 2026-11-25.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode handled explicitly. No solver, domain, schema, or report change; no new engine. See §UX49. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -1868,6 +1868,13 @@ azimuth as the 3D ray; the inset hides or shrinks without covering the lobe at
 the minimum size; no synthetic family shape; no new dependency or engine.
 
 ### UX48 — Schematic antenna overlay in the 3D lobe (layer 2)
+
+**Implemented 2026-11-26.** The 3D lobe tab now has a default-off **Show
+antenna** checkbox and an **Auto / Full / Outline** selector. The overlay uses
+the canonical wire snapshot, feed-centers it, applies one uniform scale,
+preserves support wires (thinner/dashed), and draws the shared feed marker.
+Outline mode is a convex-hull projection of the canonical endpoints. The PNG
+export uses the existing `grab()` path and respects the overlay state.
 
 **Scope:** opt-in canonical wireframe inside the 3D lobe.
 

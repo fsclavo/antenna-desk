@@ -2415,6 +2415,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cut angle for the polar pattern.",
         Language.SPANISH: "Ángulo de corte para el patrón polar.",
     },
+    "help.pattern.overlay_show": {
+        Language.ENGLISH: (
+            "Overlay the canonical antenna wireframe on the pattern. It is "
+            "feed-centered and schematic: orientation is exact, but size and "
+            "height are not to scale."
+        ),
+        Language.SPANISH: (
+            "Superpone el wireframe canónico de la antena al patrón. Está centrado "
+            "en la alimentación y es esquemático: la orientación es exacta, pero "
+            "tamaño y altura no están a escala."
+        ),
+    },
+    "help.pattern.overlay_mode": {
+        Language.ENGLISH: (
+            "Auto draws every canonical wire below the display budget and a "
+            "derived outline above it. Full always draws every wire. Outline is a "
+            "simplified projection for large arrays."
+        ),
+        Language.SPANISH: (
+            "Auto dibuja todos los hilos por debajo del presupuesto y un contorno "
+            "derivado por encima. Completa siempre dibuja todos los hilos. "
+            "Contorno es una proyección simplificada para arrays grandes."
+        ),
+    },
     "help.pattern.3d_view": {
         Language.ENGLISH: (
             "3D pattern. Drag to rotate, wheel to zoom, double-click to reset. "
@@ -9936,6 +9960,34 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.plan": {
         Language.ENGLISH: "Plan",
         Language.SPANISH: "Planta",
+    },
+    "pattern.overlay_show": {
+        Language.ENGLISH: "Show antenna",
+        Language.SPANISH: "Mostrar antena",
+    },
+    "pattern.overlay_mode.auto": {
+        Language.ENGLISH: "Auto",
+        Language.SPANISH: "Auto",
+    },
+    "pattern.overlay_mode.full": {
+        Language.ENGLISH: "Full",
+        Language.SPANISH: "Completa",
+    },
+    "pattern.overlay_mode.outline": {
+        Language.ENGLISH: "Outline",
+        Language.SPANISH: "Contorno",
+    },
+    "pattern.overlay_schematic": {
+        Language.ENGLISH: "Schematic: orientation exact; size and height are not to scale.",
+        Language.SPANISH: "Esquema: orientación exacta; tamaño y altura no a escala.",
+    },
+    "pattern.overlay_outline": {
+        Language.ENGLISH: "Outline: simplified envelope; choose Full for every wire.",
+        Language.SPANISH: "Contorno: envolvente simplificada; elegí Completa para todos los hilos.",
+    },
+    "pattern.overlay_supports": {
+        Language.ENGLISH: "Support wires are thinner and dashed.",
+        Language.SPANISH: "Los hilos de soporte son más finos y discontinuos.",
     },
     "pattern.polar_elevation": {
         Language.ENGLISH: "Elevation lobes",

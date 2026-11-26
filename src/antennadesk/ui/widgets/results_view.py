@@ -15,6 +15,7 @@ from PySide6.QtCore import QEvent, QPoint, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
+    QCheckBox,
     QComboBox,
     QDoubleSpinBox,
     QFileDialog,
@@ -89,6 +90,7 @@ from ..fonts import apply_plot_fonts, scaled_font_copy
 from ..help import apply_help
 from ..i18n import Translator
 from ..pattern_orientation import antenna_orientation, forward_axis_azimuth
+from ..pattern_overlay import OverlayMode, overlay_from_model
 from ..theme import theme_colors
 from ..units import DisplayUnits
 from .chart_cursor import ChartCursor, CursorSeries
@@ -368,6 +370,22 @@ class ResultsView(QWidget):
         self._azimuth_polar = PolarPatternView(translator, self._pattern_tab)
         self._elevation_polar = PolarPatternView(translator, self._pattern_tab)
         self._pattern_3d = RadiationPattern3DView(translator, self._pattern_tab)
+        self._pattern_3d_tab = QWidget(self._pattern_tab)
+        self._pattern_3d_tab_layout = QVBoxLayout(self._pattern_3d_tab)
+        self._pattern_3d_tab_layout.setContentsMargins(0, 0, 0, 0)
+        overlay_controls = QHBoxLayout()
+        self._pattern_overlay_show = QCheckBox(self._pattern_3d_tab)
+        self._pattern_overlay_mode = QComboBox(self._pattern_3d_tab)
+        for mode in OverlayMode:
+            self._pattern_overlay_mode.addItem("", mode.value)
+        self._pattern_overlay_mode.setEnabled(False)
+        self._pattern_overlay_show.toggled.connect(self._overlay_visibility_changed)
+        self._pattern_overlay_mode.currentIndexChanged.connect(self._overlay_mode_changed)
+        overlay_controls.addWidget(self._pattern_overlay_show)
+        overlay_controls.addWidget(self._pattern_overlay_mode)
+        overlay_controls.addStretch(1)
+        self._pattern_3d_tab_layout.addLayout(overlay_controls)
+        self._pattern_3d_tab_layout.addWidget(self._pattern_3d)
         pattern_controls = QHBoxLayout()
         pattern_controls.addWidget(self._pattern_frequency_label)
         pattern_controls.addWidget(self._pattern_frequency)
@@ -406,7 +424,7 @@ class ResultsView(QWidget):
         cut_layout.addWidget(cuts_splitter)
         self._pattern_view_tabs = QTabWidget(self._pattern_tab)
         self._pattern_view_tabs.addTab(self._cut_tab, "")
-        self._pattern_view_tabs.addTab(self._pattern_3d, "")
+        self._pattern_view_tabs.addTab(self._pattern_3d_tab, "")
         pattern_layout.addWidget(self._pattern_view_tabs)
 
         self._currents_frequency = QComboBox(self._currents_tab)
@@ -771,8 +789,24 @@ class ResultsView(QWidget):
 
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design
+        self._pattern_3d.set_overlay(
+            overlay_from_model(design.antenna if design is not None else None)
+        )
         self._render_patterns()
         self._render_confidence()
+
+    def _overlay_visibility_changed(self, visible: bool) -> None:
+        self._pattern_3d.set_overlay_visible(visible)
+        self._pattern_overlay_mode.setEnabled(visible)
+        self._pattern_3d.update()
+
+    def _overlay_mode_changed(self, *_args: object) -> None:
+        value = self._pattern_overlay_mode.currentData()
+        try:
+            mode = OverlayMode(str(value))
+        except ValueError:
+            mode = OverlayMode.AUTO
+        self._pattern_3d.set_overlay_mode(mode)
 
     def _render_confidence(self) -> None:
         t = self._translator.t
@@ -1181,6 +1215,19 @@ class ResultsView(QWidget):
         )
         if self._band_analysis is not None:
             self._render_bands()
+        self._pattern_overlay_show.setText(self._translator.t("pattern.overlay_show"))
+        self._pattern_overlay_mode.setItemText(
+            0,
+            self._translator.t("pattern.overlay_mode.auto"),
+        )
+        self._pattern_overlay_mode.setItemText(
+            1,
+            self._translator.t("pattern.overlay_mode.full"),
+        )
+        self._pattern_overlay_mode.setItemText(
+            2,
+            self._translator.t("pattern.overlay_mode.outline"),
+        )
         self._pattern_view_tabs.setTabText(0, self._translator.t("pattern.cut_tab"))
         self._pattern_view_tabs.setTabText(1, self._translator.t("pattern.3d_tab"))
         self._pattern_view_tabs.setTabToolTip(0, self._translator.t("help.tab.pattern"))
@@ -1349,6 +1396,8 @@ class ResultsView(QWidget):
         ):
             apply_help(control, self._translator, key)
         apply_help(self._pattern_metric_summary, self._translator, "pattern.metric_summary")
+        apply_help(self._pattern_overlay_show, self._translator, "pattern.overlay_show")
+        apply_help(self._pattern_overlay_mode, self._translator, "pattern.overlay_mode")
         self._pattern_view_tabs.setAccessibleDescription(self._translator.t("help.tab.pattern"))
         self._raw_tabs.setAccessibleDescription(self._translator.t("help.tab.raw"))
 

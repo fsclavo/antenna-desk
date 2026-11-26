@@ -4,11 +4,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from PySide6.QtCore import QRectF
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.i18n import Language, Translator
+from antennadesk.ui.pattern_overlay import OverlayMode
 from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
 
 POINTS = (
@@ -74,7 +77,10 @@ def test_pattern_3d_orientation_labels_survive_compact_sizes(qtbot: QtBot) -> No
     assert view.grab().isNull() is False
 
 
-def test_results_view_passes_forward_axis_and_front_to_back(qtbot: QtBot) -> None:
+def test_results_view_passes_forward_axis_and_front_to_back(
+    qtbot: QtBot,
+    tmp_path: Path,
+) -> None:
     from datetime import UTC, datetime
 
     from antennadesk.application.use_cases.create_dipole_project import (
@@ -143,6 +149,16 @@ def test_results_view_passes_forward_axis_and_front_to_back(qtbot: QtBot) -> Non
     assert view._pattern_3d._front_to_back_db == pytest.approx(10.0)
     assert view._pattern_3d._footprint_segments
     assert view._pattern_3d._feed_point is not None
+    assert view._pattern_overlay_show.isChecked() is False
+    view._pattern_overlay_show.setChecked(True)
+    assert view._pattern_3d._overlay_visible is True
+    view._pattern_overlay_mode.setCurrentIndex(
+        view._pattern_overlay_mode.findData(OverlayMode.OUTLINE.value)
+    )
+    assert view._pattern_3d._overlay_mode is OverlayMode.OUTLINE
+    image_path = tmp_path / "pattern-overlay.png"
+    view.save_pattern_image(image_path)
+    assert image_path.read_bytes().startswith(b"\x89PNG")
 
 
 def test_pattern_3d_draws_a_plan_inset_with_footprint_and_feed(qtbot: QtBot) -> None:

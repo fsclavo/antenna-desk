@@ -139,6 +139,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   compact-size threshold and when it would collide with the maximum-gain label.
   No solver, domain, schema, simulation, or report change.
 
+- **Schematic antenna overlay in the 3D lobe (UX48).** The 3D pattern tab now
+  offers a default-off **Show antenna** checkbox and an **Auto / Full / Outline**
+  selector. The overlay is feed-centered, uniformly scaled to about 35 % of the
+  pattern radius, retains canonical support wires (thinner/dashed), and uses the
+  shared antenna color and feed marker. Outline is a convex-hull projection of
+  canonical endpoints, never a synthetic family shape. The existing PNG export
+  respects the overlay state. No solver, domain, schema, simulation, or report
+  change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run
