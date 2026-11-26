@@ -147,6 +147,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0052 — Uniform radial droop for verticals](ADR/0052-uniform-radial-droop.md)
 - [ADR-0053 — One lifecycle owner for Qt worker tasks](ADR/0053-qt-worker-task-lifecycle.md)
 - [ADR-0054 — N-port feed-network solver for splitter isolation and matching](ADR/0054-bounded-multiport-feed-network.md)
+- [ADR-0056 — Antenna generator dialog layout and height budget](ADR/0056-antenna-dialog-layout.md)
 
 ## Archive
 

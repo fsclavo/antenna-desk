@@ -73,6 +73,15 @@
   scroll area, while the inline sidebar Yagi form stays single-column. The hint,
   evidence, boom note, and OK/Cancel remain visible when the form scrolls. No
   solver, domain, schema, simulation, or report change.
+- UX51 is **implemented 2026-11-26**: generator dialogs now share
+  `FormDialogFrame` (scroll/action split) and `SectionedForm` (atomic semantic
+  columns, label/help binding, and reading-order tab chain). ADR-0056 records
+  the 640 px height budget, 920 px target width, sidebar exception, and
+  rejected alternatives. The Yagi dialog is the reference implementation. The
+  layout guard covers 25 family dialogs in English and Spanish with no
+  exceptions, and negative tests prove it rejects a 1087 px form without a
+  scroll area and the old single-column Yagi shape. No solver, domain, schema,
+  simulation, or report change.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -117,7 +126,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX50 are implemented; continue with the UX51–UX55 dialog-layout track or close the 1.2 presentation track.
+2. UX46–UX51 are implemented; continue with the UX52–UX55 dialog-layout waves or close the 1.2 presentation track.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

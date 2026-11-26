@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
@@ -13,7 +12,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -53,6 +51,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
+from .sectioned_form import FormColumn, FormLayoutMode, FormRow, FormSection, SectionedForm
 from .starting_dimensions import StartingDimensionsState
 from .table_headers import fit_header_sections
 
@@ -312,77 +311,64 @@ class YagiForm(QWidget):
         self._starting_note.setVisible(False)
         self._starting_state = StartingDimensionsState(translator, self._starting_note)
 
-        geometry_rows: list[tuple[str | QLabel | None, QWidget]] = [
-            ("field.frequency", self._frequency),
-            ("field.height", self._height),
-            ("field.azimuth", self._azimuth),
-            ("field.polarization", self._polarization),
-            ("yagi.radius", self._radius),
-            ("yagi.taper_length", self._taper_length),
-            ("yagi.taper_radius", self._taper_radius),
+        geometry_rows: list[FormRow] = [
+            FormRow("field.frequency", self._frequency),
+            FormRow("field.height", self._height),
+            FormRow("field.azimuth", self._azimuth),
+            FormRow("field.polarization", self._polarization),
+            FormRow("yagi.radius", self._radius),
+            FormRow("yagi.taper_length", self._taper_length),
+            FormRow("yagi.taper_radius", self._taper_radius),
         ]
         if include_support_structures:
             geometry_rows.extend(
                 [
-                    ("yagi.mast_diameter", self._mast_diameter),
-                    ("yagi.mast_offset", self._mast_offset),
-                    ("yagi.guy_count", self._guy_count),
-                    ("yagi.guy_anchor", self._guy_anchor),
-                    ("yagi.guy_diameter", self._guy_diameter),
+                    FormRow("yagi.mast_diameter", self._mast_diameter),
+                    FormRow("yagi.mast_offset", self._mast_offset),
+                    FormRow("yagi.guy_count", self._guy_count),
+                    FormRow("yagi.guy_anchor", self._guy_anchor),
+                    FormRow("yagi.guy_diameter", self._guy_diameter),
                 ]
             )
-        feed_rows: list[tuple[str | QLabel | None, QWidget]] = [
-            ("field.material", self._material),
-            ("field.ground", self._ground),
-            ("field.soil_preset", self._soil),
-            ("field.permittivity", self._permittivity),
-            ("field.conductivity", self._conductivity),
-            ("yagi.driven", self._driven),
+        feed_rows: list[FormRow] = [
+            FormRow("field.material", self._material),
+            FormRow("field.ground", self._ground),
+            FormRow("field.soil_preset", self._soil),
+            FormRow("field.permittivity", self._permittivity),
+            FormRow("field.conductivity", self._conductivity),
+            FormRow("yagi.driven", self._driven),
         ]
         if include_feed_hardware:
-            feed_rows.append((None, self._driven_folded))
-            feed_rows.append(("yagi.fold_spacing", self._driven_fold_spacing))
+            feed_rows.append(FormRow(None, self._driven_folded))
+            feed_rows.append(FormRow("yagi.fold_spacing", self._driven_fold_spacing))
             if include_feed_transformer:
-                feed_rows.append((self._transformer_label, self._transformer))
+                feed_rows.append(FormRow(self._transformer_label, self._transformer))
         if include_feed_hardware or include_match_hardware:
             feed_rows.extend(
                 [
-                    ("yagi.match_type", self._match_type),
-                    ("yagi.match_length", self._match_length),
-                    ("yagi.match_spacing", self._match_spacing),
+                    FormRow("yagi.match_type", self._match_type),
+                    FormRow("yagi.match_length", self._match_length),
+                    FormRow("yagi.match_spacing", self._match_spacing),
                 ]
             )
         if not include_feed_hardware:
             self._match_note.setVisible(False)
 
-        def add_rows(
-            form: QFormLayout,
-            rows: Sequence[tuple[str | QLabel | None, QWidget]],
-        ) -> None:
-            for label, control in rows:
-                if label is None:
-                    form.addRow(control)
-                elif isinstance(label, QLabel):
-                    form.addRow(label, control)
-                else:
-                    form.addRow(self._labels.label(label, control), control)
-
-        self._geometry_form = QFormLayout()
-        self._feed_form = QFormLayout() if wide_layout else None
-        forms = [self._geometry_form]
-        if self._feed_form is not None:
-            forms.append(self._feed_form)
+        self._sectioned = SectionedForm(
+            (
+                FormSection(tuple(geometry_rows), column=FormColumn.LEFT),
+                FormSection(tuple(feed_rows), column=FormColumn.RIGHT),
+            ),
+            mode=FormLayoutMode.TWO_COLUMN if wide_layout else FormLayoutMode.SINGLE,
+            label_factory=self._labels.label,
+            target_width_px=920 if wide_layout else None,
+            parent=self,
+        )
+        forms = self._sectioned.forms
+        self._geometry_form = forms[0]
+        self._feed_form = forms[1] if len(forms) > 1 else None
         for form in forms:
-            form.setContentsMargins(0, 0, 0, 0)
-            form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-            if wide_layout:
-                form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-                form.setVerticalSpacing(6)
-        if self._feed_form is None:
-            add_rows(self._geometry_form, geometry_rows + feed_rows)
-        else:
-            add_rows(self._geometry_form, geometry_rows)
-            add_rows(self._feed_form, feed_rows)
+            self._labels.bind_form(form)
 
         element_buttons = QHBoxLayout()
         element_buttons.addWidget(self._add)
@@ -396,17 +382,7 @@ class YagiForm(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         if wide_layout:
             layout.setSpacing(4)
-        self._labels.bind_form(self._geometry_form)
-        if self._feed_form is None:
-            layout.addLayout(self._geometry_form)
-        else:
-            self._labels.bind_form(self._feed_form)
-            columns = QHBoxLayout()
-            columns.setContentsMargins(0, 0, 0, 0)
-            columns.setSpacing(24)
-            columns.addLayout(self._geometry_form, 1)
-            columns.addLayout(self._feed_form, 1)
-            layout.addLayout(columns)
+        layout.addWidget(self._sectioned)
         layout.addWidget(self._table, 1)
         layout.addLayout(element_buttons)
         layout.addWidget(self._match_note)
@@ -415,6 +391,12 @@ class YagiForm(QWidget):
         layout.addWidget(self._frequency_warning)
         layout.addWidget(self._clearance_warning)
         layout.addWidget(self._match_warning)
+        self._sectioned.apply_tab_order(
+            self._table,
+            self._add,
+            self._remove,
+            self._preset,
+        )
 
         self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (

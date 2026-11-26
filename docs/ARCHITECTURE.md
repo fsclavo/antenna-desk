@@ -306,6 +306,17 @@ construction sheets, and comparison use type-aware dimensions and a wire
 schedule with each wire's endpoints, length, diameter, material, and the feed
 point.
 
+Family generator dialogs use `ui/widgets/form_dialog.py:FormDialogFrame` for
+the scroll/action split and `ui/widgets/sectioned_form.py:SectionedForm` for
+semantic one/two-column sections. The dialog form may scroll, but the notes
+and the OK/Cancel box always stay outside the scroll area. A generator dialog
+must keep `minimumSizeHint().height()` at or below 640 px; a taller form must
+own a form scroll area. The target width is 920 px, with no horizontal
+scrollbar in English or Spanish. The inline sidebar forms remain
+single-column. The Yagi dialog is the reference implementation; the layout
+guard in `tests/ui/test_dialog_layout.py` covers the family generator registry.
+See [ADR-0056](ADR/0056-antenna-dialog-layout.md).
+
 The main window uses a `QUndoStack` with immutable project snapshots for
 Undo/Redo. Simulation runs are kept outside the undoable editable snapshot and
 merged back on restore, so undoing a design edit does not delete completed

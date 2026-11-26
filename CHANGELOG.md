@@ -165,6 +165,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   sidebar Yagi editor remains single-column. No solver, domain, schema,
   simulation, or report change.
 
+- **Shared generator-dialog layout and height guard (UX51).** Family generator
+  dialogs now share `FormDialogFrame` for the form/scroll/notes/action split and
+  `SectionedForm` for atomic semantic columns. The Yagi dialog is the reference
+  implementation; the inline sidebar forms remain single-column. ADR-0056
+  records the 640 px height budget, the 920 px target width, the sidebar
+  exception, and the accessibility/tab-order contract. A new registry test
+  checks 25 family dialogs in English and Spanish, and negative tests prove
+  the guard rejects a tall form without a scroll area. No solver, domain,
+  schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

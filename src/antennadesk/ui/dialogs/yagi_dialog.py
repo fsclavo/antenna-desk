@@ -4,26 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QFrame,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.yagi import YagiParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.yagi_form import YagiForm
 
 
-class YagiDialog(QDialog):
+class YagiDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -33,63 +23,50 @@ class YagiDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: YagiParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: YagiParameters | None = None
-        self._form = YagiForm(
+        form = YagiForm(
             translator,
             unit_system,
             parameters,
-            self,
+            None,
             wide_layout=True,
         )
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self._table = self._form._table
-        self._driven = self._form._driven
-        self._driven_folded = self._form._driven_folded
-        self._driven_fold_spacing = self._form._driven_fold_spacing
-        self._match_type = self._form._match_type
-        self._match_length = self._form._match_length
-        self._match_spacing = self._form._match_spacing
-        self._ground = self._form._ground
-        self._material = self._form._material
-        self._add_element = self._form._add_element
-        self._remove_element = self._form._remove_element
-        self._load_preset = self._form._load_preset
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("yagi.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("yagi.evidence"))
+        evidence.setWordWrap(True)
+        boom_note = QLabel(translator.t("yagi.boom_note"))
+        boom_note.setWordWrap(True)
 
-        self.setWindowTitle(translator.t("yagi.title"))
-        self.resize(*scaled_dialog_size(920, 860))
-
-        self._hint = QLabel(translator.t("yagi.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("yagi.evidence"), self)
-        self._evidence.setWordWrap(True)
-        self._boom_note = QLabel(translator.t("yagi.boom_note"), self)
-        self._boom_note.setWordWrap(True)
-
-        self._buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("yagi.title"),
+            form=form,
+            notes=(hint, evidence, boom_note),
+            initial_size=(920, 860),
+            parent=parent,
         )
-        self._buttons.accepted.connect(self._accept)
-        self._buttons.rejected.connect(self.reject)
-
-        self._scroll = QScrollArea(self)
-        self._scroll.setWidgetResizable(True)
-        self._scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self._scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(self._boom_note)
-        layout.addWidget(self._buttons)
+        self._translator = translator
+        self._yagi_form = form
+        self._parameters: YagiParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
+        self._boom_note = boom_note
+        self._table = form._table
+        self._driven = form._driven
+        self._driven_folded = form._driven_folded
+        self._driven_fold_spacing = form._driven_fold_spacing
+        self._match_type = form._match_type
+        self._match_length = form._match_length
+        self._match_spacing = form._match_spacing
+        self._ground = form._ground
+        self._material = form._material
+        self._add_element = form._add_element
+        self._remove_element = form._remove_element
+        self._load_preset = form._load_preset
 
     def parameters(self) -> YagiParameters:
-        return self._form.parameters()
+        return self._yagi_form.parameters()
 
     def _accept(self) -> None:
         try:
