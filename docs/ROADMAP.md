@@ -41,7 +41,7 @@ tolerance.
 
 **Latest published release:** `0.10.1` (2026-11-24). The 1.0 Confidence wave is
 complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
-1.2 has partial DL3/DL6 work and a bounded DL7 implementation. DL4 is canceled.
+1.2 has DL3 implemented, DL6 first-slice work, and a bounded DL7 implementation. DL4 is canceled.
 See [`STATUS.md`](STATUS.md)
 and the [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
 
@@ -400,8 +400,7 @@ execution queue. UX1–UX17 are complete. The 0.5 **Decide**, 0.6 **Build**, 0.7
 slice is complete. UX18–UX31 are implemented. UX32–UX38 were completed on
 2026-11-17. The UX queue is closed. The adaptive length display-units track
 (U1–U6) is complete, including the manual desktop light/dark and font-scaling
-QA on 2026-11-24; the release plan decides whether it lands in 0.10.0 or a later
-release.
+QA on 2026-11-24; the track landed in 0.10.0 and remains current in 0.10.1.
 
 Rules for this track:
 
@@ -501,8 +500,8 @@ unchanged. The normative rules and examples are in
 U1–U6 are complete: the formatter/preference, geometry scenes, every family
 editor and editable table, the optimization/synthesis/auxiliary dialogs, the
 construction/report surfaces, documentation, EN/ES help, and the manual
-light/dark/font-scaling QA are all closed. The release plan decides whether the
-track lands in 0.10.0 or a later release; do not add a global current-units
+light/dark/font-scaling QA are all closed. The track landed in 0.10.0 and
+remains current in 0.10.1; do not add a global current-units
 singleton, a `UnitSystem.CM` value, frequency-based selection, or per-cell table
 units.
 
@@ -552,7 +551,7 @@ and new catalog presets) waits until this track closes.
 | 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, attachments, and hardware deferred pending ADR/spike | M–L | B/C | narrowed 2026-11-24 |
 | 1.2 Site and exploration | DL3 | Live tuning preview | Managed length/non-length dimensions and optional coarse pattern preview implemented; Apply closes; optional non-modal remains | M–L | n/a | implemented 2026-11-24 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | Canceled 2026-11-24; not relevant to the amateur design workflow | — | — | canceled |
-| 1.2 Site and exploration | DL6 | Stacked Yagi arrays | First slice done 2026-11-25: form, schema 71, catalog, per-port sources, scene/reports, splitter + phase-line specification, co-simulated TL network with the reference line, a matched line loss plus a per-port mismatch correction, one shared mast, a Wilkinson N-port divider mode with a reconstructed pattern and per-level L/Pi/T matching networks, and bounded spacing/phase optimization, plus optional per-level transformer ratios, matched branch loss, isolation-resistor series/parallel parasitics, and a deterministic tolerance corner check; a measured broadband splitter/isolation model remains | L | C | partial 2026-11-25 |
+| 1.2 Site and exploration | DL6 | Stacked Yagi arrays | First slice done 2026-11-25: form, schema 71, catalog, per-port sources, scene/reports, splitter + phase-line specification, co-simulated TL network with the reference line, a matched line loss plus a per-port mismatch correction, one shared mast, a Wilkinson N-port divider mode with a reconstructed pattern and per-level L/Pi/T matching networks, and bounded spacing/phase optimization, plus optional per-level transformer ratios, matched branch loss, isolation-resistor series/parallel parasitics, and a deterministic tolerance corner check; a measured broadband splitter/isolation model remains | L | C | partial 2026-11-26 |
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | Bounded cliff/second-medium far-field profile implemented; native screen still unvalidated for SWR | M–L | B/C | implemented 2026-11-24 |
 | post-1.2 | DL8 | Full terrain model | Validated terrain model or second engine | XL | B/C | blocked on DL7/ADR |
 
@@ -617,12 +616,12 @@ Release track:
    catalog starting frequencies. All release jobs completed successfully in CI,
    including the Windows bundle and installer QA.
 7. Add GPG/Authenticode signing in a later release if required.
-8. `v0.7.0`, `v0.7.1`, `v0.8.0`, `v0.8.1`, `v0.8.2`, and `v0.9.0` are published;
-   see [`CHANGELOG.md`](../CHANGELOG.md) and the archived release QA records in
-   [`archive/releases/`](archive/releases/).
+8. `v0.7.0`, `v0.7.1`, `v0.8.0`, `v0.8.1`, `v0.8.2`, `v0.9.0`, `v0.10.0`, and
+   `v0.10.1` are published; see [`CHANGELOG.md`](../CHANGELOG.md) and the
+   archived release QA records in [`archive/releases/`](archive/releases/).
 9. The 2026-11-19 trust/station track completed 1.0 Confidence. 1.1 Station is
-   done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has partial DL3/DL6 work
-   and a bounded DL7 implementation, with DL4 canceled. There are no committed
+   done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has DL3 implemented,
+   DL6 first-slice work, and a bounded DL7 implementation, with DL4 canceled. There are no committed
    dates, and each release is gated by the acceptance criteria in the backlog.
 
 Validation track:

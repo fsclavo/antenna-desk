@@ -640,10 +640,12 @@ metrics followed; VNA import closed the interoperability side.
 **Wave 1 order:** DL1 and DL2 are done. DL5 is narrowed to mast and guy wires; no further wave-1 work is planned.
 
 **Wave 2 order:** DL7's bounded cliff slice is implemented; DL4 is canceled by
-product decision. The DL6 first slice is implemented (form, schema 63, catalog,
+product decision. The DL6 first slice is implemented (form, schema 71, catalog,
 per-port Sources, scene, reports, the splitter/phase-line feed specification,
-one shared mast/guy set, and the bounded spacing/phase optimizer); per-level
-matching remains.
+one shared mast/guy set, the bounded spacing/phase optimizer, per-level
+L/Pi/T matching, transformer ratios, branch loss, isolation parasitics, and
+the deterministic Wilkinson tolerance check). A measured broadband
+splitter/isolation model remains unavailable.
 
 ### Wave rules
 

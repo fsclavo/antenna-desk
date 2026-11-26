@@ -121,6 +121,7 @@ def test_schema_documents_name_the_current_version() -> None:
     readme = _read(README)
     status = _read(DOCS / "STATUS.md")
     backlog = _read(DOCS / "AUTONOMOUS_BACKLOG.md")
+    project_bundle = _read(DOCS / "PROJECT_BUNDLE.md")
 
     assert f"Schema version {SCHEMA_VERSION} is" in architecture
     assert f"Current version: `{SCHEMA_VERSION}`" in domain
@@ -128,6 +129,7 @@ def test_schema_documents_name_the_current_version() -> None:
     assert f"current development schema is `{SCHEMA_VERSION}`" in readme
     assert f"**Development schema:** `{SCHEMA_VERSION}`" in status
     assert f"Schema: **{SCHEMA_VERSION}**" in backlog
+    assert f"normal schema {SCHEMA_VERSION}" in project_bundle
 
 
 def test_changelog_does_not_repeat_unreleased_entries_in_release_sections() -> None:

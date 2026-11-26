@@ -53,7 +53,7 @@ def test_ux55_compact_dialogs_use_the_scaffold_without_scroll(
     assert isinstance(dialog, FormDialogFrame)
     assert dialog._scroll is None
     assert dialog._buttons.parent() is dialog
-    assert dialog._form.isVisible() is False
+    assert dialog._form.parent() is dialog
     assert dialog.notes
 
 

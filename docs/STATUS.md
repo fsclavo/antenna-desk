@@ -111,6 +111,11 @@
   outside the dialog and no horizontal scrollbar. See
   [`archive/qa/QA_PASS_2026-11-26_ux55.md`](archive/qa/QA_PASS_2026-11-26_ux55.md).
   The final interactive desktop 125%/150% scaling confirmation remains manual.
+- A general QA and technical-debt pass on 2026-11-26 kept the full gate,
+  lockfile, dependency audit, and package build green. It corrected stale
+  project-bundle schema, release, and DL6 documentation and added a schema
+  guard; see
+  [`archive/qa/QA_PASS_2026-11-26.md`](archive/qa/QA_PASS_2026-11-26.md).
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No

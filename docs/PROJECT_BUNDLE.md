@@ -18,7 +18,7 @@ Use **File → Export Project Bundle...** to write a
   export;
 - writes the ZIP atomically through a temporary file next to the destination.
 
-The project payload keeps the normal schema 63, simulation runs, the 64 MB
+The project payload keeps the normal schema 71, simulation runs, the 64 MB
 container limit, and the 256 MB total expanded limit. The bundle adds no
 project schema field.
 
@@ -40,14 +40,14 @@ manifest has this shape:
 {
   "format": "antennadesk.project_bundle",
   "format_version": 1,
-  "application_version": "0.7.0",
-  "created_at": "2026-11-12T12:00:00+00:00",
+  "application_version": "0.10.1",
+  "created_at": "2026-11-26T12:00:00+00:00",
   "project_file": "project.antennadesk",
   "project_name": "40 m dipole",
   "assets": [
     {
       "original_reference": "/home/user/photos/site.jpg",
-      "asset_path": "assets/0001-site.jpg",
+      "asset_path": "assets/0001-site-photo.jpg",
       "size": 123456,
       "sha256": "…",
       "missing": false
