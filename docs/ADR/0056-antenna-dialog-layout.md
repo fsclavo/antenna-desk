@@ -87,8 +87,8 @@ sections in one or two columns:
   at runtime.
 - `WrapLongRows` prevents a long Spanish label from forcing horizontal
   scrolling; the scroll area is the small-screen fallback.
-- Light/dark and font-scaling QA remains manual; offscreen tests are not a
-  substitute.
+- Light/dark and font-scaling QA is performed manually; the UX55 desktop pass
+  covered it on 2026-11-26. Offscreen tests are not a substitute.
 
 ### Guard
 
@@ -142,8 +142,8 @@ scroll; each keeps its compact single column. The final guard registry has 25
 entries and no exceptions. The offscreen closure matrix covered 400
 combinations (25 dialogs × light/dark × Medium/Large × English/Spanish ×
 1366×768/1920×1080) with no action outside the dialog and no horizontal
-scrollbar. The interactive desktop 125%/150% display-scaling check remains a
-release-level manual step.
+scrollbar. The manual desktop 125%/150% display-scaling check passed on
+2026-11-26, including the Large font preset.
 
 ## Rejected alternatives
 
@@ -180,6 +180,6 @@ UX52 later applied the standard to loaded dipole, biquad, Moxon, and magnetic
 loop, and UX53 applied it to Beverage, SCV, J-pole, and OCFD without changing
 the guard contract, UX54 applied the scaffold audit to the twelve
 scroll-heavy dialogs, and UX55 closed the compact-family and matrix work.
-Out of scope: the release-level interactive desktop scaling check, changing
-`scaled_dialog_size()` semantics, changing the sidebar, and any solver,
-domain-model, schema, simulation, report, or numerical-reference change.
+Out of scope: changing `scaled_dialog_size()` semantics, changing the
+sidebar, and any solver, domain-model, schema, simulation, report, or
+numerical-reference change.

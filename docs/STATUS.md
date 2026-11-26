@@ -110,7 +110,8 @@
   Medium/Large × EN/ES × 1366×768/1920×1080) passed with no visible action
   outside the dialog and no horizontal scrollbar. See
   [`archive/qa/QA_PASS_2026-11-26_ux55.md`](archive/qa/QA_PASS_2026-11-26_ux55.md).
-  The final interactive desktop 125%/150% scaling confirmation remains manual.
+  The manual desktop 125%/150% confirmation passed on 2026-11-26, including
+  the Large font preset.
 - A general QA and technical-debt pass on 2026-11-26 kept the full gate,
   lockfile, dependency audit, and package build green. It corrected stale
   project-bundle schema, release, and DL6 documentation and added a schema
@@ -160,7 +161,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX55 are implemented and the generator-dialog layout track is closed at the automated level; run the final desktop 125%/150% visual confirmation, then choose the next release slice.
+2. UX46–UX55 are implemented and the generator-dialog layout track is closed, including the manual desktop 125%/150% check. Start the FP1 physical/electrical spike next.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

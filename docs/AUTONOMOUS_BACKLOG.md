@@ -62,8 +62,9 @@ corrections.
 
 UX50–UX55 are implemented and fix the Yagi dialog's unreachable action area
 as the reference implementation. The compact-family migration and the
-cross-family automated QA matrix are complete; only the release-level
-interactive desktop scaling check remains manual. The track does not force two columns on every
+cross-family automated QA matrix are complete, and the manual desktop
+125%/150% check passed on 2026-11-26 including the Large font preset. The
+track does not force two columns on every
 family and does not change the narrow main-window sidebar. It changes no
 solver, domain model, project schema, container, report, or numerical
 reference. It is not part of the active 1.2 sequence; see §Antenna generator
@@ -103,7 +104,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX52 | Complex family dialogs, wave 1 | M | UX51 | **Implemented 2026-11-26.** Loaded dipole, biquad, Moxon, and magnetic loop use `FormDialogFrame` and `SectionedForm` with two semantic columns, a scroll fallback, and actions outside the scroll. All four open at 920×640 with the form and actions visible and no horizontal scrollbar in EN/ES; parameter round-trips and existing family tests are unchanged. The loaded-dipole orientation selector now shows its labels immediately. See §UX52. |
 | UX53 | Complex family dialogs, wave 2 | M | UX51 | **Implemented 2026-11-26.** Beverage, SCV, J-pole, and OCFD use `FormDialogFrame` and `SectionedForm` with two semantic columns, scroll fallback, and actions outside. All four fit 920×640 without horizontal scrolling in EN/ES; the OCFD band-plan footer stays outside the scroll; large Spanish adds only a small vertical scroll for Beverage/SCV. Parameter round-trips and family tests are unchanged. See §UX53. |
 | UX54 | Scroll-heavy family dialog audit | M–L | UX51 | **Implemented 2026-11-26.** All twelve scroll-heavy dialogs use `FormDialogFrame` with a single semantic column and actions outside the scroll. ADR-0056 records the per-dialog decision; no two-column migration was needed. Stacked Yagi promotes its level/spacing/feed controls above the embedded editor. Primary fields are visible at 1920×1080 and 1366×768, with no horizontal scrollbar. No solver/schema change. See §UX54. |
-| UX55 | Compact families, visual QA, and track closure | S–M | UX51 for start; UX52–UX54 for closure | **Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L use `FormDialogFrame` without scroll and stay compact/single-column. All 25 family dialogs are in the guard with no exceptions. A 400-check offscreen matrix (light/dark, Medium/Large, EN/ES, 1366×768/1920×1080) passed with no action outside the dialog and no horizontal scrollbar. Interactive desktop 125%/150% scaling remains manual. See §UX55 and `archive/qa/QA_PASS_2026-11-26_ux55.md`. |
+| UX55 | Compact families, visual QA, and track closure | S–M | UX51 for start; UX52–UX54 for closure | **Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L use `FormDialogFrame` without scroll and stay compact/single-column. All 25 family dialogs are in the guard with no exceptions. A 400-check offscreen matrix (light/dark, Medium/Large, EN/ES, 1366×768/1920×1080) passed with no action outside the dialog and no horizontal scrollbar. The manual desktop 125%/150% check passed, including Large font. See §UX55 and `archive/qa/QA_PASS_2026-11-26_ux55.md`. |
 | UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Proposed 2026-11-26; not started.** Center the schematic overlay on the feed projected onto the beam symmetry plane for families with an explicit forward axis; keep the feed marker at its real cross-boom offset; keep feed-centering for verticals, dipoles, loops without a declared axis, and custom models. Fixes the quad-beam plan-view offset without changing the pattern data or the 3D scale. No solver, domain, schema, or report change. See §UX56. |
 | UX57 | 3D back ray at the actual rear gain | S | UX46 | **Proposed 2026-11-26; not started.** Draw the same-elevation back ray to the rear gain (`max gain − F/B`) instead of reusing the forward peak radius; hide it when F/B is unavailable. The label already reports the correct F/B. No solver, domain, schema, or report change. See §UX57. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -2310,8 +2311,7 @@ change to `CHANGELOG.md`; no commit or push unless requested.
 
 **Status:** implemented and closed 2026-11-26 by UX50–UX55. **Release:**
 unassigned; candidate for the UI quality pass. **Decision:** ADR-0056.
-The interactive desktop 125%/150% scaling check remains a release-level
-manual step.
+The manual desktop 125%/150% check passed, including the Large font preset.
 
 **Motivation:** The Yagi generator is the only family dialog whose minimum
 height exceeds a 1920×1080 screen. `YagiDialog` requests 920×720, but its
@@ -2658,8 +2658,8 @@ change. **Effort:** M–L (1–2 weeks; much of it is review and QA, not code).
 use the shared scaffold without a form scroll and keep their compact
 single-column layouts. The final guard registry has all 25 family dialogs
 with no exceptions. The 400-combination offscreen matrix is recorded in
-`archive/qa/QA_PASS_2026-11-26_ux55.md`; the interactive desktop
-125%/150% scaling confirmation remains manual.
+`archive/qa/QA_PASS_2026-11-26_ux55.md`; the manual desktop 125%/150%
+confirmation passed on 2026-11-26, including the Large font preset.
 
 **Goal:** finish the common language for compact generators without widening
 them unnecessarily, run the visual QA matrix, and close the track.
