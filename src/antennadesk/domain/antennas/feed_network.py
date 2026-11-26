@@ -151,6 +151,39 @@ class SeriesRlBranch:
 
 
 @dataclass(frozen=True, slots=True)
+class IsolationResistorBranch:
+    """A series R-L resistor with a parallel parasitic capacitance."""
+
+    node_a: int
+    node_b: int
+    resistance_ohm: float
+    inductance_h: float = 0.0
+    capacitance_f: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.node_a < 0 or self.node_b < 0 or self.node_a == self.node_b:
+            raise ValueError("an isolation resistor branch needs two distinct nodes")
+        ensure_positive(self.resistance_ohm, name="resistance_ohm")
+        for name, value in (
+            ("inductance_h", self.inductance_h),
+            ("capacitance_f", self.capacitance_f),
+        ):
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and non-negative")
+
+    def admittance_s_at(self, frequency_hz: float) -> complex:
+        ensure_positive(frequency_hz, name="frequency_hz")
+        series = complex(
+            self.resistance_ohm,
+            math.tau * frequency_hz * self.inductance_h,
+        )
+        admittance = 1.0 / series
+        if self.capacitance_f > 0.0:
+            admittance += complex(0.0, math.tau * frequency_hz * self.capacitance_f)
+        return admittance
+
+
+@dataclass(frozen=True, slots=True)
 class ShuntBranch:
     """A shunt impedance from a node to the common reference."""
 
@@ -246,7 +279,14 @@ class TwoPortBranch:
         )
 
 
-NetworkBranch = SeriesBranch | SeriesRlBranch | ShuntBranch | TransmissionLineBranch | TwoPortBranch
+NetworkBranch = (
+    SeriesBranch
+    | SeriesRlBranch
+    | IsolationResistorBranch
+    | ShuntBranch
+    | TransmissionLineBranch
+    | TwoPortBranch
+)
 _SPEED_OF_LIGHT_M_PER_S = 299_792_458.0
 
 
@@ -306,6 +346,14 @@ class NPortNetwork:
                 admittance[b][b] += series
                 admittance[a][b] -= series
                 admittance[b][a] -= series
+                continue
+            if isinstance(branch, IsolationResistorBranch):
+                shunt = branch.admittance_s_at(frequency_hz)
+                a, b = branch.node_a, branch.node_b
+                admittance[a][a] += shunt
+                admittance[b][b] += shunt
+                admittance[a][b] -= shunt
+                admittance[b][a] -= shunt
                 continue
             series = 1.0 / branch.impedance_ohm
             if isinstance(branch, ShuntBranch):
@@ -509,6 +557,7 @@ def n_way_wilkinson(
     isolation_resistor_scales: Sequence[float] | None = None,
     branch_loss_db_per_100m: float = 0.0,
     isolation_resistor_inductance_h: float = 0.0,
+    isolation_resistor_capacitance_f: float = 0.0,
 ) -> NPortNetwork:
     """Return an equal N-way Wilkinson with feed lines to each output.
 
@@ -524,10 +573,11 @@ def n_way_wilkinson(
     ``isolation_resistor_scales`` apply a per-output multiplier to the nominal
     branch impedance and star resistor for tolerance analysis; omitted means
     1.0 everywhere. ``branch_loss_db_per_100m`` adds a matched attenuation to
-    each quarter-wave branch. ``isolation_resistor_inductance_h`` adds a series
-    parasitic inductance to every star resistor, making isolation and input
-    match frequency-dependent. The floating star center is regularized by a
-    very high numerical shunt; it is not a physical component.
+    each quarter-wave branch. ``isolation_resistor_inductance_h`` and
+    ``isolation_resistor_capacitance_f`` add series inductance and parallel
+    capacitance to every star resistor, making isolation and input match
+    frequency-dependent. The floating star center is regularized by a very high
+    numerical shunt; it is not a physical component.
     """
 
     ensure_positive(frequency_hz, name="frequency_hz")
@@ -606,11 +656,12 @@ def n_way_wilkinson(
             )
         )
         branches.append(
-            SeriesRlBranch(
+            IsolationResistorBranch(
                 node_a=splitter_node,
                 node_b=star_center,
                 resistance_ohm=system_impedance_ohm * resistor_scales[output_index],
                 inductance_h=isolation_resistor_inductance_h,
+                capacitance_f=isolation_resistor_capacitance_f,
             )
         )
         matching_node = matching_nodes.get(output_index)

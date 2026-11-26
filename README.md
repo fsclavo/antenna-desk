@@ -10,7 +10,7 @@ amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
 **Status:** pre-1.0. Latest published release: `0.10.1` (2026-11-24). The
-current development schema is `70`; unreleased work is tracked in
+current development schema is `71`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
@@ -25,7 +25,7 @@ Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
 a transposed phase-line feed; its starting design is the published Cebik 10 m
-reference. Projects use a versioned ZIP container with schema 70, per-entry
+reference. Projects use a versioned ZIP container with schema 71, per-entry
 validation, deterministic writes, and no legacy reader. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
@@ -118,14 +118,14 @@ truth for each topic, every ADR, and the archived plans.
 
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
-- A composed two-to-four-level stacked Yagi with schema 70, per-port
+- A composed two-to-four-level stacked Yagi with schema 71, per-port
   impedance/power, front-elevation scene, reports, an optional splitter +
   phase-line feed specification with a co-simulated TL network,
   mismatch-corrected line loss, per-port network results, one shared mast/guy
   set, a beta/hairpin match or folded driven element at every driven element,
   optional ideal per-level transformers, matched branch loss, isolation-resistor
-  parasitic inductance, a deterministic component-tolerance corner check, and a
-  Wilkinson N-port
+  series/parallel parasitics, a deterministic component-tolerance corner check,
+  and a Wilkinson N-port
   divider mode with a reconstructed pattern, plus a bounded spacing/phase
   optimizer inside a user-set top-height envelope that rebuilds the feed spec
   for every candidate; no stacking gain is claimed.
@@ -162,7 +162,7 @@ truth for each topic, every ADR, and the archived plans.
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` ZIP containers with multiple design
   variants, lazy run loading, design-only recovery, and a save-design-only
-  action. The current development schema is `70`; gzip, plain JSON, and older
+  action. The current development schema is `71`; gzip, plain JSON, and older
   schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.

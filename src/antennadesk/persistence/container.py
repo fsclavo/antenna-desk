@@ -255,7 +255,7 @@ class ProjectContainerRepository:
     """Read and write versioned ZIP project containers.
 
     The reader accepts container version 1 and the current schema, plus the
-    migration path for schemas 59 through 69. Previous gzip/plain-JSON files
+    migration path for schemas 59 through 70. Previous gzip/plain-JSON files
     are rejected deliberately; the project has not shipped to users yet.
     """
 
@@ -512,6 +512,7 @@ class ProjectContainerRepository:
             67,
             68,
             69,
+            70,
             SCHEMA_VERSION,
         ):
             raise UnsupportedSchemaVersion(
@@ -917,6 +918,7 @@ class ProjectContainerRepository:
             67,
             68,
             69,
+            70,
         ):
             return payload
         migrated_from = data["schema_version"]
@@ -927,7 +929,7 @@ class ProjectContainerRepository:
             # 60 -> 61 radial droop field defaults to zero, so no rewrite is
             # needed for design entries.
             project.setdefault("site_ground", None)
-        if migrated_from <= 69:
+        if migrated_from <= 70:
             _migrate_level_matching_networks(data)
         return json.dumps(
             data,

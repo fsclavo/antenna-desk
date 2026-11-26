@@ -1672,6 +1672,7 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
             isolation_resistor_tolerance_pct=5.0,
             branch_loss_db_per_100m=10.0,
             isolation_resistor_inductance_h=120e-9,
+            isolation_resistor_capacitance_f=2e-12,
         ),
     )
     sheet = render_construction_sheet(
@@ -1698,6 +1699,8 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "10.00 dB/100 m" in sheet
     assert "Isolation resistor inductance" in sheet
     assert "120.0 nH" in sheet
+    assert "Isolation resistor capacitance" in sheet
+    assert "2.00 pF" in sheet
     assert "Branch impedance tolerance" in sheet
     assert "Isolation resistor tolerance" in sheet
     assert "Tolerance corners" in sheet

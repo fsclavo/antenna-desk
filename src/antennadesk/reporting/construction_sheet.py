@@ -1468,6 +1468,12 @@ def render_construction_sheet(
                         f"{parameters.feed.isolation_resistor_inductance_h * 1e9:.1f} nH"
                         f"</td></tr>"
                     )
+                if parameters.feed.isolation_resistor_capacitance_f > 0.0:
+                    tolerance_rows += (
+                        f"<tr><th>Isolation resistor capacitance</th><td>"
+                        f"{parameters.feed.isolation_resistor_capacitance_f * 1e12:.2f} pF"
+                        f"</td></tr>"
+                    )
                 if tolerance is not None:
                     tolerance_rows += (
                         f"<tr><th>Branch impedance tolerance</th><td>"

@@ -45,8 +45,8 @@ The first slice is implemented with these boundaries:
   pattern reconstructed from the solved port voltages;
 - a folded driven element or a beta/hairpin match at every driven element,
   built per level from the base Yagi's fields, plus optional ideal per-level
-  transformer ratios, matched branch loss, isolation-resistor parasitic
-  inductance, and a deterministic component-tolerance corner check in Wilkinson
+  transformer ratios, matched branch loss, isolation-resistor series/parallel
+  parasitics, and a deterministic component-tolerance corner check in Wilkinson
   mode;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;

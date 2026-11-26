@@ -9,6 +9,7 @@ import math
 import pytest
 
 from antennadesk.domain.antennas.feed_network import (
+    IsolationResistorBranch,
     NPortNetwork,
     SeriesRlBranch,
     TransmissionLineBranch,
@@ -459,3 +460,36 @@ def test_wilkinson_isolation_inductance_changes_the_s_matrix() -> None:
     )
 
     assert ideal.s_matrix(FREQUENCY_HZ) != inductive.s_matrix(FREQUENCY_HZ)
+
+
+def test_isolation_resistor_parallel_capacitance_changes_the_s_matrix() -> None:
+    without = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+    )
+    with_capacitance = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        isolation_resistor_capacitance_f=2e-12,
+    )
+
+    assert without.s_matrix(FREQUENCY_HZ) != with_capacitance.s_matrix(FREQUENCY_HZ)
+
+
+def test_isolation_resistor_branch_admittance_includes_both_parasitics() -> None:
+    branch = IsolationResistorBranch(
+        node_a=0,
+        node_b=1,
+        resistance_ohm=50.0,
+        inductance_h=100e-9,
+        capacitance_f=2e-12,
+    )
+
+    low = branch.admittance_s_at(FREQUENCY_HZ)
+    high = branch.admittance_s_at(2.0 * FREQUENCY_HZ)
+
+    assert low != high
+    assert low.real > 0.0
+    assert high.imag < low.imag

@@ -271,6 +271,7 @@ def _stacked_yagi_spec(
                 isolation_resistor_tolerance_pct=(parameters.feed.isolation_resistor_tolerance_pct),
                 branch_loss_db_per_100m=parameters.feed.branch_loss_db_per_100m,
                 isolation_resistor_inductance_h=(parameters.feed.isolation_resistor_inductance_h),
+                isolation_resistor_capacitance_f=(parameters.feed.isolation_resistor_capacitance_f),
             )
             if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
             else None

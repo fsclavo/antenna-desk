@@ -1410,11 +1410,16 @@ def design_summary_rows(
                             "Isolation resistor inductance",
                             f"{parameters.feed.isolation_resistor_inductance_h * 1e9:.1f} nH",
                         ),
+                        (
+                            "Isolation resistor capacitance",
+                            f"{parameters.feed.isolation_resistor_capacitance_f * 1e12:.2f} pF",
+                        ),
                     ]
                     if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
                     and (
                         parameters.feed.branch_loss_db_per_100m > 0.0
                         or parameters.feed.isolation_resistor_inductance_h > 0.0
+                        or parameters.feed.isolation_resistor_capacitance_f > 0.0
                     )
                     else []
                 ),

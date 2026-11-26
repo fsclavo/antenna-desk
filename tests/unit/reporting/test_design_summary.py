@@ -1128,6 +1128,7 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
             isolation_resistor_tolerance_pct=5.0,
             branch_loss_db_per_100m=10.0,
             isolation_resistor_inductance_h=120e-9,
+            isolation_resistor_capacitance_f=2e-12,
         ),
     )
 
@@ -1147,6 +1148,7 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert "Level 2 transformer" not in rows
     assert rows["Branch matched loss"] == "10.00 dB/100 m"
     assert rows["Isolation resistor inductance"] == "120.0 nH"
+    assert rows["Isolation resistor capacitance"] == "2.00 pF"
     assert rows["Branch impedance tolerance"] == "5.0%"
     assert rows["Isolation resistor tolerance"] == "5.0%"
     assert rows["Tolerance corners"] == "15"

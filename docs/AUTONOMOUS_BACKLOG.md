@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-25
+**Date:** 2026-11-26
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -52,6 +52,11 @@ by UX47/UX48. They do not change the solver, domain model, project schema,
 pattern storage, or report format, and add no 3D engine or dependency. See §3D
 pattern orientation and comparison.
 
+FP1 is a proposed VHF/portable catalog addition, not part of the active 1.2
+sequence. It must complete the physical/electrical spike and update ADR-0055
+before schema or UI work starts. The 5/8, double 5/8, dual-band sleeve, and
+high-gain variants are deliberately excluded.
+
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
 | ID | Task | Size | Depends on | Acceptance |
@@ -66,10 +71,11 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 70, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, a user-facing Wilkinson divider mode, and per-level L/Pi/T matching networks are implemented. A folded driven element is copied to every level as geometry-only, with optional ideal per-level transformer ratios, matched branch loss, isolation-resistor parasitic inductance, and a deterministic tolerance corner check in Wilkinson mode; a measured or broadband splitter/isolation model remains explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 71, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, a user-facing Wilkinson divider mode, and per-level L/Pi/T matching networks are implemented. A folded driven element is copied to every level as geometry-only, with optional ideal per-level transformer ratios, matched branch loss, isolation-resistor series/parallel parasitics, and a deterministic tolerance corner check in Wilkinson mode; a measured broadband splitter/isolation model remains explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
+| FP1 | Flower Pot half-wave family | L | ADR-0055; physical/electrical spike; next schema bump | **Proposed 2026-11-26; not started.** Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, a construction shortening factor, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | UX46 | 3D lobe orientation indicators | S | none | **Proposed 2026-11-25.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Proposed 2026-11-25.** Top-view inset with the canonical footprint, feed, antenna azimuth, and max-gain azimuth; theme-aware and hidden at minimum size. No synthetic family shape and no new engine. See §UX47. |
@@ -1137,7 +1143,7 @@ narrow MVP (straight cylinders) mitigate it.
 **First slice implemented (2026-11-25):**
 [`ADR-0049`](ADR/0049-stacked-yagi-composed-family.md) composes two to four
 identical Yagis with an ideal source progression. The slice delivers the
-domain model, schema 70, both catalog routes, the embedded Yagi/stack form,
+domain model, schema 71, both catalog routes, the embedded Yagi/stack form,
 per-port **Sources** results, front-elevation scene and dimensions, design and
 construction reports, a multi-boom BOM, a real `nec2c` two-port test, an
 optional splitter + phase-line feed specification, and a bounded spacing/phase
@@ -1152,9 +1158,10 @@ feed-network solver, NEC antenna Y-matrix extraction, and a user-facing
 Wilkinson divider mode are implemented and validated against the standard
 Wilkinson, scikit-rf, and the existing NEC TL co-simulation. Folded driven
 elements are copied to every level as geometry-only, with optional ideal
-per-level transformer ratios, matched branch loss, isolation-resistor parasitic
-inductance, and a deterministic tolerance corner check in Wilkinson mode. A
-measured or broadband splitter/isolation model remains a follow-up. Evidence is C and no
+per-level transformer ratios, matched branch loss, isolation-resistor
+series/parallel parasitics, and a deterministic tolerance corner check in
+Wilkinson mode. A measured broadband splitter/isolation model remains a
+follow-up. Evidence is C and no
 stacking gain is claimed. See also
 [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
 
@@ -1182,18 +1189,18 @@ stacking gain is claimed. See also
 - One shared mast and optional guy set run from ground to the top boom; the
   base Yagi's support fields are interpreted once for the whole stack.
 - An N-port feed-network solver and NEC antenna Y-matrix extraction are
-  validated; the Wilkinson divider mode exposes them in schema 70, the editor,
+  validated; the Wilkinson divider mode exposes them in schema 71, the editor,
   reports, and the construction-sheet feed-network table, with a
   reconstructed pattern, optional per-level L/Pi/T matching networks, optional
-  ideal transformer ratios, matched branch loss, isolation-resistor parasitic
-  inductance, and a deterministic tolerance corner check; the conductor BOM
+  ideal transformer ratios, matched branch loss, isolation-resistor series/parallel
+  parasitics, and a deterministic tolerance corner check; the conductor BOM
   remains conductor-only.
 - The optimizer searches level spacing and either the ideal phase step or the
   line increment inside the maximum top-height envelope; the level count, base
   Yagi, and amplitude ratio stay context. In Wilkinson mode it rebuilds the
   feed-network spec for each candidate, including the per-level networks.
 
-**Remaining work:** a measured or broadband splitter S-parameter/isolation model. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
+**Remaining work:** a measured broadband splitter S-parameter/isolation model. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
 scalar isolation post-processing and proposes
 [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): an N-port solver and a
 bounded equal N-way Wilkinson with star isolation at a declared design
@@ -1406,6 +1413,142 @@ case and explicit tip validation mitigate them.
 
 **Effort:** M (1–2 weeks). **Release:** unassigned; not before the ADR and the
 current 1.1/1.2 priorities.
+
+## FP1 — Flower Pot half-wave family
+
+**Status:** **proposed 2026-11-26; not started.** **Priority:** P2 catalog/VHF,
+after the current 1.2 work. Do not start schema or UI work before the
+physical/electrical spike selects a representation and ADR-0055 is updated.
+**Decision:** [ADR-0055](ADR/0055-flower-pot-half-wave-family.md).
+
+**Motivation:** the VK2ZOI Flower Pot is a popular, inexpensive 2 m/6 m portable
+vertical. It is a coaxially fed vertical half-wave dipole, not an end-fed wire
+and not a vertical with radials. The app can approximate it as a custom vertical
+dipole today, but it cannot represent the coax construction, the resonant choke,
+the conduit loading, or the physical-versus-electrical cut lengths. The catalog
+has J Pole/Slim Jim, Ringo, discone, and vertical templates; a guided Flower Pot
+fills a real VHF/portable gap without adding a solver dependency.
+
+**Goal:** add the half-wave Flower Pot as a first-class family with honest
+construction guidance and a bounded electromagnetic equivalent. The published
+2 m and 6 m dimensions are the starting references; the model must not claim a
+validated 50 Ω match, gain, or choke impedance.
+
+**Scope (MVP):**
+- Add `FlowerPotParameters` with frequency, physical top and bottom lengths,
+  top and bottom radii, a construction shortening factor, a positive base
+  height, material/ground, and construction context for the coax/conduit/choke.
+- Generate two collinear canonical wires with a feed at their junction. The
+  lower wire ends at the choke; the feedline below the choke is the project
+  `FeedLine`, not antenna geometry.
+- Use an ideal common-mode choke in the MVP. The UI, reports, and evidence state
+  that the real choke impedance, common-mode current, coax dielectric loss, and
+  conduit dielectric body are not modeled.
+- Resolve physical versus electrical length in the spike. The selected option
+  must keep the canonical solved model and the physical cut list explicit and
+  consistent; no hidden simulation-only scale.
+- Add the catalog entry and both routes (New Antenna and Change Template), an
+  inline editor/dialog, EN/ES labels and help, adaptive length fields, and the
+  feed-connection/balance detail for an integrated choke.
+- Add the elevation scene with two wires, feed, top/bottom/total/base
+  dimensions, a choke detail inset, a feed-gap detail, and a non-wire conduit
+  outline. Do not expose a plan view that collapses the vertical wires.
+- Add the estimator for the published 2 m/6 m rows: physical total about
+  `0.44 λ`, split about `50.5 / 49.5`, shortening factor `0.88`, choke table,
+  confidence B for the published rows and heuristic outside them.
+- Add the family optimizer for the top and bottom physical lengths, with
+  positive-length, base-height, and construction-envelope constraints; target
+  impedance or minimum SWR at the design frequency. The shortening factor and
+  choke remain context.
+- Persist with the next schema bump and an additive/no-op migration. Existing
+  projects load unchanged.
+- Add design-summary, construction-sheet, cut-list, BOM, and checklist rows for
+  the coax, conduit, choke former, end cap, feedpoint seal, drainage, and
+  braided-shield requirement.
+- Add a real `nec2c` 2 m/6 m regression with finite impedance and a resonance
+  consistent with the selected representation.
+
+**Explicitly out of scope:** single 5/8 (needs a shorted one-port stub), double
+5/8 (needs a coax/TL radiator), dual-band sleeve (needs a sleeve/cylinder and
+phasing model), experimental high-gain dual-band, 70 cm single-band designs
+outside the published choke table, synthesized choke R+jX, common-mode current,
+dielectric loss, a 50 Ω/gain/bandwidth claim, and any new solver engine or
+dependency. Each deferred variant needs its own spike and ADR.
+
+**Spike (phase 0, before implementation):** compare, with the bundled `nec2c`:
+- the bare physical 904 mm/2518 mm wires;
+- an electrical-length model scaled by `1 / 0.88`;
+- an insulated-wire (`IS`) or documented per-wire electrical-length model if
+  `nec2c` supports it;
+- a lumped equivalent that restores resonance;
+- sensitivity to top/bottom radii, base height, ground, and segmentation.
+
+Use the published 2 m/6 m dimensions and VSWR behaviour as a qualitative target,
+not as an invented R+jX table. Select the simplest representation that puts the
+published resonance in the band while keeping the physical cut lengths visible;
+prefer physical geometry plus insulation if stable, otherwise the electrical
+equivalent plus cut list. Record the choice in ADR-0055.
+
+**ADR decisions:** half-wave scope only; two-wire canonical model; ideal choke;
+feedline below the choke; physical cut list and canonical model both explicit;
+positive base height; integrated choke means no separate current balun; evidence
+B/C; no 50 Ω or gain claim; schema additive; estimator and optimizer coverage.
+
+**Likely files:** a new `domain/antennas/flower_pot.py`;
+`domain/antennas/design.py`, `family.py`, `feed_connection.py`;
+`domain/design/feed_balance.py`, `evidence.py`, `estimators.py`, `formulas.py`;
+`domain/optimization/registry.py`,
+`domain/optimization/families/typed.py`; `application/simulation_specs.py`;
+`persistence/schema.py`; `ui/catalog.py`,
+`ui/dialogs/antenna_catalog_dialog.py`, a new form/dialog;
+`ui/geometry/builder.py`; `ui/i18n.py`; `ui/help.py`;
+`reporting/design_summary.py`, `construction_sheet.py`; and the corresponding
+domain, persistence, catalog, scene, reporting, estimator, optimizer, i18n/help,
+and real-NEC2C tests.
+
+**Acceptance:**
+- The spike compares the four length representations at 2 m and 6 m and ADR-0055
+  records the selected option; no numerical reference is invented.
+- The canonical model, scene, wire schedule, physical cut list, and construction
+  sheet agree on which lengths are electrical and which are physical; no build
+  value is hidden or derived only from a display.
+- The construction view is elevation, preserves both wires and the feed, and
+  does not count the choke/conduit overlays as canonical wires; dimensions are
+  non-zero and anchored.
+- The published 2 m and 6 m starting dimensions are reproduced within the
+  documented tolerance; the estimator shows the choke/conduit/feedline
+  limitations and does not claim 50 Ω or gain.
+- The feed connection says "integrated choke, no separate current balun" and
+  does not require the project current-balun record.
+- The optimizer covers the top/bottom lengths, passes field-coverage, budget,
+  constraint, determinism, Apply Best, and solver QA, and cannot produce an
+  unbuildable geometry.
+- Old projects load unchanged at the new schema; the new payload round-trips;
+  both catalog routes and EN/ES help pass their tests.
+- A real `nec2c` 2 m/6 m case completes with finite impedance and a resonance
+  consistent with the selected representation.
+- No new numerical reference or performance claim is added.
+
+**Tests:** domain validation and `to_antenna()`; physical/electrical round-trip;
+schema migration and payload round-trip; catalog routing in both dialogs; scene
+contract, construction view, dimensions, layout, and wire schedule; estimator
+registry and published-row checks; optimizer registry, field coverage,
+constraints, determinism, Apply Best, and solver QA; feed balance/connection;
+i18n/help manifest; real `nec2c` 2 m/6 m; report and BOM content.
+
+**Evidence:** B for the published 2 m/6 m starting dimensions; C for the
+coax/choke equivalent and for scaled frequencies. The published VSWR curves are
+a qualitative band check, not an R+jX reference. No gain or 50 Ω claim.
+
+**Risk / mitigation:** high. The main risk is model fidelity, not UI work. The
+spike, explicit evidence level, ideal-choke limitation, and physical cut list
+mitigate it. Keep the deferred variants out of the catalog until their
+primitives exist. Avoid scope creep into a coax solver or a sleeve model in this
+item.
+
+**Effort:** L (about 3–4 weeks including the spike, family, schema, UI, scene,
+reports, estimator, optimizer, and tests). **Release:** unassigned; candidate
+after the current 1.2 track. The spike alone is 2–4 days.
 
 ## UX45 — Shared Qt worker lifecycle
 
@@ -1989,7 +2132,7 @@ decision:
 
 ## Current baseline
 
-- Schema: **70**; container version 1.
+- Schema: **71**; container version 1.
 - Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
   technical-debt closure, main-window extractions, save/load size invariant
   fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,

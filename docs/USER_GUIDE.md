@@ -1268,8 +1268,9 @@ transformer** sets an ideal impedance ratio at each Wilkinson level; 1:1 means
 no transformer. **Branch matched loss** applies matched attenuation to every
 quarter-wave branch. **Branch impedance tolerance** and **Isolation resistor
 tolerance** run a deterministic design-frequency corner check. **Isolation
-resistor inductance** adds a series parasitic inductance to every star resistor,
-so return loss and isolation vary with frequency. Branch loss and resistor
+resistor inductance** and **Isolation resistor capacitance** add series and
+parallel parasitics to every star resistor, so return loss and isolation vary
+with frequency. Branch loss and resistor
 inductance are included in the network loss and S-parameters. The summary
 reports worst input return loss, output isolation, and output imbalance for the
 divider plus feed lines; matching networks and transformers are excluded.
@@ -1303,8 +1304,8 @@ reconstructed with ideal sources at the solved port voltages. Branches,
 resistors, feed lines, matching networks, and transformers are ideal unless a
 matching network specifies component Q or the branch loss is nonzero;
 broadband component-tolerance guarantees are not modeled. The isolation
-resistor model is a series R-L approximation; parasitic capacitance and measured
-component S-parameters are not modeled. The divider is narrowband. Use the line lengths for
+resistor model is a first-order series R-L with parallel C; measured component
+S-parameters and a broadband splitter data block are not modeled. The divider is narrowband. Use the line lengths for
 the construction harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
