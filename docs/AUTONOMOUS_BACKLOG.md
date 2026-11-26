@@ -52,6 +52,23 @@ reused by UX47/UX48. They do not change the solver, domain model, project schema
 pattern storage, or report format, and add no 3D engine or dependency. See §3D
 pattern orientation and comparison.
 
+UX56–UX57 are proposed presentation-only follow-ups to that track: UX56 centers
+the schematic antenna overlay on the beam symmetry plane for families with an
+explicit forward axis, fixing the plan-view offset visible on side-fed quad
+loops; UX57 draws the same-elevation back ray to the actual rear gain instead of
+reusing the forward maximum radius. They change no solver, domain model,
+project schema, pattern storage, or report format. See §3D lobe presentation
+corrections.
+
+UX50–UX55 are implemented and fix the Yagi dialog's unreachable action area
+as the reference implementation. The compact-family migration and the
+cross-family automated QA matrix are complete; only the release-level
+interactive desktop scaling check remains manual. The track does not force two columns on every
+family and does not change the narrow main-window sidebar. It changes no
+solver, domain model, project schema, container, report, or numerical
+reference. It is not part of the active 1.2 sequence; see §Antenna generator
+dialog layout standard.
+
 FP1 is a proposed VHF/portable catalog addition, not part of the active 1.2
 sequence. It must complete the physical/electrical spike and update ADR-0055
 before schema or UI work starts. The 5/8, double 5/8, dual-band sleeve, and
@@ -81,6 +98,14 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
 | UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Implemented 2026-11-26.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; support wires thinner/dashed; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
 | UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Implemented 2026-11-26.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode switches to 3D or turns the link off with an explanation. The construction-sheet 3D export keeps a fixed 38°/26° camera. No solver, domain, schema, or report change; no new engine. See §UX49. |
+| UX50 | Yagi generator two-column reference dialog | M | none | **Implemented 2026-11-26.** The sidebar `YagiForm` stays single-column; only `YagiDialog` uses the wide two-column layout inside a scroll area. Geometry/support are on the left and material/site/feed on the right; notes and OK/Cancel stay outside the scroll. The default 920×860 layout fits English and Spanish without scrolling or a horizontal bar; at 920×640 the form scrolls and the actions remain visible. Tests cover column order, transformer placement, warnings, ten elements, large Spanish, and the single-column sidebar. See §UX50. |
+| UX51 | Antenna dialog layout standard and height guard | M–L | UX50 | **Implemented 2026-11-26.** ADR-0056 records the 640 px height budget, 920 px target width, sidebar exception, scaffold, sectioned layout, accessibility/tab-order contract, and rejected alternatives. `FormDialogFrame` owns the scroll/action split; `SectionedForm` keeps semantic sections atomic with one/two columns and label/help binding. Yagi is the reference. The guard covers 25 family dialogs in EN/ES with no exceptions, and negative tests reject a 1087 px form without scroll and the old single-column Yagi shape. No family migration in this item. See §UX51. |
+| UX52 | Complex family dialogs, wave 1 | M | UX51 | **Implemented 2026-11-26.** Loaded dipole, biquad, Moxon, and magnetic loop use `FormDialogFrame` and `SectionedForm` with two semantic columns, a scroll fallback, and actions outside the scroll. All four open at 920×640 with the form and actions visible and no horizontal scrollbar in EN/ES; parameter round-trips and existing family tests are unchanged. The loaded-dipole orientation selector now shows its labels immediately. See §UX52. |
+| UX53 | Complex family dialogs, wave 2 | M | UX51 | **Implemented 2026-11-26.** Beverage, SCV, J-pole, and OCFD use `FormDialogFrame` and `SectionedForm` with two semantic columns, scroll fallback, and actions outside. All four fit 920×640 without horizontal scrolling in EN/ES; the OCFD band-plan footer stays outside the scroll; large Spanish adds only a small vertical scroll for Beverage/SCV. Parameter round-trips and family tests are unchanged. See §UX53. |
+| UX54 | Scroll-heavy family dialog audit | M–L | UX51 | **Implemented 2026-11-26.** All twelve scroll-heavy dialogs use `FormDialogFrame` with a single semantic column and actions outside the scroll. ADR-0056 records the per-dialog decision; no two-column migration was needed. Stacked Yagi promotes its level/spacing/feed controls above the embedded editor. Primary fields are visible at 1920×1080 and 1366×768, with no horizontal scrollbar. No solver/schema change. See §UX54. |
+| UX55 | Compact families, visual QA, and track closure | S–M | UX51 for start; UX52–UX54 for closure | **Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L use `FormDialogFrame` without scroll and stay compact/single-column. All 25 family dialogs are in the guard with no exceptions. A 400-check offscreen matrix (light/dark, Medium/Large, EN/ES, 1366×768/1920×1080) passed with no action outside the dialog and no horizontal scrollbar. Interactive desktop 125%/150% scaling remains manual. See §UX55 and `archive/qa/QA_PASS_2026-11-26_ux55.md`. |
+| UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Proposed 2026-11-26; not started.** Center the schematic overlay on the feed projected onto the beam symmetry plane for families with an explicit forward axis; keep the feed marker at its real cross-boom offset; keep feed-centering for verticals, dipoles, loops without a declared axis, and custom models. Fixes the quad-beam plan-view offset without changing the pattern data or the 3D scale. No solver, domain, schema, or report change. See §UX56. |
+| UX57 | 3D back ray at the actual rear gain | S | UX46 | **Proposed 2026-11-26; not started.** Draw the same-elevation back ray to the rear gain (`max gain − F/B`) instead of reusing the forward peak radius; hide it when F/B is unavailable. The label already reports the correct F/B. No solver, domain, schema, or report change. See §UX57. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -1813,7 +1838,8 @@ uses `PolarPatternView`, not this widget, and is out of scope.
   antipodal direction and call it "Back": in ground mode the exact antipodal of
   a low-angle lobe falls below the ground plane and is not sampled. If an exact
   antipodal reference is added later, label it "Opposite direction", not
-  "Back".
+  "Back". **Follow-up (proposed 2026-11-26):** UX57 replaces the forward-radius
+  back marker with the actual rear gain; the direction and F/B data path stay.
 - **Visual identity.** Add one theme-aware antenna color role and one feed-marker
   painter used by both `GeometryView`'s 3D view and `RadiationPattern3DView`.
   The feed marker must have the same color, shape, and radius in both. Do not
@@ -1874,6 +1900,9 @@ the canonical wire snapshot, feed-centers it, applies one uniform scale,
 preserves support wires (thinner/dashed), and draws the shared feed marker.
 Outline mode is a convex-hull projection of the canonical endpoints. The PNG
 export uses the existing `grab()` path and respects the overlay state.
+**Follow-up (proposed 2026-11-26):** UX56 revises the centering rule for
+families with an explicit forward axis; the feed-centered rule remains the
+default for non-beam families.
 
 **Scope:** opt-in canonical wireframe inside the 3D lobe.
 
@@ -1988,6 +2017,10 @@ change; no new engine.
 4. **UX47 after UX46, in parallel with UX48/UX49.** It reuses the UX46
    azimuth/max-gain data and visual tokens; it must not block either later
    layer.
+5. **UX56–UX57 after UX46, with UX56 also after UX48.** They are proposed
+   corrections to the overlay centering and back-ray radius; see §3D lobe
+   presentation corrections. They do not change the pattern data or the 3D
+   scale. UX56 and UX57 are independent and may land in either order.
 
 If the shared projection helper cannot be extracted without changing output,
 keep the existing copies and add a direct equality test before UX48. Do not
@@ -2011,6 +2044,709 @@ Each item must leave the full gate green.
   cross-layer abstraction; otherwise record the decision in
   `docs/ARCHITECTURE.md`.
 - Add the user-visible behavior to `CHANGELOG.md` when the slice lands.
+
+## 3D lobe presentation corrections (proposed 2026-11-26)
+
+**Status:** proposed; not started. **Priority:** P2 presentation correctness.
+**Release:** unassigned; candidate after the current 1.2 presentation track.
+**Dependencies:** UX46 and UX48 (implemented 2026-11-26). UX56 and UX57 are
+independent and may land in either order.
+
+**Motivation:** Two orientation aids in the 3D lobe are correct in direction but
+misleading in magnitude:
+
+1. The UX48 overlay is translated so the feed is at the pattern origin. A
+   side-fed beam such as the quad beam has its feed on one side of the driven
+   loop, not on the beam symmetry plane. The overlay's symmetry axis therefore
+   appears offset from the lobe axis even though the antenna orientation is
+   exact. In a 20 m quad beam regression case at 14.086 MHz, the feed is at
+   (5.424, −2.798, 8.113) m, the driven-loop center/symmetry plane is y=0, and
+   the overlay scale is 0.0391 m^-1: the symmetry plane lands at +0.109 of the
+   pattern unit radius (about 11%) and the boom center at −0.043 of the radius.
+   In the plan view the loops sit above the lobe axis while the maximum-gain
+   ray starts at the feed.
+2. The UX46 back ray uses the same θ and φ+180° as the F/B label but reuses the
+   forward maximum gain for its radius. The label says F/B 5.9 dB; the ray
+   reaches the forward peak radius, about 14% beyond the actual rear envelope,
+   and its label sits at that outer point. The ray visually claims a back lobe
+   as strong as the front even though the numeric F/B is correct.
+
+Both are presentation-only. The pattern data, the F/B value, the pattern origin
+as a phase reference, and the 3D radial/color scale are correct and stay
+unchanged. Do not fold in the 44 dB scale discussion or the plan-envelope
+behavior from UX46; they are out of scope.
+
+### UX56 — Center the 3D antenna overlay on the beam symmetry plane
+
+**Goal:** make the schematic overlay's symmetry axis coincide with the lobe
+axis in the azimuth/plan projection for families with an explicit forward axis,
+while keeping the feed marker at its real transverse position. This corrects
+the quad/delta/side-fed-loop case without changing Yagi, vertical, dipole, or
+custom placement.
+
+**Current behavior:** `overlay_from_model()` returns a feed-centered snapshot
+(`ui/pattern_overlay.py`); `overlay_scale()` measures the largest wire extent
+from the feed; `_draw_overlay()` subtracts `overlay.feed` from every point and
+draws the feed marker at the pattern origin. The UX48 note says the overlay is
+schematic and not to scale, but the symmetry offset is still visible and is
+easy to read as a placement error.
+
+**Proposed behavior:** for a family with a declared forward axis, translate the
+wires so the **feed projected onto the beam symmetry plane** is at the pattern
+origin. The feed itself is drawn at its real cross-boom offset. For all other
+families, keep the current feed-centered behavior.
+
+- Let `p` be the forward azimuth in radians and `v = (−sin p, cos p)` the
+  horizontal cross-boom direction.
+- Let `c` be the bounding-box center of the non-support overlay wires in the
+  x-y plane. It defines the symmetry plane; it is a presentation proxy, not a
+  phase-center calculation. If there are no non-support wires, use the feed.
+- The feed's cross-boom offset is
+  `d = (feed_x − c_x)·v_x + (feed_y − c_y)·v_y`.
+- `center = (feed_x − d·v_x, feed_y − d·v_y, feed_z)`. Keep the feed's z so the
+  overlay's vertical position does not jump.
+- For the 20 m quad beam at φ=0: `v=(0, 1)`, `c_y=0`, `d=−2.798`,
+  `center=(5.424, 0, 8.113)`, the driven-loop center. The feed marker moves
+  down by `2.798 · scale`.
+- For a center-fed Yagi at φ=0: the feed is already on the symmetry plane, so
+  `d=0` and `center=feed`; the visual result is unchanged. A Yagi fed off-center
+  along the element gets the driven-element centerline, which is the intended
+  correction.
+- For a beam at φ=90: `v=(−1, 0)`; the symmetry plane is x=c_x and the feed's x
+  offset is removed. Test the rotated case, not only φ=0.
+- For a vertical, dipole, loop without a declared forward axis, or custom model:
+  `forward_azimuth` is `None`, so `center=feed` and the behavior is unchanged.
+- Do not infer the family from wire IDs or wire counts in the widget. Use the
+  existing `forward_axis_azimuth()` registry in `ui/pattern_orientation.py` and
+  pass its result from `ResultsView` to `overlay_from_model()`. The widget only
+  consumes the snapshot's `center`.
+- Add `forward_azimuth: float | None = None` as a keyword-only parameter to
+  `overlay_from_model()`; the default preserves the current feed-centered
+  behavior for existing callers and tests.
+- Add `center` to `AntennaOverlay`. Preserve the two-argument construction used
+  by tests and helpers by defaulting `center` to `feed` (for example,
+  `center: tuple[float, float, float] | None = None` plus a frozen-dataclass
+  `__post_init__`, or update every constructor). Prefer the default so
+  non-beam callers do not change.
+- `overlay_scale()` measures from `center`, not `feed`, and still puts the
+  largest wire endpoint at 35% of the pattern unit radius. For the quad, the
+  scale rises from 0.0391 to 0.0476 m^-1 because the center is closer to the
+  far reflector corner; the overlay becomes about 22% larger. This is expected;
+  the 35% bound is unchanged.
+- Keep the current scale policy that includes support wires in the maximum
+  extent; a mast/guy set still fits. Do not add a support-wire exclusion in this
+  item.
+- `_draw_overlay()` translates by `center`, not `feed`, and draws the feed
+  marker at `(feed − center)·scale`. The maximum-gain and back rays continue to
+  start at the pattern origin; the translation puts the beam symmetry plane
+  through that origin, which is a better visual phase-reference proxy. Do not
+  move the pattern origin or the phase reference.
+- Do not add a "Center on feed / antenna" toggle in this slice. The
+  family-aware default is the intended behavior; a toggle can be a later item
+  if feedback requires both views.
+- Update the overlay note/help text from "feed-centered" to "centered on the
+  beam symmetry plane for families with a forward axis; feed-centered
+  otherwise; the feed marker stays at its real offset". Keep the "schematic;
+  orientation exact; size and height not to scale" limitation.
+
+**Acceptance:**
+
+- A quad beam with a side-fed driven loop at azimuth 0 has its symmetry plane
+  on the pattern axis in plan view; the feed marker is below the axis by the
+  true cross-boom offset; the max ray starts on the symmetry plane; the overlay
+  stays within 35% of the pattern radius.
+- A center-fed Yagi at azimuth 0 and 90 is visually unchanged (`center=feed`).
+  A Yagi with an off-center feed moves to the driven-element centerline, not to
+  the feed.
+- A vertical, a center-fed dipole, a loop without a declared forward axis, and
+  a custom model remain feed-centered.
+- The overlay scale still puts the largest endpoint at 35% of the unit radius;
+  endpoint distance ratios are preserved (uniform scale).
+- The feed marker remains the shared UX46 painter and is drawn at its real
+  offset; it is not forced to the origin for side-fed beams.
+- No change to the solver, domain model, schema, report, pattern data, 3D dB
+  scale, back ray (UX57), or mini-map.
+- EN/ES help, help coverage, accessible description, light/dark, font scaling,
+  minimum-size layout, and PNG export pass.
+
+**Tests:**
+
+- `tests/ui/test_pattern_overlay.py`: construct a quad beam with a side-fed
+  driven loop; call `overlay_from_model(model, forward_azimuth=0.0)`; assert
+  `center` is on y=0 at the driven-loop x/z; assert `feed − center` is the
+  expected cross-boom offset; assert the maximum endpoint distance from
+  `center` is `OVERLAY_EXTENT_FRACTION`.
+- Repeat at `forward_azimuth=90.0` and assert `(center − c)·v ≈ 0`.
+- Assert a center-fed Yagi has `center == feed` and a vertical/dipole with
+  `forward_azimuth=None` has `center == feed`.
+- `tests/ui/test_pattern_3d_orientation.py` or `test_results_view.py`: pass the
+  quad overlay through `ResultsView.set_design()`/`set_points()` with a
+  synthetic pattern, show the view, and assert the grab is non-null and the
+  overlay note/help mentions the symmetry-plane centering. Do not assert pixel
+  positions; assert the snapshot's `center` and the pure scale/offset helpers.
+
+**Docs/help:** `docs/USER_GUIDE.md` (overlay paragraph), `docs/STATUS.md`
+(UX48 line), `CHANGELOG.md`, `ui/i18n.py` (`help.pattern.overlay_show` EN/ES).
+Update the UX48 section with a "superseded for explicit-forward-axis families
+by UX56" note. No new help key or schema field. Add a note to
+`docs/AUTONOMOUS_BACKLOG.md` UX48 acceptance so a future reader knows the
+feed-centered rule is only the non-beam default.
+
+**Likely files:** `ui/pattern_overlay.py`, `ui/widgets/results_view.py`,
+`ui/widgets/radiation_pattern_3d_view.py`, `ui/i18n.py`,
+`tests/ui/test_pattern_overlay.py`, `tests/ui/test_pattern_3d_orientation.py`,
+`tests/ui/test_results_view.py`, and the docs above.
+
+**Out of scope:** the 3D dB/color scale, the plan-envelope interpretation, the
+back ray (UX57), the mini-map, the phase reference, any solver/domain/schema
+change, any family inference from wire IDs, and any new dependency.
+
+**Risks:** low. The main risk is a visible size/position change for side-fed
+beams; mitigate with the help text, the real feed marker, and unchanged
+non-beam behavior. There is no numerical risk.
+
+**Effort:** S–M (1–2 days), including tests, help, and docs.
+
+### UX57 — Draw the 3D back ray at the actual rear gain
+
+**Goal:** make the dashed back ray's length encode the same F/B that its label
+reports. The direction is already correct (same θ, φ+180°); only the radius is
+wrong.
+
+**Current behavior:** `RadiationPattern3DView.paintEvent()` builds
+`back_marker = screen(max_point[0], (max_point[1] + 180) % 360, max_point[2])`.
+`max_point[2]` is the forward maximum gain, so the ray reaches the forward peak
+radius regardless of the rear gain. The label uses `_back_label()` and correctly
+shows `front_to_back_db()`; the numeric value comes from `ResultsView` and is
+computed from the original far field at the same θ.
+
+**Proposed behavior:** use the rear gain for the marker radius:
+
+- If `self._front_to_back_db` is finite, `back_gain = max_point[2] −
+  self._front_to_back_db`. Draw the marker at `(max_point[0], (max_point[1] +
+  180) % 360, back_gain)`.
+- If F/B is `None` or non-finite, do not draw the back ray or its label. Do not
+  fall back to the forward radius; a full-length ray without a valid F/B is the
+  misleading case this item removes. `_shows_back_ray()` should require both the
+  explicit forward axis and a finite F/B.
+- The metric offset cancels: power, directivity, and realized gain share the
+  same F/B and the same shape. Do not recompute F/B from the decimated or
+  display-filtered mesh; use the value already passed from `ResultsView`.
+- Keep the same θ and φ+180° rule; do not draw the exact antipodal direction
+  (below the ground plane in ground mode). The label remains "Back (same
+  elevation) · F/B x dB" (or the localized equivalent).
+- Keep the existing minimum-distance/arrowhead guard. If the rear marker is too
+  close to the origin to be legible (for example, projected distance < 8 px or
+  < 3% of the maximum ray), hide the dashed ray and label rather than drawing a
+  degenerate marker at the center. Add a named threshold/help note if this
+  policy is user-visible.
+- The back label moves inward with the marker; the existing `_place_label()`
+  collision logic handles the max label, legend, mini-map, and compact sizes.
+  If no free rectangle exists, hide the label as today.
+
+**Acceptance:**
+
+- For a pattern with F/B 6 dB, the dashed back ray ends at the rear gain, not
+  the forward gain; the label still says F/B 6.0 dB. For the 20 m quad beam at
+  14.086 MHz, the ray ends at about −1.4 dBi at θ=74°, not at 4.53 dBi.
+- A 0 dB F/B pattern draws a full-length back ray (correct: front and back are
+  equal). A negative F/B cannot occur when `max_point` is the global maximum;
+  if it does due to a data anomaly, clamp/hide and document.
+- An unavailable F/B hides the back ray and label; no full-length fallback.
+- The back ray direction is still same θ, φ+180°; no below-ground antipodal
+  point.
+- The max ray, antenna azimuth marker, overlay, mini-map, legend, and the 3D
+  dB scale are unchanged.
+- Labels do not overlap at the minimum size; light/dark, font scaling, EN/ES,
+  help, and accessible text pass.
+
+**Tests:**
+
+- Add a pure helper or method for the rear gain, e.g.
+  `back_gain_db(forward_gain, front_to_back)` or `_back_gain(max_gain)`, and
+  test finite, zero, and None cases.
+- Test `_shows_back_ray()` is False when `forward_azimuth` is set but
+  `front_to_back_db` is None/non-finite.
+- Test the synthetic pattern: max 10 dBi, rear 4 dBi, F/B 6 dB; the marker
+  radius ratio is `(4 − min)/(10 − min)`, not 1.0. Use a pure projection helper
+  if the pixel path is hard to assert.
+- Extend `tests/ui/test_pattern_3d_orientation.py` with a view that has a
+  finite F/B and assert the back label metadata/geometry; add a compact-size
+  grab test to catch label collisions.
+
+**Docs/help:** `docs/USER_GUIDE.md` (the 3D paragraph at the back-ray sentence),
+`CHANGELOG.md`, and `docs/STATUS.md` when implemented. The label text and help
+key do not change. Add a "superseded by UX57" note to the UX46 back-ray bullet.
+
+**Likely files:** `ui/widgets/radiation_pattern_3d_view.py`,
+`tests/ui/test_pattern_3d_orientation.py`, `docs/USER_GUIDE.md`,
+`CHANGELOG.md`, `docs/STATUS.md`.
+
+**Out of scope:** the 3D dB/color scale, the plan-envelope interpretation, the
+overlay centering (UX56), the F/B definition, the exact antipodal direction,
+and any solver/domain/schema change.
+
+**Risks:** low. The label moves inward and may collide at compact sizes; test
+the existing collision logic. A very deep F/B produces a very short ray; hide
+it below the legibility threshold. No numerical risk.
+
+**Effort:** S (0.5–1 day), including tests and docs.
+
+**Track order:** UX56 depends on UX46/UX48; UX57 depends on UX46. They are
+independent and can land in either order. UX56 changes the UX48 overlay
+centering rule for explicit-forward-axis families; UX57 changes the UX46
+back-ray radius. Both are presentation-only and leave the solver, domain,
+schema, reports, pattern data, and 3D scale unchanged. They may be implemented
+in one change set if the combined diff stays small, but the acceptance and
+tests above are separate.
+
+**Cross-cutting acceptance:** run the full gate; update EN/ES help and the help
+coverage manifest; record light/dark and font-scaling QA; add the user-visible
+change to `CHANGELOG.md`; no commit or push unless requested.
+
+## Antenna generator dialog layout standard (implemented 2026-11-26; closed)
+
+**Status:** implemented and closed 2026-11-26 by UX50–UX55. **Release:**
+unassigned; candidate for the UI quality pass. **Decision:** ADR-0056.
+The interactive desktop 125%/150% scaling check remains a release-level
+manual step.
+
+**Motivation:** The Yagi generator is the only family dialog whose minimum
+height exceeds a 1920×1080 screen. `YagiDialog` requests 920×720, but its
+single-column form has 23 visible rows and a measured minimum height of
+1087 px (form 965 px). Qt clamps the resize to that minimum, so the note block
+and the OK/Cancel row fall below the screen. The element table is squeezed to
+its 140 px minimum while the form consumes 719 px.
+
+The rest of the family dialogs are not broken at 100% scaling today, but the
+set is inconsistent: loaded dipole, biquad, Moxon, magnetic loop, Beverage, SCV,
+J-pole, OCFD, fan dipole, Ringo, and inverted V/L have no scroll area; twelve
+other generator dialogs already scroll through forms between 493 and 1697 px
+tall. Dialog widths range from 560 to 940 px, and the notes/action area moves
+between dialogs. The result is not one visual language, and the no-scroll group
+has a latent clipping risk at large fonts or high display scaling.
+
+**Measured baseline (2026-11-26, offscreen, default font):**
+
+| Dialog | Visible form rows | Minimum height | Scroll |
+|---|---:|---:|---|
+| Yagi | 23 | 1087 px | No |
+| Loaded dipole | 16 | 616 px | No |
+| Biquad | 14 | 610 px | No |
+| Moxon | 14 | 591 px | No |
+| Magnetic loop | 14 | 584 px | No |
+| Beverage | 13 | 579 px | No |
+| SCV | 13 | 559 px | No |
+| J-pole | 14 | 557 px | No |
+| OCFD | 12 | 551 px | No |
+| Fan dipole | 9 | 508 px | No |
+| Ringo / inverted V / inverted L | 11 | 465–496 px | No |
+| End-fed | 30 | 1328 px form | Yes |
+| Stacked Yagi | 21 | 1697 px form | Yes |
+
+These are a baseline, not a contract; UX50/UX51 must re-measure with the
+actual theme and font presets.
+
+**Track goal:** make the generator dialogs feel and behave like one system
+without forcing every family into the same geometry. The common language is the
+dialog scaffold, the semantic section order, the field styling and behavior,
+and the guarantee that the action area is always reachable. Two columns are a
+responsive tool for complex forms, not a brand requirement.
+
+### Layout contract
+
+1. **Dialog scaffold.** Every modal generator dialog uses the same structure:
+   window title, optional short intro, a scrollable form area, the limitation
+   or evidence notes, and the button box. The button box stays outside the
+   scroll area and is always visible. Initial size comes from
+   `scaled_dialog_size()` and is capped to the available screen.
+2. **Semantic sections.** Fields are grouped in this order where present:
+   design/frequency; geometry; installation/site (height, azimuth,
+   polarization, material); ground and soil; feed and matching; mechanical
+   support. A family may omit a section, but it must not reorder the sections it
+   has. Section titles are user-visible strings with EN/ES help coverage.
+3. **Responsive columns.** One column is the default. Use two columns only in a
+   modal generator dialog when the form has at least 12 visible rows and at
+   least 760 px of usable width. Sections are atomic: split whole sections, not
+   individual rows. Keep the original top-to-bottom field order: left column
+   first, right column second; set an explicit tab order if the widget creation
+   order does not match. Do not reflow the form every time a conditional row
+   hides.
+4. **Height budget.** At Medium font and 100% scaling, a generator dialog's
+   `minimumSizeHint().height()` must be at most 640 px; taller content must
+   live inside the scroll area. Reference screens are 1366×768 at 100% and
+   1920×1080 at 150% (1280×720 logical). At Large font, scrolling is
+   acceptable, but the action area must remain outside the scroll and visible.
+5. **Width budget.** Two-column generator dialogs target 920 px and must not
+   exceed 1000 px without a documented preview/table reason. The content must
+   not produce a horizontal scrollbar at the target width in English, Spanish,
+   or the Large font preset.
+6. **Tables and previews.** A table or preview keeps its own internal
+   scrolling. Do not add a horizontal form scrollbar around it. At the default
+   size on 1920×1080, the Yagi element table and the action area must be
+   visible without scrolling.
+7. **Sidebar is not a dialog.** The main-window form panel stays single-column
+   at 340–520 px. The same field order and section names are reused, but the
+   sidebar never adopts the two-column dialog layout. Do not change
+   `_preferred_form_panel_width()` or the sidebar width contract for this track.
+8. **No behavior change.** This is layout work only. Parameters, defaults,
+   validation, warnings, solver specs, reports, and help keys remain unchanged.
+
+**Track non-goals:** no solver, domain-model, schema, container, pattern, or
+report change; no new antenna field or numerical reference; no new dependency;
+no forced two-column layout in the sidebar; no redesign of analysis, optimizer,
+measurement, construction, or catalog dialogs; and no replacement of canonical
+family geometry.
+
+**Task order and dependencies:** UX50 → UX51. UX52, UX53, and UX54 start after
+UX51 and may run in parallel. UX55 starts with the compact-family audit after
+UX51 and closes the track only after UX52–UX54. Each item must leave the full
+gate green and is independently shippable.
+
+### UX50 — Yagi generator two-column reference dialog
+
+**Implemented 2026-11-26.** `YagiDialog` now uses a `YagiForm` wide layout with
+two `QFormLayout` columns and a `QScrollArea`; the sidebar form keeps its
+single-column path. The dialog opens at 920×860 (capped by
+`scaled_dialog_size()`), the form scrolls at 920×640, and the hint, evidence,
+boom note, and button box stay outside the scroll area. English and Spanish
+fit at the default size without vertical or horizontal scrolling; the table
+keeps its 140 px minimum and grows when space is available. No solver,
+domain, schema, or report change.
+
+**Goal:** fix the reported off-screen action area and establish the reference
+wide-dialog implementation before extracting a general abstraction.
+
+**Scope:**
+
+- Keep `YagiForm`'s default single-column path unchanged for the sidebar. Add
+  an explicit wide layout used only by `YagiDialog`; do not make two columns the
+  default of the shared widget.
+- Split the 24 form rows (23 visible at rest) at the natural midpoint,
+  preserving the current top-to-bottom order and tab order:
+  - **Left, antenna geometry and support:** frequency, height, azimuth,
+    polarization, element radius, tapered tip length, tapered tip radius, mast
+    diameter, mast offset, guy count, guy anchor radius, guy wire diameter.
+  - **Right, material, site, ground, and feed:** material, ground, soil preset,
+    relative permittivity, conductivity, driven element, folded driven, fold
+    spacing, transformer ratio (only when folded), feed match, hairpin length,
+    hairpin spacing.
+- The conditional transformer row stays in its existing reading position and
+  hides without reflowing the columns. The folded and match controls keep their
+  current enable/disable behavior.
+- Put the form in a `QScrollArea`; keep the hint, evidence, boom note, and
+  button box outside it. Use an initial size around 920×860, capped by
+  `scaled_dialog_size()`. At 1920×1080 the form, element table, notes, and
+  actions are visible without scrolling; at 1366×768 or 150% scaling the
+  form scrolls and the action area stays visible.
+- Keep the element table minimum height at 140 px and let it grow when space is
+  available. Avoid nested horizontal scrolling.
+- Preserve field order, labels, object names, help keys, validation messages,
+  and `parameters()` behavior. Do not change the element table columns or the
+  NBS preset.
+- If a short private layout helper is needed for the two columns, keep it
+  private to the Yagi implementation; UX51 extracts the shared version after
+  this slice proves the layout.
+
+**Out of scope:** other families, the shared component, the sidebar, and any
+change to the Yagi domain or solver spec.
+
+**Tests:**
+
+- `YagiDialog.minimumSizeHint().height() <= 640` with the scroll area present.
+- After showing the dialog at 920×640, the button box is visible and lies
+  inside the dialog rectangle; the scroll area provides the missing vertical
+  space.
+- No horizontal scrollbar at 920 px in English and Spanish.
+- With a visible frequency/clearance warning and with ten table rows, the
+  action box remains visible at 920×640; overflow stays inside the scroll area.
+- Two columns exist and the proposed field groups are in the expected order;
+  the folded transformer appears in the right column and disappears cleanly
+  when unchecked.
+- Existing Yagi dialog tests for the NBS preset, driven mapping, folded driven,
+  beta/hairpin, taper, frequency scaling, warnings, and parameter round-trip
+  remain green.
+- Manual QA at 1920×1080 and 1366×768: table, notes, and OK/Cancel visible or
+  reachable; no clipped labels; light/dark.
+
+**Acceptance:** the Yagi dialog never opens with OK/Cancel outside the desktop;
+the element table and actions are visible at the default size on 1920×1080; the
+sidebar Yagi form remains single-column and unchanged; no solver, domain,
+schema, or report change.
+
+**Likely files:** `src/antennadesk/ui/dialogs/yagi_dialog.py`,
+`src/antennadesk/ui/widgets/yagi_form.py`, `src/antennadesk/ui/i18n.py` (only if
+section titles are added), `tests/ui/test_yagi_dialog.py`, and a new focused
+layout test. **Effort:** M (3–5 days including QA).
+
+### UX51 — Shared dialog scaffold, sectioned layout, and height guard
+
+**Implemented 2026-11-26.** Added `FormDialogFrame` and `SectionedForm`, moved
+the Yagi dialog onto both with no behavior change, and recorded the standard
+in [ADR-0056](ADR/0056-antenna-dialog-layout.md). The layout guard in
+`tests/ui/test_dialog_layout.py` covers 25 family dialogs in English and
+Spanish; it has no current exceptions. Negative tests prove it rejects a
+deliberately tall 1087 px form without a scroll area and the old
+single-column Yagi shape. No other family was migrated in this slice.
+
+**Goal:** turn the validated Yagi reference into a small, reusable UI standard
+and prevent the same off-screen regression in future dialogs.
+
+**Scope:**
+
+- Write ADR-0056, "Antenna generator dialog layout and height budget". Record
+  the measured baseline, the scaffold, the semantic section order, the
+  responsive column rule, the 640 px budget, the sidebar exception, the
+  rejected alternatives (two columns everywhere; scroll-only as the sole fix;
+  tabs or collapsible groups as the default), and the accessibility/tab-order
+  contract.
+- Extract the common dialog scaffold from the generator dialogs: title, form
+  area, notes, button box, `scaled_dialog_size()` use, and the scroll/action
+  split. Working name: `AntennaFormDialog` or `FormDialogFrame`. It accepts a
+  form widget and the note widgets; it does not know about antenna families.
+- Extract the sectioned layout helper used by UX50. Working name:
+  `SectionedFormLayout`. It accepts semantic sections with one or more rows,
+  chooses one or two columns from an explicit mode plus the width/row
+  threshold, keeps sections atomic, and exposes the tab order. It must not
+  require duplicating labels or help registration; `FormLabels.bind_form()`
+  must keep working for every column.
+- Refactor the Yagi dialog to the shared scaffold and helper without changing
+  its behavior. If the extraction would require rewriting `YagiForm`'s public
+  construction or sidebar path, stop and keep the private UX50 helper; do not
+  destabilize the sidebar for consistency.
+- Add `tests/ui/test_dialog_layout.py` (or similar) with an explicit registry of
+  generator dialogs. The guard must check:
+  - a dialog whose form minimum exceeds the 640 px budget contains a
+    `QScrollArea` around the form;
+  - the button box is outside the scroll area and visible after the dialog is
+    resized to the budget;
+  - no horizontal scrollbar at 920 px in English and Spanish;
+  - the action area stays inside the dialog rectangle at the budget size.
+- The guard must be able to fail on a deliberately tall fake form, so it is not
+  a no-op. Document any intentional exception next to the registry.
+- Document the standard in `docs/ARCHITECTURE.md` and link ADR-0056. Do not add
+  a second UI guideline document unless the ADR becomes too large.
+
+**Out of scope:** migrating other families; changing `scaled_dialog_size()`
+semantics beyond what the shared scaffold needs; changing the sidebar; adding
+new fields.
+
+**Tests:** unit tests for `SectionedFormLayout` (one/two columns, atomic
+sections, threshold, tab order, EN/ES width); the generator-dialog guard; the
+existing Yagi suite; a fake tall form proving the guard rejects a missing
+scroll area; the full gate.
+
+**Acceptance:** Yagi uses the shared scaffold with no behavior change; the
+standard is recorded in ADR-0056; the guard catches the original 1087 px Yagi
+shape when the scroll area is removed; all currently passing generator dialogs
+either pass the guard or are recorded exceptions; no new dependency.
+
+**Likely files:** new
+`src/antennadesk/ui/widgets/form_dialog.py` and
+`src/antennadesk/ui/widgets/sectioned_form.py` (working names),
+`src/antennadesk/ui/dialogs/yagi_dialog.py`,
+`src/antennadesk/ui/widgets/yagi_form.py`,
+`src/antennadesk/ui/fonts.py` only if the scaffold needs a small API addition,
+`docs/ADR/0056-antenna-dialog-layout.md`, `docs/ARCHITECTURE.md`,
+`tests/ui/test_dialog_layout.py`, and focused widget tests. **Effort:** M–L
+(1–2 weeks).
+
+### UX52 — Complex family dialogs, wave 1
+
+**Implemented 2026-11-26.** Loaded dipole, biquad, Moxon, and magnetic loop
+now use the shared scaffold and a two-column semantic split; each has a form
+scroll fallback and actions outside it. The four open at 920×640 with no
+scrollbar and keep their field order, help, warnings, and parameter
+round-trips. The loaded-dipole orientation labels are initialized without
+waiting for a language change. No solver, domain, schema, or report change.
+
+**Goal:** apply the standard to the four tallest one-column family dialogs
+without scroll areas.
+
+**Dialogs:** loaded dipole (16 rows, 616 px), biquad (14, 610 px), Moxon
+(14, 591 px), and magnetic loop (14, 584 px).
+
+**Scope per dialog:**
+
+- Adopt the UX51 scaffold and sectioned layout. Use two columns because each
+  form has at least 12 visible rows; keep sections atomic and the original field
+  order.
+- Add the scroll area and keep the action box outside it. Target 920 px wide;
+  do not widen beyond 1000 px without a documented reason.
+- Preserve every field, default, validation rule, warning, unit policy, help
+  key, and parameter round-trip. Do not change the antenna model.
+- Translate any new section title in English and Spanish, add its help entry,
+  and update the help coverage manifest.
+- Keep family-specific widgets intact (link/coil controls in the loaded dipole,
+  loop and capacitor controls in the magnetic loop, and so on).
+- Add or update layout tests per dialog: minimum height <= 640, action box
+  visible at the budget size, no horizontal scrollbar at 920 px in EN/ES, and
+  parameter round-trip unchanged.
+
+**Acceptance:** each of the four dialogs fits the height budget or scrolls with
+the action area visible; all fields remain reachable; no horizontal scrollbar;
+existing family tests and the full gate are green; manual light/dark and
+font-scaling QA is recorded. **Effort:** M (4–6 days).
+
+### UX53 — Complex family dialogs, wave 2
+
+**Implemented 2026-11-26.** Beverage, SCV, J-pole, and OCFD now use the shared
+scaffold and a two-column semantic split. The OCFD band-plan selector is a
+footer outside the form scroll. All four fit 920×640 with no horizontal
+scrollbar in English or Spanish and preserve their parameter round-trips.
+Large-font Spanish adds a small vertical scroll for Beverage and SCV while
+the actions remain visible. No solver, domain, schema, or report change.
+
+**Goal:** finish the one-column complex-family migration with the same
+checklist as UX52.
+
+**Dialogs:** Beverage (13 rows, 579 px), SCV (13, 559 px), J-pole (14, 557 px),
+and OCFD (12, 551 px).
+
+**Scope and acceptance:** identical to UX52. Use two columns only if the
+semantic split is clear; if a family's form is naturally one continuous
+sequence, keep one column, add the scroll safety, and document the decision in
+the layout test registry. Preserve every parameter and warning. **Effort:** M
+(4–6 days).
+
+### UX54 — Scroll-heavy family dialog audit
+
+**Implemented 2026-11-26.** The audit and per-dialog decisions are recorded in
+[ADR-0056](ADR/0056-antenna-dialog-layout.md). All twelve dialogs now use the
+shared scaffold and a single column with the action area outside the scroll.
+No two-column migration was required. Stacked Yagi now places its stacked
+controls above the embedded Yagi editor. Primary controls are visible at the
+1920×1080 default and the 1366×768 cap; the guard has no exceptions.
+
+**Goal:** decide, per dialog, whether the existing scroll is sufficient or
+whether primary fields should be moved into atomic two-column sections. This is
+an audit plus targeted migration, not a blanket rewrite.
+
+**Inventory:** stacked Yagi (form 1697 px), end-fed (1328), vertical (820),
+log-periodic (758), HexBeam (732), trap Yagi (653), phased vertical (612), quad
+beam (580), trap dipole (570), T2FD (547), discone (493), and basic antenna
+(636). These already have a scroll area; their dialog minimum is small, so they
+do not block the action area today.
+
+**Per-dialog decision record:** for each family, note the primary rows, the
+optional/advanced groups, the current scroll depth at 1920×1080 and 1366×768,
+and one of:
+
+- **keep one column + scroll:** the primary fields fit in the first viewport;
+  only advanced groups scroll;
+- **collapse advanced groups:** optional groups become checkable/collapsible
+  (the end-fed form already uses checkable groups); or
+- **atomic two-column sections:** scrolling hides primary geometry or feed
+  fields, and the form has at least 12 visible rows.
+
+Do not split a `QGroupBox` or a composed-family section across columns. Start
+with stacked Yagi and end-fed because they are the tallest composed forms; then
+vertical, log-periodic, and HexBeam; the remaining dialogs may need only the
+scaffold audit. Each dialog migration is its own change set.
+
+**Acceptance:** every inventory dialog has a written decision; each uses the
+shared scaffold and keeps the action area visible; primary fields are visible at
+the default 1920×1080 size where the decision says they should be; no horizontal
+scrollbar; parameter round-trip and family tests unchanged; no solver or schema
+change. **Effort:** M–L (1–2 weeks; much of it is review and QA, not code).
+
+### UX55 — Compact families, cross-family visual QA, and closure
+
+**Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L now
+use the shared scaffold without a form scroll and keep their compact
+single-column layouts. The final guard registry has all 25 family dialogs
+with no exceptions. The 400-combination offscreen matrix is recorded in
+`archive/qa/QA_PASS_2026-11-26_ux55.md`; the interactive desktop
+125%/150% scaling confirmation remains manual.
+
+**Goal:** finish the common language for compact generators without widening
+them unnecessarily, run the visual QA matrix, and close the track.
+
+**Scope:**
+
+- Audit fan dipole (9 rows, 508 px), Ringo (11, 496 px), and inverted V/L
+  (11, 465 px). Keep them single-column and compact. Adopt the shared scaffold;
+  add a scroll area only where the height budget fails; do not force a 920 px
+  width.
+- Verify that field order, section names, spacing, label alignment, warning
+  placement, and button placement match the standard.
+- Run the cross-family QA matrix: English and Spanish; light and dark; Medium
+  and Large font; 1366×768 at 100% and 1920×1080 at 100%, 125%, and 150% where
+  the desktop allows. Check that no action button is off-screen, no label is
+  clipped, no horizontal scrollbar appears, and the scroll position starts at
+  the top.
+- Add the final automated registry assertion for every generator dialog and
+  remove stale exceptions or document the remaining ones.
+- Update `docs/USER_GUIDE.md` if the Yagi dialog's behavior or layout is
+  user-visible, and add the layout change to `CHANGELOG.md`.
+- Close the track in `docs/STATUS.md` only when all automated checks and the
+  manual matrix are recorded.
+
+**Acceptance:** compact families remain compact; all generator dialogs share
+the scaffold and always expose their actions; the QA matrix is recorded; the
+full gate is green; no solver, domain, schema, report, or numerical change.
+**Effort:** S–M (3–5 days including manual QA).
+
+### Cross-cutting acceptance for the track
+
+- The sidebar Yagi form and every other sidebar form remain single-column at
+  340–520 px; no sidebar width, form panel, or splitter behavior changes.
+- Every generator dialog either fits the 640 px minimum-height budget or wraps
+  its form in a scroll area; the button box is never inside the scroll area.
+- No horizontal scrollbar at the target width in English, Spanish, or the Large
+  font preset.
+- Field order, parameter values, defaults, validation, warnings, and help keys
+  are unchanged. No antenna model, solver spec, schema, report, or numerical
+  reference is modified.
+- Any new section title has EN/ES text, help coverage, the manifest entry, and
+  an accessible description through `ui/help.py`.
+- The layout guard, per-dialog parameter round-trip tests, both mypy passes,
+  ruff, and the full pytest gate are green.
+- Manual light/dark and font-scaling screenshots are recorded for each changed
+  dialog; the offscreen tests are not a substitute for the visual check.
+- No new dependency, no `pickle`, and no global current-units singleton.
+
+### Risks and mitigation
+
+- **Tab order and screen-reader order.** Splitting a form can make the visual
+  order differ from the widget order. Mitigate with explicit `setTabOrder()`,
+  a focus-order test for the Yagi reference, and section construction in
+  reading order.
+- **Spanish and Large-font width.** Spanish labels are longer than English; a
+  two-column form can exceed 920 px. Mitigate by measuring the widest label in
+  both languages, keeping the 920 px target, and allowing only a documented
+  increase to 1000 px.
+- **Conditional rows.** Folded driven, transformer, match, traps, and composed
+  groups can unbalance columns. Mitigate by treating sections as atomic and
+  keeping conditional rows in their section instead of reflowing the form.
+- **Over-wide or sparse dialogs.** Two columns can make a small form feel
+  empty. Mitigate with the 12-row threshold and the compact-family exception.
+- **Nested scrolling.** A table inside a scrollable form can feel awkward.
+  Mitigate by making the default size show the table and actions, keeping the
+  table's own scrolling, and treating the form scroll as a small-screen
+  fallback.
+- **Scope creep across many dialogs.** Mitigate with waves UX52/UX53, a
+  per-dialog decision record in UX54, and no forced migration of compact
+  families.
+- **Qt size hints versus window managers.** Offscreen measurements are a
+  guide. Mitigate with layout-based sizing (no fixed pixel heights), the
+  `scaled_dialog_size()` cap, and manual QA on the target desktops.
+
+### Effort and likely files
+
+UX50 M (3–5 days); UX51 M–L (1–2 weeks); UX52 M (4–6 days); UX53 M (4–6
+days); UX54 M–L (1–2 weeks); UX55 S–M (3–5 days). Total roughly 5–8 weeks
+including tests, help, documentation, and manual QA. There is no external
+dependency.
+
+Likely files: `src/antennadesk/ui/dialogs/yagi_dialog.py`,
+`src/antennadesk/ui/widgets/yagi_form.py`, the other family dialog/form pairs
+listed above, new shared widgets under `src/antennadesk/ui/widgets/`,
+`src/antennadesk/ui/fonts.py` only if the scaffold needs a small API addition,
+`src/antennadesk/ui/i18n.py`, `src/antennadesk/ui/help.py`,
+`tests/ui/test_dialog_layout.py`, the existing family UI tests,
+`docs/ADR/0056-antenna-dialog-layout.md`, `docs/ARCHITECTURE.md`,
+`docs/USER_GUIDE.md`, and `CHANGELOG.md`.
 
 ## Adaptive length display units (implemented 2026-11-18; QA closed 2026-11-24)
 
