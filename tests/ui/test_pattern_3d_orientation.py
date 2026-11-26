@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import pytest
+from PySide6.QtCore import QRectF
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.i18n import Language, Translator
@@ -140,3 +141,32 @@ def test_results_view_passes_forward_axis_and_front_to_back(qtbot: QtBot) -> Non
     assert view._pattern_3d._antenna_azimuth == pytest.approx(90.0)
     assert view._pattern_3d._forward_azimuth == pytest.approx(90.0)
     assert view._pattern_3d._front_to_back_db == pytest.approx(10.0)
+    assert view._pattern_3d._footprint_segments
+    assert view._pattern_3d._feed_point is not None
+
+
+def test_pattern_3d_draws_a_plan_inset_with_footprint_and_feed(qtbot: QtBot) -> None:
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+    view.resize(720, 480)
+    view.set_points(
+        POINTS,
+        antenna_azimuth=90.0,
+        forward_azimuth=90.0,
+        front_to_back_db=6.0,
+        footprint_segments=((0.0, -5.0, 0.0, 5.0), (2.1, -4.9, 2.1, 4.9)),
+        feed_point=(2.1, 0.0),
+    )
+
+    assert view._feed_point == (2.1, 0.0)
+    assert view._minimap_rect(QRectF(0.0, 0.0, 632.0, 402.0)) is not None
+    view.show()
+    qtbot.wait(10)
+    assert view.grab().isNull() is False
+
+
+def test_pattern_3d_hides_the_plan_inset_at_compact_sizes(qtbot: QtBot) -> None:
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    assert view._minimap_rect(QRectF(0.0, 0.0, 320.0, 220.0)) is None

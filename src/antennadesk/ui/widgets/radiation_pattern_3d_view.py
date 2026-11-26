@@ -26,6 +26,7 @@ from ..fonts import scaled_font
 from ..geometry.projection import project_world
 from ..help import apply_help
 from ..i18n import Translator
+from ..paint import draw_feed_marker
 from ..theme import theme_colors
 
 GAIN_COLOR_BINS = 24
@@ -401,6 +402,8 @@ class RadiationPattern3DView(QWidget):
         self._antenna_vertical = False
         self._forward_azimuth: float | None = None
         self._front_to_back_db: float | None = None
+        self._footprint_segments: tuple[tuple[float, float, float, float], ...] = ()
+        self._feed_point: tuple[float, float] | None = None
         self._points: tuple[tuple[float, float, float], ...] = ()
         self._full_mesh: _Mesh | None = None
         self._interactive_mesh: _Mesh | None = None
@@ -441,6 +444,8 @@ class RadiationPattern3DView(QWidget):
         antenna_vertical: bool = False,
         forward_azimuth: float | None = None,
         front_to_back_db: float | None = None,
+        footprint_segments: tuple[tuple[float, float, float, float], ...] = (),
+        feed_point: tuple[float, float] | None = None,
     ) -> None:
         if ground:
             points = tuple(point for point in points if point[0] <= 90.0 + 1e-6)
@@ -449,6 +454,8 @@ class RadiationPattern3DView(QWidget):
         self._antenna_vertical = antenna_vertical
         self._forward_azimuth = forward_azimuth
         self._front_to_back_db = front_to_back_db
+        self._footprint_segments = footprint_segments
+        self._feed_point = feed_point
         source_mesh = _build_mesh(points)
         self._full_mesh = _reduced_full_mesh(source_mesh) if source_mesh is not None else None
         self._interactive_mesh = _decimated_mesh(source_mesh) if source_mesh is not None else None
@@ -584,6 +591,97 @@ class RadiationPattern3DView(QWidget):
             "pattern.antenna_azimuth",
             phi=f"{float(angle) % 360.0:.0f}",
         )
+
+    def _minimap_rect(self, draw_rect: QRectF) -> QRectF | None:
+        if draw_rect.width() < 440.0 or draw_rect.height() < 280.0:
+            return None
+        width = min(190.0, max(140.0, draw_rect.width() * 0.30))
+        height = min(150.0, max(110.0, draw_rect.height() * 0.38))
+        return QRectF(
+            draw_rect.left() + 8.0,
+            draw_rect.bottom() - height - 8.0,
+            width,
+            height,
+        )
+
+    def _draw_minimap(
+        self,
+        painter: QPainter,
+        inset: QRectF,
+        max_phi_deg: float,
+    ) -> None:
+        if not self._footprint_segments:
+            return
+        background = QColor(self._colors.plot_background)
+        background.setAlpha(235)
+        painter.setPen(QPen(self._colors.light_line, 0.8))
+        painter.setBrush(background)
+        painter.drawRoundedRect(inset, 4.0, 4.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+
+        painter.setFont(scaled_font(7))
+        painter.setPen(self._colors.secondary_text)
+        painter.drawText(
+            QRectF(inset.left() + 8.0, inset.top() + 3.0, inset.width() - 16.0, 14.0),
+            self._translator.t("pattern.plan"),
+        )
+
+        coordinates = [
+            value
+            for start_x, start_y, end_x, end_y in self._footprint_segments
+            for value in (start_x, start_y, end_x, end_y)
+        ]
+        if self._feed_point is not None:
+            coordinates.extend(self._feed_point)
+        if not coordinates:
+            return
+        xs = coordinates[0::2]
+        ys = coordinates[1::2]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        span_x = max(max_x - min_x, 1e-9)
+        span_y = max(max_y - min_y, 1e-9)
+        plot = inset.adjusted(8.0, 18.0, -8.0, -8.0)
+        scale = min(plot.width() / span_x, plot.height() / span_y)
+        center_x = (min_x + max_x) / 2.0
+        center_y = (min_y + max_y) / 2.0
+        center = plot.center()
+
+        def plan_point(x: float, y: float) -> QPointF:
+            return QPointF(
+                center.x() + (x - center_x) * scale,
+                center.y() - (y - center_y) * scale,
+            )
+
+        painter.setPen(QPen(self._colors.antenna, 1.0))
+        for start_x, start_y, end_x, end_y in self._footprint_segments:
+            painter.drawLine(plan_point(start_x, start_y), plan_point(end_x, end_y))
+        if self._feed_point is not None:
+            draw_feed_marker(
+                painter,
+                plan_point(*self._feed_point),
+                self._colors.feed,
+                radius=3.0,
+            )
+
+        radius = min(inset.width(), inset.height()) * 0.30
+        antenna_angle = self._forward_azimuth
+        if antenna_angle is None and not self._antenna_vertical:
+            antenna_angle = self._antenna_azimuth
+        if antenna_angle is not None:
+            angle = math.radians(antenna_angle)
+            antenna_end = QPointF(
+                center.x() + radius * math.cos(angle),
+                center.y() - radius * math.sin(angle),
+            )
+            self._draw_arrow(painter, center, antenna_end, self._colors.antenna, width=1.5)
+        if math.isfinite(max_phi_deg):
+            angle = math.radians(max_phi_deg)
+            max_end = QPointF(
+                center.x() + radius * 0.82 * math.cos(angle),
+                center.y() - radius * 0.82 * math.sin(angle),
+            )
+            self._draw_arrow(painter, center, max_end, self._colors.feed, width=1.2)
 
     @staticmethod
     def _draw_arrow(
@@ -902,6 +1000,9 @@ class RadiationPattern3DView(QWidget):
                     180.0,
                 )
             )
+        minimap = self._minimap_rect(draw_rect) if self._footprint_segments else None
+        if minimap is not None:
+            occupied.append(minimap)
         max_label = self._max_gain_label_with_azimuth(max_point)
         label_rect = self._place_label(painter, rect, marker, max_label, occupied)
         if label_rect is None:
@@ -910,6 +1011,8 @@ class RadiationPattern3DView(QWidget):
         if label_rect is not None:
             self._draw_label(painter, label_rect, max_label, self._colors.feed)
             occupied.append(label_rect)
+            if minimap is not None and label_rect.intersects(minimap):
+                minimap = None
 
         if not compact:
             if back_marker is not None:
@@ -946,6 +1049,9 @@ class RadiationPattern3DView(QWidget):
                         antenna_label,
                         self._colors.antenna,
                     )
+
+        if minimap is not None:
+            self._draw_minimap(painter, minimap, max_point[1])
 
         self._draw_gain_legend(
             painter,

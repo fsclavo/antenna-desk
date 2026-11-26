@@ -133,6 +133,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   color/feed-marker tokens, and EN/ES help and accessibility text complete the
   presentation layer. No solver, domain, schema, simulation, or report change.
 
+- **Plan mini-map in the 3D lobe (UX47).** The 3D pattern view now shows a
+  theme-aware top-view inset with the canonical wire footprint, the shared feed
+  marker, and antenna and maximum-gain azimuth arrows. It hides below the
+  compact-size threshold and when it would collide with the maximum-gain label.
+  No solver, domain, schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

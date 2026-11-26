@@ -2418,13 +2418,13 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.pattern.3d_view": {
         Language.ENGLISH: (
             "3D pattern. Drag to rotate, wheel to zoom, double-click to reset. "
-            "Solid ray: maximum gain; dashed ray: same-elevation back direction; "
-            "antenna ray or dot: design orientation."
+            "Solid ray: maximum gain; dashed ray: same-elevation back; plan "
+            "inset: antenna and maximum-gain azimuth."
         ),
         Language.SPANISH: (
             "Patrón 3D. Arrastrá para rotar, rueda para zoom y doble clic para "
-            "restablecer. Rayo sólido: ganancia máxima; discontinuo: dirección "
-            "trasera a igual elevación; rayo o punto: orientación de la antena."
+            "restablecer. Rayo sólido: ganancia máxima; discontinuo: atrás a igual "
+            "elevación; planta: azimut de antena y ganancia máxima."
         ),
     },
     "help.pattern.azimuth_cut": {
@@ -9932,6 +9932,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.azimuth_reference": {
         Language.ENGLISH: "Azimuth reference",
         Language.SPANISH: "Referencia de azimut",
+    },
+    "pattern.plan": {
+        Language.ENGLISH: "Plan",
+        Language.SPANISH: "Planta",
     },
     "pattern.polar_elevation": {
         Language.ENGLISH: "Elevation lobes",

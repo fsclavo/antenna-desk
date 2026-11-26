@@ -78,7 +78,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | FP1 | Flower Pot half-wave family | L | ADR-0055; physical/electrical spike; next schema bump | **Proposed 2026-11-26; not started.** Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, a construction shortening factor, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
-| UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Proposed 2026-11-25.** Top-view inset with the canonical footprint, feed, antenna azimuth, and max-gain azimuth; theme-aware and hidden at minimum size. No synthetic family shape and no new engine. See §UX47. |
+| UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
 | UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Proposed 2026-11-25.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; front/back only for explicit families; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
 | UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Proposed 2026-11-25.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode handled explicitly. No solver, domain, schema, or report change; no new engine. See §UX49. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -1837,6 +1837,12 @@ light/dark, font scaling, EN/ES, and help tests pass. No solver, domain, schema,
 or report change.
 
 ### UX47 — Plan mini-map in the 3D lobe
+
+**Implemented 2026-11-26.** The 3D pattern view now receives the canonical
+wire footprint and feed point from `ResultsView`, draws a theme-aware top-view
+inset, and overlays the shared feed marker plus antenna and maximum-gain azimuth
+arrows. The inset is hidden below the compact threshold and when it would
+overlap the max-gain label.
 
 **Scope:** an optional top-down reference inset inside the 3D lobe. This is a
 parallel orientation aid after UX46, not layer 2; it may land before or after

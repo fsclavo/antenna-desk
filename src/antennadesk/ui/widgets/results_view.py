@@ -2238,6 +2238,25 @@ class ResultsView(QWidget):
         )
         parameters = self._design.parameters if self._design is not None else None
         antenna_azimuth, antenna_vertical = antenna_orientation(parameters)
+        model = self._design.antenna if self._design is not None else None
+        footprint_segments = (
+            tuple(
+                (wire.start.x_m, wire.start.y_m, wire.end.x_m, wire.end.y_m) for wire in model.wires
+            )
+            if model is not None
+            else ()
+        )
+        feed_point: tuple[float, float] | None = None
+        if model is not None:
+            try:
+                feed_wire = model.feed_wire
+                ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+                feed_point = (
+                    feed_wire.start.x_m + (feed_wire.end.x_m - feed_wire.start.x_m) * ratio,
+                    feed_wire.start.y_m + (feed_wire.end.y_m - feed_wire.start.y_m) * ratio,
+                )
+            except (ValueError, AttributeError):
+                feed_point = None
         self._pattern_3d.set_points(
             tuple(
                 (point.theta_deg, point.phi_deg, point.gain_total_db + offset)
@@ -2249,6 +2268,8 @@ class ResultsView(QWidget):
             antenna_vertical=antenna_vertical,
             forward_azimuth=forward_axis_azimuth(parameters),
             front_to_back_db=front_to_back_db(frequency.far_field),
+            footprint_segments=footprint_segments,
+            feed_point=feed_point,
         )
         self._update_metric_summary(frequency)
 
