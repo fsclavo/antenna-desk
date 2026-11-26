@@ -1,27 +1,19 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Guided terminated folded dipole (T2FD) generator."""
+"""Guided terminated folded dipole generator."""
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.t2fd import T2FDParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.t2fd_form import T2FDForm
 
 
-class T2FDDialog(QDialog):
+class T2FDDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,57 +23,46 @@ class T2FDDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: T2FDParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: T2FDParameters | None = None
-        self._form = T2FDForm(translator, unit_system, parameters, self)
+        form = T2FDForm(translator, unit_system, parameters, None)
         if parameters is None and frequency_hz is not None:
-            self._form.set_frequency_hz(frequency_hz)
-        self._lowest_frequency = self._form._lowest_frequency
-        self._highest_frequency = self._form._highest_frequency
-        self._length = self._form._length
-        self._spacing = self._form._spacing
-        self._start = self._form._start
-        self._termination = self._form._termination
-        self._transformer = self._form._transformer
-        self._height = self._form._height
-        self._orientation = self._form._orientation
-        self._azimuth = self._form._azimuth
-        self._radius = self._form._radius
-        self._material = self._form._material
-        self._ground = self._form._ground
-        self._permittivity = self._form._permittivity
-        self._conductivity = self._form._conductivity
-        self._geometry = self._form._geometry
-        self._band_warning = self._form._band_warning
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("t2fd.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("t2fd.evidence"))
+        evidence.setWordWrap(True)
 
-        self.setWindowTitle(translator.t("t2fd.title"))
-        self.resize(*scaled_dialog_size(620, 780))
-
-        self._hint = QLabel(translator.t("t2fd.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("t2fd.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("t2fd.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(620, 780),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._t2fd_form = form
+        self._parameters: T2FDParameters | None = None
+        self._lowest_frequency = form._lowest_frequency
+        self._highest_frequency = form._highest_frequency
+        self._length = form._length
+        self._spacing = form._spacing
+        self._start = form._start
+        self._termination = form._termination
+        self._transformer = form._transformer
+        self._height = form._height
+        self._orientation = form._orientation
+        self._azimuth = form._azimuth
+        self._radius = form._radius
+        self._material = form._material
+        self._ground = form._ground
+        self._permittivity = form._permittivity
+        self._conductivity = form._conductivity
+        self._geometry = form._geometry
+        self._band_warning = form._band_warning
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> T2FDParameters:
-        return self._form.parameters()
+        return self._t2fd_form.parameters()
 
     def _accept(self) -> None:
         try:

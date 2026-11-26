@@ -4,24 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.log_periodic import LogPeriodicParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.log_periodic_form import LogPeriodicForm
 
 
-class LogPeriodicDialog(QDialog):
+class LogPeriodicDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,36 +23,26 @@ class LogPeriodicDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: LogPeriodicParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: LogPeriodicParameters | None = None
-        self._form = LogPeriodicForm(translator, unit_system, parameters, self)
+        form = LogPeriodicForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self.setWindowTitle(translator.t("log_periodic.title"))
-        self.resize(*scaled_dialog_size(640, 900))
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("log_periodic.hint"))
+        hint.setWordWrap(True)
 
-        self._hint = QLabel(translator.t("log_periodic.hint"), self)
-        self._hint.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("log_periodic.title"),
+            form=form,
+            notes=(hint,),
+            initial_size=(640, 900),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._log_periodic_form = form
+        self._parameters: LogPeriodicParameters | None = None
+        self._hint = hint
 
     def parameters(self) -> LogPeriodicParameters:
-        return self._form.parameters()
+        return self._log_periodic_form.parameters()
 
     def _accept(self) -> None:
         try:

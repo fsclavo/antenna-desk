@@ -4,24 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.stacked_yagi import StackedYagiParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.stacked_yagi_form import StackedYagiForm
 
 
-class StackedYagiDialog(QDialog):
+class StackedYagiDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,43 +23,33 @@ class StackedYagiDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: StackedYagiParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: StackedYagiParameters | None = None
-        self._form = StackedYagiForm(translator, unit_system, parameters, self)
+        form = StackedYagiForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-            self._form.load_starting_dimensions()
-        self.setWindowTitle(translator.t("stacked_yagi.title"))
-        self.resize(*scaled_dialog_size(940, 900))
+            form.set_frequency_hz(frequency_hz)
+            form.load_starting_dimensions()
+        hint = QLabel(translator.t("stacked_yagi.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("stacked_yagi.evidence"))
+        evidence.setWordWrap(True)
+        feed_note = QLabel(translator.t("stacked_yagi.feed_note"))
+        feed_note.setWordWrap(True)
 
-        self._hint = QLabel(translator.t("stacked_yagi.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("stacked_yagi.evidence"), self)
-        self._evidence.setWordWrap(True)
-        self._feed_note = QLabel(translator.t("stacked_yagi.feed_note"), self)
-        self._feed_note.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("stacked_yagi.title"),
+            form=form,
+            notes=(feed_note, hint, evidence),
+            initial_size=(940, 900),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._feed_note)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._stacked_form = form
+        self._parameters: StackedYagiParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
+        self._feed_note = feed_note
 
     def parameters(self) -> StackedYagiParameters:
-        return self._form.parameters()
+        return self._stacked_form.parameters()
 
     def _accept(self) -> None:
         try:

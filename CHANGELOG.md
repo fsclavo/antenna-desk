@@ -190,6 +190,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Spanish, and the OCFD band-plan footer stays outside the scroll. No solver,
   domain, schema, simulation, or report change.
 
+- **Scroll-heavy generator dialog audit (UX54).** The twelve tall generator
+  dialogs now use the shared `FormDialogFrame` with a single semantic column,
+  a form scroll, and notes and OK/Cancel outside the scroll. ADR-0056 records
+  the per-dialog decision; no two-column migration was needed. Stacked Yagi
+  now places its level, spacing, and feed controls above the embedded Yagi
+  editor. Primary controls stay visible at 1920×1080 and the 1366×768 cap,
+  with no horizontal scrollbar. No solver, domain, schema, simulation, or
+  report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

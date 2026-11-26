@@ -1,27 +1,19 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Guided phased vertical array generator."""
+"""Guided phased-vertical generator."""
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.phased_vertical import PhasedVerticalParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.phased_vertical_form import PhasedVerticalForm
 
 
-class PhasedVerticalDialog(QDialog):
+class PhasedVerticalDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,40 +23,30 @@ class PhasedVerticalDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: PhasedVerticalParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: PhasedVerticalParameters | None = None
-        self._form = PhasedVerticalForm(translator, unit_system, parameters, self)
+        form = PhasedVerticalForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-            self._form.load_starting_dimensions()
-        self.setWindowTitle(translator.t("phased_vertical.title"))
-        self.resize(*scaled_dialog_size(560, 820))
+            form.set_frequency_hz(frequency_hz)
+            form.load_starting_dimensions()
+        hint = QLabel(translator.t("phased_vertical.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("phased_vertical.evidence"))
+        evidence.setWordWrap(True)
 
-        self._hint = QLabel(translator.t("phased_vertical.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("phased_vertical.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("phased_vertical.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(560, 820),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._phased_form = form
+        self._parameters: PhasedVerticalParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> PhasedVerticalParameters:
-        return self._form.parameters()
+        return self._phased_form.parameters()
 
     def _accept(self) -> None:
         try:

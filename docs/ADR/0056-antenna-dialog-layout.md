@@ -1,6 +1,6 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; implemented by UX50 and UX51, applied to UX52 and UX53
+- **Status:** accepted 2026-11-26; implemented by UX50 and UX51, applied to UX52–UX54
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX55
 
@@ -101,6 +101,42 @@ tests prove the guard is not a no-op:
 - a deliberately tall 1087 px fake form without a scroll area fails;
 - the old single-column Yagi shape in a frame without a scroll area fails.
 
+## UX54 audit: scroll-heavy generator dialogs
+
+UX54 audited the twelve generator dialogs that already had a scroll area.
+Every one now uses `FormDialogFrame`, keeps a single semantic column, and keeps
+the notes and action box outside the scroll. No dialog required a two-column
+split: the primary controls are in the first viewport at the default
+1920×1080 size and at the 1366×768 cap; the embedded editor, table, or advanced
+groups scroll.
+
+| Dialog | Primary fields | Decision | Offscreen scroll range, 1920×1080 / 1366×768 |
+| --- | --- | --- | --- |
+| Stacked Yagi | Level count, spacing, max top height, feed mode | One column + scroll; stacked controls promoted above the embedded Yagi editor | 1009 / 1218 |
+| End-fed | Design frequency, length, feed section, feed/end height, transformer | One column + scroll; matching, loading-coil, choke, and counterpoise groups stay checkbox-gated | 851 / 940 |
+| Vertical | Frequency, height, base height, radial system | One column + scroll; loading coil and top hat stay checkbox-gated groups | 270 / 279 |
+| Log-periodic | Low/high frequency, longest element, τ/σ, element count | One column + scroll; the element table and feed line scroll | 71 / 280 |
+| HexBeam | Frequency, driver/reflector halves, turning radius, height, feed gap | One column + scroll; the bands group stays a `QGroupBox` | 164 / 293 |
+| Trap Yagi | Frequency, element count, driven length, trap values | One column + scroll | 0 / 129 |
+| Phased vertical | Frequency, element count, spacing, phase step | One column + scroll | 10 / 139 |
+| Quad beam | Frequency, element count, loop side, reflector spacing, height | One column + scroll | 52 / 141 |
+| Trap dipole | Low/high band, inner/outer lengths, trap values | One column + scroll | 0 / 29 |
+| T2FD | Low/high frequency, length, spacing, termination, transformer | One column + scroll | 0 / 23 |
+| Discone | Frequency, cone height/radius, disc radius/gap, wire count | One column + scroll | 0 / 0 |
+| Basic antenna | Frequency, length/height, orientation, feed | One column + scroll | 0 / 21 |
+
+The scroll ranges are offscreen reference measurements with the default font
+and style. They are not acceptance thresholds. The acceptance is the 640 px
+height budget, visible primary fields, visible actions outside the scroll, and
+no horizontal scrollbar. The layout guard registers all twelve; there are no
+exceptions.
+
+Two columns were rejected for this inventory: each form is a single
+geometry/feed reading flow, the advanced `QGroupBox` sections must remain
+atomic, and the stacked Yagi embedded editor is a composed-family section that
+must not be split. Promoting the stacked controls above that editor is the only
+field-order change in UX54.
+
 ## Rejected alternatives
 
 - **Two columns everywhere.** Compact forms become sparse, and the sidebar
@@ -134,6 +170,8 @@ Costs:
 
 UX52 later applied the standard to loaded dipole, biquad, Moxon, and magnetic
 loop, and UX53 applied it to Beverage, SCV, J-pole, and OCFD without changing
-the guard contract. Out of scope: the UX54–UX55 audit/closure, changing
-`scaled_dialog_size()` semantics, changing the sidebar, and any solver,
-domain-model, schema, simulation, report, or numerical-reference change.
+the guard contract, and UX54 applied the scaffold audit to the twelve
+scroll-heavy dialogs. Out of scope: the UX55 compact-family closure and
+cross-family visual QA, changing `scaled_dialog_size()` semantics, changing
+the sidebar, and any solver, domain-model, schema, simulation, report, or
+numerical-reference change.

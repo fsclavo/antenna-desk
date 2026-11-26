@@ -7,14 +7,11 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
-    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QProgressDialog,
     QPushButton,
-    QScrollArea,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -35,16 +32,16 @@ from ...domain.simulation.far_field import FarFieldRequest
 from ...domain.simulation.frequency import FrequencyPlan
 from ...domain.simulation.segmentation import SegmentationPolicy
 from ...domain.simulation.spec import SimulationSpec
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.endfed_form import EndFedForm
+from ..widgets.form_dialog import FormDialogFrame
 from ..workers.endfed_convergence_worker import EndFedConvergenceWorker
 from ..workers.task_runner import run_worker_blocking
 from .band_analysis_dialog import BandAnalysisDialog
 
 
-class EndFedDialog(QDialog):
+class EndFedDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -57,26 +54,8 @@ class EndFedDialog(QDialog):
         solver: AntennaSolver | None = None,
         project_matching_network: MatchingNetwork | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: EndFedParameters | None = None
-        self._solver = solver
-        self._project_matching_network = project_matching_network
-        self._band_plan: BandPlan | None = None
-        self._band_plan_edited = False
         if parameters is not None:
             preset = parameters.preset
-        self._form = EndFedForm(
-            translator,
-            unit_system,
-            parameters,
-            self,
-            preset=preset,
-            show_override_actions=False,
-        )
-        self._form.set_project_matching_network(self._project_matching_network)
-        if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
         title_key = {
             EndFedPreset.STANDARD: "endfed.title",
             EndFedPreset.SLOPER: "endfed.sloper_title",
@@ -84,9 +63,17 @@ class EndFedDialog(QDialog):
             EndFedPreset.SHORTENED_80_10: "endfed.shortened_80_10_title",
             EndFedPreset.SHORTENED_40_10: "endfed.shortened_40_10_title",
         }[preset]
-        self.setWindowTitle(translator.t(title_key))
-        self.resize(*scaled_dialog_size(620, 780))
-
+        form = EndFedForm(
+            translator,
+            unit_system,
+            parameters,
+            None,
+            preset=preset,
+            show_override_actions=False,
+        )
+        form.set_project_matching_network(project_matching_network)
+        if frequency_hz is not None and parameters is None:
+            form.set_frequency_hz(frequency_hz)
         hint_key = {
             EndFedPreset.STANDARD: "endfed.hint",
             EndFedPreset.SLOPER: "endfed.sloper_hint",
@@ -101,42 +88,46 @@ class EndFedDialog(QDialog):
             EndFedPreset.SHORTENED_80_10: "endfed.shortened_80_10_evidence",
             EndFedPreset.SHORTENED_40_10: "endfed.shortened_40_10_evidence",
         }[preset]
-        self._hint = QLabel(translator.t(hint_key), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t(evidence_key), self)
-        self._evidence.setWordWrap(True)
-        self._band_plan_label = QLabel(self)
-        self._band_plan_label.setWordWrap(True)
-        self._band_plan_button = QPushButton(translator.t("band.choose"), self)
-        self._band_plan_button.clicked.connect(self._choose_band_plan)
-        band_layout = QHBoxLayout()
-        band_layout.addWidget(self._band_plan_label, 1)
-        band_layout.addWidget(self._band_plan_button)
-        self._check_button = QPushButton(translator.t("endfed.convergence_check"), self)
-        self._check_button.setEnabled(solver is not None)
-        self._check_button.clicked.connect(self._check_convergence)
-        self._check_result = QLabel(self)
-        self._check_result.setWordWrap(True)
+        hint = QLabel(translator.t(hint_key))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t(evidence_key))
+        evidence.setWordWrap(True)
+        band_plan_label = QLabel()
+        band_plan_label.setWordWrap(True)
+        band_plan_button = QPushButton(translator.t("band.choose"))
+        band_plan_button.clicked.connect(self._choose_band_plan)
+        band_container = QWidget()
+        band_layout = QHBoxLayout(band_container)
+        band_layout.setContentsMargins(0, 0, 0, 0)
+        band_layout.addWidget(band_plan_label, 1)
+        band_layout.addWidget(band_plan_button)
+        check_button = QPushButton(translator.t("endfed.convergence_check"))
+        check_button.setEnabled(solver is not None)
+        check_button.clicked.connect(self._check_convergence)
+        check_result = QLabel()
+        check_result.setWordWrap(True)
 
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t(title_key),
+            form=form,
+            notes=(band_container, hint, evidence, check_button, check_result),
+            initial_size=(620, 780),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        layout = QVBoxLayout(self)
-        form_scroll = QScrollArea(self)
-        form_scroll.setWidgetResizable(True)
-        form_scroll.setWidget(self._form)
-        layout.addWidget(form_scroll, 1)
-        layout.addLayout(band_layout)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(self._check_button)
-        layout.addWidget(self._check_result)
-        layout.addWidget(buttons)
-        self._form.changed.connect(self._update_band_plan_label)
+        self._translator = translator
+        self._endfed_form = form
+        self._parameters: EndFedParameters | None = None
+        self._solver = solver
+        self._project_matching_network = project_matching_network
+        self._band_plan: BandPlan | None = None
+        self._band_plan_edited = False
+        self._hint = hint
+        self._evidence = evidence
+        self._band_plan_label = band_plan_label
+        self._band_plan_button = band_plan_button
+        self._check_button = check_button
+        self._check_result = check_result
+        form.changed.connect(self._update_band_plan_label)
         self._update_band_plan_label()
 
     def _check_convergence(self) -> None:
@@ -240,7 +231,7 @@ class EndFedDialog(QDialog):
             )
 
     def parameters(self) -> EndFedParameters:
-        return self._form.parameters()
+        return self._endfed_form.parameters()
 
     def _default_band_plan(self) -> BandPlan:
         return default_band_plan(self.parameters()).plan

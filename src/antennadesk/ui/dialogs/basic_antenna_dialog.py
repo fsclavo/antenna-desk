@@ -4,15 +4,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.design import AntennaDesignParameters, antenna_type_for
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
@@ -25,10 +17,10 @@ from ...domain.design import (
 )
 from ...domain.design.estimators import estimate_intent
 from ...domain.environment.ground import GroundModel
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.dipole_form import DipoleForm
+from ..widgets.form_dialog import FormDialogFrame
 
 _TITLE_KEYS = {
     ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
@@ -74,7 +66,7 @@ def _starting_parameters(
         return None
 
 
-class BasicAntennaDialog(QDialog):
+class BasicAntennaDialog(FormDialogFrame):
     """Edit the variables of a basic dipole, folded dipole, or loop directly."""
 
     def __init__(
@@ -88,26 +80,23 @@ class BasicAntennaDialog(QDialog):
         initial_sides: int | None = None,
         parameters: AntennaDesignParameters | None = None,
     ) -> None:
-        super().__init__(parent)
         if parameters is not None:
             antenna_type = antenna_type_for(parameters)
         if antenna_type not in _TITLE_KEYS:
             raise ValueError(f"unsupported basic antenna type: {antenna_type!r}")
-        self._translator = translator
-        self._parameters: AntennaDesignParameters | None = None
-        self._form = DipoleForm(translator, unit_system, parent=self)
-        self._form.set_template_header_visible(False)
+        form = DipoleForm(translator, unit_system)
+        form.set_template_header_visible(False)
         if parameters is not None:
-            self._form.set_parameters(parameters, reset_sweep=True)
+            form.set_parameters(parameters, reset_sweep=True)
         else:
             starting = _starting_parameters(antenna_type, frequency_hz, initial_sides)
             if starting is not None:
-                self._form.set_parameters(starting, reset_sweep=True)
+                form.set_parameters(starting, reset_sweep=True)
             else:
-                self._form.set_antenna_type(antenna_type)
-                self._form.set_frequency_hz(frequency_hz)
+                form.set_antenna_type(antenna_type)
+                form.set_frequency_hz(frequency_hz)
                 if antenna_type == ANTENNA_TYPE_LOOP and initial_sides is not None:
-                    self._form.set_sides(initial_sides)
+                    form.set_sides(initial_sides)
 
         if antenna_type == ANTENNA_TYPE_LOOP and initial_sides == 3:
             title_key = "catalog.delta_loop"
@@ -115,30 +104,23 @@ class BasicAntennaDialog(QDialog):
             title_key = "catalog.quad_loop"
         else:
             title_key = _TITLE_KEYS[antenna_type]
-        self.setWindowTitle(translator.t(title_key))
-        self.resize(*scaled_dialog_size(560, 740))
+        hint = QLabel(translator.t(_DESCRIPTION_KEYS[antenna_type]))
+        hint.setWordWrap(True)
 
-        self._hint = QLabel(translator.t(_DESCRIPTION_KEYS[antenna_type]), self)
-        self._hint.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t(title_key),
+            form=form,
+            notes=(hint,),
+            initial_size=(560, 740),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._basic_form = form
+        self._parameters: AntennaDesignParameters | None = None
+        self._hint = hint
 
     def parameters(self) -> AntennaDesignParameters:
-        return self._form.parameters()
+        return self._basic_form.parameters()
 
     def _accept(self) -> None:
         try:

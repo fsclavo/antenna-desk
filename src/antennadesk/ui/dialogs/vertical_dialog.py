@@ -1,28 +1,19 @@
 # SPDX-FileCopyrightText: 2026 Fernando Sclavo
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Guided vertical radiator with an optional radial ground plane."""
+"""Guided vertical generator."""
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QPushButton, QWidget
 
 from ...domain.antennas.vertical import VerticalParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.vertical_form import VerticalForm
 
 
-class VerticalDialog(QDialog):
+class VerticalDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -33,71 +24,56 @@ class VerticalDialog(QDialog):
         parameters: VerticalParameters | None = None,
         mobile: bool = False,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: VerticalParameters | None = None
-        self._form = VerticalForm(
+        form = VerticalForm(
             translator,
             unit_system,
             parameters,
-            self,
+            None,
             mobile=mobile,
         )
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self._frequency = self._form._frequency
-        self._height = self._form._height
-        self._base_height = self._form._base_height
-        self._radial_count = self._form._radial_count
-        self._radial_length = self._form._radial_length
-        self._radial_angle = self._form._radial_angle
-        self._radius = self._form._radius
-        self._material = self._form._material
-        self._ground = self._form._ground
-        self._permittivity = self._form._permittivity
-        self._conductivity = self._form._conductivity
-        self._geometry = self._form._geometry
-
-        self.setWindowTitle(translator.t("vertical.mobile_title" if mobile else "vertical.title"))
-        self.resize(*scaled_dialog_size(560, 700))
-
-        self._hint = QLabel(
-            translator.t("vertical.mobile_hint" if mobile else "vertical.hint"), self
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("vertical.mobile_hint" if mobile else "vertical.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(
+            translator.t("vertical.mobile_evidence" if mobile else "vertical.evidence")
         )
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(
-            translator.t("vertical.mobile_evidence" if mobile else "vertical.evidence"), self
+        evidence.setWordWrap(True)
+        example = QPushButton(translator.t("vertical.mobile_example")) if mobile else None
+        if example is not None:
+            example.setToolTip(translator.t("vertical.mobile_example_hint"))
+            example.clicked.connect(form.load_mobile_example)
+        notes = (example, hint, evidence) if example is not None else (hint, evidence)
+
+        super().__init__(
+            title=translator.t("vertical.mobile_title" if mobile else "vertical.title"),
+            form=form,
+            notes=notes,
+            initial_size=(560, 700),
+            parent=parent,
         )
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
-        )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        if mobile:
-            self._example = QPushButton(
-                translator.t("vertical.mobile_example"),
-                self,
-            )
-            self._example.setToolTip(translator.t("vertical.mobile_example_hint"))
-            self._example.clicked.connect(self._form.load_mobile_example)
-            layout.addWidget(self._example)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._vertical_form = form
+        self._parameters: VerticalParameters | None = None
+        self._frequency = form._frequency
+        self._height = form._height
+        self._base_height = form._base_height
+        self._radial_count = form._radial_count
+        self._radial_length = form._radial_length
+        self._radial_angle = form._radial_angle
+        self._radius = form._radius
+        self._material = form._material
+        self._ground = form._ground
+        self._permittivity = form._permittivity
+        self._conductivity = form._conductivity
+        self._geometry = form._geometry
+        self._hint = hint
+        self._evidence = evidence
+        if example is not None:
+            self._example = example
 
     def parameters(self) -> VerticalParameters:
-        return self._form.parameters()
+        return self._vertical_form.parameters()
 
     def _accept(self) -> None:
         try:

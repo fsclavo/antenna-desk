@@ -4,24 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.discone import DisconeParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.discone_form import DisconeForm
+from ..widgets.form_dialog import FormDialogFrame
 
 
-class DisconeDialog(QDialog):
+class DisconeDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,40 +23,30 @@ class DisconeDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: DisconeParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: DisconeParameters | None = None
-        self._form = DisconeForm(translator, unit_system, parameters, self)
+        form = DisconeForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-            self._form.load_starting_dimensions()
-        self.setWindowTitle(translator.t("discone.title"))
-        self.resize(*scaled_dialog_size(560, 780))
+            form.set_frequency_hz(frequency_hz)
+            form.load_starting_dimensions()
+        hint = QLabel(translator.t("discone.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("discone.evidence"))
+        evidence.setWordWrap(True)
 
-        self._hint = QLabel(translator.t("discone.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("discone.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("discone.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(560, 780),
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._form)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(scroll, 1)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._discone_form = form
+        self._parameters: DisconeParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> DisconeParameters:
-        return self._form.parameters()
+        return self._discone_form.parameters()
 
     def _accept(self) -> None:
         try:
