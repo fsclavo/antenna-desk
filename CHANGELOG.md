@@ -60,6 +60,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
 
+- **Wilkinson optimizer integration (DL6).** The family optimizer now
+  rebuilds the stacked-Yagi feed-network specification for every candidate, so
+  spacing and line increment can be optimized while the Wilkinson divider,
+  feed lines, and per-level matching networks are preserved. The candidate
+  builder also carries the project feed chain and solver timeout. Existing
+  phase-line and network optimization is unchanged.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

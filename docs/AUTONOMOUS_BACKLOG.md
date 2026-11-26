@@ -1183,12 +1183,12 @@ claimed. See also
   reconstructed pattern and optional per-level L/Pi/T matching networks; the
   conductor BOM remains conductor-only.
 - The optimizer searches level spacing and either the ideal phase step or the
-  phase-line increment inside the maximum top-height envelope; the level count,
-  base Yagi, and amplitude ratio stay context.
+  line increment inside the maximum top-height envelope; the level count, base
+  Yagi, and amplitude ratio stay context. In Wilkinson mode it rebuilds the
+  feed-network spec for each candidate, including the per-level networks.
 
 **Remaining work:** a splitter S-parameter/isolation model, Wilkinson component
-tolerances, folded driven elements with per-level feed hardware, and optimizer
-integration. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
+tolerances, and folded driven elements with per-level feed hardware. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
 scalar isolation post-processing and proposes
 [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): an N-port solver and a
 bounded equal N-way Wilkinson with star isolation at a declared design

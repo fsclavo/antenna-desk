@@ -1300,11 +1300,11 @@ amplitude ratio stay context. In phase-line mode the search moves the additional
 line length instead of the phase-step field. The search rejects a spacing that
 would overlap vertical-polarized levels or raise the top above the envelope.
 The splitter remains ideal in the co-simulated and phase-line modes; the
-Wilkinson mode adds a real divider with ideal components. Wilkinson mode is not
-optimized yet: optimize spacing and line length in phase-line or network mode,
-then switch to Wilkinson. Each level can carry its own matching network; treat
-the result as a solver-verified starting point, not a validated feed-network
-design.
+Wilkinson mode adds a real divider with ideal components. The optimizer also
+works in Wilkinson mode: each candidate rebuilds the divider and feed-line
+specification, so the search evaluates spacing and line increment against the
+actual network. Each level can carry its own matching network; treat the result
+as a solver-verified starting point, not a validated feed-network design.
 
 For vertical polarization, the level spacing must be longer than the longest
 element or adjacent copies overlap on the same axis. The form shows a warning

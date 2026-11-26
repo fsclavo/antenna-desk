@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from PySide6.QtWidgets import QDialog, QWidget
 
 from ..application.ports.antenna_solver import AntennaSolver
@@ -34,6 +36,7 @@ def run_family_optimization_dialog(
     band_plan_bands: int,
     operating_frequencies_hz: tuple[float, ...],
     last_summary: OptimizationSummary | None,
+    candidate_spec_builder: Callable[[AntennaDesignParameters], SimulationSpec] | None = None,
 ) -> tuple[AntennaDesignParameters, OptimizeAntennaResult | None] | None:
     dialog = FamilyOptimizationDialog(
         translator,
@@ -49,6 +52,7 @@ def run_family_optimization_dialog(
         band_plan_bands=band_plan_bands,
         operating_frequencies_hz=operating_frequencies_hz,
         last_summary=last_summary,
+        candidate_spec_builder=candidate_spec_builder,
     )
     if dialog.exec() != QDialog.DialogCode.Accepted:
         return None

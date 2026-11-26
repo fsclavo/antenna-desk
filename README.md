@@ -124,7 +124,8 @@ truth for each topic, every ADR, and the archived plans.
   mismatch-corrected line loss, per-port network results, one shared mast/guy
   set, a beta/hairpin match at every driven element, and a Wilkinson N-port
   divider mode with a reconstructed pattern, plus a bounded spacing/phase
-  optimizer inside a user-set top-height envelope; no stacking gain is claimed.
+  optimizer inside a user-set top-height envelope that rebuilds the feed spec
+  for every candidate; no stacking gain is claimed.
 - Project-level Undo/Redo and hover cursors on the result charts.
 - Multi-file VNA CSV, `.s1p`, and port-selected `.s2p` import with locale-aware
   numbers, analyzer detection, drag-and-drop, and a manual column-mapping

@@ -874,3 +874,61 @@ def test_fan_optimizer_defaults_to_the_lowest_element_band(
     assert captured["default_band_id"] is None
     assert captured["default_frequency_hz"] == pytest.approx(frequency_for_half_wave_length(10.0))
     window._dirty = False
+
+
+def test_stacked_yagi_wilkinson_passes_a_candidate_spec_builder(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        stacked_yagi_parameters,
+    )
+
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        max_top_height_m=30.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=1.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_design_frequency_hz=14_100_000.0,
+        ),
+    )
+    use_parameters(window, parameters)
+    captured: dict[str, object] = {}
+
+    class FakeFamilyOptimizationDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Rejected
+
+    monkeypatch.setattr(
+        optimization_actions_module,
+        "FamilyOptimizationDialog",
+        FakeFamilyOptimizationDialog,
+    )
+
+    assert window._optimize_action.isEnabled() is True
+    window.optimize_current_design()
+
+    builder = captured["candidate_spec_builder"]
+    assert callable(builder)
+    candidate = replace(
+        parameters,
+        feed=replace(parameters.feed, line_increment_m=2.0),
+    )
+    spec = builder(candidate)
+    assert spec.feed_network is not None
+    assert spec.feed_network.feed_line_lengths_m == (2.0, 4.0)
+    window._dirty = False

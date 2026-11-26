@@ -16918,16 +16918,6 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "This family is waiting for its descriptor in the family-optimizer migration.",
         Language.SPANISH: "Esta familia espera su descriptor en la migración al optimizador de familias.",
     },
-    "optimize.unavailable.stacked_yagi_wilkinson": {
-        Language.ENGLISH: (
-            "The Wilkinson feed mode cannot be optimized yet. Optimize in the "
-            "phase-line or network mode, then switch to Wilkinson."
-        ),
-        Language.SPANISH: (
-            "El modo Wilkinson todavía no se puede optimizar. Optimizá en modo de "
-            "líneas de fase o red y después cambiá a Wilkinson."
-        ),
-    },
     "optimize.unavailable.stacked_yagi_envelope": {
         Language.ENGLISH: (
             "Set a maximum top height in the stack editor to define the mechanical "

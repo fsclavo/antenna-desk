@@ -86,6 +86,7 @@ class OptimizeAntennaCommand:
     budget_profile: BudgetProfile = BudgetProfile.BALANCED
     cancel_token: CancelToken | None = None
     progress: Callable[[int, float | None], None] | None = None
+    candidate_spec_builder: Callable[[AntennaDesignParameters], SimulationSpec] | None = None
 
     def __post_init__(self) -> None:
         if self.target_resistance_ohm <= 0.0:
@@ -673,26 +674,24 @@ def _spec_for_point(
     needs_sweep: bool,
     feed_transformer_ratio: float | None = None,
     structural_segmentation: tuple[tuple[str, int], ...] = (),
+    base_spec: SimulationSpec | None = None,
 ) -> SimulationSpec:
+    source_spec = command.base_spec if base_spec is None else base_spec
     if needs_sweep:
         spec = replace(
-            command.base_spec,
-            far_field=(
-                command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
-            ),
+            source_spec,
+            far_field=(source_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)),
         )
     else:
         spec = replace(
-            command.base_spec,
+            source_spec,
             frequency_plan=FrequencyPlan.single(frequency_hz),
             segmentation=aligned_policy_for_model(
                 model,
                 frequency_hz,
-                _candidate_segmentation_policy(command.base_spec.segmentation),
+                _candidate_segmentation_policy(source_spec.segmentation),
             ),
-            far_field=(
-                command.base_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)
-            ),
+            far_field=(source_spec.far_field if needs_pattern else FarFieldRequest(enabled=False)),
         )
     if feed_transformer_ratio is not None:
         spec = replace(spec, feed_transformer_ratio=feed_transformer_ratio)
@@ -713,6 +712,7 @@ def _run_point(
     solver: AntennaSolver,
     model: AntennaModel,
     frequency_hz: float,
+    parameters: AntennaDesignParameters,
     *,
     needs_pattern: bool,
     needs_sweep: bool,
@@ -720,6 +720,11 @@ def _run_point(
     structural_segmentation: tuple[tuple[str, int], ...] = (),
 ) -> _PointOutcome:
     try:
+        candidate_spec = (
+            command.candidate_spec_builder(parameters)
+            if command.candidate_spec_builder is not None
+            else None
+        )
         spec = _spec_for_point(
             command,
             model,
@@ -728,6 +733,7 @@ def _run_point(
             needs_sweep=needs_sweep,
             feed_transformer_ratio=feed_transformer_ratio,
             structural_segmentation=structural_segmentation,
+            base_spec=candidate_spec,
         )
         quality = resolve_model_quality(
             model,
@@ -775,6 +781,7 @@ def _single_metrics(
         solver,
         model,
         frequency_hz,
+        parameters,
         needs_pattern=needs_pattern,
         needs_sweep=needs_sweep,
         feed_transformer_ratio=_feed_transformer_ratio(parameters),
@@ -841,6 +848,7 @@ def _multi_metrics(
                 solver,
                 model,
                 frequency_hz,
+                scenario_parameters,
                 needs_pattern=needs_pattern,
                 needs_sweep=False,
                 feed_transformer_ratio=_feed_transformer_ratio(scenario_parameters),

@@ -203,8 +203,10 @@ network per level.
   driven elements and component tolerances remain follow-ups; the beta/hairpin
   match stays the geometry-level match.
 - A schema migration is required when the splitter fields are added.
-- The Wilkinson mode is not yet exposed to the family optimizer; optimize the
-  spacing and line length in phase-line/network mode and switch.
+- The Wilkinson mode is exposed to the family optimizer. The optimizer rebuilds
+  the feed-network specification for each candidate so spacing and line
+  increment are evaluated against the actual divider and per-level matching
+  networks.
 
 ## Risks
 

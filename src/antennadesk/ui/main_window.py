@@ -165,7 +165,10 @@ from ..domain.antennas.phased_vertical import PhasedVerticalParameters
 from ..domain.antennas.quad_beam import QuadBeamParameters
 from ..domain.antennas.ringo import RingoParameters
 from ..domain.antennas.scv import ScvParameters
-from ..domain.antennas.stacked_yagi import StackedYagiParameters
+from ..domain.antennas.stacked_yagi import (
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+)
 from ..domain.antennas.t2fd import (
     T2FD_DRIVEN_WIRE_ID,
     T2FD_TERMINATED_WIRE_ID,
@@ -4102,6 +4105,41 @@ class MainWindow(QMainWindow):
             active_hexbeam_band=active_hexbeam_band,
         )
 
+    def _candidate_spec_builder(
+        self,
+    ) -> Callable[[AntennaDesignParameters], SimulationSpec]:
+        """Capture the current spec context for a worker-thread-safe builder."""
+
+        pattern_step_deg = self._custom_pattern_step_deg
+        custom_sweep = self._custom_sweep_options()
+        timeout_s = float(self._solver_timeout.value())
+        feed_line = self._feed_line
+        project_matching = self._matching_network
+        matching_position = self._matching_network_position
+        balun_loss = self._balun_loss
+        site_ground = self._project.site_ground if self._project is not None else None
+
+        def build(parameters: AntennaDesignParameters) -> SimulationSpec:
+            spec = build_typed_family_simulation_spec(
+                parameters,
+                pattern_step_deg=pattern_step_deg,
+                custom_sweep=custom_sweep,
+            )
+            resolution = resolve_matching_network(parameters, project_matching)
+            return replace(
+                spec,
+                timeout_s=timeout_s,
+                feed_line=feed_line,
+                matching_network=resolution.effective,
+                matching_network_position=matching_position,
+                matching_network_override=resolution.override_active,
+                matching_network_origin=resolution.origin,
+                balun_loss=balun_loss,
+                site_ground=site_ground,
+            )
+
+        return build
+
     def _custom_sweep_options(self) -> CustomSweepOptions:
         return CustomSweepOptions(
             enabled=self._custom_sweep.isChecked(),
@@ -6536,6 +6574,12 @@ class MainWindow(QMainWindow):
             band_plan_bands=band_plan_bands,
             operating_frequencies_hz=operating_frequencies,
             last_summary=design.optimization_summary,
+            candidate_spec_builder=(
+                self._candidate_spec_builder()
+                if isinstance(design.parameters, StackedYagiParameters)
+                and design.parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                else None
+            ),
         )
         if choice is None:
             return

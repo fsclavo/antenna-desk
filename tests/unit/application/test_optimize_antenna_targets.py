@@ -10,6 +10,7 @@ import pytest
 
 from antennadesk.application.ports.antenna_solver import ProgressCallback
 from antennadesk.application.ports.cancellation import CancelToken
+from antennadesk.application.simulation_specs import build_typed_family_simulation_spec
 from antennadesk.application.use_cases.optimize_antenna import (
     OptimizeAntenna,
     OptimizeAntennaCommand,
@@ -18,7 +19,13 @@ from antennadesk.application.use_cases.optimize_antenna import (
 )
 from antennadesk.domain.antennas.antenna import AntennaModel
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_multiband_parameters
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.ocfd import OCFDParameters
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    stacked_yagi_parameters,
+)
 from antennadesk.domain.common.validation import Diagnostic
 from antennadesk.domain.optimization.descriptor import FamilyOptimizationObjective
 from antennadesk.domain.optimization.engine import (
@@ -63,6 +70,7 @@ class RecordingSolver:
         self.transformer_ratios: list[float] = []
         self.feed_wire_ids: list[str] = []
         self.wire_ids: list[set[str]] = []
+        self.feed_line_lengths: list[tuple[float, ...]] = []
 
     def capabilities(self) -> SolverCapabilities:
         return SolverCapabilities(
@@ -98,6 +106,9 @@ class RecordingSolver:
         self.transformer_ratios.append(spec.feed_transformer_ratio)
         self.feed_wire_ids.append(model.feed.wire_id)
         self.wire_ids.append({wire.id for wire in model.wires})
+        self.feed_line_lengths.append(
+            spec.feed_network.feed_line_lengths_m if spec.feed_network is not None else ()
+        )
         frequency_hz = spec.frequency_plan.start_hz
         return SimulationResult(
             status=SimulationStatus.COMPLETED,
@@ -273,3 +284,86 @@ def test_candidate_segmentation_is_independent_of_the_start_geometry() -> None:
         SegmentationPolicy(min_segments_per_wire=3),
     )
     assert specs[0].segmentation == expected
+
+
+def test_candidate_spec_builder_rebuilds_the_wilkinson_feed_network() -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        max_top_height_m=30.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=1.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_design_frequency_hz=14_100_000.0,
+            level_matching_networks=(matching, matching),
+        ),
+    )
+    candidate = replace(
+        parameters,
+        feed=replace(parameters.feed, line_increment_m=2.0),
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    command = OptimizeAntennaCommand(
+        descriptor=availability.descriptor,
+        base_spec=build_typed_family_simulation_spec(parameters),
+        objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+        budget=OptimizationBudget(4, 4, 2),
+        candidate_spec_builder=build_typed_family_simulation_spec,
+    )
+    solver = RecordingSolver()
+
+    _single_metrics(
+        command,
+        solver,
+        candidate,
+        needs_pattern=False,
+        needs_sweep=False,
+    )
+
+    assert solver.feed_line_lengths == [(2.0, 4.0)]
+
+
+def test_wilkinson_optimizer_rebuilds_the_feed_network_for_each_candidate() -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+    parameters = stacked_yagi_parameters(
+        frequency_hz=14_100_000.0,
+        count=2,
+        height_m=10.0,
+        spacing_m=10.6,
+        max_top_height_m=30.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=1.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_design_frequency_hz=14_100_000.0,
+            level_matching_networks=(matching, matching),
+        ),
+    )
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    solver = RecordingSolver()
+    command = OptimizeAntennaCommand(
+        descriptor=availability.descriptor,
+        base_spec=build_typed_family_simulation_spec(parameters),
+        objective=FamilyOptimizationObjective.TARGET_IMPEDANCE,
+        budget=OptimizationBudget(4, 4, 2),
+        locked_variables=frozenset({"spacing_m", "amplitude_ratio", "count", "max_top_height_m"}),
+        candidate_spec_builder=build_typed_family_simulation_spec,
+    )
+
+    result = OptimizeAntenna(solver).execute(command)
+
+    assert result.status is not OptimizationStatus.ERROR
+    assert solver.feed_line_lengths
+    assert len(set(solver.feed_line_lengths)) > 1

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 import time
+from collections.abc import Callable
 from enum import StrEnum
 
 from PySide6.QtCore import Qt
@@ -115,6 +116,7 @@ class FamilyOptimizationDialog(QDialog):
         operating_frequencies_hz: tuple[float, ...] = (),
         last_summary: OptimizationSummary | None = None,
         display_units: DisplayUnits | None = None,
+        candidate_spec_builder: Callable[[AntennaDesignParameters], SimulationSpec] | None = None,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -133,6 +135,7 @@ class FamilyOptimizationDialog(QDialog):
         self._band_plan_bands = max(1, band_plan_bands)
         self._operating_frequencies_hz = tuple(operating_frequencies_hz)
         self._last_summary = last_summary
+        self._candidate_spec_builder = candidate_spec_builder
         self._runner = TaskRunner(self)
         self._runner.succeeded.connect(self._on_finished)
         self._runner.failed.connect(self._on_failed)
@@ -1041,6 +1044,7 @@ class FamilyOptimizationDialog(QDialog):
                 ),
                 budget_profile=self._budget_profile(),
                 cancel_token=self._cancel_token,
+                candidate_spec_builder=self._candidate_spec_builder,
             )
         except (ValueError, TypeError) as exc:
             QMessageBox.critical(self, self.windowTitle(), str(exc))

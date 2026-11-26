@@ -38,6 +38,7 @@ from antennadesk.domain.antennas.loaded_dipole import loaded_dipole_parameters
 from antennadesk.domain.antennas.log_periodic import cebik_10m_log_periodic_parameters
 from antennadesk.domain.antennas.loop import LoopParameters
 from antennadesk.domain.antennas.magnetic_loop import MagneticLoopParameters
+from antennadesk.domain.antennas.matching_network import design_l_network
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.moxon import MoxonParameters
 from antennadesk.domain.antennas.ocfd import OCFDParameters
@@ -1082,11 +1083,12 @@ def test_stacked_yagi_without_an_envelope_is_unavailable() -> None:
     assert availability.reason_key == "optimize.unavailable.stacked_yagi_envelope"
 
 
-def test_stacked_yagi_wilkinson_mode_is_unavailable_for_optimization() -> None:
+def test_stacked_yagi_wilkinson_mode_is_available_for_optimization() -> None:
     parameters = StackedYagiParameters(
         yagi=_stack_base_yagi(),
         count=2,
         spacing_m=10.6,
+        max_top_height_m=25.0,
         feed=StackedYagiFeed(
             mode=StackedYagiFeedMode.WILKINSON,
             reference_length_m=2.0,
@@ -1099,8 +1101,9 @@ def test_stacked_yagi_wilkinson_mode_is_unavailable_for_optimization() -> None:
 
     availability = optimizer_availability(parameters)
 
-    assert availability.descriptor is None
-    assert availability.reason_key == "optimize.unavailable.stacked_yagi_wilkinson"
+    assert availability.descriptor is not None
+    assert availability.descriptor.key == "stacked_yagi"
+    assert "line_increment_m" in {variable.name for variable in availability.descriptor.variables}
 
 
 def test_phased_vertical_optimizes_geometry_and_excitation() -> None:
@@ -1337,3 +1340,32 @@ def test_bent_endfed_optimizer_searches_the_bend_instead_of_the_end_height() -> 
     assert "end_height_m" not in names
     assert descriptor.validate(descriptor.initial_values) == ()
     assert descriptor.build_parameters(descriptor.initial_values) == parameters
+
+
+def test_stacked_yagi_wilkinson_optimizer_keeps_matching_one_per_level() -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+    parameters = StackedYagiParameters(
+        yagi=_stack_base_yagi(),
+        count=2,
+        spacing_m=10.6,
+        max_top_height_m=50.0,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=1.0,
+            velocity_factor=0.8,
+            characteristic_impedance_ohm=50.0,
+            splitter_design_frequency_hz=14_100_000.0,
+            level_matching_networks=(matching, matching),
+        ),
+    )
+    descriptor = optimizer_availability(parameters).descriptor
+    assert descriptor is not None
+
+    values = dict(descriptor.initial_values)
+    values["count"] = 4.0
+    candidate = descriptor.build_parameters(values)
+
+    assert candidate.count == 4
+    assert candidate.feed.level_matching_networks == (matching, matching, None, None)

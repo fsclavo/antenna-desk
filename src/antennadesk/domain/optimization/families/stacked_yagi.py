@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import replace
 
+from ...antennas.matching_network import MatchingNetwork
 from ...antennas.polarization import Polarization
 from ...antennas.stacked_yagi import (
     StackedYagiFeedMode,
@@ -123,26 +124,36 @@ def stacked_yagi_descriptor(
     else:
         initial["phase_step_deg"] = parameters.phase_step_deg
 
+    def level_matching_for_count(count: int) -> tuple[MatchingNetwork | None, ...]:
+        networks = parameters.feed.level_matching_networks
+        if not networks:
+            return ()
+        return tuple(networks[:count]) + (None,) * max(0, count - len(networks))
+
     def build(values: Mapping[str, float]) -> StackedYagiParameters:
+        count = round(values["count"])
+        matching = level_matching_for_count(count)
         if phase_lines:
             return replace(
                 parameters,
-                count=round(values["count"]),
+                count=count,
                 spacing_m=values["spacing_m"],
                 amplitude_ratio=values["amplitude_ratio"],
                 max_top_height_m=values["max_top_height_m"],
                 feed=replace(
                     parameters.feed,
                     line_increment_m=values["line_increment_m"],
+                    level_matching_networks=matching,
                 ),
             )
         return replace(
             parameters,
-            count=round(values["count"]),
+            count=count,
             spacing_m=values["spacing_m"],
             phase_step_deg=values["phase_step_deg"],
             amplitude_ratio=values["amplitude_ratio"],
             max_top_height_m=values["max_top_height_m"],
+            feed=replace(parameters.feed, level_matching_networks=matching),
         )
 
     def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
