@@ -561,6 +561,9 @@ class RadiationPattern3DView(QWidget):
             f"{self._translator.t('pattern.azimuth_short', phi=f'{point[1] % 360.0:.0f}')}"
         )
 
+    def _shows_back_ray(self) -> bool:
+        return self._forward_azimuth is not None
+
     def _back_label(self) -> str:
         if self._front_to_back_db is not None and math.isfinite(self._front_to_back_db):
             return self._translator.t(
@@ -848,9 +851,18 @@ class RadiationPattern3DView(QWidget):
 
         max_point = mesh.max_point
         marker = screen(*max_point)
-        back_marker = screen(max_point[0], (max_point[1] + 180.0) % 360.0, max_point[2])
+        back_marker: QPointF | None = None
+        if self._shows_back_ray():
+            back_marker = screen(
+                max_point[0],
+                (max_point[1] + 180.0) % 360.0,
+                max_point[2],
+            )
         self._draw_arrow(painter, origin, marker, self._colors.feed)
-        if math.hypot(back_marker.x() - origin.x(), back_marker.y() - origin.y()) > 2.0:
+        if (
+            back_marker is not None
+            and math.hypot(back_marker.x() - origin.x(), back_marker.y() - origin.y()) > 2.0
+        ):
             self._draw_arrow(
                 painter,
                 origin,
@@ -900,16 +912,23 @@ class RadiationPattern3DView(QWidget):
             occupied.append(label_rect)
 
         if not compact:
-            back_label = self._back_label()
-            label_rect = self._place_label(painter, rect, back_marker, back_label, occupied)
-            if label_rect is not None:
-                self._draw_label(
+            if back_marker is not None:
+                back_label = self._back_label()
+                label_rect = self._place_label(
                     painter,
-                    label_rect,
+                    rect,
+                    back_marker,
                     back_label,
-                    self._colors.secondary_text,
+                    occupied,
                 )
-                occupied.append(label_rect)
+                if label_rect is not None:
+                    self._draw_label(
+                        painter,
+                        label_rect,
+                        back_label,
+                        self._colors.secondary_text,
+                    )
+                    occupied.append(label_rect)
 
             if antenna_end is not None:
                 antenna_label = self._antenna_label()

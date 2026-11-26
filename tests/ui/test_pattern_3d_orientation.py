@@ -33,6 +33,7 @@ def test_pattern_3d_accepts_orientation_and_back_ray_metadata(qtbot: QtBot) -> N
     assert view._antenna_azimuth == pytest.approx(90.0)
     assert view._forward_azimuth == pytest.approx(90.0)
     assert view._front_to_back_db == pytest.approx(12.34)
+    assert view._shows_back_ray() is True
     assert view._back_label() == "Back (same elevation) · F/B 12.3 dB"
     assert view._antenna_label() == "Antenna φ=90°"
     assert "φ=90°" in view._max_gain_label_with_azimuth((75.0, 90.0, 12.34))
@@ -51,6 +52,7 @@ def test_pattern_3d_vertical_antenna_uses_a_dot_not_a_front_axis(qtbot: QtBot) -
 
     assert view._antenna_label() == "Antena"
     assert view._back_label() == "Atrás (misma elevación)"
+    assert view._shows_back_ray() is False
     assert view.accessibleDescription()
 
 
