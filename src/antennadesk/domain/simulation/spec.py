@@ -48,6 +48,8 @@ class FeedNetworkSpec:
     line_loss_db_per_100m: float = 0.0
     level_matching_networks: tuple[MatchingNetwork | None, ...] = ()
     level_transformer_ratios: tuple[float, ...] = ()
+    branch_impedance_tolerance_pct: float = 0.0
+    isolation_resistor_tolerance_pct: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "kind", FeedNetworkKind(self.kind))
@@ -78,6 +80,12 @@ class FeedNetworkSpec:
         for ratio in self.level_transformer_ratios:
             if not math.isfinite(ratio) or ratio <= 0.0:
                 raise ValueError("level_transformer_ratios must be positive and finite")
+        for name, value in (
+            ("branch_impedance_tolerance_pct", self.branch_impedance_tolerance_pct),
+            ("isolation_resistor_tolerance_pct", self.isolation_resistor_tolerance_pct),
+        ):
+            if not math.isfinite(value) or not 0.0 <= value < 100.0:
+                raise ValueError(f"{name} must be finite and between 0 and 100")
 
     def level_matching_network_for_level(self, level_index: int) -> MatchingNetwork | None:
         if 0 <= level_index < len(self.level_matching_networks):

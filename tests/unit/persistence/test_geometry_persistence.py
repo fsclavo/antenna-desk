@@ -1637,6 +1637,8 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching_25),
             level_transformer_ratios=(4.0, 1.5),
+            branch_impedance_tolerance_pct=5.0,
+            isolation_resistor_tolerance_pct=2.0,
         ),
     )
     original = _project(parameters, "Stacked Yagi Wilkinson")
@@ -1654,6 +1656,10 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
         matching_25,
     )
     assert restored.designs[0].parameters.feed.level_transformer_ratios == (4.0, 1.5)
+    assert restored.designs[0].parameters.feed.branch_impedance_tolerance_pct == pytest.approx(5.0)
+    assert restored.designs[0].parameters.feed.isolation_resistor_tolerance_pct == pytest.approx(
+        2.0
+    )
 
 
 def test_stacked_yagi_folded_driven_element_round_trips_through_the_schema() -> None:

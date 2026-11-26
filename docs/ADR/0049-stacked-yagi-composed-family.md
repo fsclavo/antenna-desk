@@ -45,7 +45,8 @@ The first slice is implemented with these boundaries:
   pattern reconstructed from the solved port voltages;
 - a folded driven element or a beta/hairpin match at every driven element,
   built per level from the base Yagi's fields, plus optional ideal per-level
-  transformer ratios in Wilkinson mode;
+  transformer ratios and a deterministic component-tolerance corner check in
+  Wilkinson mode;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;
 - real `nec2c` tests for an ideal two-level stack, a co-simulated three-level
@@ -75,7 +76,8 @@ slices.
   co-simulated network, one shared mast/guy set, a beta/hairpin match, and the
   Wilkinson N-port feed mode. Line loss is a user-entered matched loss plus a
   per-port load-mismatch correction estimated from the solved port impedances;
-  the loss-induced input-impedance shift and component tolerances remain out.
+  the loss-induced input-impedance shift and a non-ideal splitter/isolation
+  model remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
@@ -90,7 +92,7 @@ slices.
   isolation post-processing; [ADR-0054](0054-bounded-multiport-feed-network.md)
   implements an explicit port/reference abstraction and a bounded Wilkinson
   splitter. Per-level L/Pi/T matching networks are available in Wilkinson
-  mode; component tolerances remain out.
+  mode; broadband component-tolerance guarantees remain out.
 - The feed network is a bounded co-simulation, not a full N-port circuit model:
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent
@@ -98,6 +100,6 @@ slices.
   transformation. A matched line-loss value is applied to realized gain; the
   primary SWR remains the lossless network input, so mismatch-dependent line
   loss is not captured. Splitter internal mismatch and per-level matching
-  component tolerances remain follow-ups. The splitter excess loss is applied
+  broadband component-tolerance guarantees remain follow-ups. The splitter excess loss is applied
   to realized gain. The spacing/phase optimizer is available once a maximum top
   height is set and makes no gain claim.

@@ -4251,6 +4251,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Wilkinson y el nivel. Abre el editor de red de adaptación."
         ),
     },
+    "help.stacked_yagi.branch_tolerance": {
+        Language.ENGLISH: (
+            "Symmetric percentage tolerance on every Wilkinson branch impedance. "
+            "The worst-case summary evaluates deterministic high, low, and "
+            "single-branch corners at the design frequency."
+        ),
+        Language.SPANISH: (
+            "Tolerancia porcentual simétrica sobre la impedancia de cada rama del "
+            "Wilkinson. El resumen del peor caso evalúa esquinas altas, bajas y de "
+            "una sola rama a la frecuencia de diseño."
+        ),
+    },
+    "help.stacked_yagi.isolation_tolerance": {
+        Language.ENGLISH: (
+            "Symmetric percentage tolerance on every Wilkinson isolation resistor. "
+            "The worst-case summary evaluates deterministic high, low, and "
+            "single-resistor corners at the design frequency."
+        ),
+        Language.SPANISH: (
+            "Tolerancia porcentual simétrica sobre cada resistencia de aislación del "
+            "Wilkinson. El resumen del peor caso evalúa esquinas altas, bajas y de "
+            "una sola resistencia a la frecuencia de diseño."
+        ),
+    },
     "help.stacked_yagi.level_transformer": {
         Language.ENGLISH: (
             "Ideal impedance transformer at this Wilkinson level, written as an "
@@ -11844,6 +11868,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "stacked_yagi.splitter_design_frequency": {
         Language.ENGLISH: "Divider design frequency",
         Language.SPANISH: "Frecuencia de diseño del divisor",
+    },
+    "stacked_yagi.branch_tolerance": {
+        Language.ENGLISH: "Branch impedance tolerance",
+        Language.SPANISH: "Tolerancia de impedancia de rama",
+    },
+    "stacked_yagi.isolation_tolerance": {
+        Language.ENGLISH: "Isolation resistor tolerance",
+        Language.SPANISH: "Tolerancia de resistencias de aislación",
+    },
+    "stacked_yagi.tolerance_summary": {
+        Language.ENGLISH: (
+            "Worst case over {corners} corners: input RL ≥ {rl} dB, isolation ≥ "
+            "{isolation} dB, imbalance ≤ {imbalance} dB (divider only)."
+        ),
+        Language.SPANISH: (
+            "Peor caso sobre {corners} esquinas: ROE de entrada ≥ {rl} dB, "
+            "aislación ≥ {isolation} dB, desbalance ≤ {imbalance} dB (solo divisor)."
+        ),
     },
     "stacked_yagi.level_matching": {
         Language.ENGLISH: "Per-level matching",

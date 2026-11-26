@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   phase-line feed specification, including a matched line loss and a per-port
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
   design frequency; schema 65 adds a common level matching network, schema 66
-  makes it per-level, and schema 67 adds optional per-level transformer ratios. The slice includes
+  makes it per-level, schema 67 adds optional per-level transformer ratios, and
+  schema 68 adds zero-default component tolerance percentages. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -52,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resistors, and the feed lines to each level. The primary SWR is the splitter
   input; the per-level source results come from the solved port distribution,
   and the combined pattern is reconstructed with ideal sources at the solved
-  port voltages. The editor, schema 67, reports, and construction sheet show
+  port voltages. The editor, schema 68, reports, and construction sheet show
   the divider design frequency, branch impedance, isolation resistors, and the
   ideal/narrowband limitation. Branches, resistors, and feed lines are ideal;
   component loss, tolerance, and broadband behavior remain unavailable. Each
@@ -60,12 +61,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
 
+- **Bounded Wilkinson component-tolerance analysis (DL6).** The divider accepts
+  symmetric branch-impedance and isolation-resistor tolerance percentages. A
+  deterministic design-frequency corner analysis checks nominal, all-high,
+  all-low, and single-component deviations, and reports worst input return
+  loss, output isolation, and output imbalance for the divider plus feed lines.
+  Matching networks and transformers are excluded from this S-parameter check;
+  it is not a Monte Carlo or broadband tolerance guarantee.
+
 - **Per-level transformer ratios for the Wilkinson feed (DL6).** The stack feed
   spec accepts one optional ideal impedance ratio per level. The N-port solver
   places the transformer at each antenna boundary, so a folded element can be
   stepped to the feed impedance without consuming an L/Pi/T matching network.
   The editor, reports, construction sheet, and schema 67 expose the values;
-  other feed modes ignore them. No component tolerance or frequency-dependent
+  other feed modes ignore them. No transformer loss or frequency-dependent
   transformer model is implied.
 
 - **Folded driven elements in the stacked Yagi (DL6).** The embedded Yagi

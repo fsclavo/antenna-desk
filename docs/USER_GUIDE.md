@@ -1265,7 +1265,10 @@ Wilkinson mode the feed network determines the excitation. **Per-level
 matching** shows one row per level; each row opens the matching-network editor
 for that level and can use a different L, Pi, or T network. **Per-level
 transformer** sets an ideal impedance ratio at each Wilkinson level; 1:1 means
-no transformer.
+no transformer. **Branch impedance tolerance** and **Isolation resistor
+tolerance** run a deterministic design-frequency corner check. The summary
+reports worst input return loss, output isolation, and output imbalance for the
+divider plus feed lines; matching networks and transformers are excluded.
 
 In **Splitter + phase lines** the solver still uses ideal voltage sources: the
 line lengths only set the phase, which is computed at the design frequency and
@@ -1322,8 +1325,8 @@ realized gain; Wilkinson mode solves an ideal-component N-way divider with
 optional per-level L/Pi/T matching networks and reconstructs the pattern. The
 optional mast and guy wires are modeled once for the whole stack, not once per
 level, and a beta/hairpin match is built at each driven element. The
-loss-induced input-impedance shift and Wilkinson component tolerances are not
-modeled. Verify the pattern,
+loss-induced input-impedance shift and a non-ideal splitter/isolation model are
+not modeled. Verify the pattern,
 per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array

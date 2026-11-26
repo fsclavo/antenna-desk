@@ -654,6 +654,16 @@ REPORT_SPANISH: dict[str, str] = {
     "Wilkinson N-port network": "Red Wilkinson N-port",
     "Divider design frequency": "Frecuencia de diseño del divisor",
     "Branch impedance": "Impedancia de rama",
+    "Branch impedance tolerance": "Tolerancia de impedancia de rama",
+    "Isolation resistor tolerance": "Tolerancia de resistencias de aislación",
+    "Tolerance corners": "Esquinas de tolerancia",
+    "Worst input return loss": "Peor pérdida de retorno de entrada",
+    "Worst output isolation": "Peor aislación de salida",
+    "Worst output imbalance": "Peor desbalance de salida",
+    "Tolerance model": "Modelo de tolerancia",
+    "divider S-parameters; matching and transformers excluded": (
+        "parámetros S del divisor; matching y transformadores excluidos"
+    ),
     "Isolation resistors": "Resistencias de aislación",
     "Divider model": "Modelo del divisor",
     "Level {level} matching": "Matching del nivel {level}",

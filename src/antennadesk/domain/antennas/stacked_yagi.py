@@ -60,7 +60,8 @@ class StackedYagiFeed:
     ``splitter_design_frequency_hz`` instead of the NEC TL co-simulation.
     ``level_matching_networks`` holds one optional L/Pi/T network per level.
     ``level_transformer_ratios`` holds one optional ideal impedance ratio per
-    level in Wilkinson mode; an empty tuple means 1:1 everywhere.
+    level in Wilkinson mode; an empty tuple means 1:1 everywhere. The two
+    ``*_tolerance_pct`` values bound the divider component corner analysis.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -73,6 +74,8 @@ class StackedYagiFeed:
     splitter_design_frequency_hz: float = 0.0
     level_matching_networks: tuple[MatchingNetwork | None, ...] = ()
     level_transformer_ratios: tuple[float, ...] = ()
+    branch_impedance_tolerance_pct: float = 0.0
+    isolation_resistor_tolerance_pct: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -106,6 +109,12 @@ class StackedYagiFeed:
             ensure_positive(ratio, name="level_transformer_ratios")
             if not math.isfinite(ratio):
                 raise ValueError("level_transformer_ratios must be finite")
+        for name, value in (
+            ("branch_impedance_tolerance_pct", self.branch_impedance_tolerance_pct),
+            ("isolation_resistor_tolerance_pct", self.isolation_resistor_tolerance_pct),
+        ):
+            if not math.isfinite(value) or not 0.0 <= value < 100.0:
+                raise ValueError(f"{name} must be finite and between 0 and 100")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m

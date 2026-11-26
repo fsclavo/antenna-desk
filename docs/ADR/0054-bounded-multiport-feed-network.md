@@ -18,7 +18,7 @@ The current DL6 feed model is a bounded co-simulation:
   impedance.
 
 It does **not** model splitter return loss, port-to-port isolation, internal
-S-parameters, component tolerances, or transformer losses.
+S-parameters, broadband component-tolerance guarantees, or transformer losses.
 
 A scalar "isolation loss" or a post-processing return-loss correction is not
 acceptable. Isolation is not a through-path loss, and a scalar correction would
@@ -109,7 +109,8 @@ The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
 
 - `FeedNetworkSpec` in `SimulationSpec` and schema 64 (schema 65 adds a common
   level matching network; schema 66 adds one optional network per level; schema
-  67 adds optional per-level transformer ratios);
+  67 adds optional per-level transformer ratios; schema 68 adds tolerance
+  percentages);
 - `WilkinsonFeedSolver` wraps the NEC solver, extracts the antenna Y-matrix,
   solves the N-way Wilkinson and feed lines, and reconstructs the pattern with
   ideal sources at the solved port voltages;
@@ -126,8 +127,9 @@ The solver-side per-level matching branch is also validated: a `TwoPortBranch`
 inserts an L/Pi/T network between each feed line and its level port. A common
 L-network designed from the real antenna port self-impedance reduced the
 two-level stack input SWR from about 14.7 to 1.09 in the real NEC Y-matrix
-test. The editor, schema 67, reports, and construction sheet expose one optional
-network and one optional ideal transformer ratio per level.
+test. The editor, schema 68, reports, and construction sheet expose one optional
+network and one optional ideal transformer ratio per level, plus a deterministic
+branch/resistor tolerance corner summary.
 
 ## Implementation phases
 
@@ -146,8 +148,9 @@ network and one optional ideal transformer ratio per level.
 ### Phase 3 — UI, schema, reports, and BOM (done)
 
 - The Wilkinson mode and design frequency are in schema 64; a common level
-  matching network is in schema 65, schema 66 makes it per-level, and schema 67
-  adds per-level ideal transformer ratios.
+  matching network is in schema 65, schema 66 makes it per-level, schema 67
+  adds per-level ideal transformer ratios, and schema 68 adds tolerance
+  percentages.
 - The editor, help, design summary, and construction sheet show the divider
   design frequency, branch impedance, isolation resistors, feed-line lengths,
   and the ideal/narrowband limitation; the conductor BOM remains
@@ -162,8 +165,9 @@ network and one optional ideal transformer ratio per level.
 - The branch is validated against the analytic matching-network two-port and
   scikit-rf; a real two-level stack test reduced the input SWR from about 14.7
   to 1.09 with a common L-network.
-- The editor, schema 67, reports, and construction sheet expose one network and
-  one ideal transformer ratio per level. Optimizer integration is implemented.
+- The editor, schema 68, reports, and construction sheet expose one network,
+  one ideal transformer ratio per level, and a deterministic tolerance corner
+  summary. Optimizer integration is implemented.
 
 ## Acceptance criteria
 
@@ -201,9 +205,10 @@ network and one optional ideal transformer ratio per level.
   invalidated.
 - The Wilkinson mode will be narrowband and opt-in. It is not a general
   S-parameter block.
-- Per-level L/Pi/T matching networks are available in Wilkinson mode. Folded
-  driven elements and component tolerances remain follow-ups; the beta/hairpin
-  match stays the geometry-level match.
+- Per-level L/Pi/T matching networks, ideal transformer ratios, and a bounded
+  design-frequency tolerance corner check are available in Wilkinson mode.
+  Folded driven elements are supported as geometry-only; the beta/hairpin match
+  stays the geometry-level match.
 - A schema migration is required when the splitter fields are added.
 - The Wilkinson mode is exposed to the family optimizer. The optimizer rebuilds
   the feed-network specification for each candidate so spacing and line

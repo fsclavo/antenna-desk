@@ -35,6 +35,7 @@ from ...domain.antennas.stacked_yagi import (
     StackedYagiParameters,
     stacked_yagi_parameters,
 )
+from ...domain.antennas.wilkinson_tolerance import analyze_stacked_yagi_tolerances
 from ...domain.antennas.yagi import nbs_five_element
 from ..dialogs.matching_network_dialog import MatchingNetworkDialog
 from ..help import apply_help
@@ -188,6 +189,27 @@ class StackedYagiForm(QWidget):
         self._splitter_design_frequency.setDecimals(4)
         self._splitter_design_frequency.setSingleStep(0.1)
         self._splitter_design_frequency.setSuffix(" MHz")
+        self._branch_tolerance = QDoubleSpinBox(self)
+        self._branch_tolerance.setRange(0.0, 50.0)
+        self._branch_tolerance.setDecimals(1)
+        self._branch_tolerance.setSingleStep(0.5)
+        self._branch_tolerance.setSuffix(" %")
+        apply_help(self._branch_tolerance, translator, "branch_tolerance", family="stacked_yagi")
+        self._isolation_tolerance = QDoubleSpinBox(self)
+        self._isolation_tolerance.setRange(0.0, 50.0)
+        self._isolation_tolerance.setDecimals(1)
+        self._isolation_tolerance.setSingleStep(0.5)
+        self._isolation_tolerance.setSuffix(" %")
+        apply_help(
+            self._isolation_tolerance,
+            translator,
+            "isolation_tolerance",
+            family="stacked_yagi",
+        )
+        self._tolerance_summary = QLabel(self)
+        self._tolerance_summary.setWordWrap(True)
+        self._tolerance_summary.setStyleSheet("font-style: italic;")
+        self._tolerance_summary.setVisible(False)
         self._level_matching_networks: list[MatchingNetwork | None] = [None] * 4
         self._level_matching_labels: list[QLabel] = []
         self._level_matching_buttons: list[QPushButton] = []
@@ -317,6 +339,15 @@ class StackedYagiForm(QWidget):
             self._splitter_design_frequency,
         )
         form.addRow(
+            self._labels.label("stacked_yagi.branch_tolerance"),
+            self._branch_tolerance,
+        )
+        form.addRow(
+            self._labels.label("stacked_yagi.isolation_tolerance"),
+            self._isolation_tolerance,
+        )
+        form.addRow("", self._tolerance_summary)
+        form.addRow(
             self._labels.label("stacked_yagi.level_matching"),
             self._level_matching_box,
         )
@@ -351,6 +382,8 @@ class StackedYagiForm(QWidget):
             self._splitter_loss,
             self._line_loss,
             self._splitter_design_frequency,
+            self._branch_tolerance,
+            self._isolation_tolerance,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._feed_mode.currentIndexChanged.connect(self._feed_mode_changed)
@@ -408,6 +441,18 @@ class StackedYagiForm(QWidget):
                 "level_transformer",
                 family="stacked_yagi",
             )
+        apply_help(
+            self._branch_tolerance,
+            self._translator,
+            "branch_tolerance",
+            family="stacked_yagi",
+        )
+        apply_help(
+            self._isolation_tolerance,
+            self._translator,
+            "isolation_tolerance",
+            family="stacked_yagi",
+        )
         self._update_level_matching_rows()
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
@@ -460,9 +505,12 @@ class StackedYagiForm(QWidget):
         )
         wilkinson = mode == StackedYagiFeedMode.WILKINSON.value
         self._splitter_design_frequency.setEnabled(wilkinson)
+        self._branch_tolerance.setEnabled(wilkinson)
+        self._isolation_tolerance.setEnabled(wilkinson)
         self._phase_step.setEnabled(mode == StackedYagiFeedMode.IDEAL.value)
         self._amplitude_ratio.setEnabled(not wilkinson)
         self._update_level_matching_rows()
+        self._update_tolerance_summary()
 
     def mark_starting_dimensions_pristine(self) -> None:
         self._yagi.mark_starting_dimensions_pristine()
@@ -550,6 +598,8 @@ class StackedYagiForm(QWidget):
             self._splitter_design_frequency.setValue(
                 parameters.feed.splitter_design_frequency_hz / 1_000_000.0
             )
+            self._branch_tolerance.setValue(parameters.feed.branch_impedance_tolerance_pct)
+            self._isolation_tolerance.setValue(parameters.feed.isolation_resistor_tolerance_pct)
             self._level_matching_networks = [None] * 4
             for level_index, network in enumerate(parameters.feed.level_matching_networks[:4]):
                 self._level_matching_networks[level_index] = network
@@ -584,6 +634,29 @@ class StackedYagiForm(QWidget):
         if not 0 <= level_index < 4:
             raise ValueError("level_index must be between 0 and 3")
         self._level_transformer_fields[level_index].setValue(ratio)
+
+    def _update_tolerance_summary(self) -> None:
+        if self._feed_mode.currentData() != StackedYagiFeedMode.WILKINSON.value:
+            self._tolerance_summary.setVisible(False)
+            return
+        try:
+            result = analyze_stacked_yagi_tolerances(self.parameters())
+        except (ValueError, TypeError):
+            self._tolerance_summary.setVisible(False)
+            return
+        if result is None:
+            self._tolerance_summary.setVisible(False)
+            return
+        self._tolerance_summary.setText(
+            self._translator.t(
+                "stacked_yagi.tolerance_summary",
+                corners=result.corner_count,
+                rl=f"{result.worst_input_return_loss_db:.2f}",
+                isolation=f"{result.worst_isolation_db:.2f}",
+                imbalance=f"{result.worst_imbalance_db:.2f}",
+            )
+        )
+        self._tolerance_summary.setVisible(True)
 
     def set_level_matching_network(
         self,
@@ -743,6 +816,7 @@ class StackedYagiForm(QWidget):
         else:
             self._wilkinson_note.clear()
         self._wilkinson_note.setVisible(wilkinson)
+        self._update_tolerance_summary()
 
     def parameters(self) -> StackedYagiParameters:
         return StackedYagiParameters(
@@ -765,5 +839,7 @@ class StackedYagiForm(QWidget):
                 ),
                 level_matching_networks=self._selected_level_matching_networks(),
                 level_transformer_ratios=self._selected_level_transformer_ratios(),
+                branch_impedance_tolerance_pct=self._branch_tolerance.value(),
+                isolation_resistor_tolerance_pct=self._isolation_tolerance.value(),
             ),
         )

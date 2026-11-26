@@ -46,6 +46,7 @@ from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletP
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
+from ..domain.antennas.wilkinson_tolerance import analyze_stacked_yagi_tolerances
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import (
     ZEPP_MATCHING_FEED_ID,
@@ -1454,6 +1455,24 @@ def render_construction_sheet(
                     for level_index, ratio in enumerate(parameters.feed.level_transformer_ratios)
                     if not math.isclose(ratio, 1.0, rel_tol=0.0, abs_tol=1e-12)
                 )
+                tolerance = analyze_stacked_yagi_tolerances(parameters)
+                tolerance_rows = ""
+                if tolerance is not None:
+                    tolerance_rows = (
+                        f"<tr><th>Branch impedance tolerance</th><td>"
+                        f"{parameters.feed.branch_impedance_tolerance_pct:.1f}%</td></tr>"
+                        f"<tr><th>Isolation resistor tolerance</th><td>"
+                        f"{parameters.feed.isolation_resistor_tolerance_pct:.1f}%</td></tr>"
+                        f"<tr><th>Tolerance corners</th><td>{tolerance.corner_count}</td></tr>"
+                        f"<tr><th>Worst input return loss</th><td>"
+                        f"{tolerance.worst_input_return_loss_db:.2f} dB</td></tr>"
+                        f"<tr><th>Worst output isolation</th><td>"
+                        f"{tolerance.worst_isolation_db:.2f} dB</td></tr>"
+                        f"<tr><th>Worst output imbalance</th><td>"
+                        f"{tolerance.worst_imbalance_db:.2f} dB</td></tr>"
+                        "<tr><th>Tolerance model</th><td>divider S-parameters; "
+                        "matching and transformers excluded</td></tr>"
+                    )
                 wilkinson_rows = (
                     f"<tr><th>Divider design frequency</th><td>"
                     f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f} MHz</td></tr>"
@@ -1464,6 +1483,7 @@ def render_construction_sheet(
                     "star resistors</td></tr>"
                     f"{level_matching_rows}"
                     f"{level_transformer_rows}"
+                    f"{tolerance_rows}"
                 )
             feed_rows += f"""
 <tr><th>Feed network</th><td>{"Wilkinson N-port divider" if is_wilkinson else "splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>

@@ -56,6 +56,7 @@ from ..domain.antennas.transmission_line_doublet import TransmissionLineDoubletP
 from ..domain.antennas.trap_dipole import TrapDipoleParameters
 from ..domain.antennas.trap_yagi import TrapYagiParameters
 from ..domain.antennas.vertical import VerticalParameters
+from ..domain.antennas.wilkinson_tolerance import analyze_stacked_yagi_tolerances
 from ..domain.antennas.yagi import YagiParameters
 from ..domain.antennas.zepp import ZeppParameters, parallel_wire_impedance_ohm
 from ..domain.design.evidence import EVIDENCE
@@ -1397,6 +1398,41 @@ def design_summary_rows(
                         if not math.isclose(ratio, 1.0, rel_tol=0.0, abs_tol=1e-12)
                     ]
                     if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    else []
+                ),
+                *(
+                    [
+                        (
+                            "Branch impedance tolerance",
+                            f"{parameters.feed.branch_impedance_tolerance_pct:.1f}%",
+                        ),
+                        (
+                            "Isolation resistor tolerance",
+                            f"{parameters.feed.isolation_resistor_tolerance_pct:.1f}%",
+                        ),
+                        (
+                            "Tolerance corners",
+                            str(tolerance.corner_count),
+                        ),
+                        (
+                            "Worst input return loss",
+                            f"{tolerance.worst_input_return_loss_db:.2f} dB",
+                        ),
+                        (
+                            "Worst output isolation",
+                            f"{tolerance.worst_isolation_db:.2f} dB",
+                        ),
+                        (
+                            "Worst output imbalance",
+                            f"{tolerance.worst_imbalance_db:.2f} dB",
+                        ),
+                        (
+                            "Tolerance model",
+                            "divider S-parameters; matching and transformers excluded",
+                        ),
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    and (tolerance := analyze_stacked_yagi_tolerances(parameters)) is not None
                     else []
                 ),
                 *(

@@ -810,6 +810,8 @@ class StackedYagiFeedPayload(StrictModel):
     splitter_design_frequency_hz: float = Field(default=0.0, ge=0.0)
     level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
     level_transformer_ratios: list[float] = Field(default_factory=list)
+    branch_impedance_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
+    isolation_resistor_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
 
     @model_validator(mode="after")
     def _validate_level_transformers(self) -> Self:
@@ -954,6 +956,8 @@ class FeedNetworkSpecPayload(StrictModel):
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
     level_transformer_ratios: list[float] = Field(default_factory=list)
+    branch_impedance_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
+    isolation_resistor_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
 
     @model_validator(mode="after")
     def _validate_feed_network(self) -> Self:
@@ -2286,6 +2290,8 @@ def _stacked_yagi_parameters_from_domain(
                 for network in value.feed.level_matching_networks
             ],
             level_transformer_ratios=list(value.feed.level_transformer_ratios),
+            branch_impedance_tolerance_pct=value.feed.branch_impedance_tolerance_pct,
+            isolation_resistor_tolerance_pct=value.feed.isolation_resistor_tolerance_pct,
         ),
     )
 
@@ -2470,6 +2476,10 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
                     for network in value.feed_network.level_matching_networks
                 ],
                 level_transformer_ratios=list(value.feed_network.level_transformer_ratios),
+                branch_impedance_tolerance_pct=(value.feed_network.branch_impedance_tolerance_pct),
+                isolation_resistor_tolerance_pct=(
+                    value.feed_network.isolation_resistor_tolerance_pct
+                ),
             )
             if value.feed_network is not None
             else None
@@ -3683,6 +3693,8 @@ def _stacked_yagi_parameters_to_domain(
                 for network in value.feed.level_matching_networks
             ),
             level_transformer_ratios=tuple(value.feed.level_transformer_ratios),
+            branch_impedance_tolerance_pct=value.feed.branch_impedance_tolerance_pct,
+            isolation_resistor_tolerance_pct=value.feed.isolation_resistor_tolerance_pct,
         ),
     )
 
@@ -3831,6 +3843,10 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
                     for network in value.feed_network.level_matching_networks
                 ),
                 level_transformer_ratios=tuple(value.feed_network.level_transformer_ratios),
+                branch_impedance_tolerance_pct=(value.feed_network.branch_impedance_tolerance_pct),
+                isolation_resistor_tolerance_pct=(
+                    value.feed_network.isolation_resistor_tolerance_pct
+                ),
             )
             if value.feed_network is not None
             else None

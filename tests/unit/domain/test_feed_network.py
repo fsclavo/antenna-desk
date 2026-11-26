@@ -398,3 +398,13 @@ def test_n_way_wilkinson_rejects_invalid_level_transformers() -> None:
             frequency_hz=FREQUENCY_HZ,
             level_transformer_ratios=(4.0, 0.0),
         )
+
+
+def test_n_way_wilkinson_rejects_incomplete_component_scales() -> None:
+    with pytest.raises(ValueError, match="one entry per output"):
+        n_way_wilkinson(
+            frequency_hz=FREQUENCY_HZ,
+            port_count=2,
+            feed_line_lengths_m=(0.01, 0.01),
+            branch_impedance_scales=(1.1,),
+        )

@@ -462,6 +462,8 @@ def n_way_wilkinson(
     branch_velocity_factor: float = 1.0,
     level_matching_network: MatchingNetwork | None = None,
     level_matching_networks: Sequence[MatchingNetwork | None] | None = None,
+    branch_impedance_scales: Sequence[float] | None = None,
+    isolation_resistor_scales: Sequence[float] | None = None,
 ) -> NPortNetwork:
     """Return an equal N-way Wilkinson with feed lines to each output.
 
@@ -473,8 +475,11 @@ def n_way_wilkinson(
     the system impedance to its level port. ``level_matching_network`` applies
     the same two-port network to every output; ``level_matching_networks``
     supplies one entry per output, where ``None`` leaves that level unmatched.
-    Provide at most one of the two. The floating star center is regularized by
-    a very high numerical shunt; it is not a physical component.
+    Provide at most one of the two. ``branch_impedance_scales`` and
+    ``isolation_resistor_scales`` apply a per-output multiplier to the nominal
+    branch impedance and star resistor for tolerance analysis; omitted means
+    1.0 everywhere. The floating star center is regularized by a very high
+    numerical shunt; it is not a physical component.
     """
 
     ensure_positive(frequency_hz, name="frequency_hz")
@@ -506,9 +511,24 @@ def n_way_wilkinson(
     for network in networks:
         if network is not None and not isinstance(network, (LNetwork, PiNetwork, TNetwork)):
             raise ValueError("per-level matching supports L, Pi, or T networks only")
+    branch_scales = (
+        (1.0,) * port_count
+        if branch_impedance_scales is None or not branch_impedance_scales
+        else tuple(branch_impedance_scales)
+    )
+    resistor_scales = (
+        (1.0,) * port_count
+        if isolation_resistor_scales is None or not isolation_resistor_scales
+        else tuple(isolation_resistor_scales)
+    )
+    if len(branch_scales) != port_count or len(resistor_scales) != port_count:
+        raise ValueError("Wilkinson component scales must have one entry per output")
+    for scale in (*branch_scales, *resistor_scales):
+        if not math.isfinite(scale) or scale <= 0.0:
+            raise ValueError("Wilkinson component scales must be positive and finite")
 
     branch_length_m = _SPEED_OF_LIGHT_M_PER_S / frequency_hz / 4.0 * branch_velocity_factor
-    branch_impedance_ohm = system_impedance_ohm * math.sqrt(port_count)
+    nominal_branch_impedance_ohm = system_impedance_ohm * math.sqrt(port_count)
     first_splitter_node = port_count + 1
     star_center = first_splitter_node + port_count
     matching_node_start = star_center + 1
@@ -525,7 +545,9 @@ def n_way_wilkinson(
             TransmissionLineBranch(
                 node_a=0,
                 node_b=splitter_node,
-                characteristic_impedance_ohm=branch_impedance_ohm,
+                characteristic_impedance_ohm=(
+                    nominal_branch_impedance_ohm * branch_scales[output_index]
+                ),
                 length_m=branch_length_m,
                 velocity_factor=branch_velocity_factor,
             )
@@ -534,7 +556,10 @@ def n_way_wilkinson(
             SeriesBranch(
                 node_a=splitter_node,
                 node_b=star_center,
-                impedance_ohm=complex(system_impedance_ohm, 0.0),
+                impedance_ohm=complex(
+                    system_impedance_ohm * resistor_scales[output_index],
+                    0.0,
+                ),
             )
         )
         matching_node = matching_nodes.get(output_index)

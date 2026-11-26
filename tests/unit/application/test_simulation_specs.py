@@ -364,6 +364,8 @@ def test_stacked_yagi_folded_element_keeps_the_per_level_transformer_out() -> No
             reference_length_m=2.0,
             velocity_factor=0.8,
             level_transformer_ratios=(4.0, 1.0),
+            branch_impedance_tolerance_pct=5.0,
+            isolation_resistor_tolerance_pct=2.0,
         ),
     )
 
@@ -373,3 +375,5 @@ def test_stacked_yagi_folded_element_keeps_the_per_level_transformer_out() -> No
     assert spec.feed_network is not None
     assert spec.feed_network.port_count == 2
     assert spec.feed_network.level_transformer_ratios == (4.0, 1.0)
+    assert spec.feed_network.branch_impedance_tolerance_pct == pytest.approx(5.0)
+    assert spec.feed_network.isolation_resistor_tolerance_pct == pytest.approx(2.0)

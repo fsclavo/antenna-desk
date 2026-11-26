@@ -1668,6 +1668,8 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching),
             level_transformer_ratios=(4.0, 1.0),
+            branch_impedance_tolerance_pct=5.0,
+            isolation_resistor_tolerance_pct=5.0,
         ),
     )
     sheet = render_construction_sheet(
@@ -1690,6 +1692,10 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "Level 1 transformer" in sheet
     assert "4:1" in sheet
     assert "Level 2 transformer" not in sheet
+    assert "Branch impedance tolerance" in sheet
+    assert "Isolation resistor tolerance" in sheet
+    assert "Tolerance corners" in sheet
+    assert "Worst input return loss" in sheet
 
 
 def test_stacked_yagi_folded_construction_sheet_reports_geometry_only(

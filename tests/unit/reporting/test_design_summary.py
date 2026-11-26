@@ -1124,6 +1124,8 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching),
             level_transformer_ratios=(4.0, 1.0),
+            branch_impedance_tolerance_pct=5.0,
+            isolation_resistor_tolerance_pct=5.0,
         ),
     )
 
@@ -1141,6 +1143,12 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert rows["Level 2 matching"].startswith("L network (series")
     assert rows["Level 1 transformer"] == "4:1"
     assert "Level 2 transformer" not in rows
+    assert rows["Branch impedance tolerance"] == "5.0%"
+    assert rows["Isolation resistor tolerance"] == "5.0%"
+    assert rows["Tolerance corners"] == "15"
+    assert rows["Worst input return loss"].endswith("dB")
+    assert rows["Worst output isolation"].endswith("dB")
+    assert rows["Worst output imbalance"].endswith("dB")
 
 
 def test_stacked_yagi_folded_summary_reports_geometry_only() -> None:

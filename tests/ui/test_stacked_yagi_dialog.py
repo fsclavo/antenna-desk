@@ -385,3 +385,27 @@ def test_dialog_sets_per_level_transformers_in_wilkinson_mode(qtbot: QtBot) -> N
     form._feed_mode.setCurrentIndex(phase_index)
     form._update_feed_controls()
     assert form._level_transformer_fields[0].isEnabled() is False
+
+
+def test_dialog_shows_a_bounded_wilkinson_tolerance_summary(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
+    form._feed_mode.setCurrentIndex(index)
+    form._reference_line_field.configure(2.0)
+    form._line_increment_field.configure(0.0)
+
+    form._branch_tolerance.setValue(5.0)
+    form._isolation_tolerance.setValue(5.0)
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.branch_impedance_tolerance_pct == pytest.approx(5.0)
+    assert parameters.feed.isolation_resistor_tolerance_pct == pytest.approx(5.0)
+    assert form._tolerance_summary.isHidden() is False
+    assert "15 corners" in form._tolerance_summary.text()
+    phase_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
+    form._feed_mode.setCurrentIndex(phase_index)
+    form._update_feed_controls()
+    assert form._branch_tolerance.isEnabled() is False
+    assert form._tolerance_summary.isHidden() is True
