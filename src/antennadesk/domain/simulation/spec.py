@@ -47,6 +47,7 @@ class FeedNetworkSpec:
     splitter_excess_loss_db: float = 0.0
     line_loss_db_per_100m: float = 0.0
     level_matching_networks: tuple[MatchingNetwork | None, ...] = ()
+    level_transformer_ratios: tuple[float, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "kind", FeedNetworkKind(self.kind))
@@ -72,11 +73,21 @@ class FeedNetworkSpec:
         for network in self.level_matching_networks:
             if network is not None and not isinstance(network, (LNetwork, PiNetwork, TNetwork)):
                 raise ValueError("per-level matching supports L, Pi, or T networks only")
+        if self.level_transformer_ratios and len(self.level_transformer_ratios) != self.port_count:
+            raise ValueError("level_transformer_ratios must have one entry per port")
+        for ratio in self.level_transformer_ratios:
+            if not math.isfinite(ratio) or ratio <= 0.0:
+                raise ValueError("level_transformer_ratios must be positive and finite")
 
     def level_matching_network_for_level(self, level_index: int) -> MatchingNetwork | None:
         if 0 <= level_index < len(self.level_matching_networks):
             return self.level_matching_networks[level_index]
         return None
+
+    def level_transformer_ratio_for_level(self, level_index: int) -> float:
+        if 0 <= level_index < len(self.level_transformer_ratios):
+            return self.level_transformer_ratios[level_index]
+        return 1.0
 
 
 @dataclass(frozen=True, slots=True)

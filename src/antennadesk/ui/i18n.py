@@ -4251,6 +4251,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Wilkinson y el nivel. Abre el editor de red de adaptación."
         ),
     },
+    "help.stacked_yagi.level_transformer": {
+        Language.ENGLISH: (
+            "Ideal impedance transformer at this Wilkinson level, written as an "
+            "impedance ratio. 1:1 means no transformer. The feed sees the antenna "
+            "impedance divided by this value."
+        ),
+        Language.SPANISH: (
+            "Transformador de impedancia ideal en este nivel del Wilkinson, expresado "
+            "como relación de impedancia. 1:1 significa sin transformador. La "
+            "alimentación ve la impedancia de antena dividida por este valor."
+        ),
+    },
     "help.stacked_yagi.reference_line": {
         Language.ENGLISH: (
             "Physical splitter-to-level-1 line length. Phase-line mode uses only "
@@ -11861,6 +11873,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Wilkinson mode only",
         Language.SPANISH: "Solo modo Wilkinson",
     },
+    "stacked_yagi.level_transformer": {
+        Language.ENGLISH: "Per-level transformer",
+        Language.SPANISH: "Transformador por nivel",
+    },
+    "stacked_yagi.level_transformer_level": {
+        Language.ENGLISH: "Level {level} transformer",
+        Language.SPANISH: "Transformador del nivel {level}",
+    },
     "stacked_yagi.derived_phase": {
         Language.ENGLISH: "Derived phase step: {phase}° per level",
         Language.SPANISH: "Escalón de fase derivado: {phase}° por nivel",
@@ -11915,14 +11935,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "stacked_yagi.folded_note": {
         Language.ENGLISH: (
-            "Folded driven elements are modeled as geometry only. No ideal "
-            "per-level transformer is applied; use the feed network or per-level "
-            "matching to transform the impedance."
+            "Folded driven elements are geometry-only. In Wilkinson mode, set the "
+            "per-level transformer or matching network; the other feed modes use the "
+            "feed network."
         ),
         Language.SPANISH: (
-            "Los elementos alimentados plegados se modelan solo como geometría. No "
-            "se aplica un transformador ideal por nivel; usá la red de alimentación "
-            "o el matching por nivel para transformar la impedancia."
+            "Los elementos alimentados plegados son solo geometría. En modo "
+            "Wilkinson, configurá el transformador o el matching por nivel; los "
+            "demás modos usan la red de alimentación."
         ),
     },
     "stacked_yagi.geometry": {
@@ -14644,14 +14664,15 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: (
             "Adds a second driven conductor and two end connectors on every level. "
             "The driven element length stays the same; spacing changes the feed "
-            "impedance. No ideal per-level transformer is applied; use the feed "
-            "network or per-level matching."
+            "impedance. In Wilkinson mode, set the per-level transformer or matching "
+            "network; the other feed modes use the feed network."
         ),
         Language.SPANISH: (
             "Agrega un segundo conductor alimentado y dos conectores de extremo en "
             "cada nivel. El largo del elemento alimentado no cambia; la separación "
-            "cambia la impedancia de alimentación. No se aplica un transformador "
-            "ideal por nivel; usá la red de alimentación o el matching por nivel."
+            "cambia la impedancia de alimentación. En modo Wilkinson, configurá el "
+            "transformador o el matching por nivel; los demás modos usan la red de "
+            "alimentación."
         ),
     },
     "yagi.folded_hint": {

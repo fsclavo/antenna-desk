@@ -208,6 +208,7 @@ class WilkinsonFeedSolver:
             y_matrix.matrix,
             frequency_hz=y_matrix.frequency_hz,
             source_current_a=1.0,
+            level_transformer_ratios=feed.level_transformer_ratios,
         )
         port_voltages = solution.antenna_port_voltages_v
         if not port_voltages or max(abs(value) for value in port_voltages) <= 1e-15:
@@ -373,11 +374,12 @@ def _weighted_line_loss(
     ):
         if power <= 0.0 or not math.isfinite(impedance.real):
             continue
+        feed_side_impedance = impedance / feed.level_transformer_ratio_for_level(index)
         level_matching = feed.level_matching_network_for_level(index)
         load_impedance = (
-            level_matching.abcd(frequency_hz).input_impedance(impedance)
+            level_matching.abcd(frequency_hz).input_impedance(feed_side_impedance)
             if level_matching is not None
-            else impedance
+            else feed_side_impedance
         )
         loss_db = mismatched_line_loss_db(
             length_m=lengths[index],

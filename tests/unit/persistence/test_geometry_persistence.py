@@ -1636,6 +1636,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching_25),
+            level_transformer_ratios=(4.0, 1.5),
         ),
     )
     original = _project(parameters, "Stacked Yagi Wilkinson")
@@ -1652,6 +1653,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
         matching,
         matching_25,
     )
+    assert restored.designs[0].parameters.feed.level_transformer_ratios == (4.0, 1.5)
 
 
 def test_stacked_yagi_folded_driven_element_round_trips_through_the_schema() -> None:

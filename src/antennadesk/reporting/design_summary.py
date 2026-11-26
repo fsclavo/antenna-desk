@@ -1283,7 +1283,6 @@ def design_summary_rows(
                             "Fold spacing",
                             _length(yagi.driven_fold_spacing_m, display_units),
                         ),
-                        ("Per-level transformer", "not modeled; use matching"),
                     ]
                     if yagi.driven_folded
                     else []
@@ -1382,6 +1381,20 @@ def design_summary_rows(
                             parameters.feed.level_matching_networks
                         )
                         if network is not None
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    else []
+                ),
+                *(
+                    [
+                        (
+                            tr("Level {level} transformer", level=level_index + 1),
+                            f"{ratio:g}:1",
+                        )
+                        for level_index, ratio in enumerate(
+                            parameters.feed.level_transformer_ratios
+                        )
+                        if not math.isclose(ratio, 1.0, rel_tol=0.0, abs_tol=1e-12)
                     ]
                     if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
                     else []

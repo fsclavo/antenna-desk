@@ -1667,6 +1667,7 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching),
+            level_transformer_ratios=(4.0, 1.0),
         ),
     )
     sheet = render_construction_sheet(
@@ -1686,6 +1687,9 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "Level 1 matching" in sheet
     assert "Level 2 matching" in sheet
     assert "L network" in sheet
+    assert "Level 1 transformer" in sheet
+    assert "4:1" in sheet
+    assert "Level 2 transformer" not in sheet
 
 
 def test_stacked_yagi_folded_construction_sheet_reports_geometry_only(
@@ -1719,4 +1723,4 @@ def test_stacked_yagi_folded_construction_sheet_reports_geometry_only(
     assert "Folded driven element" in sheet
     assert "Fold spacing" in sheet
     assert "0.1000 m" in sheet
-    assert "No ideal per-level transformer" in sheet
+    assert "No transformer is built into the geometry" in sheet

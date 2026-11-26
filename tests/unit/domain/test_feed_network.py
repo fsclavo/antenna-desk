@@ -353,3 +353,48 @@ def test_n_way_wilkinson_supports_an_unmatched_level_between_matched_levels() ->
     assert math.isfinite(solution.input_impedance_ohm.imag)
     assert len(solution.antenna_port_powers_w) == 2
     assert sum(solution.antenna_port_powers_w) <= solution.input_power_w + 1e-9
+
+
+def test_n_way_wilkinson_level_transformers_match_different_loads() -> None:
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+    )
+
+    solution = solve_feed_network(
+        network,
+        [[0.005 + 0.0j, 0.0j], [0.0j, 0.02 + 0.0j]],
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+        level_transformer_ratios=(4.0, 1.0),
+    )
+
+    assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=0.001)
+    assert solution.antenna_port_impedances_ohm[0] == pytest.approx(200.0 + 0.0j, abs=0.01)
+    assert solution.antenna_port_impedances_ohm[1] == pytest.approx(50.0 + 0.0j, abs=0.01)
+    for power in solution.antenna_port_powers_w:
+        assert power == pytest.approx(solution.input_power_w / 2.0, rel=1e-4)
+
+
+def test_n_way_wilkinson_rejects_invalid_level_transformers() -> None:
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+    )
+
+    with pytest.raises(ValueError, match="size"):
+        solve_feed_network(
+            network,
+            [[0.01 + 0.0j, 0.0j], [0.0j, 0.01 + 0.0j]],
+            frequency_hz=FREQUENCY_HZ,
+            level_transformer_ratios=(4.0,),
+        )
+    with pytest.raises(ValueError, match="positive"):
+        solve_feed_network(
+            network,
+            [[0.01 + 0.0j, 0.0j], [0.0j, 0.01 + 0.0j]],
+            frequency_hz=FREQUENCY_HZ,
+            level_transformer_ratios=(4.0, 0.0),
+        )

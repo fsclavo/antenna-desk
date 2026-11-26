@@ -394,7 +394,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Folded": "Plegado",
     "Folded driven": "Alimentado plegado",
     "Folded driven element": "Elemento alimentado plegado",
-    " Each level uses the folded driven element: join both conductors at both ends and feed one conductor at its center. No ideal per-level transformer is modeled; use the feed network or per-level matching.": " Cada nivel usa el elemento alimentado plegado: uní ambos conductores en los dos extremos y alimentá un conductor en su centro. No se modela un transformador ideal por nivel; usá la red de alimentación o el matching por nivel.",  # noqa: E501
+    " Each level uses the folded driven element: join both conductors at both ends and feed one conductor at its center. No transformer is built into the geometry; in Wilkinson mode set the per-level transformer or matching network.": " Cada nivel usa el elemento alimentado plegado: uní ambos conductores en los dos extremos y alimentá un conductor en su centro. La geometría no incluye un transformador; en modo Wilkinson configurá el transformador o el matching por nivel.",  # noqa: E501
     "Per-level transformer": "Transformador por nivel",
     "not modeled; use matching": "no modelado; usá matching",
     "Frequency": "Frecuencia",
@@ -657,6 +657,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Isolation resistors": "Resistencias de aislación",
     "Divider model": "Modelo del divisor",
     "Level {level} matching": "Matching del nivel {level}",
+    "Level {level} transformer": "Transformador del nivel {level}",
     "ideal quarter-wave branches and star resistors": (
         "ramas ideales de cuarto de onda y resistencias en estrella"
     ),

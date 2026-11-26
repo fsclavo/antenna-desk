@@ -58,8 +58,9 @@ class StackedYagiFeed:
     ideal N-way division and is applied to the realized gain. In Wilkinson
     mode the splitter and feed lines are solved by the N-port circuit solver at
     ``splitter_design_frequency_hz`` instead of the NEC TL co-simulation.
-    ``level_matching_networks`` holds one optional L/Pi/T network per level;
-    an empty tuple leaves every level unmatched.
+    ``level_matching_networks`` holds one optional L/Pi/T network per level.
+    ``level_transformer_ratios`` holds one optional ideal impedance ratio per
+    level in Wilkinson mode; an empty tuple means 1:1 everywhere.
     """
 
     mode: StackedYagiFeedMode = StackedYagiFeedMode.IDEAL
@@ -71,6 +72,7 @@ class StackedYagiFeed:
     line_loss_db_per_100m: float = 0.0
     splitter_design_frequency_hz: float = 0.0
     level_matching_networks: tuple[MatchingNetwork | None, ...] = ()
+    level_transformer_ratios: tuple[float, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -100,6 +102,10 @@ class StackedYagiFeed:
         for network in self.level_matching_networks:
             if network is not None and not isinstance(network, (LNetwork, PiNetwork, TNetwork)):
                 raise ValueError("per-level matching supports L, Pi, or T networks only")
+        for ratio in self.level_transformer_ratios:
+            ensure_positive(ratio, name="level_transformer_ratios")
+            if not math.isfinite(ratio):
+                raise ValueError("level_transformer_ratios must be finite")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m
@@ -108,6 +114,11 @@ class StackedYagiFeed:
         if 0 <= level_index < len(self.level_matching_networks):
             return self.level_matching_networks[level_index]
         return None
+
+    def level_transformer_ratio_for_level(self, level_index: int) -> float:
+        if 0 <= level_index < len(self.level_transformer_ratios):
+            return self.level_transformer_ratios[level_index]
+        return 1.0
 
     def line_loss_for_level(self, level_index: int) -> float:
         """Return the matched line loss for a zero-based level line."""
@@ -196,8 +207,8 @@ class StackedYagiParameters:
             raise ValueError("a stacked Yagi requires 2 to 4 levels")
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError(
-                "a stacked Yagi does not support a per-level feed transformer; "
-                "use the folded geometry with per-level matching"
+                "a stacked Yagi takes per-level transformers in its feed specification; "
+                "set the base Yagi transformer_ratio to 1.0"
             )
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_positive(self.amplitude_ratio, name="amplitude_ratio")
@@ -207,6 +218,11 @@ class StackedYagiParameters:
             and len(self.feed.level_matching_networks) != self.count
         ):
             raise ValueError("level_matching_networks must have one entry per level")
+        if (
+            self.feed.level_transformer_ratios
+            and len(self.feed.level_transformer_ratios) != self.count
+        ):
+            raise ValueError("level_transformer_ratios must have one entry per level")
         if not math.isfinite(self.phase_step_deg):
             raise ValueError("phase_step_deg must be finite")
         if (

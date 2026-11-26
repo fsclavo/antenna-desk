@@ -809,6 +809,13 @@ class StackedYagiFeedPayload(StrictModel):
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     splitter_design_frequency_hz: float = Field(default=0.0, ge=0.0)
     level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
+    level_transformer_ratios: list[float] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validate_level_transformers(self) -> Self:
+        if any(not math.isfinite(ratio) or ratio <= 0.0 for ratio in self.level_transformer_ratios):
+            raise ValueError("level_transformer_ratios must be positive and finite")
+        return self
 
 
 class StackedYagiParametersPayload(StrictModel):
@@ -824,8 +831,8 @@ class StackedYagiParametersPayload(StrictModel):
     def _validate_stack(self) -> Self:
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError(
-                "a stacked Yagi does not support a per-level feed transformer; "
-                "use the folded geometry with per-level matching"
+                "a stacked Yagi takes per-level transformers in its feed specification; "
+                "set the base Yagi transformer_ratio to 1.0"
             )
         if (
             self.feed.level_matching_networks
@@ -946,6 +953,7 @@ class FeedNetworkSpecPayload(StrictModel):
     splitter_excess_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
+    level_transformer_ratios: list[float] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate_feed_network(self) -> Self:
@@ -955,6 +963,10 @@ class FeedNetworkSpecPayload(StrictModel):
             raise ValueError("feed_line_lengths_m must be positive")
         if self.level_matching_networks and len(self.level_matching_networks) != self.port_count:
             raise ValueError("level_matching_networks must have one entry per port")
+        if self.level_transformer_ratios and len(self.level_transformer_ratios) != self.port_count:
+            raise ValueError("level_transformer_ratios must have one entry per port")
+        if any(not math.isfinite(ratio) or ratio <= 0.0 for ratio in self.level_transformer_ratios):
+            raise ValueError("level_transformer_ratios must be positive and finite")
         return self
 
 
@@ -2273,6 +2285,7 @@ def _stacked_yagi_parameters_from_domain(
                 _matching_network_from_domain(network) if network is not None else None
                 for network in value.feed.level_matching_networks
             ],
+            level_transformer_ratios=list(value.feed.level_transformer_ratios),
         ),
     )
 
@@ -2456,6 +2469,7 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
                     _matching_network_from_domain(network) if network is not None else None
                     for network in value.feed_network.level_matching_networks
                 ],
+                level_transformer_ratios=list(value.feed_network.level_transformer_ratios),
             )
             if value.feed_network is not None
             else None
@@ -3668,6 +3682,7 @@ def _stacked_yagi_parameters_to_domain(
                 _matching_network_to_domain(network) if network is not None else None
                 for network in value.feed.level_matching_networks
             ),
+            level_transformer_ratios=tuple(value.feed.level_transformer_ratios),
         ),
     )
 
@@ -3815,6 +3830,7 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
                     _matching_network_to_domain(network) if network is not None else None
                     for network in value.feed_network.level_matching_networks
                 ),
+                level_transformer_ratios=tuple(value.feed_network.level_transformer_ratios),
             )
             if value.feed_network is not None
             else None

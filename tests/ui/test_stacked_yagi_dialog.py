@@ -357,10 +357,31 @@ def test_dialog_allows_folded_driven_elements_without_a_per_level_transformer(
     assert yagi_form._transformer.isHidden() is True
     yagi_form._driven_folded.setChecked(True)
     form._update_geometry()
-
     parameters = dialog.parameters()
 
     assert parameters.yagi.driven_folded is True
     assert parameters.yagi.transformer_ratio == pytest.approx(1.0)
-    assert "No ideal per-level transformer" in form._folded_note.text()
+    assert "per-level transformer" in form._folded_note.text()
     assert form._folded_note.isHidden() is False
+
+
+def test_dialog_sets_per_level_transformers_in_wilkinson_mode(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
+    form._feed_mode.setCurrentIndex(index)
+    form._reference_line_field.configure(2.0)
+    form._line_increment_field.configure(0.0)
+
+    form.set_level_transformer_ratio(0, 4.0)
+    form.set_level_transformer_ratio(1, 1.5)
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.level_transformer_ratios == (4.0, 1.5)
+    assert form._level_transformer_fields[0].isEnabled() is True
+    assert form._level_transformer_rows[2].isHidden() is True
+    phase_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
+    form._feed_mode.setCurrentIndex(phase_index)
+    form._update_feed_controls()
+    assert form._level_transformer_fields[0].isEnabled() is False

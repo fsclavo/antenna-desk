@@ -1240,10 +1240,10 @@ mode each level can have its own optional L/Pi/T network between its feed line
 and the level; the primary SWR is the splitter input and the pattern is
 reconstructed from the solved port voltages.
 The stack uses one shared mast and one guy set for every level. A beta/hairpin
-match or a folded driven element can be applied to every driven element;
-per-level feed transformers are still disabled. Folded elements are
-geometry-only, so no ideal 4:1 transformer is applied per level; use the feed
-network or per-level matching to transform the impedance.
+match or a folded driven element can be applied to every driven element.
+Folded elements are geometry-only. In Wilkinson mode, set a per-level ideal
+transformer ratio or matching network to transform the impedance; the other
+feed modes use the feed network.
 
 The **Mast diameter**, **Mast offset**, **Guy count**, **Guy anchor**, and
 **Guy diameter** fields describe one shared support: the mast runs from ground
@@ -1263,7 +1263,9 @@ Yagi design frequency. The phase step is derived from the additional length and
 velocity factor in phase-line/network mode and is shown below the fields; in
 Wilkinson mode the feed network determines the excitation. **Per-level
 matching** shows one row per level; each row opens the matching-network editor
-for that level and can use a different L, Pi, or T network.
+for that level and can use a different L, Pi, or T network. **Per-level
+transformer** sets an ideal impedance ratio at each Wilkinson level; 1:1 means
+no transformer.
 
 In **Splitter + phase lines** the solver still uses ideal voltage sources: the
 line lengths only set the phase, which is computed at the design frequency and
@@ -1285,11 +1287,13 @@ In **Wilkinson divider** the app builds an equal N-way divider at the declared
 design frequency: each branch is a quarter-wave line of `Z0 × sqrt(count)`, the
 isolation network is a star of `count` resistors of `Z0`, and each output runs
 through the feed line to its level. Each level can have its own optional
-**Per-level matching** L/Pi/T network between its feed line and the level. The
-N-port solver combines the divider with the antenna port admittance. The primary SWR is the
-splitter input, the **Sources** table is the solved port distribution, and the
-pattern is reconstructed with ideal sources at the solved port voltages.
-Branches, resistors, feed lines, and the matching networks are ideal unless a
+**Per-level matching** L/Pi/T network between its feed line and the level, plus
+an optional **Per-level transformer** ideal impedance ratio. The N-port solver
+combines the divider with the antenna port admittance and applies each
+transformer at its antenna boundary. The primary SWR is the splitter input, the
+**Sources** table is the solved port distribution, and the pattern is
+reconstructed with ideal sources at the solved port voltages. Branches,
+resistors, feed lines, matching networks, and transformers are ideal unless a
 matching network specifies component Q; component tolerance and broadband
 behavior are not modeled. The divider is narrowband. Use the line lengths for
 the construction harness and verify the match with the solver or a measurement.
@@ -1318,8 +1322,8 @@ realized gain; Wilkinson mode solves an ideal-component N-way divider with
 optional per-level L/Pi/T matching networks and reconstructs the pattern. The
 optional mast and guy wires are modeled once for the whole stack, not once per
 level, and a beta/hairpin match is built at each driven element. The
-loss-induced input-impedance shift, Wilkinson component tolerances, and
-per-level transformers are not modeled. Verify the pattern,
+loss-induced input-impedance shift and Wilkinson component tolerances are not
+modeled. Verify the pattern,
 per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array

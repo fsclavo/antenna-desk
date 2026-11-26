@@ -216,6 +216,32 @@ class StackedYagiForm(QWidget):
             self._level_matching_buttons.append(button)
             self._level_matching_summaries.append(summary)
             self._level_matching_rows.append(row)
+        self._level_transformer_labels: list[QLabel] = []
+        self._level_transformer_fields: list[QDoubleSpinBox] = []
+        self._level_transformer_rows: list[QWidget] = []
+        self._level_transformer_box = QWidget(self)
+        level_transformer_layout = QVBoxLayout(self._level_transformer_box)
+        level_transformer_layout.setContentsMargins(0, 0, 0, 0)
+        for _ in range(4):
+            row = QWidget(self._level_transformer_box)
+            row_layout = QHBoxLayout(row)
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            label = QLabel(row)
+            field = QDoubleSpinBox(row)
+            field.setRange(1.0, 100.0)
+            field.setDecimals(2)
+            field.setSingleStep(0.5)
+            field.setSuffix(":1")
+            field.setValue(1.0)
+            field.valueChanged.connect(self._emit_changed)
+            apply_help(field, translator, "level_transformer", family="stacked_yagi")
+            row_layout.addWidget(label)
+            row_layout.addWidget(field)
+            row_layout.addStretch(1)
+            level_transformer_layout.addWidget(row)
+            self._level_transformer_labels.append(label)
+            self._level_transformer_fields.append(field)
+            self._level_transformer_rows.append(row)
 
         self._starting = QPushButton(
             translator.t("action.load_starting_dimensions"),
@@ -294,6 +320,10 @@ class StackedYagiForm(QWidget):
             self._labels.label("stacked_yagi.level_matching"),
             self._level_matching_box,
         )
+        form.addRow(
+            self._labels.label("stacked_yagi.level_transformer"),
+            self._level_transformer_box,
+        )
         form.addRow(self._starting)
 
         layout = QVBoxLayout(self)
@@ -369,6 +399,13 @@ class StackedYagiForm(QWidget):
                 button,
                 self._translator,
                 "level_matching",
+                family="stacked_yagi",
+            )
+        for field in self._level_transformer_fields:
+            apply_help(
+                field,
+                self._translator,
+                "level_transformer",
                 family="stacked_yagi",
             )
         self._update_level_matching_rows()
@@ -516,6 +553,10 @@ class StackedYagiForm(QWidget):
             self._level_matching_networks = [None] * 4
             for level_index, network in enumerate(parameters.feed.level_matching_networks[:4]):
                 self._level_matching_networks[level_index] = network
+            for field in self._level_transformer_fields:
+                field.setValue(1.0)
+            for level_index, ratio in enumerate(parameters.feed.level_transformer_ratios[:4]):
+                self._level_transformer_fields[level_index].setValue(ratio)
             self._update_feed_controls()
         finally:
             self._updating = False
@@ -529,6 +570,20 @@ class StackedYagiForm(QWidget):
         if any(network is not None for network in networks):
             return networks
         return ()
+
+    def _selected_level_transformer_ratios(self) -> tuple[float, ...]:
+        ratios = tuple(
+            self._level_transformer_fields[index].value()
+            for index in range(self._level_count.value())
+        )
+        if any(not math.isclose(ratio, 1.0, abs_tol=1e-9) for ratio in ratios):
+            return ratios
+        return ()
+
+    def set_level_transformer_ratio(self, level_index: int, ratio: float) -> None:
+        if not 0 <= level_index < 4:
+            raise ValueError("level_index must be between 0 and 3")
+        self._level_transformer_fields[level_index].setValue(ratio)
 
     def set_level_matching_network(
         self,
@@ -568,13 +623,21 @@ class StackedYagiForm(QWidget):
         for level_index in range(4):
             visible = level_index < count
             self._level_matching_rows[level_index].setVisible(visible)
+            self._level_transformer_rows[level_index].setVisible(visible)
             self._level_matching_labels[level_index].setText(
                 self._translator.t(
                     "stacked_yagi.level_matching_level",
                     level=level_index + 1,
                 )
             )
+            self._level_transformer_labels[level_index].setText(
+                self._translator.t(
+                    "stacked_yagi.level_transformer_level",
+                    level=level_index + 1,
+                )
+            )
             self._level_matching_buttons[level_index].setEnabled(wilkinson and visible)
+            self._level_transformer_fields[level_index].setEnabled(wilkinson and visible)
             if not wilkinson:
                 key = "stacked_yagi.level_matching_inactive"
             else:
@@ -701,5 +764,6 @@ class StackedYagiForm(QWidget):
                     self._splitter_design_frequency.value() * 1_000_000.0
                 ),
                 level_matching_networks=self._selected_level_matching_networks(),
+                level_transformer_ratios=self._selected_level_transformer_ratios(),
             ),
         )

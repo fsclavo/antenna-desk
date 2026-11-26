@@ -197,3 +197,38 @@ def test_wilkinson_wrapper_with_level_matching_improves_the_input_swr() -> None:
     assert matched_point.far_field
     assert len(matched_point.source_results) == 2
     assert matched_point.realized_gain_db is not None
+
+
+def test_wilkinson_wrapper_applies_level_transformers() -> None:
+    base_parameters = _parameters()
+    transformed_parameters = replace(
+        base_parameters,
+        feed=replace(
+            base_parameters.feed,
+            level_transformer_ratios=(4.0, 4.0),
+        ),
+    )
+    base_spec = replace(
+        build_typed_family_simulation_spec(base_parameters),
+        frequency_plan=FrequencyPlan.single(FREQUENCY_HZ),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+    transformed_spec = replace(
+        build_typed_family_simulation_spec(transformed_parameters),
+        frequency_plan=FrequencyPlan.single(FREQUENCY_HZ),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+    wrapper = WilkinsonFeedSolver(Nec2cSolver(Path(os.environ["NEC2C"])))
+
+    base_result = wrapper.run(base_parameters.to_antenna(), base_spec)
+    transformed_result = wrapper.run(transformed_parameters.to_antenna(), transformed_spec)
+
+    assert base_result.frequencies
+    assert transformed_result.frequencies
+    base_point = base_result.frequencies[0]
+    transformed_point = transformed_result.frequencies[0]
+    assert math.isfinite(transformed_point.impedance_ohm.real)
+    assert math.isfinite(transformed_point.impedance_ohm.imag)
+    assert transformed_point.impedance_ohm != base_point.impedance_ohm
+    assert len(transformed_point.source_results) == 2
+    assert transformed_point.realized_gain_db is not None

@@ -324,13 +324,16 @@ def solve_feed_network(
     frequency_hz: float,
     source_current_a: float = 1.0,
     input_port_index: int = 0,
+    level_transformer_ratios: Sequence[float] | None = None,
 ) -> FeedNetworkSolution:
     """Connect an antenna admittance matrix to a feed network.
 
     The feed network's ``input_port_index`` is driven by an ideal current
     source; the remaining ports are connected to the antenna. ``antenna_admittance``
     has one row and column per antenna port and must match the other ports in
-    order.
+    order. ``level_transformer_ratios`` places an ideal impedance transformer
+    at each antenna port; a ratio ``r`` means the feed sees ``Z_ant / r``.
+    Empty or omitted means 1:1 everywhere.
     """
 
     ensure_positive(source_current_a, name="source_current_a")
@@ -342,13 +345,33 @@ def solve_feed_network(
         raise ValueError("antenna_admittance size does not match the feed-network ports")
     if not 0 <= input_port_index < port_count:
         raise ValueError("input_port_index is outside the feed-network ports")
+    ratios = (
+        (1.0,) * antenna_ports
+        if level_transformer_ratios is None or not level_transformer_ratios
+        else tuple(level_transformer_ratios)
+    )
+    if len(ratios) != antenna_ports:
+        raise ValueError("level_transformer_ratios size does not match the antenna ports")
+    for ratio in ratios:
+        if not math.isfinite(ratio) or ratio <= 0.0:
+            raise ValueError("level_transformer_ratios must be positive and finite")
+    scales = tuple(math.sqrt(ratio) for ratio in ratios)
+    transformed_admittance = [
+        [
+            antenna_admittance[row][column] * scales[row] * scales[column]
+            for column in range(antenna_ports)
+        ]
+        for row in range(antenna_ports)
+    ]
 
     port_order = [index for index in range(port_count) if index != input_port_index]
     admittance = network.y_matrix(frequency_hz)
     combined = [row[:] for row in admittance]
     for antenna_row, network_row in enumerate(port_order):
         for antenna_column, network_column in enumerate(port_order):
-            combined[network_row][network_column] += antenna_admittance[antenna_row][antenna_column]
+            combined[network_row][network_column] += transformed_admittance[antenna_row][
+                antenna_column
+            ]
 
     current = [0.0 + 0.0j for _ in range(port_count)]
     current[input_port_index] = complex(source_current_a, 0.0)
@@ -356,7 +379,11 @@ def solve_feed_network(
     input_voltage = voltage[input_port_index]
     input_current = current[input_port_index]
     input_power = 0.5 * (input_voltage * input_current.conjugate()).real
-    antenna_voltages = [voltage[index] for index in port_order]
+    feed_side_voltages = [voltage[index] for index in port_order]
+    antenna_voltages = [
+        voltage_value * scale
+        for voltage_value, scale in zip(feed_side_voltages, scales, strict=True)
+    ]
     antenna_currents = _matvec(antenna_admittance, antenna_voltages)
     antenna_impedances = tuple(
         voltage_value / current_value if abs(current_value) > 1e-30 else complex(float("inf"), 0.0)

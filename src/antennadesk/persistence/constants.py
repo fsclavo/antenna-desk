@@ -20,7 +20,7 @@ from ..application.project_limits import (
 CONTAINER_FORMAT: Final = "antennadesk.project"
 CONTAINER_VERSION: Final = 1
 PROJECT_FORMAT: Final = "antennadesk-project"
-SCHEMA_VERSION: Final = 66
+SCHEMA_VERSION: Final = 67
 
 __all__ = [
     "CONTAINER_FORMAT",

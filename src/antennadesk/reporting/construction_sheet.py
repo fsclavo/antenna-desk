@@ -1402,8 +1402,9 @@ def render_construction_sheet(
 """
             folded_note = tr(
                 " Each level uses the folded driven element: join both conductors at "
-                "both ends and feed one conductor at its center. No ideal per-level "
-                "transformer is modeled; use the feed network or per-level matching."
+                "both ends and feed one conductor at its center. No transformer is "
+                "built into the geometry; in Wilkinson mode set the per-level "
+                "transformer or matching network."
             )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
@@ -1447,6 +1448,12 @@ def render_construction_sheet(
                     for level_index, network in enumerate(parameters.feed.level_matching_networks)
                     if network is not None
                 )
+                level_transformer_rows = "".join(
+                    f"<tr><th>{_escape(tr('Level {level} transformer', level=level_index + 1))}</th>"
+                    f"<td>{ratio:g}:1</td></tr>"
+                    for level_index, ratio in enumerate(parameters.feed.level_transformer_ratios)
+                    if not math.isclose(ratio, 1.0, rel_tol=0.0, abs_tol=1e-12)
+                )
                 wilkinson_rows = (
                     f"<tr><th>Divider design frequency</th><td>"
                     f"{parameters.splitter_design_frequency_hz / 1_000_000.0:.4f} MHz</td></tr>"
@@ -1456,6 +1463,7 @@ def render_construction_sheet(
                     "<tr><th>Divider model</th><td>ideal quarter-wave branches and "
                     "star resistors</td></tr>"
                     f"{level_matching_rows}"
+                    f"{level_transformer_rows}"
                 )
             feed_rows += f"""
 <tr><th>Feed network</th><td>{"Wilkinson N-port divider" if is_wilkinson else "splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>

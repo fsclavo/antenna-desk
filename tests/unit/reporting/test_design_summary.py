@@ -1123,6 +1123,7 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
             level_matching_networks=(matching, matching),
+            level_transformer_ratios=(4.0, 1.0),
         ),
     )
 
@@ -1138,6 +1139,8 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert rows["Matched line loss"] == "1.50 dB/100 m"
     assert rows["Level 1 matching"].startswith("L network (series")
     assert rows["Level 2 matching"].startswith("L network (series")
+    assert rows["Level 1 transformer"] == "4:1"
+    assert "Level 2 transformer" not in rows
 
 
 def test_stacked_yagi_folded_summary_reports_geometry_only() -> None:
@@ -1165,4 +1168,4 @@ def test_stacked_yagi_folded_summary_reports_geometry_only() -> None:
 
     assert rows["Folded driven element"] == "yes"
     assert rows["Fold spacing"] == "0.1000 m"
-    assert rows["Per-level transformer"] == "not modeled; use matching"
+    assert "Per-level transformer" not in rows

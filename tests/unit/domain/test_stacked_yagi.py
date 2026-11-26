@@ -296,7 +296,7 @@ def test_folded_driven_element_is_copied_to_every_level() -> None:
             assert f"level-{level}-element-2-{suffix}" in {wire.id for wire in model.wires}
 
 
-def test_folded_stack_rejects_an_ideal_per_level_transformer() -> None:
+def test_stack_rejects_a_base_yagi_transformer_ratio() -> None:
     yagi = replace(
         nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
         driven_folded=True,
@@ -304,9 +304,31 @@ def test_folded_stack_rejects_an_ideal_per_level_transformer() -> None:
         transformer_ratio=4.0,
     )
 
-    with pytest.raises(ValueError, match="per-level feed transformer"):
+    with pytest.raises(ValueError, match="base Yagi transformer_ratio"):
         StackedYagiParameters(
             yagi=yagi,
             count=2,
             spacing_m=10.6,
+        )
+
+
+def test_stack_accepts_one_level_transformer_per_level() -> None:
+    yagi = nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0)
+    feed = StackedYagiFeed(
+        mode=StackedYagiFeedMode.WILKINSON,
+        reference_length_m=2.0,
+        level_transformer_ratios=(4.0, 1.5),
+    )
+    stack = StackedYagiParameters(yagi=yagi, count=2, spacing_m=10.6, feed=feed)
+
+    assert stack.feed.level_transformer_ratio_for_level(0) == pytest.approx(4.0)
+    assert stack.feed.level_transformer_ratio_for_level(1) == pytest.approx(1.5)
+    assert stack.feed.level_transformer_ratio_for_level(2) == pytest.approx(1.0)
+
+    with pytest.raises(ValueError, match="one entry per level"):
+        StackedYagiParameters(
+            yagi=yagi,
+            count=2,
+            spacing_m=10.6,
+            feed=replace(feed, level_transformer_ratios=(4.0,)),
         )

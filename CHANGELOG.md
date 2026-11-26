@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   migration; schema 63 adds the optional maximum top height and the splitter/
   phase-line feed specification, including a matched line loss and a per-port
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
-  design frequency; schema 65 adds a common level matching network, and schema
-  66 makes it per-level. The slice includes
+  design frequency; schema 65 adds a common level matching network, schema 66
+  makes it per-level, and schema 67 adds optional per-level transformer ratios. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -34,8 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ideal voltage sources and does not model line loss or line impedance
   transformation. One shared mast and optional guy set are modeled across all
   levels, and a beta/hairpin match is built at every driven element. Per-level
-  matching networks and per-level transformers remain unavailable in that
-  first slice; later entries add per-level matching and folded geometry. A network mode adds a 1 cm numerical splitter
+  matching networks remain unavailable in that first slice; later entries add
+  per-level matching, folded geometry, and per-level ideal transformer ratios. A network mode adds a 1 cm numerical splitter
   node and co-simulates lossless NEC TL cards from that node to every level,
   including the reference line; it reports every network connection point. The
   reference line and differential TL impedance transformation are included. The
@@ -52,13 +52,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resistors, and the feed lines to each level. The primary SWR is the splitter
   input; the per-level source results come from the solved port distribution,
   and the combined pattern is reconstructed with ideal sources at the solved
-  port voltages. The editor, schema 66, reports, and construction sheet show
+  port voltages. The editor, schema 67, reports, and construction sheet show
   the divider design frequency, branch impedance, isolation resistors, and the
   ideal/narrowband limitation. Branches, resistors, and feed lines are ideal;
   component loss, tolerance, and broadband behavior remain unavailable. Each
   level can carry its own optional L/Pi/T matching network between the feed
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
+
+- **Per-level transformer ratios for the Wilkinson feed (DL6).** The stack feed
+  spec accepts one optional ideal impedance ratio per level. The N-port solver
+  places the transformer at each antenna boundary, so a folded element can be
+  stepped to the feed impedance without consuming an L/Pi/T matching network.
+  The editor, reports, construction sheet, and schema 67 expose the values;
+  other feed modes ignore them. No component tolerance or frequency-dependent
+  transformer model is implied.
 
 - **Folded driven elements in the stacked Yagi (DL6).** The embedded Yagi
   editor now exposes the folded driven element and fold spacing inside a stack,

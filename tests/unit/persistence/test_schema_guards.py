@@ -188,6 +188,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
         splitter_excess_loss_db=0.2,
         line_loss_db_per_100m=1.5,
         level_matching_networks=(matching, matching_25),
+        level_transformer_ratios=(4.0, 1.5),
     )
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.single(14_100_000.0),
@@ -201,6 +202,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
     assert payload.feed_network.kind is FeedNetworkKind.WILKINSON
     assert payload.feed_network.port_count == 2
     assert feed_network.level_matching_networks == (matching, matching_25)
+    assert payload.feed_network.level_transformer_ratios == [4.0, 1.5]
     assert len(payload.feed_network.level_matching_networks) == 2
     assert all(
         network is not None and network.topology == "l"

@@ -363,6 +363,7 @@ def test_stacked_yagi_folded_element_keeps_the_per_level_transformer_out() -> No
             mode=StackedYagiFeedMode.WILKINSON,
             reference_length_m=2.0,
             velocity_factor=0.8,
+            level_transformer_ratios=(4.0, 1.0),
         ),
     )
 
@@ -371,3 +372,4 @@ def test_stacked_yagi_folded_element_keeps_the_per_level_transformer_out() -> No
     assert spec.feed_transformer_ratio == pytest.approx(1.0)
     assert spec.feed_network is not None
     assert spec.feed_network.port_count == 2
+    assert spec.feed_network.level_transformer_ratios == (4.0, 1.0)
