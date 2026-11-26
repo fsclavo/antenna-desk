@@ -202,6 +202,7 @@ class WilkinsonFeedSolver:
             system_impedance_ohm=feed.feed_line_impedance_ohm,
             velocity_factor=feed.velocity_factor,
             level_matching_networks=feed.level_matching_networks,
+            branch_loss_db_per_100m=feed.branch_loss_db_per_100m,
         )
         solution = solve_feed_network(
             network,

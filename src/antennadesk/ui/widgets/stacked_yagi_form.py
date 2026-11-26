@@ -189,6 +189,12 @@ class StackedYagiForm(QWidget):
         self._splitter_design_frequency.setDecimals(4)
         self._splitter_design_frequency.setSingleStep(0.1)
         self._splitter_design_frequency.setSuffix(" MHz")
+        self._branch_loss = QDoubleSpinBox(self)
+        self._branch_loss.setRange(0.0, 100.0)
+        self._branch_loss.setDecimals(2)
+        self._branch_loss.setSingleStep(0.1)
+        self._branch_loss.setSuffix(" dB/100 m")
+        apply_help(self._branch_loss, translator, "branch_loss", family="stacked_yagi")
         self._branch_tolerance = QDoubleSpinBox(self)
         self._branch_tolerance.setRange(0.0, 50.0)
         self._branch_tolerance.setDecimals(1)
@@ -339,6 +345,10 @@ class StackedYagiForm(QWidget):
             self._splitter_design_frequency,
         )
         form.addRow(
+            self._labels.label("stacked_yagi.branch_loss"),
+            self._branch_loss,
+        )
+        form.addRow(
             self._labels.label("stacked_yagi.branch_tolerance"),
             self._branch_tolerance,
         )
@@ -382,6 +392,7 @@ class StackedYagiForm(QWidget):
             self._splitter_loss,
             self._line_loss,
             self._splitter_design_frequency,
+            self._branch_loss,
             self._branch_tolerance,
             self._isolation_tolerance,
         ):
@@ -441,6 +452,12 @@ class StackedYagiForm(QWidget):
                 "level_transformer",
                 family="stacked_yagi",
             )
+        apply_help(
+            self._branch_loss,
+            self._translator,
+            "branch_loss",
+            family="stacked_yagi",
+        )
         apply_help(
             self._branch_tolerance,
             self._translator,
@@ -505,6 +522,7 @@ class StackedYagiForm(QWidget):
         )
         wilkinson = mode == StackedYagiFeedMode.WILKINSON.value
         self._splitter_design_frequency.setEnabled(wilkinson)
+        self._branch_loss.setEnabled(wilkinson)
         self._branch_tolerance.setEnabled(wilkinson)
         self._isolation_tolerance.setEnabled(wilkinson)
         self._phase_step.setEnabled(mode == StackedYagiFeedMode.IDEAL.value)
@@ -839,6 +857,7 @@ class StackedYagiForm(QWidget):
                 ),
                 level_matching_networks=self._selected_level_matching_networks(),
                 level_transformer_ratios=self._selected_level_transformer_ratios(),
+                branch_loss_db_per_100m=self._branch_loss.value(),
                 branch_impedance_tolerance_pct=self._branch_tolerance.value(),
                 isolation_resistor_tolerance_pct=self._isolation_tolerance.value(),
             ),

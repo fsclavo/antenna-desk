@@ -110,7 +110,7 @@ The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
 - `FeedNetworkSpec` in `SimulationSpec` and schema 64 (schema 65 adds a common
   level matching network; schema 66 adds one optional network per level; schema
   67 adds optional per-level transformer ratios; schema 68 adds tolerance
-  percentages);
+  percentages; schema 69 adds matched branch loss);
 - `WilkinsonFeedSolver` wraps the NEC solver, extracts the antenna Y-matrix,
   solves the N-way Wilkinson and feed lines, and reconstructs the pattern with
   ideal sources at the solved port voltages;
@@ -127,9 +127,9 @@ The solver-side per-level matching branch is also validated: a `TwoPortBranch`
 inserts an L/Pi/T network between each feed line and its level port. A common
 L-network designed from the real antenna port self-impedance reduced the
 two-level stack input SWR from about 14.7 to 1.09 in the real NEC Y-matrix
-test. The editor, schema 68, reports, and construction sheet expose one optional
-network and one optional ideal transformer ratio per level, plus a deterministic
-branch/resistor tolerance corner summary.
+test. The editor, schema 69, reports, and construction sheet expose one optional
+network, one optional ideal transformer ratio per level, matched branch loss,
+and a deterministic branch/resistor tolerance corner summary.
 
 ## Implementation phases
 
@@ -149,8 +149,8 @@ branch/resistor tolerance corner summary.
 
 - The Wilkinson mode and design frequency are in schema 64; a common level
   matching network is in schema 65, schema 66 makes it per-level, schema 67
-  adds per-level ideal transformer ratios, and schema 68 adds tolerance
-  percentages.
+  adds per-level ideal transformer ratios, schema 68 adds tolerance
+  percentages, and schema 69 adds matched branch loss.
 - The editor, help, design summary, and construction sheet show the divider
   design frequency, branch impedance, isolation resistors, feed-line lengths,
   and the ideal/narrowband limitation; the conductor BOM remains
@@ -165,9 +165,9 @@ branch/resistor tolerance corner summary.
 - The branch is validated against the analytic matching-network two-port and
   scikit-rf; a real two-level stack test reduced the input SWR from about 14.7
   to 1.09 with a common L-network.
-- The editor, schema 68, reports, and construction sheet expose one network,
-  one ideal transformer ratio per level, and a deterministic tolerance corner
-  summary. Optimizer integration is implemented.
+- The editor, schema 69, reports, and construction sheet expose one network,
+  one ideal transformer ratio per level, matched branch loss, and a
+  deterministic tolerance corner summary. Optimizer integration is implemented.
 
 ## Acceptance criteria
 

@@ -1457,8 +1457,13 @@ def render_construction_sheet(
                 )
                 tolerance = analyze_stacked_yagi_tolerances(parameters)
                 tolerance_rows = ""
+                if parameters.feed.branch_loss_db_per_100m > 0.0:
+                    tolerance_rows += (
+                        f"<tr><th>Branch matched loss</th><td>"
+                        f"{parameters.feed.branch_loss_db_per_100m:.2f} dB/100 m</td></tr>"
+                    )
                 if tolerance is not None:
-                    tolerance_rows = (
+                    tolerance_rows += (
                         f"<tr><th>Branch impedance tolerance</th><td>"
                         f"{parameters.feed.branch_impedance_tolerance_pct:.1f}%</td></tr>"
                         f"<tr><th>Isolation resistor tolerance</th><td>"

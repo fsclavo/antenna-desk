@@ -76,6 +76,7 @@ class StackedYagiFeed:
     level_transformer_ratios: tuple[float, ...] = ()
     branch_impedance_tolerance_pct: float = 0.0
     isolation_resistor_tolerance_pct: float = 0.0
+    branch_loss_db_per_100m: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))
@@ -115,6 +116,8 @@ class StackedYagiFeed:
         ):
             if not math.isfinite(value) or not 0.0 <= value < 100.0:
                 raise ValueError(f"{name} must be finite and between 0 and 100")
+        if not math.isfinite(self.branch_loss_db_per_100m) or self.branch_loss_db_per_100m < 0.0:
+            raise ValueError("branch_loss_db_per_100m must be finite and non-negative")
 
     def line_length_for_level(self, level_index: int) -> float:
         return self.reference_length_m + level_index * self.line_increment_m

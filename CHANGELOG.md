@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
   design frequency; schema 65 adds a common level matching network, schema 66
   makes it per-level, schema 67 adds optional per-level transformer ratios, and
-  schema 68 adds zero-default component tolerance percentages. The slice includes
+  schema 68 adds zero-default component tolerance percentages, and schema 69
+  adds zero-default matched branch loss. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -53,13 +54,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resistors, and the feed lines to each level. The primary SWR is the splitter
   input; the per-level source results come from the solved port distribution,
   and the combined pattern is reconstructed with ideal sources at the solved
-  port voltages. The editor, schema 68, reports, and construction sheet show
+  port voltages. The editor, schema 69, reports, and construction sheet show
   the divider design frequency, branch impedance, isolation resistors, and the
-  ideal/narrowband limitation. Branches, resistors, and feed lines are ideal;
-  component loss, tolerance, and broadband behavior remain unavailable. Each
+  ideal/narrowband limitation. Branches, resistors, and feed lines are ideal in
+  that first slice; branch loss and a bounded tolerance check arrive in later
+  entries, while broadband component-tolerance guarantees remain unavailable. Each
   level can carry its own optional L/Pi/T matching network between the feed
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
+
+- **Matched Wilkinson branch loss (DL6).** The divider now accepts a matched
+  loss in dB per 100 m for each quarter-wave branch. The N-port solver uses a
+  lossy transmission-line two-port, so the loss appears in divider efficiency,
+  input return loss, isolation, and imbalance. Feed-line loss remains separate.
+  The editor, reports, construction sheet, and schema 69 expose the value. This
+  is a matched attenuation model, not a frequency-dependent component
+  S-parameter or isolation model.
 
 - **Bounded Wilkinson component-tolerance analysis (DL6).** The divider accepts
   symmetric branch-impedance and isolation-resistor tolerance percentages. A

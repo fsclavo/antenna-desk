@@ -15,6 +15,7 @@ dependency is needed. ``scikit-rf`` remains a development-only cross-check.
 
 from __future__ import annotations
 
+import cmath
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -148,6 +149,7 @@ class TransmissionLineBranch:
     characteristic_impedance_ohm: float
     length_m: float
     velocity_factor: float = 1.0
+    matched_loss_db_per_100m: float = 0.0
 
     def __post_init__(self) -> None:
         if self.node_a < 0 or self.node_b < 0 or self.node_a == self.node_b:
@@ -157,6 +159,8 @@ class TransmissionLineBranch:
         ensure_positive(self.velocity_factor, name="velocity_factor")
         if self.velocity_factor > 1.0:
             raise ValueError("velocity_factor must not exceed 1")
+        if not math.isfinite(self.matched_loss_db_per_100m) or self.matched_loss_db_per_100m < 0.0:
+            raise ValueError("matched_loss_db_per_100m must be finite and non-negative")
 
     def y_parameters(self, frequency_hz: float) -> tuple[complex, complex, complex, complex]:
         """Return the two-port admittance parameters at ``frequency_hz``."""
@@ -169,6 +173,13 @@ class TransmissionLineBranch:
             / (_SPEED_OF_LIGHT_M_PER_S * self.velocity_factor)
         )
         sin_theta = math.sin(theta)
+        attenuation_np_per_m = self.matched_loss_db_per_100m / 100.0 * math.log(10.0) / 20.0
+        if attenuation_np_per_m > 0.0:
+            propagation = complex(attenuation_np_per_m * self.length_m, theta)
+            y0 = 1.0 / self.characteristic_impedance_ohm
+            y11 = y0 / cmath.tanh(propagation)
+            y12 = -y0 / cmath.sinh(propagation)
+            return (y11, y12, y12, y11)
         if abs(sin_theta) < 1e-9:
             # A half-wave line is a through connection with a phase reversal.
             # A tiny series impedance keeps the nodal matrix finite.
@@ -464,6 +475,7 @@ def n_way_wilkinson(
     level_matching_networks: Sequence[MatchingNetwork | None] | None = None,
     branch_impedance_scales: Sequence[float] | None = None,
     isolation_resistor_scales: Sequence[float] | None = None,
+    branch_loss_db_per_100m: float = 0.0,
 ) -> NPortNetwork:
     """Return an equal N-way Wilkinson with feed lines to each output.
 
@@ -478,8 +490,9 @@ def n_way_wilkinson(
     Provide at most one of the two. ``branch_impedance_scales`` and
     ``isolation_resistor_scales`` apply a per-output multiplier to the nominal
     branch impedance and star resistor for tolerance analysis; omitted means
-    1.0 everywhere. The floating star center is regularized by a very high
-    numerical shunt; it is not a physical component.
+    1.0 everywhere. ``branch_loss_db_per_100m`` adds a matched attenuation to
+    each quarter-wave branch. The floating star center is regularized by a very
+    high numerical shunt; it is not a physical component.
     """
 
     ensure_positive(frequency_hz, name="frequency_hz")
@@ -490,6 +503,8 @@ def n_way_wilkinson(
     ensure_positive(system_impedance_ohm, name="system_impedance_ohm")
     ensure_positive(velocity_factor, name="velocity_factor")
     ensure_positive(branch_velocity_factor, name="branch_velocity_factor")
+    if not math.isfinite(branch_loss_db_per_100m) or branch_loss_db_per_100m < 0.0:
+        raise ValueError("branch_loss_db_per_100m must be finite and non-negative")
     if velocity_factor > 1.0:
         raise ValueError("velocity_factor must not exceed 1")
     if branch_velocity_factor > 1.0:
@@ -550,6 +565,7 @@ def n_way_wilkinson(
                 ),
                 length_m=branch_length_m,
                 velocity_factor=branch_velocity_factor,
+                matched_loss_db_per_100m=branch_loss_db_per_100m,
             )
         )
         branches.append(

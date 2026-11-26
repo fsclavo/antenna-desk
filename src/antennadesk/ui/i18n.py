@@ -4251,6 +4251,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "Wilkinson y el nivel. Abre el editor de red de adaptación."
         ),
     },
+    "help.stacked_yagi.branch_loss": {
+        Language.ENGLISH: (
+            "Matched attenuation of each Wilkinson quarter-wave branch in dB per "
+            "100 m. It is applied by the N-port solver and included in divider "
+            "loss and S-parameters; feed-line loss remains a separate field."
+        ),
+        Language.SPANISH: (
+            "Atenuación adaptada de cada rama de cuarto de onda del Wilkinson en dB "
+            "por 100 m. La aplica el solver N-port y se incluye en la pérdida y los "
+            "parámetros S del divisor; la pérdida de línea sigue siendo otro campo."
+        ),
+    },
     "help.stacked_yagi.branch_tolerance": {
         Language.ENGLISH: (
             "Symmetric percentage tolerance on every Wilkinson branch impedance. "
@@ -11869,6 +11881,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Divider design frequency",
         Language.SPANISH: "Frecuencia de diseño del divisor",
     },
+    "stacked_yagi.branch_loss": {
+        Language.ENGLISH: "Branch matched loss",
+        Language.SPANISH: "Pérdida adaptada de rama",
+    },
     "stacked_yagi.branch_tolerance": {
         Language.ENGLISH: "Branch impedance tolerance",
         Language.SPANISH: "Tolerancia de impedancia de rama",
@@ -11879,11 +11895,11 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "stacked_yagi.tolerance_summary": {
         Language.ENGLISH: (
-            "Worst case over {corners} corners: input RL ≥ {rl} dB, isolation ≥ "
+            "Worst case over {corners} corner(s): input RL ≥ {rl} dB, isolation ≥ "
             "{isolation} dB, imbalance ≤ {imbalance} dB (divider only)."
         ),
         Language.SPANISH: (
-            "Peor caso sobre {corners} esquinas: ROE de entrada ≥ {rl} dB, "
+            "Peor caso sobre {corners} esquina(s): ROE de entrada ≥ {rl} dB, "
             "aislación ≥ {isolation} dB, desbalance ≤ {imbalance} dB (solo divisor)."
         ),
     },

@@ -66,7 +66,11 @@ def analyze_stacked_yagi_tolerances(
         return None
     branch_tolerance = feed.branch_impedance_tolerance_pct / 100.0
     resistor_tolerance = feed.isolation_resistor_tolerance_pct / 100.0
-    if branch_tolerance <= 0.0 and resistor_tolerance <= 0.0:
+    if (
+        branch_tolerance <= 0.0
+        and resistor_tolerance <= 0.0
+        and feed.branch_loss_db_per_100m <= 0.0
+    ):
         return None
 
     nominal = (1.0,) * parameters.count
@@ -140,6 +144,7 @@ def analyze_stacked_yagi_tolerances(
             level_matching_networks=(),
             branch_impedance_scales=branch_scales,
             isolation_resistor_scales=resistor_scales,
+            branch_loss_db_per_100m=feed.branch_loss_db_per_100m,
         )
         results.append(_metrics(network.s_matrix(frequency_hz, z0)))
 

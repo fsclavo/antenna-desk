@@ -269,6 +269,7 @@ def _stacked_yagi_spec(
                 level_transformer_ratios=parameters.feed.level_transformer_ratios,
                 branch_impedance_tolerance_pct=(parameters.feed.branch_impedance_tolerance_pct),
                 isolation_resistor_tolerance_pct=(parameters.feed.isolation_resistor_tolerance_pct),
+                branch_loss_db_per_100m=parameters.feed.branch_loss_db_per_100m,
             )
             if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
             else None

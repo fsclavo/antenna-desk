@@ -232,3 +232,25 @@ def test_wilkinson_wrapper_applies_level_transformers() -> None:
     assert transformed_point.impedance_ohm != base_point.impedance_ohm
     assert len(transformed_point.source_results) == 2
     assert transformed_point.realized_gain_db is not None
+
+
+def test_wilkinson_wrapper_includes_branch_loss() -> None:
+    parameters = replace(
+        _parameters(),
+        feed=replace(_parameters().feed, branch_loss_db_per_100m=10.0),
+    )
+    spec = replace(
+        build_typed_family_simulation_spec(parameters),
+        frequency_plan=FrequencyPlan.single(FREQUENCY_HZ),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+    result = WilkinsonFeedSolver(Nec2cSolver(Path(os.environ["NEC2C"]))).run(
+        parameters.to_antenna(),
+        spec,
+    )
+
+    assert result.status.value == "completed"
+    point = result.frequencies[0]
+    assert point.network_loss_db is not None
+    assert point.network_loss_db > 0.0
+    assert point.realized_gain_db is not None

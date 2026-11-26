@@ -73,3 +73,26 @@ def test_wilkinson_tolerance_rejects_out_of_range_percentages() -> None:
         _parameters(branch_tolerance_pct=100.0)
     with pytest.raises(ValueError, match="between 0 and 100"):
         _parameters(resistor_tolerance_pct=-1.0)
+
+
+def test_wilkinson_branch_loss_produces_a_nominal_s_parameter_check() -> None:
+    parameters = _parameters(branch_tolerance_pct=0.0, resistor_tolerance_pct=0.0)
+    parameters = StackedYagiParameters(
+        yagi=parameters.yagi,
+        count=parameters.count,
+        spacing_m=parameters.spacing_m,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            velocity_factor=0.8,
+            branch_loss_db_per_100m=10.0,
+        ),
+    )
+
+    result = analyze_stacked_yagi_tolerances(parameters)
+
+    assert result is not None
+    assert result.corner_count == 1
+    assert result.worst_input_return_loss_db == pytest.approx(result.nominal_input_return_loss_db)
+    assert result.worst_isolation_db == pytest.approx(result.nominal_isolation_db)
+    assert result.worst_imbalance_db == pytest.approx(result.nominal_imbalance_db)

@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-25
 **Latest published release:** `0.10.1` (2026-11-24)
-**Development schema:** `68`
+**Development schema:** `69`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
@@ -33,7 +33,7 @@
   [`ADR-0052`](ADR/0052-uniform-radial-droop.md).
 - DL6 stacked Yagi first slice is **implemented 2026-11-25** (ADR-0049):
   two to four identical Yagis on one vertical stack, ideal per-level sources,
-  schema 68, form and both catalog routes, per-port **Sources** results, front
+  schema 69, form and both catalog routes, per-port **Sources** results, front
   elevation scene, design/construction reports, multi-boom BOM, a real `nec2c`
   two-port test, a bounded spacing/phase optimizer constrained by the
   user-set maximum top height, and an optional splitter + phase-line feed
@@ -46,10 +46,10 @@
   the lossless input. A Wilkinson divider mode uses the pure-Python N-port
   solver: equal N-way quarter-wave branches, a star of isolation resistors,
   feed-line loss, and a reconstructed pattern from the solved port voltages.
-  Its primary SWR is the splitter input; the editor, schema 68, reports, and
+  Its primary SWR is the splitter input; the editor, schema 69, reports, and
   tests expose it, including an optional L/Pi/T matching network, an optional
-  ideal transformer ratio on each level, and a deterministic component-tolerance
-  corner check.
+  ideal transformer ratio on each level, a matched branch loss, and a
+  deterministic component-tolerance corner check.
   A single shared mast and optional guy set are modeled once
   across every level, and a beta/hairpin match or a folded driven element is
   modeled at every driven element. Folded elements are geometry-only; use the
@@ -57,8 +57,8 @@
   or the feed network in the other modes. The bounded spacing/phase optimizer
   also works in Wilkinson mode by rebuilding the feed-network spec per
   candidate. The tolerance check is limited to divider/feed-line S-parameters at
-  the design frequency; the loss-induced input-impedance shift and a non-ideal
-  splitter/isolation model remain unavailable. Evidence is C; no stacking gain is claimed.
+  the design frequency; the loss-induced input-impedance shift and a
+  frequency-dependent non-ideal splitter/isolation model remain unavailable. Evidence is C; no stacking gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -102,7 +102,7 @@
 
 ## Next
 
-1. Continue DL6 with a non-ideal splitter/isolation model and component loss.
+1. Continue DL6 with a frequency-dependent non-ideal splitter/isolation model.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

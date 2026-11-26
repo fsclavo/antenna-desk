@@ -408,3 +408,22 @@ def test_n_way_wilkinson_rejects_incomplete_component_scales() -> None:
             feed_line_lengths_m=(0.01, 0.01),
             branch_impedance_scales=(1.1,),
         )
+
+
+def test_wilkinson_branch_loss_appears_in_network_loss() -> None:
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        branch_loss_db_per_100m=10.0,
+    )
+
+    solution = solve_feed_network(
+        network,
+        [[0.01 + 0.0j, 0.0j], [0.0j, 0.01 + 0.0j]],
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+    )
+
+    assert solution.network_loss_w > 0.0
+    assert sum(solution.antenna_port_powers_w) < solution.input_power_w

@@ -178,6 +178,7 @@ HELP_MANIFEST = frozenset(
         "help.stacked_yagi.splitter_loss",
         "help.stacked_yagi.line_loss",
         "help.stacked_yagi.splitter_design_frequency",
+        "help.stacked_yagi.branch_loss",
         "help.stacked_yagi.branch_tolerance",
         "help.stacked_yagi.isolation_tolerance",
         "help.stacked_yagi.level_matching",

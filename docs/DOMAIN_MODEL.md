@@ -236,8 +236,8 @@ feed specification: ideal splitter plus
 equal phase-line increments, reference line length, velocity factor,
 characteristic impedance, splitter excess loss, a matched line loss per 100 m,
 an optional Wilkinson divider design frequency, an optional L/Pi/T matching
-network per level, optional ideal per-level transformer ratios, and symmetric
-branch/resistor tolerance percentages. In network mode
+network per level, optional ideal per-level transformer ratios, symmetric branch/resistor
+tolerance percentages, and a matched branch loss. In network mode
 `to_antenna()` adds a 1 cm numerical splitter-node wire 1 m above the top of
 the stack and lossless `TransmissionLine` cards from that node to every level,
 including the reference line to level 1, instead of ideal sources; NEC reports
@@ -262,12 +262,14 @@ splitter node or TLs; `SimulationSpec.feed_network` describes the divider, and
 divider and feed lines, and reconstructs the pattern with ideal sources at the
 solved port voltages. The Wilkinson branches, star isolation resistors, feed
 lines, and the per-level L/Pi/T matching networks are ideal unless a matching
-network specifies Q; component tolerance is not modeled. Splitter internal
-mismatch in the co-simulated network mode is not modeled. A folded driven
+network specifies Q or the branch loss is nonzero; broadband component-tolerance
+guarantees are not modeled. Splitter internal mismatch in the co-simulated
+network mode is not modeled. A folded driven
 element is copied to every level. In Wilkinson mode,
 `level_transformer_ratios` applies one ideal impedance transformer per level;
-an empty tuple means 1:1. The folded geometry has no built-in transformer, so
-use those ratios or per-level matching. `analyze_stacked_yagi_tolerances()`
+an empty tuple means 1:1. `branch_loss_db_per_100m` adds a matched attenuation
+to each quarter-wave branch. The folded geometry has no built-in transformer,
+so use those ratios or per-level matching. `analyze_stacked_yagi_tolerances()`
 checks deterministic high, low, and single-component corners for branch
 impedance and isolation-resistor tolerance at the design frequency. The check
 covers the divider and feed lines only, not matching networks, transformers, or
@@ -306,14 +308,14 @@ zero-EX default), and the source currents form the short-circuit Y-matrix.
 and reconstructs the combined pattern. The solver is validated against the
 standard Wilkinson equations, scikit-rf, and the existing NEC TL co-simulation.
 The stacked-Yagi **Wilkinson divider** feed mode exposes it in the editor,
-schema 68, reports, and construction sheet; the feed-network power budget is
+schema 69, reports, and construction sheet; the feed-network power budget is
 not reported because the reconstructed multi-source budget is ambiguous. The
 star isolation center is regularized by a very high numerical shunt in the
 solver; it is not a physical component and is not listed in the construction
 sheet. A `TwoPortBranch` inserts an L/Pi/T matching network between a feed line
 and its level port; each level can have its own network. The solver also accepts
 an optional ideal transformer ratio per level at the antenna boundary. The
-editor, schema 68, reports, and construction sheet expose both.
+editor, schema 69, reports, and construction sheet expose both.
 
 ### RingoParameters
 
@@ -934,7 +936,7 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `68`; the application writes version 68 and
+trusted. The current schema is `69`; the application writes version 69 and
 rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
 optional `site_ground: null` metadata on open; a 60 container loads vertical
 designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged; a
@@ -943,9 +945,9 @@ container adds the optional stack top-height envelope at zero; a 64 container
 loads unchanged because the Wilkinson feed network is optional; a 65 container
 expands its common per-level matching network into one entry per level; a 66
 container loads unchanged because per-level transformer ratios are optional; a
-67 container loads unchanged because tolerance fields default to zero. The
-project has not shipped to users, so no legacy reader is retained. The complete
-example
+67 container loads unchanged because tolerance fields default to zero; a 68
+container loads unchanged because branch loss defaults to zero. The project has
+not shipped to users, so no legacy reader is retained. The complete example
 lives in [`examples/dipole_40m.antennadesk`](../examples/dipole_40m.antennadesk)
 and is written in the current container format.
 
@@ -963,18 +965,19 @@ migration.
 
 ## Schema policy
 
-- Current version: `68`.
-- Container version 1 and schema versions 59 through 67 are accepted. A 59
+- Current version: `69`.
+- Container version 1 and schema versions 59 through 68 are accepted. A 59
   container adds `project.site_ground: null`, a 60 container adds the default
   `radial_droop_deg = 0` on open, 61 is the metadata-only predecessor of the
   optional stacked-Yagi payload, 62 is the metadata-only predecessor of the
   optional stack top-height envelope, 63 adds the optional splitter/phase-line
   feed specification, 64 adds the Wilkinson feed network, 65 adds one common
   matching network for every level, 66 expands that network into one optional
-  network per level, 67 adds optional ideal per-level transformer ratios, and
-  68 adds zero-default branch and isolation-resistor tolerance percentages.
-  The list below is a historical record of earlier development schemas; those
-  readers and migrations were removed on 2026-11-20.
+  network per level, 67 adds optional ideal per-level transformer ratios, 68
+  adds zero-default branch and isolation-resistor tolerance percentages, and 69
+  adds zero-default matched branch loss. The list below is a historical record
+  of earlier development schemas; those readers and migrations were removed on
+  2026-11-20.
 
 ### Historical schema changes (not readable by the current build)
 
@@ -1123,6 +1126,7 @@ migration.
   feed; a missing list means 1:1 on every level.
 - Version 68 adds zero-default branch-impedance and isolation-resistor tolerance
   percentages for the bounded Wilkinson corner analysis.
+- Version 69 adds zero-default matched branch loss for the Wilkinson divider.
 - Folded dipole and loop parameters are additive in version 3; existing
   `wire_dipole` documents do not change.
 - Series RLC loads are an optional antenna list in version 3; missing loads
@@ -1132,7 +1136,7 @@ migration.
 - Unknown fields are rejected.
 - Unknown formats are rejected.
 - Future schema versions are rejected with a clear error.
-- Only the current schema and the listed 59→68 migration path are accepted.
+- Only the current schema and the listed 59→69 migration path are accepted.
 - Saves are atomic and deterministic, with per-entry and total size limits.
 
 ## Current limitations

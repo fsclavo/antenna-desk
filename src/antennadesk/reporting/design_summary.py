@@ -1403,6 +1403,17 @@ def design_summary_rows(
                 *(
                     [
                         (
+                            "Branch matched loss",
+                            f"{parameters.feed.branch_loss_db_per_100m:.2f} dB/100 m",
+                        ),
+                    ]
+                    if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
+                    and parameters.feed.branch_loss_db_per_100m > 0.0
+                    else []
+                ),
+                *(
+                    [
+                        (
                             "Branch impedance tolerance",
                             f"{parameters.feed.branch_impedance_tolerance_pct:.1f}%",
                         ),
