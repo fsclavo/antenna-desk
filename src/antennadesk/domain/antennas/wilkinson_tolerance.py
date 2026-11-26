@@ -70,6 +70,7 @@ def analyze_stacked_yagi_tolerances(
         branch_tolerance <= 0.0
         and resistor_tolerance <= 0.0
         and feed.branch_loss_db_per_100m <= 0.0
+        and feed.isolation_resistor_inductance_h <= 0.0
     ):
         return None
 
@@ -145,6 +146,7 @@ def analyze_stacked_yagi_tolerances(
             branch_impedance_scales=branch_scales,
             isolation_resistor_scales=resistor_scales,
             branch_loss_db_per_100m=feed.branch_loss_db_per_100m,
+            isolation_resistor_inductance_h=feed.isolation_resistor_inductance_h,
         )
         results.append(_metrics(network.s_matrix(frequency_hz, z0)))
 

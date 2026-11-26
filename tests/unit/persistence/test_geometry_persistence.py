@@ -1640,6 +1640,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
             branch_impedance_tolerance_pct=5.0,
             isolation_resistor_tolerance_pct=2.0,
             branch_loss_db_per_100m=10.0,
+            isolation_resistor_inductance_h=120e-9,
         ),
     )
     original = _project(parameters, "Stacked Yagi Wilkinson")
@@ -1662,6 +1663,9 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
         2.0
     )
     assert restored.designs[0].parameters.feed.branch_loss_db_per_100m == pytest.approx(10.0)
+    assert restored.designs[0].parameters.feed.isolation_resistor_inductance_h == pytest.approx(
+        120e-9
+    )
 
 
 def test_stacked_yagi_folded_driven_element_round_trips_through_the_schema() -> None:

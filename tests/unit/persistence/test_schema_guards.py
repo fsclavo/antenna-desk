@@ -192,6 +192,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
         branch_impedance_tolerance_pct=5.0,
         isolation_resistor_tolerance_pct=2.0,
         branch_loss_db_per_100m=10.0,
+        isolation_resistor_inductance_h=120e-9,
     )
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.single(14_100_000.0),
@@ -209,6 +210,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
     assert payload.feed_network.branch_impedance_tolerance_pct == pytest.approx(5.0)
     assert payload.feed_network.isolation_resistor_tolerance_pct == pytest.approx(2.0)
     assert payload.feed_network.branch_loss_db_per_100m == pytest.approx(10.0)
+    assert payload.feed_network.isolation_resistor_inductance_h == pytest.approx(120e-9)
     assert len(payload.feed_network.level_matching_networks) == 2
     assert all(
         network is not None and network.topology == "l"

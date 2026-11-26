@@ -1267,8 +1267,10 @@ for that level and can use a different L, Pi, or T network. **Per-level
 transformer** sets an ideal impedance ratio at each Wilkinson level; 1:1 means
 no transformer. **Branch matched loss** applies matched attenuation to every
 quarter-wave branch. **Branch impedance tolerance** and **Isolation resistor
-tolerance** run a deterministic design-frequency corner check. Branch loss is
-included in the network loss and S-parameters. The summary
+tolerance** run a deterministic design-frequency corner check. **Isolation
+resistor inductance** adds a series parasitic inductance to every star resistor,
+so return loss and isolation vary with frequency. Branch loss and resistor
+inductance are included in the network loss and S-parameters. The summary
 reports worst input return loss, output isolation, and output imbalance for the
 divider plus feed lines; matching networks and transformers are excluded.
 
@@ -1300,8 +1302,9 @@ transformer at its antenna boundary. The primary SWR is the splitter input, the
 reconstructed with ideal sources at the solved port voltages. Branches,
 resistors, feed lines, matching networks, and transformers are ideal unless a
 matching network specifies component Q or the branch loss is nonzero;
-broadband component-tolerance guarantees are not modeled. The divider is
-narrowband. Use the line lengths for
+broadband component-tolerance guarantees are not modeled. The isolation
+resistor model is a series R-L approximation; parasitic capacitance and measured
+component S-parameters are not modeled. The divider is narrowband. Use the line lengths for
 the construction harness and verify the match with the solver or a measurement.
 
 Set **Maximum top height** to the highest conductor your support allows. It is
@@ -1328,8 +1331,8 @@ realized gain; Wilkinson mode solves an ideal-component N-way divider with
 optional per-level L/Pi/T matching networks and reconstructs the pattern. The
 optional mast and guy wires are modeled once for the whole stack, not once per
 level, and a beta/hairpin match is built at each driven element. The
-loss-induced input-impedance shift and a frequency-dependent non-ideal
-splitter/isolation model are not modeled. Verify the pattern,
+loss-induced input-impedance shift and a measured broadband splitter/isolation
+model are not modeled. Verify the pattern,
 per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array

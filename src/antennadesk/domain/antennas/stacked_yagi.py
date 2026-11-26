@@ -77,6 +77,7 @@ class StackedYagiFeed:
     branch_impedance_tolerance_pct: float = 0.0
     isolation_resistor_tolerance_pct: float = 0.0
     branch_loss_db_per_100m: float = 0.0
+    isolation_resistor_inductance_h: float = 0.0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "mode", StackedYagiFeedMode(self.mode))

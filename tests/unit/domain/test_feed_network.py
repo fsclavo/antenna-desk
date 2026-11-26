@@ -10,6 +10,7 @@ import pytest
 
 from antennadesk.domain.antennas.feed_network import (
     NPortNetwork,
+    SeriesRlBranch,
     TransmissionLineBranch,
     TwoPortBranch,
     n_way_wilkinson,
@@ -427,3 +428,34 @@ def test_wilkinson_branch_loss_appears_in_network_loss() -> None:
 
     assert solution.network_loss_w > 0.0
     assert sum(solution.antenna_port_powers_w) < solution.input_power_w
+
+
+def test_series_rl_branch_impedance_scales_with_frequency() -> None:
+    branch = SeriesRlBranch(
+        node_a=0,
+        node_b=1,
+        resistance_ohm=50.0,
+        inductance_h=100e-9,
+    )
+
+    low = branch.impedance_ohm_at(FREQUENCY_HZ)
+    high = branch.impedance_ohm_at(2.0 * FREQUENCY_HZ)
+
+    assert low.real == pytest.approx(50.0)
+    assert high.imag == pytest.approx(2.0 * low.imag)
+
+
+def test_wilkinson_isolation_inductance_changes_the_s_matrix() -> None:
+    ideal = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+    )
+    inductive = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        isolation_resistor_inductance_h=200e-9,
+    )
+
+    assert ideal.s_matrix(FREQUENCY_HZ) != inductive.s_matrix(FREQUENCY_HZ)

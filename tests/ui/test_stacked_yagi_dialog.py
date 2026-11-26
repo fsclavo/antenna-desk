@@ -425,3 +425,19 @@ def test_dialog_shows_nominal_divider_s_parameters_with_branch_loss(qtbot: QtBot
     assert parameters.feed.branch_loss_db_per_100m == pytest.approx(10.0)
     assert form._tolerance_summary.isHidden() is False
     assert "1 corner(s)" in form._tolerance_summary.text()
+
+
+def test_dialog_sets_isolation_resistor_inductance(qtbot: QtBot) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
+    form._feed_mode.setCurrentIndex(index)
+    form._reference_line_field.configure(2.0)
+    form._line_increment_field.configure(0.0)
+    form._isolation_inductance.setValue(120.0)
+
+    parameters = dialog.parameters()
+
+    assert parameters.feed.isolation_resistor_inductance_h == pytest.approx(120e-9)
+    assert form._tolerance_summary.isHidden() is False
+    assert "1 corner(s)" in form._tolerance_summary.text()

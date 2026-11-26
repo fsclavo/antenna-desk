@@ -22,8 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
   design frequency; schema 65 adds a common level matching network, schema 66
   makes it per-level, schema 67 adds optional per-level transformer ratios, and
-  schema 68 adds zero-default component tolerance percentages, and schema 69
-  adds zero-default matched branch loss. The slice includes
+  schema 68 adds zero-default component tolerance percentages, schema 69 adds
+  zero-default matched branch loss, and schema 70 adds zero-default
+  isolation-resistor parasitic inductance. The slice includes
   both catalog routes, a front-elevation scene with level spacing, design and
   construction reports, a multi-boom BOM, a vertical-polarization overlap
   guard, and a real `nec2c` two-port test. A bounded optimizer searches level
@@ -54,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   resistors, and the feed lines to each level. The primary SWR is the splitter
   input; the per-level source results come from the solved port distribution,
   and the combined pattern is reconstructed with ideal sources at the solved
-  port voltages. The editor, schema 69, reports, and construction sheet show
+  port voltages. The editor, schema 70, reports, and construction sheet show
   the divider design frequency, branch impedance, isolation resistors, and the
   ideal/narrowband limitation. Branches, resistors, and feed lines are ideal in
   that first slice; branch loss and a bounded tolerance check arrive in later
@@ -62,6 +63,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   level can carry its own optional L/Pi/T matching network between the feed
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
+
+- **Frequency-dependent Wilkinson isolation-resistor parasitics (DL6).** Each
+  star isolation resistor can now include a series parasitic inductance. The
+  N-port solver evaluates the resulting R-L impedance at every frequency, so
+  isolation, input return loss, and balance vary across a sweep. The editor,
+  reports, construction sheet, and schema 70 expose the value. This is a
+  bounded series R-L model, not a measured component S-parameter or a
+  broadband isolation guarantee.
 
 - **Matched Wilkinson branch loss (DL6).** The divider now accepts a matched
   loss in dB per 100 m for each quarter-wave branch. The N-port solver uses a

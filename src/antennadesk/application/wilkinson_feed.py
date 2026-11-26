@@ -203,6 +203,7 @@ class WilkinsonFeedSolver:
             velocity_factor=feed.velocity_factor,
             level_matching_networks=feed.level_matching_networks,
             branch_loss_db_per_100m=feed.branch_loss_db_per_100m,
+            isolation_resistor_inductance_h=feed.isolation_resistor_inductance_h,
         )
         solution = solve_feed_network(
             network,

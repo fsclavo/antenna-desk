@@ -813,6 +813,7 @@ class StackedYagiFeedPayload(StrictModel):
     branch_impedance_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
     isolation_resistor_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
     branch_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+    isolation_resistor_inductance_h: float = Field(default=0.0, ge=0.0)
 
     @model_validator(mode="after")
     def _validate_level_transformers(self) -> Self:
@@ -960,6 +961,7 @@ class FeedNetworkSpecPayload(StrictModel):
     branch_impedance_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
     isolation_resistor_tolerance_pct: float = Field(default=0.0, ge=0.0, lt=100.0)
     branch_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
+    isolation_resistor_inductance_h: float = Field(default=0.0, ge=0.0)
 
     @model_validator(mode="after")
     def _validate_feed_network(self) -> Self:
@@ -2295,6 +2297,7 @@ def _stacked_yagi_parameters_from_domain(
             branch_impedance_tolerance_pct=value.feed.branch_impedance_tolerance_pct,
             isolation_resistor_tolerance_pct=value.feed.isolation_resistor_tolerance_pct,
             branch_loss_db_per_100m=value.feed.branch_loss_db_per_100m,
+            isolation_resistor_inductance_h=value.feed.isolation_resistor_inductance_h,
         ),
     )
 
@@ -2484,6 +2487,9 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
                     value.feed_network.isolation_resistor_tolerance_pct
                 ),
                 branch_loss_db_per_100m=value.feed_network.branch_loss_db_per_100m,
+                isolation_resistor_inductance_h=(
+                    value.feed_network.isolation_resistor_inductance_h
+                ),
             )
             if value.feed_network is not None
             else None
@@ -3700,6 +3706,7 @@ def _stacked_yagi_parameters_to_domain(
             branch_impedance_tolerance_pct=value.feed.branch_impedance_tolerance_pct,
             isolation_resistor_tolerance_pct=value.feed.isolation_resistor_tolerance_pct,
             branch_loss_db_per_100m=value.feed.branch_loss_db_per_100m,
+            isolation_resistor_inductance_h=value.feed.isolation_resistor_inductance_h,
         ),
     )
 
@@ -3853,6 +3860,9 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
                     value.feed_network.isolation_resistor_tolerance_pct
                 ),
                 branch_loss_db_per_100m=value.feed_network.branch_loss_db_per_100m,
+                isolation_resistor_inductance_h=(
+                    value.feed_network.isolation_resistor_inductance_h
+                ),
             )
             if value.feed_network is not None
             else None

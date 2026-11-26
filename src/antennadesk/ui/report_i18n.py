@@ -657,6 +657,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Branch matched loss": "Pérdida adaptada de rama",
     "Branch impedance tolerance": "Tolerancia de impedancia de rama",
     "Isolation resistor tolerance": "Tolerancia de resistencias de aislación",
+    "Isolation resistor inductance": "Inductancia de resistencias de aislación",
     "Tolerance corners": "Esquinas de tolerancia",
     "Worst input return loss": "Peor pérdida de retorno de entrada",
     "Worst output isolation": "Peor aislación de salida",

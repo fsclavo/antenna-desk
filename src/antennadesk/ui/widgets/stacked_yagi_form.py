@@ -212,6 +212,17 @@ class StackedYagiForm(QWidget):
             "isolation_tolerance",
             family="stacked_yagi",
         )
+        self._isolation_inductance = QDoubleSpinBox(self)
+        self._isolation_inductance.setRange(0.0, 1000.0)
+        self._isolation_inductance.setDecimals(2)
+        self._isolation_inductance.setSingleStep(1.0)
+        self._isolation_inductance.setSuffix(" nH")
+        apply_help(
+            self._isolation_inductance,
+            translator,
+            "isolation_inductance",
+            family="stacked_yagi",
+        )
         self._tolerance_summary = QLabel(self)
         self._tolerance_summary.setWordWrap(True)
         self._tolerance_summary.setStyleSheet("font-style: italic;")
@@ -356,6 +367,10 @@ class StackedYagiForm(QWidget):
             self._labels.label("stacked_yagi.isolation_tolerance"),
             self._isolation_tolerance,
         )
+        form.addRow(
+            self._labels.label("stacked_yagi.isolation_inductance"),
+            self._isolation_inductance,
+        )
         form.addRow("", self._tolerance_summary)
         form.addRow(
             self._labels.label("stacked_yagi.level_matching"),
@@ -395,6 +410,7 @@ class StackedYagiForm(QWidget):
             self._branch_loss,
             self._branch_tolerance,
             self._isolation_tolerance,
+            self._isolation_inductance,
         ):
             widget.valueChanged.connect(self._emit_changed)
         self._feed_mode.currentIndexChanged.connect(self._feed_mode_changed)
@@ -470,6 +486,12 @@ class StackedYagiForm(QWidget):
             "isolation_tolerance",
             family="stacked_yagi",
         )
+        apply_help(
+            self._isolation_inductance,
+            self._translator,
+            "isolation_inductance",
+            family="stacked_yagi",
+        )
         self._update_level_matching_rows()
         self._starting.setText(self._translator.t("action.load_starting_dimensions"))
         apply_help(
@@ -525,6 +547,7 @@ class StackedYagiForm(QWidget):
         self._branch_loss.setEnabled(wilkinson)
         self._branch_tolerance.setEnabled(wilkinson)
         self._isolation_tolerance.setEnabled(wilkinson)
+        self._isolation_inductance.setEnabled(wilkinson)
         self._phase_step.setEnabled(mode == StackedYagiFeedMode.IDEAL.value)
         self._amplitude_ratio.setEnabled(not wilkinson)
         self._update_level_matching_rows()
@@ -616,8 +639,12 @@ class StackedYagiForm(QWidget):
             self._splitter_design_frequency.setValue(
                 parameters.feed.splitter_design_frequency_hz / 1_000_000.0
             )
+            self._branch_loss.setValue(parameters.feed.branch_loss_db_per_100m)
             self._branch_tolerance.setValue(parameters.feed.branch_impedance_tolerance_pct)
             self._isolation_tolerance.setValue(parameters.feed.isolation_resistor_tolerance_pct)
+            self._isolation_inductance.setValue(
+                parameters.feed.isolation_resistor_inductance_h * 1e9
+            )
             self._level_matching_networks = [None] * 4
             for level_index, network in enumerate(parameters.feed.level_matching_networks[:4]):
                 self._level_matching_networks[level_index] = network
@@ -860,5 +887,6 @@ class StackedYagiForm(QWidget):
                 branch_loss_db_per_100m=self._branch_loss.value(),
                 branch_impedance_tolerance_pct=self._branch_tolerance.value(),
                 isolation_resistor_tolerance_pct=self._isolation_tolerance.value(),
+                isolation_resistor_inductance_h=self._isolation_inductance.value() * 1e-9,
             ),
         )

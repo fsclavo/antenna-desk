@@ -1462,6 +1462,12 @@ def render_construction_sheet(
                         f"<tr><th>Branch matched loss</th><td>"
                         f"{parameters.feed.branch_loss_db_per_100m:.2f} dB/100 m</td></tr>"
                     )
+                if parameters.feed.isolation_resistor_inductance_h > 0.0:
+                    tolerance_rows += (
+                        f"<tr><th>Isolation resistor inductance</th><td>"
+                        f"{parameters.feed.isolation_resistor_inductance_h * 1e9:.1f} nH"
+                        f"</td></tr>"
+                    )
                 if tolerance is not None:
                     tolerance_rows += (
                         f"<tr><th>Branch impedance tolerance</th><td>"

@@ -1406,9 +1406,16 @@ def design_summary_rows(
                             "Branch matched loss",
                             f"{parameters.feed.branch_loss_db_per_100m:.2f} dB/100 m",
                         ),
+                        (
+                            "Isolation resistor inductance",
+                            f"{parameters.feed.isolation_resistor_inductance_h * 1e9:.1f} nH",
+                        ),
                     ]
                     if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
-                    and parameters.feed.branch_loss_db_per_100m > 0.0
+                    and (
+                        parameters.feed.branch_loss_db_per_100m > 0.0
+                        or parameters.feed.isolation_resistor_inductance_h > 0.0
+                    )
                     else []
                 ),
                 *(

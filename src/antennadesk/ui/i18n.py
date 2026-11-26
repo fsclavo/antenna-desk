@@ -4263,6 +4263,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "parámetros S del divisor; la pérdida de línea sigue siendo otro campo."
         ),
     },
+    "help.stacked_yagi.isolation_inductance": {
+        Language.ENGLISH: (
+            "Series parasitic inductance added to every Wilkinson isolation "
+            "resistor. The solver uses the resulting R-L impedance at each "
+            "frequency, so return loss and isolation become frequency-dependent."
+        ),
+        Language.SPANISH: (
+            "Inductancia parásita serie agregada a cada resistencia de aislación "
+            "del Wilkinson. El solver usa la impedancia R-L resultante en cada "
+            "frecuencia, por lo que la ROE de entrada y la aislación varían con la "
+            "frecuencia."
+        ),
+    },
     "help.stacked_yagi.branch_tolerance": {
         Language.ENGLISH: (
             "Symmetric percentage tolerance on every Wilkinson branch impedance. "
@@ -11892,6 +11905,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "stacked_yagi.isolation_tolerance": {
         Language.ENGLISH: "Isolation resistor tolerance",
         Language.SPANISH: "Tolerancia de resistencias de aislación",
+    },
+    "stacked_yagi.isolation_inductance": {
+        Language.ENGLISH: "Isolation resistor inductance",
+        Language.SPANISH: "Inductancia de resistencias de aislación",
     },
     "stacked_yagi.tolerance_summary": {
         Language.ENGLISH: (
