@@ -1265,7 +1265,8 @@ def design_summary_rows(
         branch_impedance_ohm = parameters.feed.characteristic_impedance_ohm * math.sqrt(
             parameters.count
         )
-        total_conductor = parameters.count * sum(element.length_m for element in yagi.elements)
+        base_wires = yagi.to_antenna(include_support=False).wires
+        total_conductor = parameters.count * sum(wire.length_m for wire in base_wires)
         rows.extend(
             [
                 ("Type", parameters.template_name),
@@ -1275,6 +1276,18 @@ def design_summary_rows(
                 ("Base boom length", _length(parameters.boom_length_m, display_units)),
                 ("Base boom height", _length(yagi.height_m, display_units)),
                 ("Top level height", _length(parameters.highest_tip_m, display_units)),
+                *(
+                    [
+                        ("Folded driven element", "yes"),
+                        (
+                            "Fold spacing",
+                            _length(yagi.driven_fold_spacing_m, display_units),
+                        ),
+                        ("Per-level transformer", "not modeled; use matching"),
+                    ]
+                    if yagi.driven_folded
+                    else []
+                ),
                 (
                     "Phase step",
                     "set by the feed network"

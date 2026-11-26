@@ -262,8 +262,10 @@ divider and feed lines, and reconstructs the pattern with ideal sources at the
 solved port voltages. The Wilkinson branches, star isolation resistors, feed
 lines, and the per-level L/Pi/T matching networks are ideal unless a matching
 network specifies Q; component tolerance is not modeled. Splitter internal
-mismatch in the co-simulated network mode, component tolerances, folded driven
-elements, and per-level feed transformers are not modeled. A beta/hairpin match
+mismatch in the co-simulated network mode, component tolerances, and per-level
+feed transformers are not modeled. A folded driven element is copied to every
+level; its ideal 4:1 transformer is not applied per level, so use the feed
+network or per-level matching to transform the impedance. A beta/hairpin match
 is built at every driven element. The base Yagi's
 optional mast and guy fields are interpreted once for the whole stack: one mast
 runs from ground to the top boom and the guys attach to its top, instead of one

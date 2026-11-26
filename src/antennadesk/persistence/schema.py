@@ -822,10 +822,11 @@ class StackedYagiParametersPayload(StrictModel):
 
     @model_validator(mode="after")
     def _validate_stack(self) -> Self:
-        if self.yagi.driven_folded:
-            raise ValueError("a stacked Yagi does not support folded driven elements yet")
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
-            raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
+            raise ValueError(
+                "a stacked Yagi does not support a per-level feed transformer; "
+                "use the folded geometry with per-level matching"
+            )
         if (
             self.feed.level_matching_networks
             and len(self.feed.level_matching_networks) != self.count

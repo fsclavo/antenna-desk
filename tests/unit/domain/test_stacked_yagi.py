@@ -120,11 +120,9 @@ def test_vertical_polarized_levels_must_not_overlap() -> None:
     assert stack.highest_tip_m == pytest.approx(30.0 + span + 0.1 + span / 2.0)
 
 
-def test_stack_rejects_folded_or_transformed_driven_elements_for_now() -> None:
+def test_stack_rejects_an_ideal_feed_transformer() -> None:
     yagi = nbs_five_element(frequency_hz=50_100_000.0, height_m=8.0)
 
-    with pytest.raises(ValueError, match="folded driven"):
-        StackedYagiParameters(replace(yagi, driven_folded=True), count=2, spacing_m=3.0)
     with pytest.raises(ValueError, match="transformer"):
         StackedYagiParameters(
             replace(yagi, transformer_ratio=4.0),
@@ -273,3 +271,42 @@ def test_phase_line_loss_is_scaled_by_the_physical_length() -> None:
 
     assert feed.line_loss_for_level(0) == pytest.approx(0.03)
     assert feed.line_loss_for_level(2) == pytest.approx(0.105)
+
+
+def test_folded_driven_element_is_copied_to_every_level() -> None:
+    yagi = replace(
+        nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
+        driven_folded=True,
+        driven_fold_spacing_m=0.1,
+        transformer_ratio=1.0,
+    )
+    stack = StackedYagiParameters(
+        yagi=yagi,
+        count=2,
+        spacing_m=10.6,
+    )
+
+    model = stack.to_antenna()
+
+    assert model.feed.wire_id == "level-1-element-2-a"
+    assert model.feed.offset_m == pytest.approx(0.5 * 0.500 * yagi.wavelength_m)
+    assert {source.wire_id for source in model.sources} == {"level-2-element-2-a"}
+    for level in (1, 2):
+        for suffix in ("a", "b", "end-1", "end-2"):
+            assert f"level-{level}-element-2-{suffix}" in {wire.id for wire in model.wires}
+
+
+def test_folded_stack_rejects_an_ideal_per_level_transformer() -> None:
+    yagi = replace(
+        nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
+        driven_folded=True,
+        driven_fold_spacing_m=0.1,
+        transformer_ratio=4.0,
+    )
+
+    with pytest.raises(ValueError, match="per-level feed transformer"):
+        StackedYagiParameters(
+            yagi=yagi,
+            count=2,
+            spacing_m=10.6,
+        )

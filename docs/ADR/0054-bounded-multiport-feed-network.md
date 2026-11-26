@@ -18,8 +18,7 @@ The current DL6 feed model is a bounded co-simulation:
   impedance.
 
 It does **not** model splitter return loss, port-to-port isolation, internal
-S-parameters, component tolerances, folded driven elements, or per-level
-transformers.
+S-parameters, component tolerances, or per-level transformers.
 
 A scalar "isolation loss" or a post-processing return-loss correction is not
 acceptable. Isolation is not a through-path loss, and a scalar correction would
@@ -80,9 +79,10 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
 6. **Do not add an external circuit engine or a general S-parameter dependency**
    in this ADR. The bounded Python solver covers the DL6 splitter; a wider engine
    needs its own cost, license, and benefit ADR.
-7. **Start with per-level matching, folded driven elements, and per-level
-   transformers out** until the single-level L/Pi/T matching slice is
-   validated. The follow-up implements optional matching networks per level.
+7. **Start with per-level matching and per-level transformers out** until the
+   single-level L/Pi/T matching slice is validated. The follow-up implements
+   optional matching networks per level; folded driven elements are supported
+   as geometry-only.
 
 ## Implementation (2026-11-25)
 

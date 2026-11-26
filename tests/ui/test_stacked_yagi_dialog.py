@@ -344,3 +344,23 @@ def test_dialog_sets_individual_level_matching_networks(qtbot: QtBot) -> None:
     form._update_feed_controls()
     assert form._level_matching_buttons[0].isEnabled() is False
     assert form._level_matching_summaries[0].text() == "Wilkinson mode only"
+
+
+def test_dialog_allows_folded_driven_elements_without_a_per_level_transformer(
+    qtbot: QtBot,
+) -> None:
+    dialog = _dialog(qtbot)
+    form = dialog._form
+    yagi_form = form._yagi
+
+    assert yagi_form._driven_folded.isHidden() is False
+    assert yagi_form._transformer.isHidden() is True
+    yagi_form._driven_folded.setChecked(True)
+    form._update_geometry()
+
+    parameters = dialog.parameters()
+
+    assert parameters.yagi.driven_folded is True
+    assert parameters.yagi.transformer_ratio == pytest.approx(1.0)
+    assert "No ideal per-level transformer" in form._folded_note.text()
+    assert form._folded_note.isHidden() is False

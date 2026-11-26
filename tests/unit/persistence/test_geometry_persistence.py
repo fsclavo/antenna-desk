@@ -1652,3 +1652,40 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
         matching,
         matching_25,
     )
+
+
+def test_stacked_yagi_folded_driven_element_round_trips_through_the_schema() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import (
+        StackedYagiFeed,
+        StackedYagiFeedMode,
+        StackedYagiParameters,
+    )
+    from antennadesk.domain.antennas.yagi import nbs_five_element
+
+    yagi = replace(
+        nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
+        driven_folded=True,
+        driven_fold_spacing_m=0.1,
+        transformer_ratio=1.0,
+    )
+    parameters = StackedYagiParameters(
+        yagi=yagi,
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            velocity_factor=0.8,
+        ),
+    )
+    original = _project(parameters, "Folded Stacked Yagi")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    restored_yagi = restored.designs[0].parameters.yagi
+    assert restored_yagi.driven_folded is True
+    assert restored_yagi.driven_fold_spacing_m == pytest.approx(0.1)
+    assert restored_yagi.transformer_ratio == pytest.approx(1.0)
+    assert "level-1-element-2-a" in {wire.id for wire in restored.designs[0].antenna.wires}

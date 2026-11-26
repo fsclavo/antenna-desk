@@ -1309,6 +1309,34 @@ def test_stacked_yagi_preserves_levels_and_labels_additional_sources() -> None:
     assert any(dimension.text == "10.60 m" for dimension in scene.dimensions)
 
 
+def test_stacked_yagi_draws_the_folded_driven_element_on_every_level() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            driven_index=1,
+            driven_folded=True,
+            driven_fold_spacing_m=0.1,
+            transformer_ratio=1.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+    )
+
+    model = parameters.to_antenna()
+    scene = _scene(parameters, "stacked_yagi", GeometryViewMode.ELEVATION)
+
+    assert len(scene.polylines) == len(model.wires) == 10
+    for level in (1, 2):
+        for suffix in ("a", "b", "end-1", "end-2"):
+            assert any(wire.id == f"level-{level}-element-2-{suffix}" for wire in model.wires)
+
+
 def test_stacked_yagi_network_mode_draws_the_node_and_explains_it() -> None:
     parameters = StackedYagiParameters(
         yagi=YagiParameters(

@@ -49,12 +49,13 @@
   Its primary SWR is the splitter input; the editor, schema 66, reports, and
   tests expose it, including an optional L/Pi/T matching network on each level.
   A single shared mast and optional guy set are modeled once
-  across every level, and a beta/hairpin match is modeled at every driven
-  element. The bounded spacing/phase optimizer also works in Wilkinson mode by
+  across every level, and a beta/hairpin match or a folded driven element is
+  modeled at every driven element. Folded elements are geometry-only: no ideal
+  per-level transformer is applied, so use the feed network or per-level
+  matching. The bounded spacing/phase optimizer also works in Wilkinson mode by
   rebuilding the feed-network spec per candidate. The loss-induced
-  input-impedance shift, component tolerances, folded driven elements, and
-  per-level transformers remain unavailable. Evidence is C;
-  no stacking gain is claimed.
+  input-impedance shift, component tolerances, and per-level transformers
+  remain unavailable. Evidence is C; no stacking gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -98,7 +99,7 @@
 
 ## Next
 
-1. Continue DL6 with folded driven elements and Wilkinson component tolerances.
+1. Continue DL6 with Wilkinson component tolerances and per-level feed transformers.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.

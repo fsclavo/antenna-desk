@@ -66,7 +66,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
 | DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
-| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 66, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, a user-facing Wilkinson divider mode, and per-level L/Pi/T matching networks are implemented. Splitter component tolerances, folded driven elements, and per-level transformers remain explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
+| DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 66, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, a user-facing Wilkinson divider mode, and per-level L/Pi/T matching networks are implemented. A folded driven element is copied to every level as geometry-only; splitter component tolerances and per-level feed transformers remain explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
@@ -1146,13 +1146,14 @@ numerical splitter node and co-simulates lossless NEC TL cards to every level,
 including the reference line, and reports every network port; a user-entered
 matched line loss plus a per-port mismatch correction is applied to realized
 gain. One shared mast and optional guy set are modeled across every level, and a
-beta/hairpin match is built at every driven element. A pure-Python N-port
+beta/hairpin match or folded driven element is built at every driven element. A
+pure-Python N-port
 feed-network solver, NEC antenna Y-matrix extraction, and a user-facing
 Wilkinson divider mode are implemented and validated against the standard
-Wilkinson, scikit-rf, and the existing NEC TL co-simulation. Wilkinson
-component tolerances, folded driven elements, and the per-level transformer
-remain follow-ups. Evidence is C and no stacking gain is
-claimed. See also
+Wilkinson, scikit-rf, and the existing NEC TL co-simulation. Folded driven
+elements are copied to every level as geometry-only. Wilkinson component
+tolerances and the per-level transformer remain follow-ups. Evidence is C and no
+stacking gain is claimed. See also
 [`spikes/dl6-stacked-yagi-spike.md`](spikes/dl6-stacked-yagi-spike.md).
 
 **Delivered in the first slice:**
@@ -1164,9 +1165,10 @@ claimed. See also
 - Reports show levels, spacing, top height, phase step, amplitude ratio, and
   the ideal-feed limitation; the BOM uses one boom per level.
 - A vertical-polarized stack rejects overlapping levels.
-- The base editor cannot add folded driven elements or feed transformers
-  inside a stack; its mast/guy fields are shared by all levels and its
-  beta/hairpin match fields are applied to every driven element.
+- The base editor can add a folded driven element inside a stack, but no
+  per-level feed transformer; its mast/guy fields are shared by all levels and
+  its beta/hairpin match fields are applied to every driven element. Folded
+  geometry uses the feed network or per-level matching to transform impedance.
 - Phase-line mode derives the excitation phase from the extra line length per
   level, records the reference length, velocity factor, Z0, and splitter excess
   loss, and applies that loss to realized gain.
@@ -1188,7 +1190,7 @@ claimed. See also
   feed-network spec for each candidate, including the per-level networks.
 
 **Remaining work:** a splitter S-parameter/isolation model, Wilkinson component
-tolerances, and folded driven elements with per-level feed hardware. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
+tolerances, and per-level feed transformers. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
 scalar isolation post-processing and proposes
 [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): an N-port solver and a
 bounded equal N-way Wilkinson with star isolation at a declared design

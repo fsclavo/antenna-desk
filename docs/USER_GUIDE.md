@@ -1240,8 +1240,10 @@ mode each level can have its own optional L/Pi/T network between its feed line
 and the level; the primary SWR is the splitter input and the pattern is
 reconstructed from the solved port voltages.
 The stack uses one shared mast and one guy set for every level. A beta/hairpin
-match can be applied to every driven element; folded driven elements and
-per-level feed transformers are still disabled.
+match or a folded driven element can be applied to every driven element;
+per-level feed transformers are still disabled. Folded elements are
+geometry-only, so no ideal 4:1 transformer is applied per level; use the feed
+network or per-level matching to transform the impedance.
 
 The **Mast diameter**, **Mast offset**, **Guy count**, **Guy anchor**, and
 **Guy diameter** fields describe one shared support: the mast runs from ground
@@ -1316,8 +1318,8 @@ realized gain; Wilkinson mode solves an ideal-component N-way divider with
 optional per-level L/Pi/T matching networks and reconstructs the pattern. The
 optional mast and guy wires are modeled once for the whole stack, not once per
 level, and a beta/hairpin match is built at each driven element. The
-loss-induced input-impedance shift, Wilkinson component tolerances, folded
-driven elements, and per-level transformers are not modeled. Verify the pattern,
+loss-induced input-impedance shift, Wilkinson component tolerances, and
+per-level transformers are not modeled. Verify the pattern,
 per-port impedance, and match with the solver or a measurement.
 
 ## Create a phased vertical array

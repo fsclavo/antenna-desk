@@ -1138,3 +1138,31 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert rows["Matched line loss"] == "1.50 dB/100 m"
     assert rows["Level 1 matching"].startswith("L network (series")
     assert rows["Level 2 matching"].startswith("L network (series")
+
+
+def test_stacked_yagi_folded_summary_reports_geometry_only() -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            driven_index=1,
+            driven_folded=True,
+            driven_fold_spacing_m=0.1,
+            transformer_ratio=1.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+
+    rows = dict(design_summary_rows(parameters))
+
+    assert rows["Folded driven element"] == "yes"
+    assert rows["Fold spacing"] == "0.1000 m"
+    assert rows["Per-level transformer"] == "not modeled; use matching"

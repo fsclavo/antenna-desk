@@ -85,7 +85,8 @@ class StackedYagiForm(QWidget):
             self,
             display_units=self._display_units,
             include_support_structures=True,
-            include_feed_hardware=False,
+            include_feed_hardware=True,
+            include_feed_transformer=False,
             include_match_hardware=True,
         )
 
@@ -245,6 +246,10 @@ class StackedYagiForm(QWidget):
         self._network_note.setWordWrap(True)
         self._network_note.setStyleSheet("font-style: italic;")
         self._network_note.setVisible(False)
+        self._folded_note = QLabel(self)
+        self._folded_note.setWordWrap(True)
+        self._folded_note.setStyleSheet("font-style: italic;")
+        self._folded_note.setVisible(False)
         self._wilkinson_note = QLabel(self)
         self._wilkinson_note.setWordWrap(True)
         self._wilkinson_note.setStyleSheet("font-style: italic;")
@@ -302,6 +307,7 @@ class StackedYagiForm(QWidget):
         layout.addWidget(self._phase_note)
         layout.addWidget(self._network_note)
         layout.addWidget(self._wilkinson_note)
+        layout.addWidget(self._folded_note)
         layout.addWidget(self._starting_note)
 
         for widget in (self._phase_step, self._amplitude_ratio):
@@ -594,6 +600,7 @@ class StackedYagiForm(QWidget):
         except (ValueError, TypeError):
             self._geometry.setText("")
             self._overlap_warning.setVisible(False)
+            self._folded_note.setVisible(False)
             return
         count = self._level_count.value()
         spacing_m = self._spacing_field.value_m()
@@ -613,6 +620,9 @@ class StackedYagiForm(QWidget):
                 unit=unit,
             )
         )
+        folded = yagi.driven_folded
+        self._folded_note.setText(self._translator.t("stacked_yagi.folded_note") if folded else "")
+        self._folded_note.setVisible(folded)
         overlap = yagi.polarization is Polarization.VERTICAL and spacing_m <= span
         self._overlap_warning.setText(
             self._translator.t("stacked_yagi.overlap_warning") if overlap else ""

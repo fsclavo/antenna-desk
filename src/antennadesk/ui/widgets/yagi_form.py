@@ -73,12 +73,14 @@ class YagiForm(QWidget):
         display_units: DisplayUnits | None = None,
         include_support_structures: bool = True,
         include_feed_hardware: bool = True,
+        include_feed_transformer: bool = True,
         include_match_hardware: bool = True,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._include_support_structures = include_support_structures
         self._include_feed_hardware = include_feed_hardware
+        self._include_feed_transformer = include_feed_transformer
         self._include_match_hardware = include_match_hardware
         self._labels = FormLabels(translator, self, family="yagi")
         self._unit_system = unit_system
@@ -189,7 +191,11 @@ class YagiForm(QWidget):
         self._preset.clicked.connect(self._load_preset)
         self._driven = QComboBox(self)
         self._driven_folded = QCheckBox(translator.t("yagi.folded_driven"), self)
-        self._driven_folded.setToolTip(translator.t("yagi.folded_hint"))
+        self._driven_folded.setToolTip(
+            translator.t(
+                "yagi.folded_hint" if include_feed_transformer else "yagi.folded_stack_hint"
+            )
+        )
         self._driven_fold_spacing = QDoubleSpinBox(self)
         self._driven_fold_spacing.setDecimals(3)
         self._driven_fold_spacing.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
@@ -325,7 +331,8 @@ class YagiForm(QWidget):
         if include_feed_hardware:
             form.addRow(self._driven_folded)
             form.addRow(self._labels.label("yagi.fold_spacing"), self._driven_fold_spacing)
-            form.addRow(self._transformer_label, self._transformer)
+            if include_feed_transformer:
+                form.addRow(self._transformer_label, self._transformer)
         if include_feed_hardware or include_match_hardware:
             form.addRow(self._labels.label("yagi.match_type"), self._match_type)
             form.addRow(self._labels.label("yagi.match_length"), self._match_length)
@@ -442,9 +449,13 @@ class YagiForm(QWidget):
             index = self._match_type.findData(YagiMatchType.NONE.value)
             if index >= 0:
                 self._match_type.setCurrentIndex(index)
-            if math.isclose(self._transformer.value(), 1.0, abs_tol=1e-9):
+            if self._include_feed_transformer and math.isclose(
+                self._transformer.value(),
+                1.0,
+                abs_tol=1e-9,
+            ):
                 self._transformer.setValue(YAGI_FOLDED_REFERENCE_TRANSFORMER_RATIO)
-        else:
+        elif self._include_feed_transformer:
             self._transformer.setValue(1.0)
         self._update_folded_controls()
         self._update_match_controls()
@@ -458,9 +469,10 @@ class YagiForm(QWidget):
         folded = self._driven_folded.isChecked()
         self._driven_fold_spacing.setEnabled(folded)
         self._match_type.setEnabled(not folded)
-        self._transformer_label.setVisible(folded)
-        self._transformer.setVisible(folded)
-        self._transformer.setEnabled(folded)
+        show_transformer = folded and self._include_feed_transformer
+        self._transformer_label.setVisible(show_transformer)
+        self._transformer.setVisible(show_transformer)
+        self._transformer.setEnabled(show_transformer)
 
     def _update_match_controls(self) -> None:
         active = self._selected_match_type() is YagiMatchType.BETA_HAIRPIN
@@ -490,7 +502,11 @@ class YagiForm(QWidget):
         self._preset.setText(self._translator.t("yagi.nbs_preset"))
         self._starting_state.retranslate()
         self._driven_folded.setText(self._translator.t("yagi.folded_driven"))
-        self._driven_folded.setToolTip(self._translator.t("yagi.folded_hint"))
+        self._driven_folded.setToolTip(
+            self._translator.t(
+                "yagi.folded_hint" if self._include_feed_transformer else "yagi.folded_stack_hint"
+            )
+        )
         self._match_type.setItemText(0, self._translator.t("yagi.match_none"))
         self._match_type.setItemText(1, self._translator.t("yagi.match_beta_hairpin"))
         self._match_type.setToolTip(self._translator.t("yagi.match_hint"))
@@ -755,7 +771,9 @@ class YagiForm(QWidget):
                 self._conductivity.setValue(parameters.ground.conductivity_s_per_m)
             self._driven_folded.setChecked(parameters.driven_folded)
             self._driven_fold_spacing_field.configure(parameters.driven_fold_spacing_m)
-            self._transformer.setValue(parameters.transformer_ratio)
+            self._transformer.setValue(
+                parameters.transformer_ratio if self._include_feed_transformer else 1.0
+            )
             match_index = self._match_type.findData(parameters.match_type.value)
             if match_index >= 0:
                 self._match_type.setCurrentIndex(match_index)
@@ -915,7 +933,9 @@ class YagiForm(QWidget):
             match_spacing_m=self._match_spacing_field.value_m(),
             transformer_ratio=(
                 self._transformer.value()
-                if self._include_feed_hardware and self._driven_folded.isChecked()
+                if self._include_feed_hardware
+                and self._include_feed_transformer
+                and self._driven_folded.isChecked()
                 else 1.0
             ),
             azimuth_deg=self._azimuth.value(),

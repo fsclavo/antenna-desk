@@ -43,15 +43,19 @@ The first slice is implemented with these boundaries:
   declared design frequency, equal N-way quarter-wave branches, star isolation
   resistors, feed-line loss, optional per-level L/Pi/T matching networks, and a
   pattern reconstructed from the solved port voltages;
-- a beta/hairpin match at every driven element, built per level from the base
-  Yagi's match fields;
+- a folded driven element or a beta/hairpin match at every driven element,
+  built per level from the base Yagi's fields; the folded geometry has no
+  per-level transformer;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
   envelope; in phase-line mode the search moves the line increment;
 - real `nec2c` tests for an ideal two-level stack, a co-simulated three-level
-  network, one shared mast, and a per-level beta match.
+  network, one shared mast, a per-level beta match, and a folded driven
+  element.
 
-The base Yagi editor in the stack disables folded driven elements and per-level
-feed transformers. A beta/hairpin match is available on every driven element.
+The base Yagi editor in the stack exposes folded driven elements but no
+per-level feed transformer. Folded geometry can use the feed network or
+per-level matching to transform its impedance. A beta/hairpin match is available
+on every driven element when the driven element is straight.
 The mast and guy fields form one shared support model: a single mast runs from
 ground through every level and one guy set attaches to its top. Copying a mast
 per level is rejected.
@@ -71,17 +75,18 @@ slices.
   co-simulated network, one shared mast/guy set, a beta/hairpin match, and the
   Wilkinson N-port feed mode. Line loss is a user-entered matched loss plus a
   per-port load-mismatch correction estimated from the solved port impedances;
-  the loss-induced input-impedance shift, component tolerances, folded driven
-  elements, and per-level feed transformers remain out.
+  the loss-induced input-impedance shift, component tolerances, and per-level
+  feed transformers remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
 - A count of one is not a stack; use `YagiParameters` directly. The family
   accepts two to four levels.
-- A Yagi with a folded driven element or per-level feed transformer is
-  rejected. A beta/hairpin match is copied to every level. The mast and guy
-  fields are interpreted as one shared support for the whole stack; copying a
-  mast per level would create floating or double-counted hardware.
+- A per-level feed transformer is rejected. A folded driven element or a
+  beta/hairpin match is copied to every level; the folded geometry has no ideal
+  per-level transformer. The mast and guy fields are interpreted as one shared
+  support for the whole stack; copying a mast per level would create floating
+  or double-counted hardware.
 - A [feed-network spike](../spikes/dl6-feed-network-spike.md) rejects scalar
   isolation post-processing; [ADR-0054](0054-bounded-multiport-feed-network.md)
   implements an explicit port/reference abstraction and a bounded Wilkinson

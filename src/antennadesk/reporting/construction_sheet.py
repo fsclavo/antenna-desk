@@ -1393,6 +1393,18 @@ def render_construction_sheet(
             if yagi.mast_diameter_m > 0.0
             else " The shared mast and guys are not modeled."
         )
+        folded_row = ""
+        folded_note = ""
+        if yagi.driven_folded:
+            folded_row = f"""
+<tr><th>Folded driven element</th><td>{_escape(tr("yes"))}</td></tr>
+<tr><th>Fold spacing</th><td>{_length(yagi.driven_fold_spacing_m, display_units)}</td></tr>
+"""
+            folded_note = tr(
+                " Each level uses the folded driven element: join both conductors at "
+                "both ends and feed one conductor at its center. No ideal per-level "
+                "transformer is modeled; use the feed network or per-level matching."
+            )
         feed_rows = f"""
 <tr><th>Type</th><td>{_escape(tr(parameters.template_name))}</td></tr>
 <tr><th>Levels</th><td>{parameters.count}</td></tr>
@@ -1401,6 +1413,7 @@ def render_construction_sheet(
 <tr><th>Base boom length</th><td>{_length(parameters.boom_length_m, display_units)}</td></tr>
 <tr><th>Base boom height</th><td>{_length(yagi.height_m, display_units)}</td></tr>
 <tr><th>Top level height</th><td>{_length(parameters.highest_tip_m, display_units)}</td></tr>
+{folded_row}
 <tr><th>Phase step</th><td>{"set by the feed network" if parameters.feed.mode is StackedYagiFeedMode.WILKINSON else f"{parameters.effective_phase_step_deg:.1f}°"}</td></tr>
 <tr><th>Additional-level ratio</th><td>{"set by the feed network" if parameters.feed.mode is StackedYagiFeedMode.WILKINSON else f"{parameters.amplitude_ratio:.2f}"}</td></tr>
 <tr><th>Feed height above ground</th><td>{_length(feed_height_m, display_units)}</td></tr>
@@ -1471,8 +1484,8 @@ def render_construction_sheet(
                     "is reconstructed from the solved port voltages. Branches and "
                     "resistors are ideal; component loss, tolerance, and broadband "
                     "behavior are not modeled. Fit each level as a complete Yagi from "
-                    "the base element table. {mast_note} Per-level matching is not "
-                    "modeled; verify the combined pattern and match.",
+                    "the base element table. {folded_note} {mast_note} Verify the "
+                    "combined pattern and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
                     branch=f"{branch_impedance:.1f}",
@@ -1486,6 +1499,7 @@ def render_construction_sheet(
                     z0=f"{parameters.feed.characteristic_impedance_ohm:.1f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
                     line_loss=f"{parameters.feed.line_loss_db_per_100m:.2f}",
+                    folded_note=folded_note,
                     mast_note=mast_note,
                 )
             elif parameters.feed.mode is StackedYagiFeedMode.NETWORK:
@@ -1503,9 +1517,9 @@ def render_construction_sheet(
                     "co-simulates the network and reports every port; the primary SWR is "
                     "the lossless network input and splitter internal mismatch is not "
                     "modeled. Fit each level as a "
-                    "complete Yagi from the base element table. {mast_note} "
-                    "Per-level matching is not modeled; verify the combined pattern "
-                    "and match.",
+                    "complete Yagi from the base element table. {folded_note} "
+                    "Per-level matching is not modeled in the co-simulated network "
+                    "mode. {mast_note} Verify the combined pattern and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
                     reference=f"{parameters.feed.reference_length_m:.4f}",
@@ -1513,6 +1527,7 @@ def render_construction_sheet(
                     velocity=f"{parameters.feed.velocity_factor:.3f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
                     line_loss=f"{parameters.feed.line_loss_db_per_100m:.2f}",
+                    folded_note=folded_note,
                     mast_note=mast_note,
                 )
             else:
@@ -1526,8 +1541,8 @@ def render_construction_sheet(
                     "line. Record {loss} dB of splitter excess loss. The line impedance "
                     "transformation and line loss are not modeled; the solver uses ideal "
                     "voltage sources. Fit each level as a complete Yagi from the base "
-                    "element table. {mast_note} Per-level matching is not modeled; "
-                    "verify the combined pattern and match.",
+                    "element table. {folded_note} Per-level matching is not modeled in "
+                    "phase-line mode. {mast_note} Verify the combined pattern and match.",
                     count=parameters.count,
                     spacing=f"{parameters.spacing_m:.4f}",
                     last=parameters.count,
@@ -1536,6 +1551,7 @@ def render_construction_sheet(
                     increment=f"{parameters.feed.line_increment_m:.4f}",
                     velocity=f"{parameters.feed.velocity_factor:.3f}",
                     loss=f"{parameters.feed.splitter_loss_db:.2f}",
+                    folded_note=folded_note,
                     mast_note=mast_note,
                 )
         else:
@@ -1545,14 +1561,15 @@ def render_construction_sheet(
                 "between level booms. Level 1 is the primary feed; drive levels 2 to "
                 "{last} as ideal sources with a {phase}° phase step and {ratio} relative "
                 "amplitude. Fit each level as a complete Yagi from the base element "
-                "table. The power splitter, phase lines, splitter loss, and per-level "
-                "matching are not modeled. {mast_note} Verify the combined pattern "
-                "and match.",
+                "table. {folded_note} The power splitter, phase lines, splitter loss, "
+                "and per-level matching are not modeled. {mast_note} Verify the "
+                "combined pattern and match.",
                 count=parameters.count,
                 spacing=f"{parameters.spacing_m:.4f}",
                 last=parameters.count,
                 phase=f"{parameters.effective_phase_step_deg:.1f}",
                 ratio=f"{parameters.amplitude_ratio:.2f}",
+                folded_note=folded_note,
                 mast_note=mast_note,
             )
         feed_rows += match_row

@@ -11913,6 +11913,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Additional-level voltage ratio",
         Language.SPANISH: "Relación de tensión de niveles adicionales",
     },
+    "stacked_yagi.folded_note": {
+        Language.ENGLISH: (
+            "Folded driven elements are modeled as geometry only. No ideal "
+            "per-level transformer is applied; use the feed network or per-level "
+            "matching to transform the impedance."
+        ),
+        Language.SPANISH: (
+            "Los elementos alimentados plegados se modelan solo como geometría. No "
+            "se aplica un transformador ideal por nivel; usá la red de alimentación "
+            "o el matching por nivel para transformar la impedancia."
+        ),
+    },
     "stacked_yagi.geometry": {
         Language.ENGLISH: (
             "{count} levels · spacing {spacing} {unit} · top {top} {unit} · phase step {phase}°"
@@ -14627,6 +14639,20 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "yagi.transformer_geometry": {
         Language.ENGLISH: "feed transformer {ratio}:1",
         Language.SPANISH: "transformador de alimentación {ratio}:1",
+    },
+    "yagi.folded_stack_hint": {
+        Language.ENGLISH: (
+            "Adds a second driven conductor and two end connectors on every level. "
+            "The driven element length stays the same; spacing changes the feed "
+            "impedance. No ideal per-level transformer is applied; use the feed "
+            "network or per-level matching."
+        ),
+        Language.SPANISH: (
+            "Agrega un segundo conductor alimentado y dos conectores de extremo en "
+            "cada nivel. El largo del elemento alimentado no cambia; la separación "
+            "cambia la impedancia de alimentación. No se aplica un transformador "
+            "ideal por nivel; usá la red de alimentación o el matching por nivel."
+        ),
     },
     "yagi.folded_hint": {
         Language.ENGLISH: (

@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   is the primary impedance/SWR reference; the **Sources** table reports every
   driven level.
   The embedded Yagi editor uses its mast/guy fields as one shared support model
-  across every level. A beta/hairpin match is built at every driven element;
-  folded driven elements and per-level transformers stay disabled. Schema 62 adds the composed payload with a metadata-only 61→62
+  across every level. A beta/hairpin match or folded driven element can be built
+  at every driven element; per-level transformers stay disabled. Schema 62 adds the composed payload with a metadata-only 61→62
   migration; schema 63 adds the optional maximum top height and the splitter/
   phase-line feed specification, including a matched line loss and a per-port
   load-mismatch correction; schema 64 adds the Wilkinson feed network and its
@@ -34,8 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   ideal voltage sources and does not model line loss or line impedance
   transformation. One shared mast and optional guy set are modeled across all
   levels, and a beta/hairpin match is built at every driven element. Per-level
-  matching networks, folded driven elements, and per-level transformers remain
-  unavailable. A network mode adds a 1 cm numerical splitter
+  matching networks and per-level transformers remain unavailable in that
+  first slice; later entries add per-level matching and folded geometry. A network mode adds a 1 cm numerical splitter
   node and co-simulates lossless NEC TL cards from that node to every level,
   including the reference line; it reports every network connection point. The
   reference line and differential TL impedance transformation are included. The
@@ -59,6 +59,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   level can carry its own optional L/Pi/T matching network between the feed
   line and the level. The existing ideal, phase-line, and co-simulated NEC
   modes remain selectable.
+
+- **Folded driven elements in the stacked Yagi (DL6).** The embedded Yagi
+  editor now exposes the folded driven element and fold spacing inside a stack,
+  and the geometry is copied to every level. The folded element is
+  geometry-only: no ideal per-level 4:1 transformer is applied. Use the feed
+  network or per-level L/Pi/T matching to transform its impedance. A
+  beta/hairpin match remains exclusive with a folded driven element. The
+  reports and construction sheet state the geometry-only boundary.
 
 - **Wilkinson optimizer integration (DL6).** The family optimizer now
   rebuilds the stacked-Yagi feed-network specification for every candidate, so

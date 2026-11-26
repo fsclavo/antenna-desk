@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import get_args
 
 import pytest
@@ -41,6 +42,7 @@ from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 from antennadesk.domain.antennas.stacked_yagi import (
     StackedYagiFeed,
     StackedYagiFeedMode,
+    StackedYagiParameters,
     stacked_yagi_parameters,
 )
 from antennadesk.domain.antennas.t2fd import T2FDParameters
@@ -344,3 +346,28 @@ def test_stacked_yagi_wilkinson_mode_builds_a_feed_network_spec() -> None:
     assert spec.co_simulate_feed_network is False
     assert spec.feed_network_loss_db == pytest.approx(0.0)
     assert spec.feed_network_line_loss_db_per_100m == pytest.approx(0.0)
+
+
+def test_stacked_yagi_folded_element_keeps_the_per_level_transformer_out() -> None:
+    yagi = replace(
+        nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0),
+        driven_folded=True,
+        driven_fold_spacing_m=0.1,
+        transformer_ratio=1.0,
+    )
+    parameters = StackedYagiParameters(
+        yagi=yagi,
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            velocity_factor=0.8,
+        ),
+    )
+
+    spec = build_typed_family_simulation_spec(parameters)
+
+    assert spec.feed_transformer_ratio == pytest.approx(1.0)
+    assert spec.feed_network is not None
+    assert spec.feed_network.port_count == 2

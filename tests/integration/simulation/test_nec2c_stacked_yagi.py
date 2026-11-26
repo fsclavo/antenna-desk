@@ -265,3 +265,42 @@ def test_stacked_yagi_beta_match_runs_on_every_level() -> None:
     for level in (1, 2):
         wire_ids = {wire.id for wire in model.wires}
         assert f"level-{level}-element-2-hairpin-short" in wire_ids
+
+
+def test_stacked_yagi_folded_driven_element_runs_in_nec2c() -> None:
+    parameters = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            driven_index=1,
+            driven_folded=True,
+            driven_fold_spacing_m=0.1,
+            transformer_ratio=1.0,
+            ground=GroundModel.perfect(),
+        ),
+        count=2,
+        spacing_m=10.6,
+        phase_step_deg=180.0,
+    )
+    spec = SimulationSpec(
+        frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+        segmentation=SegmentationPolicy(min_segments_per_wire=3),
+        far_field=FarFieldRequest(enabled=True, theta_count=9, phi_count=17),
+    )
+
+    result = Nec2cSolver(Path(os.environ["NEC2C"])).run(
+        parameters.to_antenna(),
+        spec,
+    )
+
+    assert result.status is SimulationStatus.COMPLETED
+    point = result.frequencies[0]
+    assert math.isfinite(point.impedance_ohm.real)
+    assert len(point.source_results) == 2
+    assert all(source.wire_id.endswith("-element-2-a") for source in point.source_results)
+    assert point.far_field
+    assert result.raw_input.count("EX 0 ") == 2

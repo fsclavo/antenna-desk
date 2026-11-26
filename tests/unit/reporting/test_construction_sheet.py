@@ -1686,3 +1686,37 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "Level 1 matching" in sheet
     assert "Level 2 matching" in sheet
     assert "L network" in sheet
+
+
+def test_stacked_yagi_folded_construction_sheet_reports_geometry_only(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.stacked_yagi import StackedYagiParameters
+    from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
+
+    stack = StackedYagiParameters(
+        yagi=YagiParameters(
+            frequency_hz=14_100_000.0,
+            elements=(
+                YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+                YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+            ),
+            height_m=10.0,
+            driven_index=1,
+            driven_folded=True,
+            driven_fold_spacing_m=0.1,
+            transformer_ratio=1.0,
+        ),
+        count=2,
+        spacing_m=10.6,
+    )
+    sheet = render_construction_sheet(
+        sample_project,
+        sample_project.designs[0].with_parameters(stack),
+        None,
+    )
+
+    assert "Folded driven element" in sheet
+    assert "Fold spacing" in sheet
+    assert "0.1000 m" in sheet
+    assert "No ideal per-level transformer" in sheet

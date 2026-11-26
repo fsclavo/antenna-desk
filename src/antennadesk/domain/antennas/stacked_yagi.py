@@ -178,7 +178,9 @@ class StackedYagiParameters:
 
     The base Yagi's optional mast and guy fields describe one shared support:
     the mast runs from ground to the top boom and the guys attach to its top.
-    A beta/hairpin match is built at every driven element.
+    A folded driven element or a beta/hairpin match is copied to every level.
+    The folded geometry has no ideal per-level transformer, so use the feed
+    network or per-level matching to transform its impedance.
     """
 
     yagi: YagiParameters
@@ -192,10 +194,11 @@ class StackedYagiParameters:
     def __post_init__(self) -> None:
         if self.count < 2 or self.count > 4:
             raise ValueError("a stacked Yagi requires 2 to 4 levels")
-        if self.yagi.driven_folded:
-            raise ValueError("a stacked Yagi does not support folded driven elements yet")
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
-            raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
+            raise ValueError(
+                "a stacked Yagi does not support a per-level feed transformer; "
+                "use the folded geometry with per-level matching"
+            )
         ensure_positive(self.spacing_m, name="spacing_m")
         ensure_positive(self.amplitude_ratio, name="amplitude_ratio")
         ensure_non_negative(self.max_top_height_m, name="max_top_height_m")
