@@ -70,6 +70,9 @@ of truth before adding another planning document.
 - [`spikes/dl6-measured-splitter-spike.md`](spikes/dl6-measured-splitter-spike.md)
   — measured/broadband splitter S-parameter options, data requirements, and the
   blocked S3P/S4P decision.
+- [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md)
+  — FP1 physical-versus-electrical length spike, Option A selection, and the
+  explicit 1.087 NEC electrical model scale.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,

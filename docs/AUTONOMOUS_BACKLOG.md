@@ -70,10 +70,10 @@ solver, domain model, project schema, container, report, or numerical
 reference. It is not part of the active 1.2 sequence; see §Antenna generator
 dialog layout standard.
 
-FP1 is a proposed VHF/portable catalog addition, not part of the active 1.2
-sequence. It must complete the physical/electrical spike and update ADR-0055
-before schema or UI work starts. The 5/8, double 5/8, dual-band sleeve, and
-high-gain variants are deliberately excluded.
+FP1 is a VHF/portable catalog addition, not part of the active 1.2 sequence.
+Its length-representation spike is complete and ADR-0055 is updated;
+implementation is the next bounded slice. The 5/8, double 5/8, dual-band
+sleeve, and high-gain variants are deliberately excluded.
 
 Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archive/backlog-completed-2026-11-20.md).
 
@@ -93,7 +93,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
-| FP1 | Flower Pot half-wave family | L | ADR-0055; physical/electrical spike; next schema bump | **Proposed 2026-11-26; not started.** Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, a construction shortening factor, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
+| FP1 | Flower Pot half-wave family | L | ADR-0055; next schema bump | **Spike complete 2026-11-26; implementation pending.** The length spike selected Option A: an explicit 1.087 NEC electrical scale over the published physical cut lengths, with both factors shown separately. Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
@@ -1444,10 +1444,11 @@ current 1.1/1.2 priorities.
 
 ## FP1 — Flower Pot half-wave family
 
-**Status:** **proposed 2026-11-26; not started.** **Priority:** P2 catalog/VHF,
-after the current 1.2 work. Do not start schema or UI work before the
-physical/electrical spike selects a representation and ADR-0055 is updated.
-**Decision:** [ADR-0055](ADR/0055-flower-pot-half-wave-family.md).
+**Status:** **spike complete 2026-11-26; implementation pending.** **Priority:**
+P2 catalog/VHF, after the current 1.2 work. The length spike selected Option A
+and ADR-0055 is updated; schema/UI work may start as the next bounded slice.
+**Decision:** [ADR-0055](ADR/0055-flower-pot-half-wave-family.md), with the
+spike in [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 
 **Motivation:** the VK2ZOI Flower Pot is a popular, inexpensive 2 m/6 m portable
 vertical. It is a coaxially fed vertical half-wave dipole, not an end-fed wire
@@ -1503,19 +1504,15 @@ outside the published choke table, synthesized choke R+jX, common-mode current,
 dielectric loss, a 50 Ω/gain/bandwidth claim, and any new solver engine or
 dependency. Each deferred variant needs its own spike and ADR.
 
-**Spike (phase 0, before implementation):** compare, with the bundled `nec2c`:
-- the bare physical 904 mm/2518 mm wires;
-- an electrical-length model scaled by `1 / 0.88`;
-- an insulated-wire (`IS`) or documented per-wire electrical-length model if
-  `nec2c` supports it;
-- a lumped equivalent that restores resonance;
-- sensitivity to top/bottom radii, base height, ground, and segmentation.
-
-Use the published 2 m/6 m dimensions and VSWR behaviour as a qualitative target,
-not as an invented R+jX table. Select the simplest representation that puts the
-published resonance in the band while keeping the physical cut lengths visible;
-prefer physical geometry plus insulation if stable, otherwise the electrical
-equivalent plus cut list. Record the choice in ADR-0055.
+**Spike (phase 0, complete 2026-11-26):** compared, with the bundled `nec2c`,
+the bare physical 904 mm/2518 mm wires, an electrical model scaled by
+`1 / 0.88`, an electrical model scaled by `1.087`, an `IS`/`LD 7` coating
+model, and a lumped equivalent, with sensitivity to radii, base height,
+ground, and segmentation. `nec2c` rejects `IS` and `LD 7`; the naive
+`1 / 0.88` scale resonates too low. **Option A with an explicit 1.087 NEC
+electrical scale** puts both published bands in range while keeping the
+physical cut list separate. See
+[`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 
 **ADR decisions:** half-wave scope only; two-wire canonical model; ideal choke;
 feedline below the choke; physical cut list and canonical model both explicit;
@@ -1535,11 +1532,14 @@ domain, persistence, catalog, scene, reporting, estimator, optimizer, i18n/help,
 and real-NEC2C tests.
 
 **Acceptance:**
-- The spike compares the four length representations at 2 m and 6 m and ADR-0055
-  records the selected option; no numerical reference is invented.
+- The spike compared the four length representations at 2 m and 6 m and
+  ADR-0055 recorded Option A; no numerical reference is invented.
 - The canonical model, scene, wire schedule, physical cut list, and construction
-  sheet agree on which lengths are electrical and which are physical; no build
-  value is hidden or derived only from a display.
+  sheet keep the 0.88 construction factor and the 1.087 electrical model scale
+  distinct and agree on which lengths are electrical and which are physical;
+  no build value is hidden or derived only from a display.
+- The scaled electrical lower-tip extension is visible and validated against
+  the base height.
 - The construction view is elevation, preserves both wires and the feed, and
   does not count the choke/conduit overlays as canonical wires; dimensions are
   non-zero and anchored.

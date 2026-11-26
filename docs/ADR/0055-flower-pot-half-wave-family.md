@@ -1,8 +1,8 @@
 # ADR-0055 — Flower Pot half-wave family and electrical-length representation
 
-- **Status:** accepted 2026-11-26 for the FP1 scope; implementation pending, and
-  the physical-versus-electrical length representation must be selected by the
-  required spike before any schema or UI work
+- **Status:** accepted 2026-11-26 for the FP1 scope; the required
+  physical-versus-electrical spike is complete and selected Option A;
+  implementation is pending
 - **Date:** 2026-11-26
 - **Related:** FP1, [`AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) §FP1,
   [`GEOMETRY_PRESENTATION.md`](../GEOMETRY_PRESENTATION.md),
@@ -86,21 +86,27 @@ The other published variants need new primitives:
    lengths, the difference must be explicit in the family parameters and in the
    construction report. A hidden simulation-only scale factor outside the
    canonical model is not acceptable.
-5. **Resolve the physical-versus-electrical representation with a spike before
-   implementation.** The spike must compare the options in the next section
-   against the published 2 m and 6 m behaviour and select one. The selected
-   option is recorded in this ADR before schema work starts.
-6. **Expose the measured construction values.** The family parameters carry the
+5. **Use the selected Option A: an explicit NEC electrical equivalent plus a
+   physical cut list.** The spike compared A–D and selected a feed-centered
+   electrical scale of **1.087**, separate from the 0.88 construction factor.
+   The model scale is explicit in the family parameters and construction
+   report; no hidden simulation-only scale is allowed. See
+   [`fp1-flower-pot-length-representation.md`](../spikes/fp1-flower-pot-length-representation.md).
+6. **Expose both length systems explicitly.** The family parameters carry the
    physical top and bottom cut lengths, their radii, the installation base
-   height, the conduit/coax construction context, and the empirical shortening
-   factor or the validated insulation/velocity parameter selected by the spike.
-   The construction sheet must show the physical cut list. The wire schedule
-   must show the canonical wires and label any electrical-equivalent length as
-   such. Neither table may be the only source of a build value.
+   height, the conduit/coax construction context, the **0.88 construction
+   shortening factor**, and the **1.087 electrical model scale** selected by
+   the spike. The construction sheet must show the physical cut list. The wire
+   schedule must show the canonical wires and label the scaled lengths as
+   electrical equivalents. Neither table may be the only source of a build
+   value, and the two factors must never be presented as interchangeable.
 7. **Keep the lower tip above ground.** The base height is an installation
    parameter; the family must not place the lower radiator endpoint at `z = 0`
    or let the NEC ground clearance silently move it. A positive base height is
-   required, with a clear validation message.
+   required, and validation uses the **scaled electrical lower tip**, which
+   extends about 38.9 mm (2 m) or 108.3 mm (6 m) below the physical lower cut
+   when the feed is kept at the physical junction height. A clear validation
+   message must state that margin.
 8. **Classify the feed as a balanced antenna with an integrated choke.** The
    app must not require a separate current balun or classify the family as an
    unbalanced vertical. The feed-connection detail should say: coax center to
@@ -112,7 +118,7 @@ The other published variants need new primitives:
    VSWR plots, not a numerical R+jX table or a calibrated gain measurement. The
    catalog must not claim 50 Ω, a specific gain, or a validated choke. Scaled
    frequencies outside the published 2 m/6 m rows are heuristic.
-10. **Persist with the next schema bump after the required spike** (schema 71
+10. **Persist with the next schema bump after the completed spike** (schema 71
     is current at this commit) and an additive/no-op migration for existing
     files. The family payload is optional; old projects load unchanged.
 11. **Add the estimator and optimizer coverage required by ADR-0013 and
@@ -126,8 +132,8 @@ The other published variants need new primitives:
 
 ## Physical-versus-electrical spike
 
-The spike is a standalone NEC-2 investigation using the bundled `nec2c`; it does
-not need application code. It must compare:
+The spike was a standalone NEC-2 investigation using the bundled `nec2c`; it
+did not need application code. It compared:
 
 | Option | Canonical geometry | Solver model | Construction values | Risk |
 |---|---|---|---|---|
@@ -136,7 +142,7 @@ not need application code. It must compare:
 | **C. Physical geometry + lumped equivalent** | Physical | Series load that restores resonance | Physical | Medium: non-physical equivalent, frequency-specific |
 | **D. Bare physical wire** | Physical | No correction | Physical | Low, but **rejected**: it resonates in the wrong place and would mislead the builder |
 
-The spike must record, for 2 m and 6 m:
+The spike recorded, for 2 m and 6 m:
 
 - the bare-wire resonance and input impedance for the physical lengths;
 - the resonance and impedance for each corrected option;
@@ -149,27 +155,53 @@ The spike must record, for 2 m and 6 m:
 - the difference between the canonical wire length and the physical cut length
   that the construction sheet must disclose.
 
-The comparison target is the published VSWR behaviour and the published
-dimensions, not an invented R+jX value. The spike must not treat a VSWR plot as a
-precision impedance reference.
+The comparison target was the published VSWR behaviour and the published
+dimensions, not an invented R+jX value. The spike did not treat a VSWR plot as
+a precision impedance reference.
 
-Selection rule:
+### Spike result (2026-11-26)
 
-1. Prefer **B** if `nec2c` supports a stable insulated-wire or per-wire
-   electrical-length representation and the result is reproducible across 2 m
-   and 6 m.
-2. Otherwise use **A** with a documented cut list and an explicit canonical
-   "electrical model" label.
-3. Use **C** only if A and B are both unavailable and the limitation is visible.
-4. Reject **D**.
+The full run is recorded in
+[`fp1-flower-pot-length-representation.md`](../spikes/fp1-flower-pot-length-representation.md).
+With the bundled `nec2c`, 0.5/1.5 mm assumed radii, free space, and 21/41
+segments:
+
+| Case | 2 m resonance | 6 m resonance |
+| --- | ---: | ---: |
+| D: bare physical wire | 158.505 MHz | 57.357 MHz |
+| A: scale `1 / 0.88` | 139.653 MHz | 50.515 MHz |
+| A: scale **1.087** | 145.935 MHz | 52.795 MHz |
+
+The naive `1 / 0.88` scale double-counts the wire end effect. A single **1.087**
+scale places both rows within 0.2 % of the published band centers. Radius
+sensitivity moves the 2 m resonance by about 1.9 MHz over 0.25–3.0 mm radii, so
+1.087 is a NEC model calibration, not a velocity factor.
+
+`nec2c` rejects the NEC-4 `IS` card and the 4nec2 `LD 7` card; its loading code
+accepts only types 0–5. Option B is unavailable for the MVP and would not model
+the coax/PVC construction even if present. Option C needs 101.8 nH (2 m) or
+339.2 nH (6 m) at the feed, which is not constant per unit length and has no
+physical choke/coax justification. Option D is rejected because it resonates
+far outside both published bands.
+
+### Selection rule (applied)
+
+1. **B is unavailable.** `nec2c` has no stable insulated-wire/coating model for
+   this construction.
+2. **A is selected** with an explicit canonical electrical model and a separate
+   physical cut list.
+3. **C is rejected** as a non-physical, band-specific equivalent.
+4. **D is rejected** because it misleads the builder.
 
 ## Geometry presentation
 
 The construction view is elevation. The scene must:
 
 - draw both canonical wires and the feed at their junction;
-- dimension the top and bottom sections, the total radiator, and the base
-  height;
+- show the physical cut lengths separately from the scaled electrical model
+  lengths; label the latter as the solver equivalent;
+- dimension the top and bottom sections, the total radiator, the base height,
+  and the electrical lower-tip extension;
 - show the choke as a detail inset or overlay, not as a synthetic canonical
   wire;
 - show the 2–3 mm feed gap and the heatshrink separator in a not-to-scale
@@ -182,9 +214,9 @@ The construction view is elevation. The scene must:
 The scene contract test must preserve both wires and the feed, assert the
 construction view, assert no zero-length dimension, and assert that the choke
 and conduit overlays are not counted as canonical wires. The wire schedule must
-list both conductors with their radii and materials; a family-specific cut list
-must list the physical top/bottom lengths, the coax type, the choke turns and
-former, and the conduit length.
+list both conductors with their radii, materials, and scaled electrical
+lengths; a family-specific cut list must list the physical top/bottom lengths,
+the coax type, the choke turns and former, and the conduit length.
 
 ## Estimator
 
@@ -192,8 +224,11 @@ The frequency-first estimator covers the published 2 m and 6 m starting points:
 
 - physical total length approximately `0.44 λ`;
 - top/bottom split approximately `50.5 / 49.5` of the physical total;
-- default shortening factor `0.88` for grey PVC conduit, editable;
+- default construction shortening factor `0.88` for grey PVC conduit,
+  editable; this is not the electrical model scale;
 - published rows: 457/447 mm at 146 MHz and 1273/1245 mm at 52.7 MHz;
+- electrical model scale `1.087` for `to_antenna()`, separate from the
+  construction factor and labelled as a NEC calibration;
 - choke starting table from VK2ZOI, with a warning that the choke must be
   resonated and measured;
 - confidence B for the published rows, heuristic outside them;
@@ -202,7 +237,9 @@ The frequency-first estimator covers the published 2 m and 6 m starting points:
 - warnings for conduit material, coax type, feedline/choke not modeled, and
   installation height.
 
-The estimator must not claim a 50 Ω feedpoint or a gain value.
+The estimator must not claim a 50 Ω feedpoint or a gain value. The 0.88
+construction factor and the 1.087 electrical model scale are shown as two
+different quantities.
 
 ## Optimizer
 
@@ -214,10 +251,11 @@ The initial descriptor may vary the top and bottom physical lengths with:
 - a deterministic seed and the normal budget profiles;
 - an Apply Best path through the family editor and a full simulation.
 
-The shortening/insulation representation, choke, conduit, and feedline are
-context, not optimizer variables, unless a later ADR defines a traceable model
-for them. The optimizer must not tune the model into a geometry that cannot be
-built.
+The **1.087 electrical model scale**, the **0.88 construction factor**, choke,
+conduit, and feedline are context, not optimizer variables, unless a later ADR
+defines a traceable model for them. Constraints must include the scaled
+electrical lower-tip clearance as well as the physical cut geometry. The
+optimizer must not tune the model into a geometry that cannot be built.
 
 ## Consequences
 
@@ -253,11 +291,14 @@ Costs:
 
 ## Acceptance
 
-- The spike compares options A–D at 2 m and 6 m and records the selected
-  representation in this ADR; no numerical reference is invented.
+- The spike compared options A–D at 2 m and 6 m and recorded the selected
+  Option A representation in this ADR; no numerical reference is invented.
 - The family parameters, `to_antenna()`, scene, wire schedule, cut list, and
-  construction sheet agree on which lengths are canonical and which are
-  physical.
+  construction sheet keep the 0.88 construction factor and the 1.087
+  electrical model scale distinct and agree on which lengths are canonical
+  and which are physical.
+- The scaled electrical lower-tip extension is visible and validated against
+  the base height.
 - The construction view preserves both wires and the feed; the choke/conduit
   overlays are not canonical wires; dimensions are non-zero and anchored.
 - The estimator reproduces the published 2 m and 6 m starting dimensions within
@@ -280,7 +321,8 @@ Costs:
 | Risk | Mitigation |
 |---|---|
 | The equivalent dipole does not reproduce the coax/choke behaviour | Spike first; label the limitation; compare with a measured build when available |
-| The user cuts the electrical length instead of the physical length | Show both; make the cut list authoritative; explicit copy in the form and construction sheet |
+| The scaled electrical lower tip goes below ground | Validate the scaled tip, show the extension, and require positive clearance |
+| The user cuts the electrical length instead of the physical length | Show both; make the cut list authoritative; explicit copy in the form and construction sheet; never collapse 0.88 and 1.087 |
 | The published VSWR plot is treated as a numerical reference | Use it only as a qualitative band/behaviour check; do not invent R+jX |
 | The choke table is mistaken for an impedance model | State that it is a self-resonance construction guide; keep the choke ideal in the MVP |
 | The family is confused with an end-fed or a vertical with radials | Catalog description, help, and feed-connection detail state the topology explicitly |
@@ -289,6 +331,8 @@ Costs:
 
 ## References
 
+- [`fp1-flower-pot-length-representation.md`](../spikes/fp1-flower-pot-length-representation.md),
+  FP1 NEC-2 length-representation spike, 2026-11-26.
 - J. Bishop, VK2ZOI, "Half-Wave Flower Pot Antenna",
   <https://vk2zoi.com/articles/half-wave-flower-pot/>.
 - J. Bishop, VK2ZOI, "Flower Pots",

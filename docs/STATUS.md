@@ -117,6 +117,13 @@
   project-bundle schema, release, and DL6 documentation and added a schema
   guard; see
   [`archive/qa/QA_PASS_2026-11-26.md`](archive/qa/QA_PASS_2026-11-26.md).
+- FP1's length-representation spike is **complete 2026-11-26**. It selected
+  Option A: a feed-centered **1.087 NEC electrical model scale** over the
+  published physical cut lengths, with the 0.88 construction factor kept
+  separate and both length systems shown in the construction report. `nec2c`
+  rejects `IS`/`LD 7`; the naive `1/0.88` scale resonates too low. Implementation
+  is pending. See [ADR-0055](ADR/0055-flower-pot-half-wave-family.md) and
+  [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -161,7 +168,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX55 are implemented and the generator-dialog layout track is closed, including the manual desktop 125%/150% check. Start the FP1 physical/electrical spike next.
+2. UX46–UX55 are implemented and the generator-dialog layout track is closed. FP1 has a selected length representation; implement the bounded half-wave family next, starting with the domain model and schema bump.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

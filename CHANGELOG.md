@@ -125,6 +125,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   measured S3P/S4P model blocked on data, multi-port Touchstone support, and an
   embedded-data/provenance ADR; the bounded Wilkinson model remains the
   supported result.
+- **Flower Pot length-representation spiked (FP1).** A NEC-2 spike selected
+  Option A: an explicit 1.087 electrical model scale over the published
+  physical cut lengths, kept separate from the 0.88 construction factor. The
+  physical cut list remains authoritative; `nec2c` rejects the `IS`/`LD 7`
+  coating cards and the naive `1/0.88` scale resonates too low. No family,
+  schema, or UI implementation has started.
 
 - **3D lobe orientation indicators (UX46).** The 3D pattern view now draws a
   maximum-gain ray, a dashed same-elevation back ray with the project F/B value,
