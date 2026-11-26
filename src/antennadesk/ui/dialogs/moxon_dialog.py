@@ -4,23 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.moxon import MoxonParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.moxon_form import MoxonForm
 
 
-class MoxonDialog(QDialog):
+class MoxonDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -30,37 +23,35 @@ class MoxonDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: MoxonParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: MoxonParameters | None = None
-        self._form = MoxonForm(translator, unit_system, parameters, self)
-        if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-
-        self.setWindowTitle(translator.t("moxon.title"))
-        self.resize(*scaled_dialog_size(560, 620))
-
-        self._hint = QLabel(translator.t("moxon.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("moxon.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        form = MoxonForm(
+            translator,
+            unit_system,
+            parameters,
+            None,
+            wide_layout=True,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
+        if frequency_hz is not None and parameters is None:
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("moxon.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("moxon.evidence"))
+        evidence.setWordWrap(True)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        super().__init__(
+            title=translator.t("moxon.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(920, 640),
+            parent=parent,
+        )
+        self._translator = translator
+        self._moxon_form = form
+        self._parameters: MoxonParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> MoxonParameters:
-        return self._form.parameters()
+        return self._moxon_form.parameters()
 
     def _accept(self) -> None:
         try:

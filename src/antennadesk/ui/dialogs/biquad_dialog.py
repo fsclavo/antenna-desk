@@ -4,24 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QPushButton, QWidget
 
 from ...domain.antennas.biquad import BiquadKind, BiquadParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
 from ..widgets.biquad_form import BiquadForm
+from ..widgets.form_dialog import FormDialogFrame
 
 
-class BiquadDialog(QDialog):
+class BiquadDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -32,42 +24,41 @@ class BiquadDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: BiquadParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: BiquadParameters | None = None
-        self._form = BiquadForm(translator, unit_system, parameters, self, kind=kind)
-        if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-            self._form.load_starting_dimensions()
-        self.setWindowTitle(translator.t("biquad.title"))
-        self.resize(*scaled_dialog_size(560, 760))
-
-        self._hint = QLabel(translator.t("biquad.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("biquad.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        self._starting = QPushButton(translator.t("biquad.load_starting"), self)
-        self._starting.setToolTip(translator.t("biquad.load_starting_hint"))
-        self._starting.clicked.connect(self._form.load_starting_dimensions)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        form = BiquadForm(
+            translator,
+            unit_system,
+            parameters,
+            None,
+            kind=kind,
+            wide_layout=True,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
+        if frequency_hz is not None and parameters is None:
+            form.set_frequency_hz(frequency_hz)
+            form.load_starting_dimensions()
+        hint = QLabel(translator.t("biquad.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("biquad.evidence"))
+        evidence.setWordWrap(True)
+        starting = QPushButton(translator.t("biquad.load_starting"))
+        starting.setToolTip(translator.t("biquad.load_starting_hint"))
+        starting.clicked.connect(form.load_starting_dimensions)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addWidget(self._starting)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        super().__init__(
+            title=translator.t("biquad.title"),
+            form=form,
+            notes=(starting, hint, evidence),
+            initial_size=(920, 640),
+            parent=parent,
+        )
+        self._translator = translator
+        self._biquad_form = form
+        self._parameters: BiquadParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
+        self._starting = starting
 
     def parameters(self) -> BiquadParameters:
-        return self._form.parameters()
+        return self._biquad_form.parameters()
 
     def _accept(self) -> None:
         try:

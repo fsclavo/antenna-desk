@@ -175,6 +175,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the guard rejects a tall form without a scroll area. No solver, domain,
   schema, simulation, or report change.
 
+- **Wide dialogs for the complex family wave 1 (UX52).** Loaded dipole, biquad,
+  Moxon, and magnetic loop now use the shared `FormDialogFrame` and
+  `SectionedForm` with two semantic columns, a form scroll fallback, and the
+  notes and OK/Cancel outside the scroll. All four open at 920×640 with the
+  form and actions visible and no horizontal scrollbar in English or Spanish.
+  The loaded-dipole orientation selector now shows its labels immediately. No
+  solver, domain, schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

@@ -4,23 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.loaded_dipole import LoadedDipoleParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.loaded_dipole_form import LoadedDipoleForm
 
 
-class LoadedDipoleDialog(QDialog):
+class LoadedDipoleDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -30,36 +23,35 @@ class LoadedDipoleDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: LoadedDipoleParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: LoadedDipoleParameters | None = None
-        self._form = LoadedDipoleForm(translator, unit_system, parameters, self)
-        if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self.setWindowTitle(translator.t("loaded_dipole.title"))
-        self.resize(*scaled_dialog_size(560, 800))
-
-        self._hint = QLabel(translator.t("loaded_dipole.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("loaded_dipole.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        form = LoadedDipoleForm(
+            translator,
+            unit_system,
+            parameters,
+            None,
+            wide_layout=True,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
+        if frequency_hz is not None and parameters is None:
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("loaded_dipole.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("loaded_dipole.evidence"))
+        evidence.setWordWrap(True)
 
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        super().__init__(
+            title=translator.t("loaded_dipole.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(920, 640),
+            parent=parent,
+        )
+        self._translator = translator
+        self._loaded_form = form
+        self._parameters: LoadedDipoleParameters | None = None
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> LoadedDipoleParameters:
-        return self._form.parameters()
+        return self._loaded_form.parameters()
 
     def _accept(self) -> None:
         try:

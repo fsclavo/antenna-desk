@@ -8,7 +8,6 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,
@@ -49,6 +48,7 @@ from .form_units import (
     apply_radius_units,
 )
 from .ground_presets import GroundPresetController
+from .sectioned_form import FormColumn, FormLayoutMode, FormRow, FormSection, SectionedForm
 from .starting_dimensions import StartingDimensionsState
 
 # The editor starts on the 10 m band.  The geometry is the published Cebik
@@ -69,10 +69,12 @@ class MoxonForm(QWidget):
         parent: QWidget | None = None,
         *,
         display_units: DisplayUnits | None = None,
+        wide_layout: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self, family="moxon")
+        self._wide_layout = wide_layout
         self._unit_system = unit_system
         self._display_units = display_units or DisplayUnits(
             unit_system,
@@ -223,31 +225,47 @@ class MoxonForm(QWidget):
         self._starting_note.setVisible(False)
         self._starting_state = StartingDimensionsState(translator, self._starting_note)
 
-        form = QFormLayout()
-        form.addRow(self._labels.label("field.frequency"), self._frequency)
-        form.addRow(self._labels.label("moxon.width"), self._width)
-        form.addRow(self._labels.label("moxon.depth"), self._depth)
-        form.addRow(self._labels.label("moxon.reflector_tip"), self._reflector_tip)
-        form.addRow(self._labels.label("moxon.driven_tip"), self._driven_tip)
-        form.addRow(self._labels.label("field.height"), self._height)
-        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
-        form.addRow(self._labels.label("field.polarization"), self._polarization)
-        form.addRow(self._labels.label("moxon.wire_radius"), self._radius)
-        form.addRow(self._labels.label("field.material"), self._material)
-        form.addRow(self._labels.label("field.ground"), self._ground)
-        form.addRow(self._labels.label("field.soil_preset"), self._soil)
-        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
-        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        left_rows = [
+            FormRow("field.frequency", self._frequency),
+            FormRow("moxon.width", self._width),
+            FormRow("moxon.depth", self._depth),
+            FormRow("moxon.reflector_tip", self._reflector_tip),
+            FormRow("moxon.driven_tip", self._driven_tip),
+            FormRow("field.height", self._height),
+        ]
+        right_rows = [
+            FormRow("field.azimuth", self._azimuth),
+            FormRow("field.polarization", self._polarization),
+            FormRow("moxon.wire_radius", self._radius),
+            FormRow("field.material", self._material),
+            FormRow("field.ground", self._ground),
+            FormRow("field.soil_preset", self._soil),
+            FormRow("field.permittivity", self._permittivity),
+            FormRow("field.conductivity", self._conductivity),
+        ]
+        self._sectioned = SectionedForm(
+            (
+                FormSection(tuple(left_rows), column=FormColumn.LEFT),
+                FormSection(tuple(right_rows), column=FormColumn.RIGHT),
+            ),
+            mode=FormLayoutMode.TWO_COLUMN if wide_layout else FormLayoutMode.SINGLE,
+            label_factory=self._labels.label,
+            target_width_px=920 if wide_layout else None,
+            parent=self,
+        )
+        for form in self._sectioned.forms:
+            self._labels.bind_form(form)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._labels.bind_form(form)
-        layout.addLayout(form)
+        layout.addWidget(self._sectioned)
         layout.addWidget(self._reference)
         layout.addWidget(self._starting_note)
         layout.addWidget(self._geometry)
         layout.addWidget(self._clearance_warning)
         layout.addWidget(self._frequency_warning)
+        layout.addStretch(1)
+        self._sectioned.apply_tab_order(self._reference)
 
         self._frequency.valueChanged.connect(self._frequency_changed)
         for widget in (
