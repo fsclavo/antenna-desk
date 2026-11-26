@@ -158,6 +158,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   uses a fixed 38°/26° camera so sheets stay reproducible. No solver, domain,
   schema, simulation, or report change.
 
+- **Wide Yagi generator dialog (UX50).** The Yagi generator now opens at
+  920×860 with a two-column form: geometry and support on the left; material,
+  site, ground, and feed on the right. The form scrolls inside a scroll area
+  while the hint, evidence, boom note, and OK/Cancel stay visible. The inline
+  sidebar Yagi editor remains single-column. No solver, domain, schema,
+  simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

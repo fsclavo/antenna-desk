@@ -576,6 +576,12 @@ diameter. The mast and guys use the element material, are drawn and included in
 the BOM, and are not connected to the elements; boom mounting, towers, and
 structural hardware are not modeled.
 
+The generator dialog uses a wide two-column form: geometry and support controls
+on the left, material, site, ground, and feed controls on the right. The form
+scrolls inside the dialog when the screen is short or the font is large; the
+hint, evidence, boom note, and OK/Cancel stay outside the scroll area. The
+inline editor in the main window remains single-column.
+
 **Polarization** selects horizontal or vertical elements. In both cases the
 boom stays horizontal; vertical polarization rotates each element around the
 boom. Height is the boom centerline, so a vertical Yagi needs enough clearance

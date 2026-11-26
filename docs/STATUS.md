@@ -68,6 +68,11 @@
   views** camera link that syncs yaw/pitch only, resets both cameras on design
   change, and turns off with an explanation in Construction view. The
   construction-sheet isometric export keeps a fixed 38°/26° camera.
+- UX50 is **implemented 2026-11-26**: the Yagi generator dialog uses a wide
+  two-column form (geometry/support left, material/site/feed right) inside a
+  scroll area, while the inline sidebar Yagi form stays single-column. The hint,
+  evidence, boom note, and OK/Cancel remain visible when the form scrolls. No
+  solver, domain, schema, simulation, or report change.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -112,7 +117,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX49 are implemented; the next step is visual QA and closing the 1.2 presentation track.
+2. UX46–UX50 are implemented; continue with the UX51–UX55 dialog-layout track or close the 1.2 presentation track.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

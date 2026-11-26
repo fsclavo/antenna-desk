@@ -4,11 +4,14 @@
 
 from __future__ import annotations
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QFrame,
     QLabel,
     QMessageBox,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -33,7 +36,13 @@ class YagiDialog(QDialog):
         super().__init__(parent)
         self._translator = translator
         self._parameters: YagiParameters | None = None
-        self._form = YagiForm(translator, unit_system, parameters, self)
+        self._form = YagiForm(
+            translator,
+            unit_system,
+            parameters,
+            self,
+            wide_layout=True,
+        )
         if frequency_hz is not None and parameters is None:
             self._form.set_frequency_hz(frequency_hz)
         self._table = self._form._table
@@ -50,7 +59,7 @@ class YagiDialog(QDialog):
         self._load_preset = self._form._load_preset
 
         self.setWindowTitle(translator.t("yagi.title"))
-        self.resize(*scaled_dialog_size(920, 720))
+        self.resize(*scaled_dialog_size(920, 860))
 
         self._hint = QLabel(translator.t("yagi.hint"), self)
         self._hint.setWordWrap(True)
@@ -59,19 +68,25 @@ class YagiDialog(QDialog):
         self._boom_note = QLabel(translator.t("yagi.boom_note"), self)
         self._boom_note.setWordWrap(True)
 
-        buttons = QDialogButtonBox(
+        self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
+        self._buttons.accepted.connect(self._accept)
+        self._buttons.rejected.connect(self.reject)
+
+        self._scroll = QScrollArea(self)
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._scroll.setWidget(self._form)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self._form, 1)
+        layout.addWidget(self._scroll, 1)
         layout.addWidget(self._hint)
         layout.addWidget(self._evidence)
         layout.addWidget(self._boom_note)
-        layout.addWidget(buttons)
+        layout.addWidget(self._buttons)
 
     def parameters(self) -> YagiParameters:
         return self._form.parameters()
