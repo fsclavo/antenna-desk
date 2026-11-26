@@ -4,24 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QPushButton, QWidget
 
 from ...domain.antennas.ringo import RingoParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.ringo_form import RingoForm
 
 
-class RingoDialog(QDialog):
+class RingoDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -31,44 +23,34 @@ class RingoDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: RingoParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: RingoParameters | None = None
-        self._form = RingoForm(translator, unit_system, parameters, self)
+        form = RingoForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self.setWindowTitle(translator.t("ringo.title"))
-        self.resize(*scaled_dialog_size(560, 620))
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("ringo.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("ringo.evidence"))
+        evidence.setWordWrap(True)
+        example = QPushButton(translator.t("ringo.ar6_example"))
+        example.setToolTip(translator.t("ringo.ar6_example_hint"))
+        example.clicked.connect(form.load_cushcraft_ar6_example)
 
-        self._hint = QLabel(translator.t("ringo.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("ringo.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        self._example = QPushButton(
-            translator.t("ringo.ar6_example"),
-            self,
+        super().__init__(
+            title=translator.t("ringo.title"),
+            form=form,
+            notes=(example, hint, evidence),
+            initial_size=(560, 620),
+            scroll_form=False,
+            parent=parent,
         )
-        self._example.setToolTip(translator.t("ringo.ar6_example_hint"))
-        self._example.clicked.connect(self._form.load_cushcraft_ar6_example)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
-        )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addWidget(self._example)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._ringo_form = form
+        self._parameters: RingoParameters | None = None
+        self._example = example
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> RingoParameters:
-        return self._form.parameters()
+        return self._ringo_form.parameters()
 
     def _accept(self) -> None:
         try:

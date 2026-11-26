@@ -199,6 +199,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   with no horizontal scrollbar. No solver, domain, schema, simulation, or
   report change.
 
+- **Generator dialog layout track closure (UX55).** Fan dipole, Ringo, inverted
+  V, and inverted L now use `FormDialogFrame` without a form scroll, and all 25
+  family generator dialogs use the shared scaffold. The layout guard has no
+  exceptions. A 400-check offscreen matrix (25 dialogs × light/dark ×
+  Medium/Large × EN/ES × 1366×768/1920×1080) found no action outside the dialog
+  and no horizontal scrollbar. The final interactive desktop 125%/150% scaling
+  confirmation remains manual. No solver, domain, schema, simulation, or report
+  change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

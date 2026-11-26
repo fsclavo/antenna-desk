@@ -103,6 +103,14 @@
   level/spacing/feed controls above the embedded Yagi editor. Primary controls
   are visible at 1920×1080 and the 1366×768 cap, with no horizontal scrollbar.
   No solver, domain, schema, simulation, or report change.
+- UX55 is **implemented 2026-11-26**: fan dipole, Ringo, inverted V, and
+  inverted L use the shared scaffold without a form scroll, and all 25 family
+  generator dialogs now use `FormDialogFrame`. The layout guard has no
+  exceptions. A 400-check offscreen matrix (25 dialogs × light/dark ×
+  Medium/Large × EN/ES × 1366×768/1920×1080) passed with no visible action
+  outside the dialog and no horizontal scrollbar. See
+  [`archive/qa/QA_PASS_2026-11-26_ux55.md`](archive/qa/QA_PASS_2026-11-26_ux55.md).
+  The final interactive desktop 125%/150% scaling confirmation remains manual.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -147,7 +155,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX54 are implemented; continue with UX55 or close the 1.2 presentation track.
+2. UX46–UX55 are implemented and the generator-dialog layout track is closed at the automated level; run the final desktop 125%/150% visual confirmation, then choose the next release slice.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

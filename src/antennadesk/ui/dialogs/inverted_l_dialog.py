@@ -4,23 +4,16 @@
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QLabel,
-    QMessageBox,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QMessageBox, QWidget
 
 from ...domain.antennas.inverted_l import InvertedLParameters
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.inverted_l_form import InvertedLForm
 
 
-class InvertedLDialog(QDialog):
+class InvertedLDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -30,48 +23,41 @@ class InvertedLDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: InvertedLParameters | None = None,
     ) -> None:
-        super().__init__(parent)
-        self._translator = translator
-        self._parameters: InvertedLParameters | None = None
-        self._form = InvertedLForm(translator, unit_system, parameters, self)
+        form = InvertedLForm(translator, unit_system, parameters, None)
         if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self._frequency = self._form._frequency
-        self._vertical_height = self._form._vertical_height
-        self._horizontal_length = self._form._horizontal_length
-        self._base_height = self._form._base_height
-        self._azimuth = self._form._azimuth
-        self._radius = self._form._radius
-        self._material = self._form._material
-        self._ground = self._form._ground
-        self._permittivity = self._form._permittivity
-        self._conductivity = self._form._conductivity
-        self._geometry = self._form._geometry
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("inverted_l.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("inverted_l.evidence"))
+        evidence.setWordWrap(True)
 
-        self.setWindowTitle(translator.t("inverted_l.title"))
-        self.resize(*scaled_dialog_size(560, 600))
-
-        self._hint = QLabel(translator.t("inverted_l.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("inverted_l.evidence"), self)
-        self._evidence.setWordWrap(True)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
+        super().__init__(
+            title=translator.t("inverted_l.title"),
+            form=form,
+            notes=(hint, evidence),
+            initial_size=(560, 600),
+            scroll_form=False,
+            parent=parent,
         )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
+        self._translator = translator
+        self._inverted_l_form = form
+        self._parameters: InvertedLParameters | None = None
+        self._frequency = form._frequency
+        self._vertical_height = form._vertical_height
+        self._horizontal_length = form._horizontal_length
+        self._base_height = form._base_height
+        self._azimuth = form._azimuth
+        self._radius = form._radius
+        self._material = form._material
+        self._ground = form._ground
+        self._permittivity = form._permittivity
+        self._conductivity = form._conductivity
+        self._geometry = form._geometry
+        self._hint = hint
+        self._evidence = evidence
 
     def parameters(self) -> InvertedLParameters:
-        return self._form.parameters()
+        return self._inverted_l_form.parameters()
 
     def _accept(self) -> None:
         try:

@@ -154,12 +154,19 @@ def test_generator_dialog_layout_guard(
     dialog = case.dialog_type(Translator(language), UnitSystem.METRIC)
     qtbot.addWidget(dialog)
 
+    assert isinstance(dialog, FormDialogFrame)
     issues = audit_generator_dialog(dialog)
 
     if case.exception is not None:
         assert issues, f"{case.name} now passes; remove the exception: {case.exception}"
         return
     assert issues == (), f"{case.name} ({language.value}): " + "; ".join(issues)
+
+
+def test_registry_covers_every_family_generator_dialog() -> None:
+    names = [case.name for case in REGISTRY]
+
+    assert len(names) == len(set(names)) == 25
 
 
 def test_guard_rejects_a_deliberately_tall_form_without_scroll(qtbot: QtBot) -> None:

@@ -1,6 +1,6 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; implemented by UX50 and UX51, applied to UX52–UX54
+- **Status:** accepted 2026-11-26; implemented and closed by UX50–UX55
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX55
 
@@ -137,6 +137,14 @@ atomic, and the stacked Yagi embedded editor is a composed-family section that
 must not be split. Promoting the stacked controls above that editor is the only
 field-order change in UX54.
 
+UX55 migrated fan dipole, Ringo, inverted V, and inverted L without a form
+scroll; each keeps its compact single column. The final guard registry has 25
+entries and no exceptions. The offscreen closure matrix covered 400
+combinations (25 dialogs × light/dark × Medium/Large × English/Spanish ×
+1366×768/1920×1080) with no action outside the dialog and no horizontal
+scrollbar. The interactive desktop 125%/150% display-scaling check remains a
+release-level manual step.
+
 ## Rejected alternatives
 
 - **Two columns everywhere.** Compact forms become sparse, and the sidebar
@@ -170,8 +178,8 @@ Costs:
 
 UX52 later applied the standard to loaded dipole, biquad, Moxon, and magnetic
 loop, and UX53 applied it to Beverage, SCV, J-pole, and OCFD without changing
-the guard contract, and UX54 applied the scaffold audit to the twelve
-scroll-heavy dialogs. Out of scope: the UX55 compact-family closure and
-cross-family visual QA, changing `scaled_dialog_size()` semantics, changing
-the sidebar, and any solver, domain-model, schema, simulation, report, or
-numerical-reference change.
+the guard contract, UX54 applied the scaffold audit to the twelve
+scroll-heavy dialogs, and UX55 closed the compact-family and matrix work.
+Out of scope: the release-level interactive desktop scaling check, changing
+`scaled_dialog_size()` semantics, changing the sidebar, and any solver,
+domain-model, schema, simulation, report, or numerical-reference change.
