@@ -77,7 +77,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
 | FP1 | Flower Pot half-wave family | L | ADR-0055; physical/electrical spike; next schema bump | **Proposed 2026-11-26; not started.** Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, a construction shortening factor, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
-| UX46 | 3D lobe orientation indicators | S | none | **Proposed 2026-11-25.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
+| UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Proposed 2026-11-25.** Top-view inset with the canonical footprint, feed, antenna azimuth, and max-gain azimuth; theme-aware and hidden at minimum size. No synthetic family shape and no new engine. See §UX47. |
 | UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Proposed 2026-11-25.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; front/back only for explicit families; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
 | UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Proposed 2026-11-25.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode handled explicitly. No solver, domain, schema, or report change; no new engine. See §UX49. |
@@ -1764,6 +1764,12 @@ UX49 S (1–2 days), including tests, help, and docs. No external dependency.
 UI/projection tests, and the docs listed under the cross-cutting acceptance.
 
 ### UX46 — 3D lobe orientation indicators (layer 1)
+
+**Implemented 2026-11-26.** The presentation-only slice adds the shared
+projection helper, explicit forward-axis registry, antenna azimuth/vertical
+markers, maximum-gain ray, same-elevation back ray with F/B, azimuth reference
+ring, compact-label behavior, shared antenna/feed visual tokens, and EN/ES help
+and accessibility text. No solver, domain, schema, or report change.
 
 **Scope:** presentation only; `RadiationPattern3DView` and the data that
 `ResultsView` already has. No antenna-wire overlay yet. The live-tuning dialog

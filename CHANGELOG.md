@@ -126,6 +126,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   embedded-data/provenance ADR; the bounded Wilkinson model remains the
   supported result.
 
+- **3D lobe orientation indicators (UX46).** The 3D pattern view now draws a
+  maximum-gain ray, a dashed same-elevation back ray with the project F/B value,
+  and an antenna azimuth arrow or vertical dot using an explicit forward-axis
+  registry. A faint azimuth reference ring, compact labels, shared antenna
+  color/feed-marker tokens, and EN/ES help and accessibility text complete the
+  presentation layer. No solver, domain, schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

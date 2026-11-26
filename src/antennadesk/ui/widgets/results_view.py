@@ -72,6 +72,7 @@ from ...domain.simulation.bands import AMATEUR_BANDS, amateur_band_for
 from ...domain.simulation.metrics import decision_metrics
 from ...domain.simulation.pattern import (
     PatternGainMetric,
+    front_to_back_db,
     max_power_gain_db,
     pattern_gain_offset_db,
 )
@@ -87,6 +88,7 @@ from ...reporting.result_summary import representative_gain_frequency
 from ..fonts import apply_plot_fonts, scaled_font_copy
 from ..help import apply_help
 from ..i18n import Translator
+from ..pattern_orientation import antenna_orientation, forward_axis_azimuth
 from ..theme import theme_colors
 from ..units import DisplayUnits
 from .chart_cursor import ChartCursor, CursorSeries
@@ -2234,6 +2236,8 @@ class ResultsView(QWidget):
             self._design is not None
             and self._design.antenna.environment.ground.kind is not GroundKind.FREE_SPACE
         )
+        parameters = self._design.parameters if self._design is not None else None
+        antenna_azimuth, antenna_vertical = antenna_orientation(parameters)
         self._pattern_3d.set_points(
             tuple(
                 (point.theta_deg, point.phi_deg, point.gain_total_db + offset)
@@ -2241,6 +2245,10 @@ class ResultsView(QWidget):
                 if point.gain_total_db is not None
             ),
             ground=ground,
+            antenna_azimuth=antenna_azimuth,
+            antenna_vertical=antenna_vertical,
+            forward_azimuth=forward_axis_azimuth(parameters),
+            front_to_back_db=front_to_back_db(frequency.far_field),
         )
         self._update_metric_summary(frequency)
 
@@ -2323,11 +2331,9 @@ class ResultsView(QWidget):
         self._azimuth_polar.set_mirror(False)
         self._azimuth_polar.set_closed(True)
         parameters = self._design.parameters if self._design is not None else None
-        azimuth = getattr(parameters, "azimuth_deg", None)
-        orientation = getattr(parameters, "orientation", None)
-        vertical = getattr(orientation, "value", orientation) == "vertical"
+        azimuth, vertical = antenna_orientation(parameters)
         if azimuth is not None and not vertical:
-            self._azimuth_polar.set_antenna(float(azimuth))
+            self._azimuth_polar.set_antenna(azimuth)
         else:
             self._azimuth_polar.set_antenna(None, vertical=vertical)
         self._azimuth_polar.set_title(

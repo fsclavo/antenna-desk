@@ -23,6 +23,8 @@ from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
 from ...domain.simulation.pattern import takeoff_angle_deg
 from ..fonts import scaled_font
+from ..geometry.projection import project_world
+from ..help import apply_help
 from ..i18n import Translator
 from ..theme import theme_colors
 
@@ -395,6 +397,10 @@ class RadiationPattern3DView(QWidget):
         super().__init__(parent)
         self._translator = translator
         self._metric_label = translator.t("pattern.metric.power")
+        self._antenna_azimuth: float | None = None
+        self._antenna_vertical = False
+        self._forward_azimuth: float | None = None
+        self._front_to_back_db: float | None = None
         self._points: tuple[tuple[float, float, float], ...] = ()
         self._full_mesh: _Mesh | None = None
         self._interactive_mesh: _Mesh | None = None
@@ -408,6 +414,8 @@ class RadiationPattern3DView(QWidget):
         self._interaction_timer: QTimer | None = None
         self._colors = theme_colors(self.palette())
         self.setMinimumHeight(280)
+        self.setAccessibleName(translator.t("pattern.3d_polar"))
+        apply_help(self, translator, "pattern.3d_view")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         app = QApplication.instance()
         if isinstance(app, QApplication):
@@ -429,10 +437,18 @@ class RadiationPattern3DView(QWidget):
         points: tuple[tuple[float, float, float], ...],
         *,
         ground: bool = False,
+        antenna_azimuth: float | None = None,
+        antenna_vertical: bool = False,
+        forward_azimuth: float | None = None,
+        front_to_back_db: float | None = None,
     ) -> None:
         if ground:
             points = tuple(point for point in points if point[0] <= 90.0 + 1e-6)
         self._points = points
+        self._antenna_azimuth = antenna_azimuth
+        self._antenna_vertical = antenna_vertical
+        self._forward_azimuth = forward_azimuth
+        self._front_to_back_db = front_to_back_db
         source_mesh = _build_mesh(points)
         self._full_mesh = _reduced_full_mesh(source_mesh) if source_mesh is not None else None
         self._interactive_mesh = _decimated_mesh(source_mesh) if source_mesh is not None else None
@@ -539,6 +555,121 @@ class RadiationPattern3DView(QWidget):
             angle=takeoff_angle_deg(point[0]),
         )
 
+    def _max_gain_label_with_azimuth(self, point: tuple[float, float, float]) -> str:
+        return (
+            f"{self._max_gain_label(point)} · "
+            f"{self._translator.t('pattern.azimuth_short', phi=f'{point[1] % 360.0:.0f}')}"
+        )
+
+    def _back_label(self) -> str:
+        if self._front_to_back_db is not None and math.isfinite(self._front_to_back_db):
+            return self._translator.t(
+                "pattern.back_with_fb",
+                value=f"{self._front_to_back_db:.1f}",
+            )
+        return self._translator.t("pattern.back_same_elevation")
+
+    def _antenna_label(self) -> str:
+        if self._antenna_vertical and self._forward_azimuth is None:
+            return self._translator.t("pattern.antenna")
+        angle = self._forward_azimuth
+        if angle is None:
+            angle = self._antenna_azimuth
+        if angle is None:
+            return self._translator.t("pattern.antenna")
+        return self._translator.t(
+            "pattern.antenna_azimuth",
+            phi=f"{float(angle) % 360.0:.0f}",
+        )
+
+    @staticmethod
+    def _draw_arrow(
+        painter: QPainter,
+        start: QPointF,
+        end: QPointF,
+        color: QColor,
+        *,
+        dashed: bool = False,
+        width: float = 1.5,
+    ) -> None:
+        style = Qt.PenStyle.DashLine if dashed else Qt.PenStyle.SolidLine
+        painter.setPen(QPen(color, width, style))
+        painter.drawLine(start, end)
+        dx = end.x() - start.x()
+        dy = end.y() - start.y()
+        length = math.hypot(dx, dy)
+        if length < 8.0:
+            return
+        ux = dx / length
+        uy = dy / length
+        size = 6.0
+        left = QPointF(
+            end.x() - size * ux + 0.5 * size * uy,
+            end.y() - size * uy - 0.5 * size * ux,
+        )
+        right = QPointF(
+            end.x() - size * ux - 0.5 * size * uy,
+            end.y() - size * uy + 0.5 * size * ux,
+        )
+        painter.drawLine(end, left)
+        painter.drawLine(end, right)
+
+    @staticmethod
+    def _place_label(
+        painter: QPainter,
+        rect: QRectF,
+        anchor: QPointF,
+        text: str,
+        occupied: list[QRectF],
+        *,
+        force: bool = False,
+    ) -> QRectF | None:
+        painter.setFont(scaled_font(8))
+        metrics = painter.fontMetrics()
+        width = min(metrics.horizontalAdvance(text) + 10.0, rect.width() - 12.0)
+        height = 18.0
+        candidates = (
+            (anchor.x() + 8.0, anchor.y() - height - 4.0),
+            (anchor.x() - width - 8.0, anchor.y() - height - 4.0),
+            (anchor.x() + 8.0, anchor.y() + 6.0),
+            (anchor.x() - width - 8.0, anchor.y() + 6.0),
+            (anchor.x() - width / 2.0, anchor.y() - height - 10.0),
+            (anchor.x() - width / 2.0, anchor.y() + 10.0),
+        )
+        for x, y in candidates:
+            label = QRectF(x, y, width, height)
+            label.moveLeft(min(max(label.left(), rect.left() + 6.0), rect.right() - 6.0 - width))
+            label.moveTop(min(max(label.top(), rect.top() + 6.0), rect.bottom() - 6.0 - height))
+            if not any(label.intersects(other) for other in occupied):
+                return label
+        if not force:
+            return None
+        label = QRectF(candidates[0][0], candidates[0][1], width, height)
+        label.moveLeft(min(max(label.left(), rect.left() + 6.0), rect.right() - 6.0 - width))
+        label.moveTop(min(max(label.top(), rect.top() + 6.0), rect.bottom() - 6.0 - height))
+        return label
+
+    def _draw_label(
+        self,
+        painter: QPainter,
+        label: QRectF,
+        text: str,
+        color: QColor,
+    ) -> None:
+        background = QColor(self._colors.background)
+        background.setAlpha(220)
+        painter.setFont(scaled_font(8))
+        painter.setPen(QPen(self._colors.light_line, 0.8))
+        painter.setBrush(background)
+        painter.drawRoundedRect(label, 3.0, 3.0)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(color)
+        painter.drawText(
+            label.adjusted(5.0, 0.0, -5.0, 0.0),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            text,
+        )
+
     def paintEvent(self, event: QPaintEvent) -> None:
         del event
         painter = QPainter(self)
@@ -633,10 +764,7 @@ class RadiationPattern3DView(QWidget):
             )
 
         def screen_world(x: float, y: float, z: float) -> QPointF:
-            rotated_x = x * cos_yaw - y * sin_yaw
-            rotated_y = x * sin_yaw + y * cos_yaw
-            px = rotated_x
-            py = rotated_y * sin_pitch + z * cos_pitch
+            px, py = project_world(x, y, z, self._yaw_deg, self._pitch_deg)
             return QPointF(
                 center.x() + (px - center_px) * scale,
                 center.y() - (py - center_py) * scale,
@@ -662,88 +790,143 @@ class RadiationPattern3DView(QWidget):
             painter.setPen(QPen(gain_color((index + 0.5) / GAIN_COLOR_BINS), 1.0))
             painter.drawPath(path)
 
-        if self._ground:
-            ground_points = [
-                screen_world(
-                    0.88 * math.cos(math.radians(phi)),
-                    0.88 * math.sin(math.radians(phi)),
-                    0.0,
+        origin = screen(0.0, 0.0, min_gain)
+        compact = draw_rect.width() < 420.0 or draw_rect.height() < 240.0
+
+        ring_points = [
+            screen_world(
+                0.88 * math.cos(math.radians(phi)),
+                0.88 * math.sin(math.radians(phi)),
+                0.0,
+            )
+            for phi in range(0, 361, 12)
+        ]
+        painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DotLine))
+        for index in range(1, len(ring_points)):
+            painter.drawLine(ring_points[index - 1], ring_points[index])
+        for phi in (0.0, 90.0, 180.0, 270.0):
+            end_point = screen_world(
+                0.88 * math.cos(math.radians(phi)),
+                0.88 * math.sin(math.radians(phi)),
+                0.0,
+            )
+            painter.drawLine(origin, end_point)
+            if not compact:
+                painter.setPen(self._colors.secondary_text)
+                painter.setFont(scaled_font(7))
+                painter.drawText(
+                    QRectF(end_point.x() - 18.0, end_point.y() - 8.0, 36.0, 16.0),
+                    Qt.AlignmentFlag.AlignCenter,
+                    self._translator.t("pattern.azimuth_short", phi=f"{phi:.0f}"),
                 )
-                for phi in range(0, 361, 12)
-            ]
-            painter.setPen(QPen(self._colors.light_line, 1.0, Qt.PenStyle.DotLine))
-            for index in range(1, len(ground_points)):
-                painter.drawLine(ground_points[index - 1], ground_points[index])
-            for phi in range(0, 360, 45):
-                painter.drawLine(
-                    screen_world(0.0, 0.0, 0.0),
-                    screen_world(
-                        0.88 * math.cos(math.radians(phi)),
-                        0.88 * math.sin(math.radians(phi)),
-                        0.0,
-                    ),
-                )
+        if not compact:
+            ring_label = screen_world(0.0, -0.98, 0.0)
             painter.setPen(self._colors.secondary_text)
             painter.setFont(scaled_font(7))
-            ground_label = screen_world(0.0, -0.88, 0.0)
             painter.drawText(
-                QRectF(ground_label.x() - 30.0, ground_label.y() + 4.0, 60.0, 14.0),
+                QRectF(ring_label.x() - 42.0, ring_label.y() + 4.0, 84.0, 14.0),
                 Qt.AlignmentFlag.AlignCenter,
-                self._translator.t("pattern.ground"),
+                self._translator.t(
+                    "pattern.ground" if self._ground else "pattern.azimuth_reference"
+                ),
             )
+
+        antenna_end: QPointF | None = None
+        antenna_angle = self._forward_azimuth
+        if antenna_angle is None and not self._antenna_vertical:
+            antenna_angle = self._antenna_azimuth
+        if antenna_angle is not None:
+            angle = math.radians(antenna_angle)
+            antenna_end = screen_world(0.99 * math.cos(angle), 0.99 * math.sin(angle), 0.0)
+            self._draw_arrow(painter, origin, antenna_end, self._colors.antenna, width=2.0)
+        elif self._antenna_vertical:
+            painter.setPen(QPen(self._colors.antenna, 2.0))
+            painter.setBrush(self._colors.antenna)
+            painter.drawEllipse(origin, 3.5, 3.5)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            antenna_end = origin
 
         max_point = mesh.max_point
         marker = screen(*max_point)
+        back_marker = screen(max_point[0], (max_point[1] + 180.0) % 360.0, max_point[2])
+        self._draw_arrow(painter, origin, marker, self._colors.feed)
+        if math.hypot(back_marker.x() - origin.x(), back_marker.y() - origin.y()) > 2.0:
+            self._draw_arrow(
+                painter,
+                origin,
+                back_marker,
+                self._colors.secondary_text,
+                dashed=True,
+            )
+
         painter.setPen(QPen(self._colors.feed, 2.0))
         painter.setBrush(self._colors.feed)
         painter.drawEllipse(marker, 3.5, 3.5)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
-        max_label = self._max_gain_label(max_point)
-        painter.setFont(scaled_font(8))
-        metrics = painter.fontMetrics()
-        label_width = min(metrics.horizontalAdvance(max_label) + 10.0, rect.width() - 12.0)
-        label_height = 18.0
-        label_x = marker.x() + 8.0
-        label_y = marker.y() - label_height - 4.0
-        if label_x + label_width > rect.right() - 6.0:
-            label_x = marker.x() - label_width - 8.0
-        if label_y < rect.top() + 6.0:
-            label_y = marker.y() + 6.0
-        label_rect = QRectF(
-            max(rect.left() + 6.0, label_x),
-            label_y,
-            label_width,
-            label_height,
-        )
-        background = QColor(self._colors.background)
-        background.setAlpha(220)
-        painter.setPen(QPen(self._colors.light_line, 0.8))
-        painter.setBrush(background)
-        painter.drawRoundedRect(label_rect, 3.0, 3.0)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(self._colors.feed)
-        painter.drawText(
-            label_rect.adjusted(5.0, 0.0, -5.0, 0.0),
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            max_label,
-        )
-
-        origin = screen(0.0, 0.0, min_gain)
         painter.setPen(QPen(self._colors.axis, 1.5))
         for axis_theta, axis_phi, axis_label in (
             (90.0, 0.0, "X"),
             (90.0, 90.0, "Y"),
             (0.0, 0.0, "Z"),
         ):
-            end = screen(axis_theta, axis_phi, max_gain)
-            painter.drawLine(origin, end)
+            axis_end = screen(axis_theta, axis_phi, max_gain)
+            painter.drawLine(origin, axis_end)
             painter.setFont(scaled_font(7))
             painter.setPen(self._colors.secondary_text)
             painter.drawText(
-                QRectF(end.x() + 4.0, end.y() - 8.0, 16.0, 16.0),
+                QRectF(axis_end.x() + 4.0, axis_end.y() - 8.0, 16.0, 16.0),
                 axis_label,
             )
+            painter.setPen(QPen(self._colors.axis, 1.5))
+
+        occupied: list[QRectF] = []
+        if draw_rect.width() >= 360.0 and draw_rect.height() >= 180.0:
+            occupied.append(
+                QRectF(
+                    draw_rect.right() - 84.0,
+                    draw_rect.top() + 8.0,
+                    84.0,
+                    180.0,
+                )
+            )
+        max_label = self._max_gain_label_with_azimuth(max_point)
+        label_rect = self._place_label(painter, rect, marker, max_label, occupied)
+        if label_rect is None:
+            max_label = self._max_gain_label(max_point)
+            label_rect = self._place_label(painter, rect, marker, max_label, occupied, force=True)
+        if label_rect is not None:
+            self._draw_label(painter, label_rect, max_label, self._colors.feed)
+            occupied.append(label_rect)
+
+        if not compact:
+            back_label = self._back_label()
+            label_rect = self._place_label(painter, rect, back_marker, back_label, occupied)
+            if label_rect is not None:
+                self._draw_label(
+                    painter,
+                    label_rect,
+                    back_label,
+                    self._colors.secondary_text,
+                )
+                occupied.append(label_rect)
+
+            if antenna_end is not None:
+                antenna_label = self._antenna_label()
+                label_rect = self._place_label(
+                    painter,
+                    rect,
+                    antenna_end,
+                    antenna_label,
+                    occupied,
+                )
+                if label_rect is not None:
+                    self._draw_label(
+                        painter,
+                        label_rect,
+                        antenna_label,
+                        self._colors.antenna,
+                    )
 
         self._draw_gain_legend(
             painter,

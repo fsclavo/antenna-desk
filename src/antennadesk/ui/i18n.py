@@ -2415,6 +2415,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Cut angle for the polar pattern.",
         Language.SPANISH: "Ángulo de corte para el patrón polar.",
     },
+    "help.pattern.3d_view": {
+        Language.ENGLISH: (
+            "3D pattern. Drag to rotate, wheel to zoom, double-click to reset. "
+            "Solid ray: maximum gain; dashed ray: same-elevation back direction; "
+            "antenna ray or dot: design orientation."
+        ),
+        Language.SPANISH: (
+            "Patrón 3D. Arrastrá para rotar, rueda para zoom y doble clic para "
+            "restablecer. Rayo sólido: ganancia máxima; discontinuo: dirección "
+            "trasera a igual elevación; rayo o punto: orientación de la antena."
+        ),
+    },
     "help.pattern.azimuth_cut": {
         Language.ENGLISH: ("Elevation angle θ used for the azimuth cut; the chart sweeps φ."),
         Language.SPANISH: (
@@ -9913,6 +9925,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Elevación",
     },
     "pattern.azimuth": {Language.ENGLISH: "Azimuth φ (°)", Language.SPANISH: "Azimut φ (°)"},
+    "pattern.azimuth_short": {
+        Language.ENGLISH: "φ={phi}°",
+        Language.SPANISH: "φ={phi}°",
+    },
+    "pattern.azimuth_reference": {
+        Language.ENGLISH: "Azimuth reference",
+        Language.SPANISH: "Referencia de azimut",
+    },
     "pattern.polar_elevation": {
         Language.ENGLISH: "Elevation lobes",
         Language.SPANISH: "Lóbulos de elevación",
@@ -9932,6 +9952,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.ground": {
         Language.ENGLISH: "Ground",
         Language.SPANISH: "Suelo",
+    },
+    "pattern.back_same_elevation": {
+        Language.ENGLISH: "Back (same elevation)",
+        Language.SPANISH: "Atrás (misma elevación)",
+    },
+    "pattern.back_with_fb": {
+        Language.ENGLISH: "Back (same elevation) · F/B {value} dB",
+        Language.SPANISH: "Atrás (misma elevación) · F/B {value} dB",
+    },
+    "pattern.antenna_azimuth": {
+        Language.ENGLISH: "Antenna φ={phi}°",
+        Language.SPANISH: "Antena φ={phi}°",
     },
     "pattern.max_gain_ground": {
         Language.ENGLISH: "Power gain {gain:.2f} dBi · {angle:.1f}° above ground",

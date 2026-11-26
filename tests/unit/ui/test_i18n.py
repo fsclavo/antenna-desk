@@ -144,6 +144,7 @@ HELP_MANIFEST = frozenset(
         "help.tab.simulation",
         "help.matching_network.position",
         "help.matching_network.source_impedance",
+        "help.pattern.3d_view",
         "help.pattern.azimuth_cut",
         "help.pattern.elevation_cut",
         "help.pattern.metric_summary",

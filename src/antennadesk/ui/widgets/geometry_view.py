@@ -62,9 +62,11 @@ from ..geometry.layout import (
     layout_angular_dimensions,
     layout_dimensions,
 )
+from ..geometry.projection import project_world
 from ..geometry.scene import GeometryScene, SceneInset, ScenePoint
 from ..geometry.views import GeometryViewMode, construction_view
 from ..i18n import Translator
+from ..paint import draw_feed_marker
 from ..theme import theme_colors
 from ..units import DisplayUnits, LengthPolicy, LengthUnit, UnitSystem, length_from_m
 
@@ -1300,7 +1302,7 @@ class GeometryView(QWidget):
             painter.drawLine(screen(x, min_y, 0.0), screen(x, max_y, 0.0))
             painter.drawLine(screen(min_x, y, 0.0), screen(max_x, y, 0.0))
 
-        painter.setPen(QPen(self._colors.wire, 2.5))
+        painter.setPen(QPen(self._colors.antenna, 2.5))
         for wire in self._model.wires:
             painter.drawLine(
                 screen(wire.start.x_m, wire.start.y_m, wire.start.z_m),
@@ -1314,10 +1316,7 @@ class GeometryView(QWidget):
             feed_wire.start.y_m + (feed_wire.end.y_m - feed_wire.start.y_m) * feed_ratio,
             feed_wire.start.z_m + (feed_wire.end.z_m - feed_wire.start.z_m) * feed_ratio,
         )
-        painter.setPen(QPen(self._colors.feed, 2.0))
-        painter.setBrush(self._colors.feed)
-        painter.drawEllipse(feed, 4.0, 4.0)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
+        draw_feed_marker(painter, feed, self._colors.feed)
         self._draw_centered_label(
             painter,
             QPointF(feed.x() + 20.0, feed.y() - 12.0),
@@ -1359,9 +1358,9 @@ class GeometryView(QWidget):
         cos_pitch: float,
         sin_pitch: float,
     ) -> tuple[float, float]:
-        rotated_x = x_m * cos_yaw - y_m * sin_yaw
-        rotated_y = x_m * sin_yaw + y_m * cos_yaw
-        return rotated_x, rotated_y * sin_pitch + z_m * cos_pitch
+        yaw_deg = math.degrees(math.atan2(sin_yaw, cos_yaw))
+        pitch_deg = math.degrees(math.atan2(sin_pitch, cos_pitch))
+        return project_world(x_m, y_m, z_m, yaw_deg, pitch_deg)
 
     def _type_label(self) -> str | None:
         return type_label(

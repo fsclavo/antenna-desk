@@ -28,6 +28,7 @@ class ThemeColors:
     light_line: QColor
     dimension: QColor
     wire: QColor
+    antenna: QColor
     feed: QColor
     ground: QColor
     resistance: QColor
@@ -48,6 +49,7 @@ LIGHT = ThemeColors(
     light_line=QColor("#b8b8b8"),
     dimension=QColor("#555555"),
     wire=QColor("#1f5fa8"),
+    antenna=QColor("#1f5fa8"),
     feed=QColor("#c0392b"),
     ground=QColor("#777777"),
     resistance=QColor("#1f5fa8"),
@@ -68,6 +70,7 @@ DARK = ThemeColors(
     light_line=QColor("#666666"),
     dimension=QColor("#d0d0d0"),
     wire=QColor("#5aa9ff"),
+    antenna=QColor("#5aa9ff"),
     feed=QColor("#ff6b5a"),
     ground=QColor("#a0a0a0"),
     resistance=QColor("#5aa9ff"),
