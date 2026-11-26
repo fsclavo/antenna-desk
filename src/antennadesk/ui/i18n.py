@@ -2957,6 +2957,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "geometry.view_elevation": {Language.ENGLISH: "Elevation", Language.SPANISH: "Alzado"},
     "geometry.view_plan": {Language.ENGLISH: "Plan", Language.SPANISH: "Planta"},
     "geometry.view_3d": {Language.ENGLISH: "3D", Language.SPANISH: "3D"},
+    "geometry.link_3d_views": {
+        Language.ENGLISH: "Link 3D",
+        Language.SPANISH: "Vincular 3D",
+    },
     "geometry.3d_summary": {
         Language.ENGLISH: "{type} · {count} wires · max height {height}",
         Language.SPANISH: "{type} · {count} hilos · altura máxima {height}",
@@ -5304,6 +5308,19 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Dimensioned construction view and 3D view of the canonical wire model.",
         Language.SPANISH: "Vista de construcción acotada y vista 3D del modelo de hilos canónico.",
     },
+    "help.geometry.link_3d_views": {
+        Language.ENGLISH: (
+            "Synchronize yaw and pitch with the 3D pattern lobe. Zoom and pan stay "
+            "independent. Enabling the link switches Construction to 3D and adopts "
+            "the geometry camera; returning to Construction turns the link off."
+        ),
+        Language.SPANISH: (
+            "Sincroniza guiñada e inclinación con el lóbulo 3D del patrón. Zoom y "
+            "desplazamiento son independientes. Al activar el enlace, Construcción "
+            "cambia a 3D y se adopta la cámara de geometría; al volver a Construcción, "
+            "el enlace se desactiva."
+        ),
+    },
     "help.section.feed_matching": {
         Language.ENGLISH: (
             "Internal EFHW matching, project matching network, feed line, and balun "
@@ -7553,6 +7570,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Imperial — Pies (fijo)",
     },
     "status.ready": {Language.ENGLISH: "Ready", Language.SPANISH: "Listo"},
+    "status.camera_linked": {
+        Language.ENGLISH: "3D views linked; geometry camera adopted.",
+        Language.SPANISH: "Vistas 3D vinculadas; se adoptó la cámara de geometría.",
+    },
+    "status.camera_unlinked": {
+        Language.ENGLISH: "3D view link off.",
+        Language.SPANISH: "Enlace de vistas 3D desactivado.",
+    },
+    "status.camera_link_construction": {
+        Language.ENGLISH: "3D view link off: geometry is in Construction view.",
+        Language.SPANISH: "Enlace 3D desactivado: geometría está en vista de Construcción.",
+    },
     "status.simulating": {Language.ENGLISH: "Simulating...", Language.SPANISH: "Simulando..."},
     "status.comparing": {
         Language.ENGLISH: "Comparing designs...",

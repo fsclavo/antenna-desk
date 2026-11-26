@@ -8,7 +8,7 @@ import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, QTimer
+from PySide6.QtCore import QEvent, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -25,7 +25,7 @@ from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
 from ...domain.simulation.pattern import takeoff_angle_deg
 from ..fonts import scaled_font
-from ..geometry.projection import project_world
+from ..geometry.projection import project_world_precomputed
 from ..help import apply_help
 from ..i18n import Translator
 from ..paint import draw_feed_marker
@@ -403,6 +403,10 @@ def _decimated_mesh(mesh: _Mesh) -> _Mesh:
 
 
 class RadiationPattern3DView(QWidget):
+    DEFAULT_YAW_DEG = 38.0
+    DEFAULT_PITCH_DEG = 26.0
+    camera_changed = Signal(float, float)
+
     def __init__(self, translator: Translator, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._translator = translator
@@ -420,8 +424,8 @@ class RadiationPattern3DView(QWidget):
         self._full_mesh: _Mesh | None = None
         self._interactive_mesh: _Mesh | None = None
         self._ground = False
-        self._yaw_deg = 38.0
-        self._pitch_deg = 26.0
+        self._yaw_deg = self.DEFAULT_YAW_DEG
+        self._pitch_deg = self.DEFAULT_PITCH_DEG
         self._zoom = 1.0
         self._dragging = False
         self._interacting = False
@@ -495,12 +499,35 @@ class RadiationPattern3DView(QWidget):
             return OverlayMode.OUTLINE
         return OverlayMode.FULL
 
+    def camera_angles(self) -> tuple[float, float]:
+        """Return the current 3D camera yaw and pitch in degrees."""
+
+        return self._yaw_deg, self._pitch_deg
+
+    def set_camera(self, yaw_deg: float, pitch_deg: float) -> None:
+        """Set the 3D camera without emitting ``camera_changed``.
+
+        Only direct user interaction emits the signal, so applying a linked
+        camera cannot create a feedback loop.
+        """
+
+        if not math.isfinite(yaw_deg) or not math.isfinite(pitch_deg):
+            raise ValueError("camera angles must be finite")
+        yaw = yaw_deg % 360.0
+        pitch = min(max(pitch_deg, -85.0), 85.0)
+        if math.isclose(yaw, self._yaw_deg) and math.isclose(pitch, self._pitch_deg):
+            return
+        self._yaw_deg = yaw
+        self._pitch_deg = pitch
+        self.update()
+
     def reset_view(self) -> None:
         self._stop_interaction_timer()
         self._interacting = False
-        self._yaw_deg = 38.0
-        self._pitch_deg = 26.0
+        self._yaw_deg = self.DEFAULT_YAW_DEG
+        self._pitch_deg = self.DEFAULT_PITCH_DEG
         self._zoom = 1.0
+        self.camera_changed.emit(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG)
         self.update()
 
     def _interaction_timer_instance(self) -> QTimer:
@@ -548,6 +575,7 @@ class RadiationPattern3DView(QWidget):
         self._yaw_deg = (self._yaw_deg + delta.x() * 0.45) % 360.0
         self._pitch_deg = min(max(self._pitch_deg + delta.y() * 0.35, -85.0), 85.0)
         self._begin_interaction()
+        self.camera_changed.emit(self._yaw_deg, self._pitch_deg)
         self.update()
         event.accept()
 
@@ -621,6 +649,26 @@ class RadiationPattern3DView(QWidget):
         return self._translator.t(
             "pattern.antenna_azimuth",
             phi=f"{float(angle) % 360.0:.0f}",
+        )
+
+    @staticmethod
+    def _project_world_point(
+        x: float,
+        y: float,
+        z: float,
+        cos_yaw: float,
+        sin_yaw: float,
+        cos_pitch: float,
+        sin_pitch: float,
+    ) -> tuple[float, float]:
+        return project_world_precomputed(
+            x,
+            y,
+            z,
+            cos_yaw,
+            sin_yaw,
+            cos_pitch,
+            sin_pitch,
         )
 
     def _minimap_rect(self, draw_rect: QRectF) -> QRectF | None:
@@ -903,19 +951,28 @@ class RadiationPattern3DView(QWidget):
 
         def project(theta_deg: float, phi_deg: float, gain: float) -> tuple[float, float]:
             x, y, z = pattern_point(theta_deg, phi_deg, gain)
-            rotated_x = x * cos_yaw - y * sin_yaw
-            rotated_y = x * sin_yaw + y * cos_yaw
-            return rotated_x, rotated_y * sin_pitch + z * cos_pitch
+            return self._project_world_point(
+                x,
+                y,
+                z,
+                cos_yaw,
+                sin_yaw,
+                cos_pitch,
+                sin_pitch,
+            )
 
         projected: list[tuple[float, float]] = []
         for vertex in mesh.vertices:
             radius = max(vertex.normalized_gain, 0.02)
-            rotated_x = (vertex.x * cos_yaw - vertex.y * sin_yaw) * radius
-            rotated_y = (vertex.x * sin_yaw + vertex.y * cos_yaw) * radius
             projected.append(
-                (
-                    rotated_x,
-                    rotated_y * sin_pitch + vertex.z * radius * cos_pitch,
+                self._project_world_point(
+                    vertex.x * radius,
+                    vertex.y * radius,
+                    vertex.z * radius,
+                    cos_yaw,
+                    sin_yaw,
+                    cos_pitch,
+                    sin_pitch,
                 )
             )
 
@@ -954,7 +1011,15 @@ class RadiationPattern3DView(QWidget):
             )
 
         def screen_world(x: float, y: float, z: float) -> QPointF:
-            px, py = project_world(x, y, z, self._yaw_deg, self._pitch_deg)
+            px, py = self._project_world_point(
+                x,
+                y,
+                z,
+                cos_yaw,
+                sin_yaw,
+                cos_pitch,
+                sin_pitch,
+            )
             return QPointF(
                 center.x() + (px - center_px) * scale,
                 center.y() - (py - center_py) * scale,

@@ -62,7 +62,7 @@ from ..geometry.layout import (
     layout_angular_dimensions,
     layout_dimensions,
 )
-from ..geometry.projection import project_world
+from ..geometry.projection import project_world_precomputed
 from ..geometry.scene import GeometryScene, SceneInset, ScenePoint
 from ..geometry.views import GeometryViewMode, construction_view
 from ..i18n import Translator
@@ -98,8 +98,11 @@ class GeometryView(QWidget):
     INSET_WIDTH = 200.0
     INSET_HEIGHT = 160.0
     INSET_GAP = 6.0
+    DEFAULT_YAW_DEG = 38.0
+    DEFAULT_PITCH_DEG = 26.0
     zoom_changed = Signal(float)
     hidden_dimensions_changed = Signal(object)
+    camera_changed = Signal(float, float)
 
     def __init__(
         self,
@@ -122,8 +125,8 @@ class GeometryView(QWidget):
         self._height_exaggeration = 1.0
         self._zoom = 1.0
         self._pan = QPointF(0.0, 0.0)
-        self._three_d_yaw_deg = 42.0
-        self._three_d_pitch_deg = 24.0
+        self._three_d_yaw_deg = self.DEFAULT_YAW_DEG
+        self._three_d_pitch_deg = self.DEFAULT_PITCH_DEG
         self._dragging = False
         self._drag_origin = QPointF(0.0, 0.0)
         self._drag_pan = QPointF(0.0, 0.0)
@@ -181,7 +184,10 @@ class GeometryView(QWidget):
         self._active_band = None
         self._scene = None
         self._last_summary = None
+        self._three_d_yaw_deg = self.DEFAULT_YAW_DEG
+        self._three_d_pitch_deg = self.DEFAULT_PITCH_DEG
         self._set_hidden_dimensions(())
+        self.camera_changed.emit(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG)
         self.update()
 
     def save_image(self, path: Path) -> None:
@@ -195,6 +201,7 @@ class GeometryView(QWidget):
         mode: GeometryViewMode,
         *,
         zoom: float = 1.0,
+        camera: tuple[float, float] | None = None,
     ) -> Iterator[None]:
         """Temporarily render another mode without changing the live view."""
 
@@ -204,6 +211,8 @@ class GeometryView(QWidget):
             self._zoom,
             self._pan,
             self._height_exaggeration,
+            self._three_d_yaw_deg,
+            self._three_d_pitch_deg,
         )
         try:
             self._mode = mode
@@ -211,6 +220,8 @@ class GeometryView(QWidget):
             self._zoom = zoom
             self._pan = QPointF(0.0, 0.0)
             self._height_exaggeration = 1.0
+            if camera is not None:
+                self._three_d_yaw_deg, self._three_d_pitch_deg = camera
             yield
         finally:
             (
@@ -219,6 +230,8 @@ class GeometryView(QWidget):
                 self._zoom,
                 self._pan,
                 self._height_exaggeration,
+                self._three_d_yaw_deg,
+                self._three_d_pitch_deg,
             ) = previous
 
     def _image_for_mode(
@@ -228,6 +241,7 @@ class GeometryView(QWidget):
         height: int,
         *,
         zoom: float = 1.0,
+        camera: tuple[float, float] | None = None,
     ) -> QImage:
         if self._model is None:
             raise OSError("no geometry model to export")
@@ -237,7 +251,7 @@ class GeometryView(QWidget):
             QImage.Format.Format_ARGB32_Premultiplied,
         )
         image.fill(self._colors.background)
-        with self._rendered_mode(mode, zoom=zoom):
+        with self._rendered_mode(mode, zoom=zoom, camera=camera):
             painter = QPainter(image)
             try:
                 self._render(painter, QRectF(0.0, 0.0, float(width), float(height)))
@@ -252,6 +266,7 @@ class GeometryView(QWidget):
         height: int,
         *,
         zoom: float = 1.0,
+        camera: tuple[float, float] | None = None,
     ) -> bytes:
         if self._model is None:
             raise OSError("no geometry model to export")
@@ -266,7 +281,7 @@ class GeometryView(QWidget):
         generator.setTitle(self._display_name or "")
         generator.setDescription(self._translator.t("panel.geometry"))
         try:
-            with self._rendered_mode(mode, zoom=zoom):
+            with self._rendered_mode(mode, zoom=zoom, camera=camera):
                 painter = QPainter(generator)
                 try:
                     painter.fillRect(
@@ -334,14 +349,26 @@ class GeometryView(QWidget):
         return self._svg_for_mode(mode, width, height)
 
     def three_d_image(self, width: int = 900, height: int = 650) -> QImage:
-        """Render the isometric inspection view for a construction sheet."""
+        """Render the isometric sheet view with the fixed default camera."""
 
-        return self._image_for_mode(GeometryViewMode.THREE_D, width, height, zoom=1.25)
+        return self._image_for_mode(
+            GeometryViewMode.THREE_D,
+            width,
+            height,
+            zoom=1.25,
+            camera=(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG),
+        )
 
     def three_d_svg(self, width: int = 900, height: int = 650) -> bytes:
-        """Render the isometric inspection view as a vector SVG document."""
+        """Render the isometric sheet view as vector SVG with a fixed camera."""
 
-        return self._svg_for_mode(GeometryViewMode.THREE_D, width, height, zoom=1.25)
+        return self._svg_for_mode(
+            GeometryViewMode.THREE_D,
+            width,
+            height,
+            zoom=1.25,
+            camera=(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG),
+        )
 
     def save_svg(self, path: Path) -> None:
         generator = QSvgGenerator()
@@ -424,12 +451,13 @@ class GeometryView(QWidget):
         self._pan = QPointF(0.0, 0.0)
         self._zoom = 1.0
         self._height_exaggeration = 1.0
-        self._three_d_yaw_deg = 42.0
-        self._three_d_pitch_deg = 24.0
+        self._three_d_yaw_deg = self.DEFAULT_YAW_DEG
+        self._three_d_pitch_deg = self.DEFAULT_PITCH_DEG
         self._scene = None
         self._mode = GeometryViewMode.CONSTRUCTION
         self._set_hidden_dimensions(())
         self.zoom_changed.emit(1.0)
+        self.camera_changed.emit(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG)
         self.update()
 
     def resolved_mode(self) -> GeometryViewMode:
@@ -506,6 +534,42 @@ class GeometryView(QWidget):
         self._scene = None
         self.update()
 
+    def camera_angles(self) -> tuple[float, float]:
+        """Return the current 3D camera yaw and pitch in degrees."""
+
+        return self._three_d_yaw_deg, self._three_d_pitch_deg
+
+    def set_camera(self, yaw_deg: float, pitch_deg: float) -> None:
+        """Set the 3D camera without emitting ``camera_changed``.
+
+        The silent path is what keeps the linked camera from feeding back into
+        itself; only direct user interaction emits the signal.
+        """
+
+        if not math.isfinite(yaw_deg) or not math.isfinite(pitch_deg):
+            raise ValueError("camera angles must be finite")
+        yaw = yaw_deg % 360.0
+        pitch = min(max(pitch_deg, -85.0), 85.0)
+        if math.isclose(yaw, self._three_d_yaw_deg) and math.isclose(
+            pitch, self._three_d_pitch_deg
+        ):
+            return
+        self._three_d_yaw_deg = yaw
+        self._three_d_pitch_deg = pitch
+        self.update()
+
+    def reset_view(self) -> None:
+        """Reset zoom, pan, and the 3D camera without changing the view mode."""
+
+        self._pan = QPointF(0.0, 0.0)
+        self._zoom = 1.0
+        self.zoom_changed.emit(1.0)
+        if self._mode is GeometryViewMode.THREE_D:
+            self._three_d_yaw_deg = self.DEFAULT_YAW_DEG
+            self._three_d_pitch_deg = self.DEFAULT_PITCH_DEG
+            self.camera_changed.emit(self.DEFAULT_YAW_DEG, self.DEFAULT_PITCH_DEG)
+        self.update()
+
     def set_zoom(self, factor: float) -> None:
         if not math.isfinite(factor):
             raise ValueError("zoom must be finite")
@@ -549,6 +613,10 @@ class GeometryView(QWidget):
                     max(self._three_d_pitch_deg + delta.y() * 0.35, -85.0),
                     85.0,
                 )
+                self.camera_changed.emit(
+                    self._three_d_yaw_deg,
+                    self._three_d_pitch_deg,
+                )
             else:
                 delta = event.position() - self._drag_origin
                 self._pan = QPointF(
@@ -570,13 +638,7 @@ class GeometryView(QWidget):
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
-            self._pan = QPointF(0.0, 0.0)
-            self._zoom = 1.0
-            if self._mode is GeometryViewMode.THREE_D:
-                self._three_d_yaw_deg = 42.0
-                self._three_d_pitch_deg = 24.0
-            self.zoom_changed.emit(1.0)
-            self.update()
+            self.reset_view()
             event.accept()
             return
         super().mouseDoubleClickEvent(event)
@@ -1358,9 +1420,15 @@ class GeometryView(QWidget):
         cos_pitch: float,
         sin_pitch: float,
     ) -> tuple[float, float]:
-        yaw_deg = math.degrees(math.atan2(sin_yaw, cos_yaw))
-        pitch_deg = math.degrees(math.atan2(sin_pitch, cos_pitch))
-        return project_world(x_m, y_m, z_m, yaw_deg, pitch_deg)
+        return project_world_precomputed(
+            x_m,
+            y_m,
+            z_m,
+            cos_yaw,
+            sin_yaw,
+            cos_pitch,
+            sin_pitch,
+        )
 
     def _type_label(self) -> str | None:
         return type_label(

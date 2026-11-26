@@ -60,11 +60,14 @@
   candidate. The tolerance check is limited to divider/feed-line S-parameters at
   the design frequency; the loss-induced input-impedance shift and a
   measured broadband splitter/isolation model remain unavailable. Evidence is C; no stacking gain is claimed.
-- UX46–UX48 are **implemented 2026-11-26**: the 3D lobe shows the
+- UX46–UX49 are **implemented 2026-11-26**: the 3D lobe shows the
   maximum-gain ray, same-elevation back ray with F/B for explicit beam axes,
   antenna azimuth/vertical marker, azimuth reference ring, compact labels, a
   top-view plan inset, and a feed-centered canonical antenna overlay with
-  Auto/Full/Outline modes. UX49 remains proposed.
+  Auto/Full/Outline modes. The geometry controls include an opt-in **Link 3D
+  views** camera link that syncs yaw/pitch only, resets both cameras on design
+  change, and turns off with an explanation in Construction view. The
+  construction-sheet isometric export keeps a fixed 38°/26° camera.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -109,7 +112,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX48 are implemented; continue with UX49 if the presentation track is next.
+2. UX46–UX49 are implemented; the next step is visual QA and closing the 1.2 presentation track.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

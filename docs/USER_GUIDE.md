@@ -1616,11 +1616,28 @@ with a large top load.
   reports elevation above the horizontal plane instead. The marker is the
   highest sampled direction, so the reported angle is quantized to the selected
   pattern resolution. Drag the 3D lobe to rotate
-  it, use the mouse wheel to zoom, and double-click to reset the view. The
-  **Metric** selector changes the cut titles, axis labels, polar footers, 3D
-  label, and cursor readout. Directivity and realized gain are derived by
-  shifting the power-gain pattern to the corresponding value at its maximum
-  direction. Power gain is not realized gain; see the gain summary below.
+  it, use the mouse wheel to zoom, and double-click to reset the view. Both 3D
+  views start at yaw 38° and pitch 26°. Above the 3D lobe, **Show antenna**
+  overlays a schematic canonical wireframe centered on the feed at one uniform
+  scale; its orientation is exact, but its size and height are not to scale, and
+  support wires are thinner and dashed. **Auto** draws every wire below the
+  display budget and a derived outline above it; **Full** always draws every
+  wire; **Outline** is a simplified convex-hull projection for large arrays.
+  The 3D lobe also shows a maximum-gain ray, a dashed same-elevation back ray
+  with the project F/B value when the family has an explicit forward axis, an
+  antenna azimuth marker, and a top-view plan inset with the feed and azimuth
+  arrows. The **Metric** selector changes the cut titles, axis labels, polar
+  footers, 3D label, and cursor readout.
+  The geometry panel has a **Link 3D** checkbox, off by default. Enabling
+  it switches Construction to 3D, if needed, and adopts the geometry camera;
+  after that, dragging or double-clicking either view rotates both. Only yaw and
+  pitch are linked: zoom, pan, and vertical scale stay independent. A design
+  change resets both cameras to 38°/26° and keeps the geometry view in 3D while
+  the link is on. Returning to Construction turns the link off and says so in
+  the status bar. The link is a session preference, not a project field.
+  Directivity and realized gain are derived by shifting the power-gain pattern
+  to the corresponding value at its maximum direction. Power gain is not
+  realized gain; see the gain summary below.
 - **Currents**: segment current magnitude for the selected frequency, with the
   feed segment marked.
 - **Measurements**: imported VNA sweeps with measured and simulated SWR,
@@ -2664,6 +2681,8 @@ simulated impedance/SWR, resonance, and construction notes. Dipoles show first
 and second leg lengths; folded dipoles show element and connector lengths;
 loops show orientation, side length, circumference, side count, height, and
 feed side.
+The sheet's isometric view uses a fixed 38°/26° camera, regardless of the live
+geometry or pattern camera, so the exported sheet is reproducible.
 **Save HTML...** writes the sheet and **Save PDF...** writes a native PDF.
 **Save Package...** writes one ZIP with the HTML sheet, the native PDF, the
 wire-schedule CSV, the conductor BOM CSV, and a plain-text build-notes file.

@@ -191,9 +191,11 @@ rendered offscreen from the design snapshot with a fixed size and light theme;
 report rendering does not read live widgets. The 3D wireframe is built by the
 Qt-free `reporting/pattern_lobe.py` with a fixed projection and palette, is
 decimated to at most 19×37 displayed vertices, and keeps the stored pattern and
-2D cuts at full resolution. The `UiPreferences` report options can omit the
-primary figure (enabled by default) and optionally add one figure per analyzed
-band (disabled by default). Both values are passed to the report writers; a
+2D cuts at full resolution. The interactive camera link and overlay are
+UI-only; reports keep their fixed projection and do not read live widgets.
+The `UiPreferences` report options can omit the primary figure (enabled by
+default) and optionally add one figure per analyzed band (disabled by
+default). Both values are passed to the report writers; a
 disabled primary figure also suppresses the per-band figures. Band analysis adds a pattern section per band and
 keeps the 2D cuts only. A single-cut or missing grid reports an explicit
 unavailable state instead of synthesizing a surface. See UX26 and UX40 in
@@ -295,7 +297,11 @@ in screen space using font metrics and collision avoidance. The geometry panel
 exposes a single **Construction** view plus **3D**. Construction resolves to the
 principal projection (front for vertical planes, top for horizontal arrays and
 beams, top for the cubical quad, front plus a top inset for non-planar models),
-and changing the model resets zoom, pan, and vertical exaggeration. Reports,
+and changing the model resets zoom, pan, and vertical exaggeration. The
+interactive **Link 3D views** option synchronizes only yaw and pitch with the
+pattern lobe; zoom and pan remain independent, and design changes reset both
+cameras. The construction-sheet isometric image and SVG use a fixed 38°/26°
+camera so exported sheets do not depend on the live view. Reports,
 construction sheets, and comparison use type-aware dimensions and a wire
 schedule with each wire's endpoints, length, diameter, material, and the feed
 point.

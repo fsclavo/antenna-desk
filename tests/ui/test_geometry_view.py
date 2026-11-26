@@ -412,8 +412,8 @@ def test_three_d_view_can_be_rotated_and_reset(qtbot: QtBot) -> None:
     assert view._three_d_pitch_deg != pytest.approx(initial_pitch)
 
     qtbot.mouseDClick(view, Qt.MouseButton.LeftButton, pos=QPoint(100, 100))
-    assert view._three_d_yaw_deg == pytest.approx(42.0)
-    assert view._three_d_pitch_deg == pytest.approx(24.0)
+    assert view._three_d_yaw_deg == pytest.approx(GeometryView.DEFAULT_YAW_DEG)
+    assert view._three_d_pitch_deg == pytest.approx(GeometryView.DEFAULT_PITCH_DEG)
 
 
 def test_construction_image_renders_without_changing_the_view(qtbot: QtBot) -> None:
@@ -446,7 +446,14 @@ def test_construction_svg_is_vector_and_preserves_the_view(qtbot: QtBot) -> None
 def test_three_d_image_and_svg_render_without_changing_the_view(qtbot: QtBot) -> None:
     view = _make_view(qtbot)
     view.set_zoom(2.0)
-    before = (view._mode, view._zoom, view._pan, view._height_exaggeration)
+    view.set_camera(71.0, 7.0)
+    before = (
+        view._mode,
+        view._zoom,
+        view._pan,
+        view._height_exaggeration,
+        view.camera_angles(),
+    )
 
     image = view.three_d_image(400, 300)
     svg = view.three_d_svg(400, 300)
@@ -456,7 +463,27 @@ def test_three_d_image_and_svg_render_without_changing_the_view(qtbot: QtBot) ->
     assert image.height() == 300
     assert svg.startswith(b"<?xml")
     assert b"<svg" in svg
-    assert (view._mode, view._zoom, view._pan, view._height_exaggeration) == before
+    assert (
+        view._mode,
+        view._zoom,
+        view._pan,
+        view._height_exaggeration,
+        view.camera_angles(),
+    ) == before
+
+
+def test_three_d_sheet_export_uses_the_fixed_default_camera(qtbot: QtBot) -> None:
+    view = _make_view(qtbot)
+    view.set_view_mode(GeometryViewMode.THREE_D)
+    view.set_camera(71.0, 7.0)
+
+    from_live_camera = view.three_d_image(400, 300)
+    view.set_camera(GeometryView.DEFAULT_YAW_DEG, GeometryView.DEFAULT_PITCH_DEG)
+    from_default_camera = view.three_d_image(400, 300)
+    view.set_camera(71.0, 7.0)
+
+    assert from_live_camera == from_default_camera
+    assert view.camera_angles() == (pytest.approx(71.0), pytest.approx(7.0))
 
 
 def test_compact_view_exposes_hidden_dimension_values(qtbot: QtBot) -> None:

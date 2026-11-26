@@ -143,6 +143,7 @@ class ResultsView(QWidget):
     band_selected = Signal(object)
     matching_network_requested = Signal(object)
     tab_changed = Signal(str)
+    pattern_camera_changed = Signal(float, float)
 
     def __init__(
         self,
@@ -370,6 +371,7 @@ class ResultsView(QWidget):
         self._azimuth_polar = PolarPatternView(translator, self._pattern_tab)
         self._elevation_polar = PolarPatternView(translator, self._pattern_tab)
         self._pattern_3d = RadiationPattern3DView(translator, self._pattern_tab)
+        self._pattern_3d.camera_changed.connect(self.pattern_camera_changed)
         self._pattern_3d_tab = QWidget(self._pattern_tab)
         self._pattern_3d_tab_layout = QVBoxLayout(self._pattern_3d_tab)
         self._pattern_3d_tab_layout.setContentsMargins(0, 0, 0, 0)
@@ -794,6 +796,16 @@ class ResultsView(QWidget):
         )
         self._render_patterns()
         self._render_confidence()
+
+    def pattern_camera(self) -> tuple[float, float]:
+        """Return the 3D lobe camera yaw and pitch in degrees."""
+
+        return self._pattern_3d.camera_angles()
+
+    def set_pattern_camera(self, yaw_deg: float, pitch_deg: float) -> None:
+        """Apply a linked camera without emitting a feedback signal."""
+
+        self._pattern_3d.set_camera(yaw_deg, pitch_deg)
 
     def _overlay_visibility_changed(self, visible: bool) -> None:
         self._pattern_3d.set_overlay_visible(visible)

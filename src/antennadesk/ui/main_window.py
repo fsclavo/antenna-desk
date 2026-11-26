@@ -1352,6 +1352,7 @@ class MainWindow(QMainWindow):
         self._view_combo = QComboBox(self)
         self._view_combo.addItem("", GeometryViewMode.CONSTRUCTION.value)
         self._view_combo.addItem("", GeometryViewMode.THREE_D.value)
+        self._link_3d_views = QCheckBox(self)
         self._height_label = QLabel(self)
         self._height_combo = QComboBox(self)
         for factor in (1.0, 1.5, 2.0, 3.0):
@@ -1365,6 +1366,7 @@ class MainWindow(QMainWindow):
         geometry_controls.addStretch(1)
         geometry_controls.addWidget(self._view_label)
         geometry_controls.addWidget(self._view_combo)
+        geometry_controls.addWidget(self._link_3d_views)
         geometry_controls.addWidget(self._height_label)
         geometry_controls.addWidget(self._height_combo)
         geometry_controls.addWidget(self._zoom_label)
@@ -1377,6 +1379,9 @@ class MainWindow(QMainWindow):
         self._height_combo.currentIndexChanged.connect(self._on_height_scale_changed)
         self._zoom_combo.currentIndexChanged.connect(self._on_zoom_changed)
         self._geometry.zoom_changed.connect(self._sync_zoom_combo)
+        self._link_3d_views.toggled.connect(self._on_camera_link_toggled)
+        self._geometry.camera_changed.connect(self._on_geometry_camera_changed)
+        self._results.pattern_camera_changed.connect(self._on_pattern_camera_changed)
 
         self._right_splitter = QSplitter(Qt.Orientation.Vertical, self)
         right_splitter = self._right_splitter
@@ -1878,6 +1883,8 @@ class MainWindow(QMainWindow):
         self._view_label.setText(self._translator.t("geometry.view"))
         self._view_combo.setItemText(0, self._translator.t("geometry.view_construction"))
         self._view_combo.setItemText(1, self._translator.t("geometry.view_3d"))
+        self._link_3d_views.setText(self._translator.t("geometry.link_3d_views"))
+        apply_help(self._link_3d_views, self._translator, "geometry.link_3d_views")
         self._height_label.setText(self._translator.t("geometry.vertical_scale"))
         self._zoom_label.setText(self._translator.t("geometry.zoom"))
         self._zoom_combo.setToolTip(self._translator.t("geometry.zoom_hint"))
@@ -7752,7 +7759,41 @@ class MainWindow(QMainWindow):
             return
         mode = GeometryViewMode(value)
         self._geometry.set_view_mode(mode)
+        if mode is not GeometryViewMode.THREE_D and self._link_3d_views.isChecked():
+            self._link_3d_views.setChecked(False)
+            self._last_status_key = "status.camera_link_construction"
+            self._update_status_text()
         self._update_height_control()
+
+    def _on_camera_link_toggled(self, checked: bool) -> None:
+        if checked:
+            if self._geometry.mode is not GeometryViewMode.THREE_D:
+                index = self._view_combo.findData(GeometryViewMode.THREE_D.value)
+                if index >= 0:
+                    self._view_combo.setCurrentIndex(index)
+            yaw_deg, pitch_deg = self._geometry.camera_angles()
+            self._results.set_pattern_camera(yaw_deg, pitch_deg)
+            self._last_status_key = "status.camera_linked"
+        else:
+            self._last_status_key = "status.camera_unlinked"
+        self._update_status_text()
+
+    def _on_geometry_camera_changed(self, yaw_deg: float, pitch_deg: float) -> None:
+        if not self._link_3d_views.isChecked():
+            return
+        if self._geometry.mode is not GeometryViewMode.THREE_D:
+            self._geometry.set_view_mode(GeometryViewMode.THREE_D)
+            index = self._view_combo.findData(GeometryViewMode.THREE_D.value)
+            if index >= 0 and self._view_combo.currentIndex() != index:
+                self._view_combo.blockSignals(True)
+                self._view_combo.setCurrentIndex(index)
+                self._view_combo.blockSignals(False)
+            self._update_height_control()
+        self._results.set_pattern_camera(yaw_deg, pitch_deg)
+
+    def _on_pattern_camera_changed(self, yaw_deg: float, pitch_deg: float) -> None:
+        if self._link_3d_views.isChecked():
+            self._geometry.set_camera(yaw_deg, pitch_deg)
 
     def _on_hidden_dimensions_changed(self, values: object) -> None:
         if isinstance(values, (tuple, list)):
@@ -7776,8 +7817,13 @@ class MainWindow(QMainWindow):
 
     def _auto_select_view(self, design: DesignVariant) -> None:
         del design
-        self._geometry.set_view_mode(GeometryViewMode.CONSTRUCTION)
-        index = self._view_combo.findData(GeometryViewMode.CONSTRUCTION.value)
+        mode = (
+            GeometryViewMode.THREE_D
+            if self._link_3d_views.isChecked()
+            else GeometryViewMode.CONSTRUCTION
+        )
+        self._geometry.set_view_mode(mode)
+        index = self._view_combo.findData(mode.value)
         if index >= 0 and self._view_combo.currentIndex() != index:
             self._view_combo.blockSignals(True)
             self._view_combo.setCurrentIndex(index)

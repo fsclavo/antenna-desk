@@ -131,6 +131,7 @@ HELP_MANIFEST = frozenset(
         "help.section.pattern",
         "help.section.band",
         "help.section.geometry",
+        "help.geometry.link_3d_views",
         "help.section.feed_matching",
         "help.section.feed_connection",
         "help.action.feed_connection",

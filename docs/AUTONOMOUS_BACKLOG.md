@@ -43,12 +43,12 @@ VR1 is a vertical-geometry enhancement implemented ahead of the remaining 1.1/1.
 items. It is bounded to one uniform droop, physical radial length, schema 61, and
 family-optimizer coverage; the phased vertical is not included.
 
-UX46–UX49 are a proposed presentation-only track for 3D pattern orientation.
-Implement the three layers in the order UX46 → UX48 → UX49; UX47 is an
-additional orientation aid after UX46 and must not block the overlay or the
-camera link. UX47 is the plan mini-map, UX48 includes the large-array outline
-mode, and the shared antenna color/feed marker is introduced in UX46 and reused
-by UX47/UX48. They do not change the solver, domain model, project schema,
+UX46–UX49 are a presentation-only track for 3D pattern orientation, implemented
+2026-11-26. The three layers were delivered in the order UX46 → UX48 → UX49;
+UX47 is an additional orientation aid after UX46. UX47 is the plan mini-map,
+UX48 includes the large-array outline mode, UX49 links the geometry and pattern
+cameras, and the shared antenna color/feed marker is introduced in UX46 and
+reused by UX47/UX48. They do not change the solver, domain model, project schema,
 pattern storage, or report format, and add no 3D engine or dependency. See §3D
 pattern orientation and comparison.
 
@@ -80,7 +80,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
 | UX48 | Schematic antenna overlay in the 3D lobe | M | UX46 | **Implemented 2026-11-26.** Opt-in "Show antenna"; feed-centered, uniform-scale canonical wireframe with a not-to-scale note; support wires thinner/dashed; Auto/Full/Outline for large arrays; same color and feed marker as UX46. No solver, domain, schema, or report change; no new engine. See §UX48. |
-| UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Proposed 2026-11-25.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode handled explicitly. No solver, domain, schema, or report change; no new engine. See §UX49. |
+| UX49 | Linked geometry/pattern 3D cameras | S | UX46; UX48 | **Implemented 2026-11-26.** Opt-in link syncs yaw/pitch only; zoom and pan stay independent; reset and model-change propagation; exact projection tests; Construction mode switches to 3D or turns the link off with an explanation. The construction-sheet 3D export keeps a fixed 38°/26° camera. No solver, domain, schema, or report change; no new engine. See §UX49. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -1708,14 +1708,12 @@ controller), `ui/dialogs/convergence_dialog.py`,
 `ui/main_window.py`, `ui/project_io.py`, `tests/unit/ui/`, `tests/ui/`, and an
 architecture-boundary guard test.
 
-## 3D pattern orientation and comparison (proposed 2026-11-25)
+## 3D pattern orientation and comparison (implemented 2026-11-26)
 
-**Status:** proposed presentation-only track. Implement the three layers in the
-order **UX46 → UX48 → UX49**; do not start UX48 or UX49 before UX46 is green.
-UX47 is an independent orientation aid after UX46 and is not a prerequisite for
-UX48/UX49. Each slice must leave the full gate green. **Priority:** P2 UX, after
-the current DL6/DL3 slice closes. **Release:** unassigned; candidate for the 1.2
-visualization track.
+**Status:** implemented presentation-only track. UX46, UX47, UX48, and UX49
+landed in the order **UX46 → UX48 → UX49**, with UX47 as an independent
+orientation aid. The full gate is green. **Release:** unassigned; candidate for
+the 1.2 visualization track.
 
 **Motivation:** The 3D lobe answers "how strong" but not "where relative to the
 antenna". The 2D azimuth polar already draws an antenna line; the 3D view has
@@ -1723,7 +1721,8 @@ only axes, an optional ground ring, and a maximum-gain marker. The user needs a
 clear visual front/back and lobe takeoff direction without a numerical-precision
 claim. The geometry 3D view and the pattern 3D view already share a right-handed,
 Z-up frame and the same orthographic projection; their default camera angles
-differ (42°/24° vs 38°/26°). This track makes that relationship legible.
+differed (42°/24° vs 38°/26°), and UX49 unified them at 38°/26°. This track
+makes that relationship legible.
 
 **Track non-goals:** no solver, domain-model, schema, container, or pattern
 storage change; no new numerical reference; no perspective projection or height
@@ -1928,10 +1927,20 @@ accessibility pass. No solver, domain, schema, or report change; no new engine.
 
 ### UX49 — Linked geometry/pattern 3D cameras (layer 3)
 
+**Implemented 2026-11-26.** The geometry controls row now has a default-off
+**Link 3D** checkbox. Link-on adopts the geometry camera, syncs yaw and
+pitch only, and leaves zoom and pan independent. Dragging or double-clicking
+either view propagates the camera; a design change resets both cameras and
+keeps the geometry view in 3D while linked. Selecting Construction turns the
+link off with a status explanation. Both interactive views share the same
+precomputed orthographic projection, with an exactness test over +X, +Y, +Z,
+and a beam-forward vector. The construction-sheet isometric export uses a fixed
+38°/26° camera so the sheet stays reproducible; the live view is unchanged.
+
 **Scope:** opt-in camera synchronization between the geometry 3D view and the
 3D lobe.
 
-- Add a "Link 3D views" checkable action in the geometry controls row (or a
+- Add a "Link 3D" checkable action in the geometry controls row (or a
   shared link control visible to both panels), default off. Persist only as a UI
   preference if desired; no project-schema field.
 - Use a single shared camera source of truth (yaw, pitch) or bidirectional
@@ -1954,10 +1963,10 @@ accessibility pass. No solver, domain, schema, or report change; no new engine.
 - Exactness test: with the same yaw/pitch and orthographic projection, a set of
   world vectors projects to the same screen-space direction in both views within
   `1e-9`; include +X, +Y, +Z, and a known beam forward vector.
-- **Export decision.** `GeometryView.three_d_image()` currently uses the live
-  camera. Decide and document whether the construction sheet uses the live
-  linked camera or a fixed camera. If fixed, add a regression test; do not change
-  exported report output silently.
+- **Export decision (resolved).** The construction sheet uses a fixed 38°/26°
+  camera for the isometric image and SVG, so the link and the live view cannot
+  change exported output. A regression test compares the export with a
+  non-default live camera against the fixed-camera export.
 
 **Acceptance:** rotating either linked view updates the other's yaw/pitch
 exactly; unlinked views stay independent; reset/model-change propagation keeps

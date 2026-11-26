@@ -7,6 +7,25 @@ from __future__ import annotations
 import math
 
 
+def project_world_precomputed(
+    x: float,
+    y: float,
+    z: float,
+    cos_yaw: float,
+    sin_yaw: float,
+    cos_pitch: float,
+    sin_pitch: float,
+) -> tuple[float, float]:
+    """Project with precomputed camera terms.
+
+    The returned ``y`` grows upward. Callers invert it when painting.
+    """
+
+    rotated_x = x * cos_yaw - y * sin_yaw
+    rotated_y = x * sin_yaw + y * cos_yaw
+    return rotated_x, rotated_y * sin_pitch + z * cos_pitch
+
+
 def project_world(
     x: float,
     y: float,
@@ -21,10 +40,12 @@ def project_world(
 
     yaw = math.radians(yaw_deg)
     pitch = math.radians(pitch_deg)
-    cos_yaw = math.cos(yaw)
-    sin_yaw = math.sin(yaw)
-    cos_pitch = math.cos(pitch)
-    sin_pitch = math.sin(pitch)
-    rotated_x = x * cos_yaw - y * sin_yaw
-    rotated_y = x * sin_yaw + y * cos_yaw
-    return rotated_x, rotated_y * sin_pitch + z * cos_pitch
+    return project_world_precomputed(
+        x,
+        y,
+        z,
+        math.cos(yaw),
+        math.sin(yaw),
+        math.cos(pitch),
+        math.sin(pitch),
+    )

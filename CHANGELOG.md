@@ -148,6 +148,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   respects the overlay state. No solver, domain, schema, simulation, or report
   change.
 
+- **Linked geometry and pattern 3D cameras (UX49).** The geometry controls now
+  include a default-off **Link 3D views** checkbox. Link-on adopts the geometry
+  camera and syncs yaw/pitch only; zoom and pan stay independent. Dragging or
+  double-clicking either view propagates the camera, and a design change resets
+  both cameras while keeping the geometry view in 3D. Selecting Construction
+  turns the link off with a status explanation. Both views now use one shared
+  precomputed orthographic projection. The construction-sheet isometric export
+  uses a fixed 38°/26° camera so sheets stay reproducible. No solver, domain,
+  schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run
