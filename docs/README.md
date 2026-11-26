@@ -67,6 +67,9 @@ of truth before adding another planning document.
   stacked-Yagi composition, feed-network, and first-slice architecture.
 - [`spikes/dl6-feed-network-spike.md`](spikes/dl6-feed-network-spike.md) —
   splitter isolation, explicit network ports, and per-level matching options.
+- [`spikes/dl6-measured-splitter-spike.md`](spikes/dl6-measured-splitter-spike.md)
+  — measured/broadband splitter S-parameter options, data requirements, and the
+  blocked S3P/S4P decision.
 - [`ANTENNA_DESIGN_ESTIMATORS.md`](ANTENNA_DESIGN_ESTIMATORS.md) — estimator
   sources, assumptions, confidence, and tolerances.
 - [`MATERIALS_REFERENCE.md`](MATERIALS_REFERENCE.md) — source-backed wire,

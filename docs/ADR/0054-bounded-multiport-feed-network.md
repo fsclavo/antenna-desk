@@ -205,6 +205,8 @@ branch/resistor tolerance corner summary.
 ## Consequences
 
 - Splitter isolation and return loss can be modeled without NEC port geometry.
+  A measured S3P/S4P splitter block remains out of scope; see the
+  [measured-splitter spike](../spikes/dl6-measured-splitter-spike.md).
 - The current ideal/excess-loss model stays the default; no existing result is
   invalidated.
 - The Wilkinson mode will be narrowband and opt-in. It is not a general

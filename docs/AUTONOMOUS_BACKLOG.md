@@ -1200,7 +1200,7 @@ stacking gain is claimed. See also
   Yagi, and amplitude ratio stay context. In Wilkinson mode it rebuilds the
   feed-network spec for each candidate, including the per-level networks.
 
-**Remaining work:** a measured broadband splitter S-parameter/isolation model. The [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
+**Remaining work:** a measured broadband splitter S-parameter/isolation model. The [measured-splitter spike](spikes/dl6-measured-splitter-spike.md) (2026-11-26) concludes that this needs measured S3P/S4P data, multi-port Touchstone support, and an embedded-data/provenance ADR; no measured model is implemented. The earlier [feed-network spike](spikes/dl6-feed-network-spike.md) rejects
 scalar isolation post-processing and proposes
 [ADR-0054](ADR/0054-bounded-multiport-feed-network.md): an N-port solver and a
 bounded equal N-way Wilkinson with star isolation at a declared design

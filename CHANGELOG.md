@@ -120,6 +120,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   builder also carries the project feed chain and solver timeout. Existing
   phase-line and network optimization is unchanged.
 
+- **Measured splitter model spiked (DL6).** A documentation spike evaluates
+  measured two-port branch and three/four-port splitter blocks. It keeps the
+  measured S3P/S4P model blocked on data, multi-port Touchstone support, and an
+  embedded-data/provenance ADR; the bounded Wilkinson model remains the
+  supported result.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run
