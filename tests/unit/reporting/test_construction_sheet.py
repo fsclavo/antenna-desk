@@ -1666,7 +1666,7 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
-            level_matching_network=matching,
+            level_matching_networks=(matching, matching),
         ),
     )
     sheet = render_construction_sheet(
@@ -1683,5 +1683,6 @@ def test_stacked_yagi_wilkinson_construction_sheet_lists_the_divider(
     assert "Isolation resistors" in sheet
     assert "quarter-wave" in sheet
     assert "pattern is reconstructed" in sheet
-    assert "Level matching" in sheet
+    assert "Level 1 matching" in sheet
+    assert "Level 2 matching" in sheet
     assert "L network" in sheet

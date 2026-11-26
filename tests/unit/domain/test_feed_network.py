@@ -276,3 +276,80 @@ def test_n_way_wilkinson_with_level_matching_is_matched_and_splits_equally() -> 
     for power in solution.antenna_port_powers_w:
         assert power == pytest.approx(solution.input_power_w / 2.0, rel=1e-4)
     assert solution.network_loss_w == pytest.approx(0.0, abs=1e-4)
+
+
+def test_n_way_wilkinson_supports_a_different_network_per_level() -> None:
+    matching_100 = design_l_network(
+        100.0 + 0.0j,
+        FREQUENCY_HZ,
+        source_impedance_ohm=50.0,
+    )
+    matching_25 = design_l_network(
+        25.0 + 0.0j,
+        FREQUENCY_HZ,
+        source_impedance_ohm=50.0,
+    )
+    assert matching_100 is not None
+    assert matching_25 is not None
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        level_matching_networks=(matching_100, matching_25),
+    )
+
+    solution = solve_feed_network(
+        network,
+        [[0.01 + 0.0j, 0.0j], [0.0j, 0.04 + 0.0j]],
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+    )
+
+    assert solution.input_impedance_ohm == pytest.approx(50.0 + 0.0j, abs=0.001)
+    for power in solution.antenna_port_powers_w:
+        assert power == pytest.approx(solution.input_power_w / 2.0, rel=1e-4)
+    assert solution.network_loss_w == pytest.approx(0.0, abs=1e-4)
+
+
+def test_n_way_wilkinson_rejects_ambiguous_or_incomplete_level_networks() -> None:
+    matching = design_l_network(100.0 + 0.0j, FREQUENCY_HZ, source_impedance_ohm=50.0)
+    assert matching is not None
+
+    with pytest.raises(ValueError, match="not both"):
+        n_way_wilkinson(
+            frequency_hz=FREQUENCY_HZ,
+            port_count=2,
+            feed_line_lengths_m=(0.01, 0.01),
+            level_matching_network=matching,
+            level_matching_networks=(matching, matching),
+        )
+    with pytest.raises(ValueError, match="one entry per output"):
+        n_way_wilkinson(
+            frequency_hz=FREQUENCY_HZ,
+            port_count=2,
+            feed_line_lengths_m=(0.01, 0.01),
+            level_matching_networks=(matching,),
+        )
+
+
+def test_n_way_wilkinson_supports_an_unmatched_level_between_matched_levels() -> None:
+    matching = design_l_network(100.0 + 0.0j, FREQUENCY_HZ, source_impedance_ohm=50.0)
+    assert matching is not None
+    network = n_way_wilkinson(
+        frequency_hz=FREQUENCY_HZ,
+        port_count=2,
+        feed_line_lengths_m=(0.01, 0.01),
+        level_matching_networks=(matching, None),
+    )
+
+    solution = solve_feed_network(
+        network,
+        [[0.01 + 0.0j, 0.0j], [0.0j, 0.02 + 0.0j]],
+        frequency_hz=FREQUENCY_HZ,
+        source_current_a=1.0,
+    )
+
+    assert math.isfinite(solution.input_impedance_ohm.real)
+    assert math.isfinite(solution.input_impedance_ohm.imag)
+    assert len(solution.antenna_port_powers_w) == 2
+    assert sum(solution.antenna_port_powers_w) <= solution.input_power_w + 1e-9

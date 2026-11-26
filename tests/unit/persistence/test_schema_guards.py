@@ -175,7 +175,9 @@ def test_simulation_spec_round_trips_the_feed_network_loss() -> None:
 
 def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
     matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    matching_25 = design_l_network(25.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
     assert matching is not None
+    assert matching_25 is not None
     feed_network = FeedNetworkSpec(
         kind=FeedNetworkKind.WILKINSON,
         design_frequency_hz=14_100_000.0,
@@ -185,7 +187,7 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
         velocity_factor=0.8,
         splitter_excess_loss_db=0.2,
         line_loss_db_per_100m=1.5,
-        level_matching_network=matching,
+        level_matching_networks=(matching, matching_25),
     )
     spec = SimulationSpec(
         frequency_plan=FrequencyPlan.single(14_100_000.0),
@@ -198,6 +200,11 @@ def test_simulation_spec_round_trips_a_wilkinson_feed_network() -> None:
     assert payload.feed_network is not None
     assert payload.feed_network.kind is FeedNetworkKind.WILKINSON
     assert payload.feed_network.port_count == 2
-    assert payload.feed_network.level_matching_network is not None
+    assert feed_network.level_matching_networks == (matching, matching_25)
+    assert len(payload.feed_network.level_matching_networks) == 2
+    assert all(
+        network is not None and network.topology == "l"
+        for network in payload.feed_network.level_matching_networks
+    )
     assert restored.feed_network == feed_network
     assert restored.co_simulate_feed_network is False

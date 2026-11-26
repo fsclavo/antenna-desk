@@ -201,7 +201,7 @@ class WilkinsonFeedSolver:
             feed_line_lengths_m=feed.feed_line_lengths_m,
             system_impedance_ohm=feed.feed_line_impedance_ohm,
             velocity_factor=feed.velocity_factor,
-            level_matching_network=feed.level_matching_network,
+            level_matching_networks=feed.level_matching_networks,
         )
         solution = solve_feed_network(
             network,
@@ -373,9 +373,10 @@ def _weighted_line_loss(
     ):
         if power <= 0.0 or not math.isfinite(impedance.real):
             continue
+        level_matching = feed.level_matching_network_for_level(index)
         load_impedance = (
-            feed.level_matching_network.abcd(frequency_hz).input_impedance(impedance)
-            if feed.level_matching_network is not None
+            level_matching.abcd(frequency_hz).input_impedance(impedance)
+            if level_matching is not None
             else impedance
         )
         loss_db = mismatched_line_loss_db(

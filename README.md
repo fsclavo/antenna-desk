@@ -10,7 +10,7 @@ amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
 **Status:** pre-1.0. Latest published release: `0.10.1` (2026-11-24). The
-current development schema is `65`; unreleased work is tracked in
+current development schema is `66`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
@@ -25,7 +25,7 @@ Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
 a transposed phase-line feed; its starting design is the published Cebik 10 m
-reference. Projects use a versioned ZIP container with schema 65, per-entry
+reference. Projects use a versioned ZIP container with schema 66, per-entry
 validation, deterministic writes, and no legacy reader. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
@@ -118,7 +118,7 @@ truth for each topic, every ADR, and the archived plans.
 
 - Frequency-first dimension estimates for the families with a documented
   estimator, with assumptions, confidence, and optional numerical refinement.
-- A composed two-to-four-level stacked Yagi with schema 65, per-port
+- A composed two-to-four-level stacked Yagi with schema 66, per-port
   impedance/power, front-elevation scene, reports, an optional splitter +
   phase-line feed specification with a co-simulated TL network,
   mismatch-corrected line loss, per-port network results, one shared mast/guy
@@ -158,7 +158,7 @@ truth for each topic, every ADR, and the archived plans.
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` ZIP containers with multiple design
   variants, lazy run loading, design-only recovery, and a save-design-only
-  action. The current development schema is `65`; gzip, plain JSON, and older
+  action. The current development schema is `66`; gzip, plain JSON, and older
   schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
@@ -299,8 +299,8 @@ Per-template limitations and evidence levels are single-sourced in
 - All catalog families are implemented, but some remain experimental or
   heuristic. Folded dipoles still lack an independent impedance reference;
   loops have the ARRL quad-loop resistance check. The stacked-Yagi Wilkinson
-  mode uses ideal divider components and is narrowband; per-level matching is
-  not modeled. VNA CSV import and measurement comparison are implemented; live
+  mode uses ideal divider components and is narrowband; per-level L/Pi/T
+  matching networks are available, while component tolerances are not modeled. VNA CSV import and measurement comparison are implemented; live
   instrument control is not.
 - Series and parallel RLC loads are supported on one wire segment. L/Pi/T
   matching networks are post-processed at the feedpoint, and the vertical

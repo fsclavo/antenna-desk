@@ -217,6 +217,34 @@ class OptimizationDocument(ContainerModel):
         return self
 
 
+def _migrate_level_matching_networks(
+    value: object,
+    inherited_count: int | None = None,
+) -> None:
+    """Expand the schema-65 common level network into one entry per level."""
+
+    if isinstance(value, list):
+        for item in value:
+            _migrate_level_matching_networks(item, inherited_count)
+        return
+    if not isinstance(value, dict):
+        return
+    count = inherited_count
+    for key in ("count", "port_count"):
+        candidate = value.get(key)
+        if isinstance(candidate, int) and not isinstance(candidate, bool):
+            count = candidate
+    if "level_matching_network" in value:
+        common = value.pop("level_matching_network")
+        if "level_matching_networks" not in value:
+            if common is None or not isinstance(count, int) or count <= 0:
+                value["level_matching_networks"] = []
+            else:
+                value["level_matching_networks"] = [common for _ in range(count)]
+    for child in value.values():
+        _migrate_level_matching_networks(child, count)
+
+
 @dataclass(frozen=True, slots=True)
 class _Entry:
     kind: EntryKind
@@ -227,7 +255,7 @@ class ProjectContainerRepository:
     """Read and write versioned ZIP project containers.
 
     The reader accepts container version 1 and the current schema, plus the
-    migration path for schemas 59 through 64. Previous gzip/plain-JSON files
+    migration path for schemas 59 through 65. Previous gzip/plain-JSON files
     are rejected deliberately; the project has not shipped to users yet.
     """
 
@@ -472,7 +500,7 @@ class ProjectContainerRepository:
             raise ProjectFormatError(
                 f"unsupported project container version {manifest.container_version}"
             )
-        if manifest.schema_version not in (59, 60, 61, 62, 63, 64, SCHEMA_VERSION):
+        if manifest.schema_version not in (59, 60, 61, 62, 63, 64, 65, SCHEMA_VERSION):
             raise UnsupportedSchemaVersion(
                 found=manifest.schema_version,
                 supported=SCHEMA_VERSION,
@@ -871,6 +899,7 @@ class ProjectContainerRepository:
             62,
             63,
             64,
+            65,
         ):
             return payload
         migrated_from = data["schema_version"]
@@ -881,6 +910,8 @@ class ProjectContainerRepository:
             # 60 -> 61 radial droop field defaults to zero, so no rewrite is
             # needed for design entries.
             project.setdefault("site_ground", None)
+        if migrated_from <= 65:
+            _migrate_level_matching_networks(data)
         return json.dumps(
             data,
             ensure_ascii=False,

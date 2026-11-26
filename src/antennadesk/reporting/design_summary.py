@@ -1362,15 +1362,15 @@ def design_summary_rows(
                 *(
                     [
                         (
-                            "Level matching",
-                            matching_network_description(
-                                parameters.feed.level_matching_network,
-                                tr,
-                            ),
+                            tr("Level {level} matching", level=level_index + 1),
+                            matching_network_description(network, tr),
                         )
+                        for level_index, network in enumerate(
+                            parameters.feed.level_matching_networks
+                        )
+                        if network is not None
                     ]
                     if parameters.feed.mode is StackedYagiFeedMode.WILKINSON
-                    and parameters.feed.level_matching_network is not None
                     else []
                 ),
                 *(

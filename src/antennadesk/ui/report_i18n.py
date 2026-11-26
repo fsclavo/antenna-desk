@@ -653,7 +653,7 @@ REPORT_SPANISH: dict[str, str] = {
     "Branch impedance": "Impedancia de rama",
     "Isolation resistors": "Resistencias de aislación",
     "Divider model": "Modelo del divisor",
-    "Level matching": "Matching por nivel",
+    "Level {level} matching": "Matching del nivel {level}",
     "ideal quarter-wave branches and star resistors": (
         "ramas ideales de cuarto de onda y resistencias en estrella"
     ),

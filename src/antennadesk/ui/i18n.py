@@ -4243,13 +4243,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.stacked_yagi.level_matching": {
         Language.ENGLISH: (
-            "A common L, Pi, or T network between each Wilkinson feed line and its "
-            "level. Opens the matching-network editor; the network is applied to "
-            "every level."
+            "Each level has its own optional L, Pi, or T network between the "
+            "Wilkinson feed line and the level. Opens the matching-network editor."
         ),
         Language.SPANISH: (
-            "Una red L, Pi o T común entre cada línea del Wilkinson y su nivel. Abre "
-            "el editor de red de adaptación; la red se aplica a todos los niveles."
+            "Cada nivel tiene su propia red L, Pi o T opcional entre la línea del "
+            "Wilkinson y el nivel. Abre el editor de red de adaptación."
         ),
     },
     "help.stacked_yagi.reference_line": {
@@ -11842,17 +11841,21 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "none",
         Language.SPANISH: "ninguno",
     },
+    "stacked_yagi.level_matching_level": {
+        Language.ENGLISH: "Level {level}",
+        Language.SPANISH: "Nivel {level}",
+    },
     "stacked_yagi.level_matching_l": {
-        Language.ENGLISH: "L network on every level",
-        Language.SPANISH: "Red L en cada nivel",
+        Language.ENGLISH: "L network",
+        Language.SPANISH: "Red L",
     },
     "stacked_yagi.level_matching_pi": {
-        Language.ENGLISH: "Pi network on every level",
-        Language.SPANISH: "Red Pi en cada nivel",
+        Language.ENGLISH: "Pi network",
+        Language.SPANISH: "Red Pi",
     },
     "stacked_yagi.level_matching_t": {
-        Language.ENGLISH: "T network on every level",
-        Language.SPANISH: "Red T en cada nivel",
+        Language.ENGLISH: "T network",
+        Language.SPANISH: "Red T",
     },
     "stacked_yagi.level_matching_inactive": {
         Language.ENGLISH: "Wilkinson mode only",

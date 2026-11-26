@@ -38,6 +38,19 @@ def test_solver_timeout_accepts_an_override_and_rejects_too_large_values() -> No
         )
 
 
+def test_feed_network_rejects_a_level_matching_length_mismatch() -> None:
+    with pytest.raises(ValueError, match="one entry per port"):
+        FeedNetworkSpec(
+            kind=FeedNetworkKind.WILKINSON,
+            design_frequency_hz=14_100_000.0,
+            port_count=2,
+            feed_line_lengths_m=(2.0, 2.0),
+            feed_line_impedance_ohm=50.0,
+            velocity_factor=1.0,
+            level_matching_networks=(None,),
+        )
+
+
 def test_feed_network_rejects_a_measured_transformer_as_level_matching() -> None:
     with pytest.raises(ValueError, match="L, Pi, or T"):
         FeedNetworkSpec(
@@ -47,5 +60,5 @@ def test_feed_network_rejects_a_measured_transformer_as_level_matching() -> None
             feed_line_lengths_m=(2.0, 2.0),
             feed_line_impedance_ohm=50.0,
             velocity_factor=1.0,
-            level_matching_network=TransformerNetwork(series_inductance_h=1e-6),
+            level_matching_networks=(TransformerNetwork(series_inductance_h=1e-6), None),
         )

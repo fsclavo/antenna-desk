@@ -17,7 +17,18 @@ from typing import Any
 import pytest
 
 from antennadesk.application.project_payload import PreparedProject
+from antennadesk.application.use_cases.create_dipole_project import (
+    CreateDipoleProject,
+    CreateDipoleProjectCommand,
+)
 from antennadesk.domain.antennas.feed_line import FeedLine
+from antennadesk.domain.antennas.matching_network import design_l_network
+from antennadesk.domain.antennas.stacked_yagi import (
+    StackedYagiFeed,
+    StackedYagiFeedMode,
+    StackedYagiParameters,
+    stacked_yagi_parameters,
+)
 from antennadesk.domain.environment.site_ground import EdgeShape, SiteGroundProfile
 from antennadesk.domain.projects.project import Project
 from antennadesk.domain.simulation.result import SimulationResult
@@ -2287,6 +2298,74 @@ def test_schema_64_container_migrates_to_current(
     target = tmp_path / "schema-current-64.antennadesk"
     repository.save(loaded, target)
     assert _manifest(target)["schema_version"] == SCHEMA_VERSION
+
+
+def test_schema_65_common_level_matching_migrates_to_one_network_per_level(
+    repository: ProjectContainerRepository,
+    tmp_path: Path,
+) -> None:
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+    parameters = StackedYagiParameters(
+        yagi=stacked_yagi_parameters(
+            frequency_hz=14_100_000.0,
+            count=2,
+            height_m=10.0,
+            spacing_m=10.6,
+        ).yagi,
+        count=2,
+        spacing_m=10.6,
+        feed=StackedYagiFeed(
+            mode=StackedYagiFeedMode.WILKINSON,
+            reference_length_m=2.0,
+            line_increment_m=0.0,
+            level_matching_networks=(matching, matching),
+        ),
+    )
+    project = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Schema 65 matching",
+            variant_name="Stack",
+            parameters=parameters,
+        )
+    )
+    source = tmp_path / "schema-65-matching.antennadesk"
+    repository.save(project, source)
+    entries = _read_entries(source)
+    manifest = json.loads(entries["manifest.json"])
+    manifest["schema_version"] = 65
+    entries["manifest.json"] = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+
+    def downgrade(value: object) -> None:
+        if isinstance(value, list):
+            for item in value:
+                downgrade(item)
+            return
+        if not isinstance(value, dict):
+            return
+        networks = value.get("level_matching_networks")
+        if isinstance(networks, list):
+            value.pop("level_matching_networks")
+            value["level_matching_network"] = networks[0] if networks else None
+        for child in value.values():
+            downgrade(child)
+
+    for name, payload in tuple(entries.items()):
+        if not name.endswith(".json"):
+            continue
+        document = json.loads(payload)
+        if isinstance(document, dict) and document.get("schema_version") == SCHEMA_VERSION:
+            document["schema_version"] = 65
+            downgrade(document)
+            entries[name] = json.dumps(document, separators=(",", ":")).encode("utf-8")
+    _write_container(source, entries)
+
+    loaded = repository.load(source)
+
+    assert loaded.designs[0].parameters.feed.level_matching_networks == (
+        matching,
+        matching,
+    )
 
 
 def test_round_trip_preserves_run_site_ground(

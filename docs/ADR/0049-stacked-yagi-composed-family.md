@@ -41,8 +41,8 @@ The first slice is implemented with these boundaries:
   top-boom height instead of copied per level;
 - a Wilkinson divider mode solved by the N-port feed-network solver, with a
   declared design frequency, equal N-way quarter-wave branches, star isolation
-  resistors, feed-line loss, an optional common per-level L/Pi/T matching
-  network, and a pattern reconstructed from the solved port voltages;
+  resistors, feed-line loss, optional per-level L/Pi/T matching networks, and a
+  pattern reconstructed from the solved port voltages;
 - a beta/hairpin match at every driven element, built per level from the base
   Yagi's match fields;
 - a bounded spacing/phase optimizer inside a user-set maximum top-height
@@ -71,9 +71,8 @@ slices.
   co-simulated network, one shared mast/guy set, a beta/hairpin match, and the
   Wilkinson N-port feed mode. Line loss is a user-entered matched loss plus a
   per-port load-mismatch correction estimated from the solved port impedances;
-  the loss-induced input-impedance shift, component tolerances, individual
-  per-level matching values, folded driven elements, and per-level feed
-  transformers remain out.
+  the loss-induced input-impedance shift, component tolerances, folded driven
+  elements, and per-level feed transformers remain out.
 - Evidence is C until a published stack or measurement is available; no
   stacking gain is claimed.
 - The ideal source progression is visible as a limitation.
@@ -86,8 +85,8 @@ slices.
 - A [feed-network spike](../spikes/dl6-feed-network-spike.md) rejects scalar
   isolation post-processing; [ADR-0054](0054-bounded-multiport-feed-network.md)
   implements an explicit port/reference abstraction and a bounded Wilkinson
-  splitter. A common per-level L/Pi/T matching network is available in
-  Wilkinson mode; individual per-level values remain out.
+  splitter. Per-level L/Pi/T matching networks are available in Wilkinson
+  mode; component tolerances remain out.
 - The feed network is a bounded co-simulation, not a full N-port circuit model:
   phase-line mode keeps ideal voltage sources and a fixed design-frequency
   phase; network mode co-simulates lossless NEC TLs with frequency-dependent
@@ -95,6 +94,6 @@ slices.
   transformation. A matched line-loss value is applied to realized gain; the
   primary SWR remains the lossless network input, so mismatch-dependent line
   loss is not captured. Splitter internal mismatch and per-level matching
-  remain follow-ups. The splitter excess loss is applied to realized gain. The
-  spacing/phase optimizer is available once a maximum top height is set and
-  makes no gain claim.
+  component tolerances remain follow-ups. The splitter excess loss is applied
+  to realized gain. The spacing/phase optimizer is available once a maximum top
+  height is set and makes no gain claim.

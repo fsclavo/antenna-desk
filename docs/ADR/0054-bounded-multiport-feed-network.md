@@ -18,8 +18,8 @@ The current DL6 feed model is a bounded co-simulation:
   impedance.
 
 It does **not** model splitter return loss, port-to-port isolation, internal
-S-parameters, individual per-level matching networks, folded driven elements,
-or per-level transformers.
+S-parameters, component tolerances, folded driven elements, or per-level
+transformers.
 
 A scalar "isolation loss" or a post-processing return-loss correction is not
 acceptable. Isolation is not a through-path loss, and a scalar correction would
@@ -80,8 +80,9 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
 6. **Do not add an external circuit engine or a general S-parameter dependency**
    in this ADR. The bounded Python solver covers the DL6 splitter; a wider engine
    needs its own cost, license, and benefit ADR.
-7. **Keep per-level matching, folded driven elements, and per-level
-   transformers out** until the single-level L/Pi/T matching slice is validated.
+7. **Start with per-level matching, folded driven elements, and per-level
+   transformers out** until the single-level L/Pi/T matching slice is
+   validated. The follow-up implements optional matching networks per level.
 
 ## Implementation (2026-11-25)
 
@@ -106,8 +107,8 @@ equations and with scikit-rf in the tests; no numeric tolerance is invented.
 
 The solver is exposed in the stacked-Yagi **Wilkinson divider** mode:
 
-- `FeedNetworkSpec` in `SimulationSpec` and schema 64 (schema 65 adds the
-  common per-level matching network);
+- `FeedNetworkSpec` in `SimulationSpec` and schema 64 (schema 65 adds a common
+  level matching network; schema 66 adds one optional network per level);
 - `WilkinsonFeedSolver` wraps the NEC solver, extracts the antenna Y-matrix,
   solves the N-way Wilkinson and feed lines, and reconstructs the pattern with
   ideal sources at the solved port voltages;
@@ -124,8 +125,8 @@ The solver-side per-level matching branch is also validated: a `TwoPortBranch`
 inserts an L/Pi/T network between each feed line and its level port. A common
 L-network designed from the real antenna port self-impedance reduced the
 two-level stack input SWR from about 14.7 to 1.09 in the real NEC Y-matrix
-test. The editor, schema 65, reports, and construction sheet expose one common
-network for every level; individual per-level values remain pending.
+test. The editor, schema 66, reports, and construction sheet expose one optional
+network per level.
 
 ## Implementation phases
 
@@ -143,25 +144,24 @@ network for every level; individual per-level values remain pending.
 
 ### Phase 3 — UI, schema, reports, and BOM (done)
 
-- The Wilkinson mode and design frequency are in schema 64; the common
-  per-level matching network is in schema 65.
+- The Wilkinson mode and design frequency are in schema 64; a common level
+  matching network is in schema 65, and schema 66 makes it per-level.
 - The editor, help, design summary, and construction sheet show the divider
   design frequency, branch impedance, isolation resistors, feed-line lengths,
   and the ideal/narrowband limitation; the conductor BOM remains
   conductor-only.
 - The ideal/excess-loss mode remains selectable.
 
-### Follow-up — Per-level matching (common network implemented)
+### Follow-up — Per-level matching (implemented)
 
 - Reuse the N-port solver and antenna Y-matrix.
 - A `TwoPortBranch` inserts one L/Pi/T network between a feed line and a level
-  port; the same network is applied to every level.
+  port; each level can use a different network.
 - The branch is validated against the analytic matching-network two-port and
   scikit-rf; a real two-level stack test reduced the input SWR from about 14.7
   to 1.09 with a common L-network.
-- The editor, schema 65, reports, and construction sheet expose the common
-  network. Individual per-level values and optimizer integration remain
-  pending.
+- The editor, schema 66, reports, and construction sheet expose one network per
+  level. Optimizer integration remains pending.
 
 ## Acceptance criteria
 
@@ -199,8 +199,9 @@ network for every level; individual per-level values remain pending.
   invalidated.
 - The Wilkinson mode will be narrowband and opt-in. It is not a general
   S-parameter block.
-- Per-level matching and folded driven elements remain unavailable until the
-  follow-up slice. The beta/hairpin match remains the only per-level match.
+- Per-level L/Pi/T matching networks are available in Wilkinson mode. Folded
+  driven elements and component tolerances remain follow-ups; the beta/hairpin
+  match stays the geometry-level match.
 - A schema migration is required when the splitter fields are added.
 - The Wilkinson mode is not yet exposed to the family optimizer; optimize the
   spacing and line length in phase-line/network mode and switch.

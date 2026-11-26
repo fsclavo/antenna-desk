@@ -46,7 +46,7 @@ class FeedNetworkSpec:
     velocity_factor: float
     splitter_excess_loss_db: float = 0.0
     line_loss_db_per_100m: float = 0.0
-    level_matching_network: MatchingNetwork | None = None
+    level_matching_networks: tuple[MatchingNetwork | None, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "kind", FeedNetworkKind(self.kind))
@@ -67,11 +67,16 @@ class FeedNetworkSpec:
         ):
             if not math.isfinite(value) or value < 0.0:
                 raise ValueError(f"{name} must be finite and non-negative")
-        if self.level_matching_network is not None and not isinstance(
-            self.level_matching_network,
-            (LNetwork, PiNetwork, TNetwork),
-        ):
-            raise ValueError("per-level matching supports L, Pi, or T networks only")
+        if self.level_matching_networks and len(self.level_matching_networks) != self.port_count:
+            raise ValueError("level_matching_networks must have one entry per port")
+        for network in self.level_matching_networks:
+            if network is not None and not isinstance(network, (LNetwork, PiNetwork, TNetwork)):
+                raise ValueError("per-level matching supports L, Pi, or T networks only")
+
+    def level_matching_network_for_level(self, level_index: int) -> MatchingNetwork | None:
+        if 0 <= level_index < len(self.level_matching_networks):
+            return self.level_matching_networks[level_index]
+        return None
 
 
 @dataclass(frozen=True, slots=True)

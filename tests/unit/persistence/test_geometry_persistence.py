@@ -1617,7 +1617,9 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
     )
 
     matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    matching_25 = design_l_network(25.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
     assert matching is not None
+    assert matching_25 is not None
 
     parameters = stacked_yagi_parameters(
         frequency_hz=14_100_000.0,
@@ -1633,7 +1635,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
-            level_matching_network=matching,
+            level_matching_networks=(matching, matching_25),
         ),
     )
     original = _project(parameters, "Stacked Yagi Wilkinson")
@@ -1646,4 +1648,7 @@ def test_stacked_yagi_wilkinson_feed_round_trips_through_the_schema() -> None:
     assert restored.designs[0].parameters.feed.splitter_design_frequency_hz == pytest.approx(
         14_100_000.0
     )
-    assert restored.designs[0].parameters.feed.level_matching_network == matching
+    assert restored.designs[0].parameters.feed.level_matching_networks == (
+        matching,
+        matching_25,
+    )

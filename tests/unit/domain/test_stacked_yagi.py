@@ -8,7 +8,10 @@ from dataclasses import replace
 
 import pytest
 
-from antennadesk.domain.antennas.matching_network import TransformerNetwork
+from antennadesk.domain.antennas.matching_network import (
+    TransformerNetwork,
+    design_l_network,
+)
 from antennadesk.domain.antennas.polarization import Polarization
 from antennadesk.domain.antennas.stacked_yagi import (
     STACKED_YAGI_SPLITTER_NODE_ID,
@@ -198,7 +201,21 @@ def test_phase_line_feed_rejects_invalid_lines_and_loss() -> None:
         StackedYagiFeed(
             mode=StackedYagiFeedMode.WILKINSON,
             reference_length_m=2.0,
-            level_matching_network=TransformerNetwork(series_inductance_h=1e-6),
+            level_matching_networks=(TransformerNetwork(series_inductance_h=1e-6),),
+        )
+
+
+def test_stacked_yagi_rejects_a_level_matching_length_mismatch() -> None:
+    yagi = nbs_five_element(frequency_hz=14_100_000.0, height_m=10.0)
+    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
+    assert matching is not None
+
+    with pytest.raises(ValueError, match="one entry per level"):
+        StackedYagiParameters(
+            yagi=yagi,
+            count=2,
+            spacing_m=10.0,
+            feed=StackedYagiFeed(level_matching_networks=(matching,)),
         )
 
 

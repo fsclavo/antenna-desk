@@ -1428,12 +1428,11 @@ def render_construction_sheet(
                 branch_impedance = parameters.feed.characteristic_impedance_ohm * math.sqrt(
                     parameters.count
                 )
-                level_matching_row = (
-                    f"<tr><th>Level matching</th><td>"
-                    f"{_escape(matching_network_description(parameters.feed.level_matching_network, tr))}"
-                    f"</td></tr>"
-                    if parameters.feed.level_matching_network is not None
-                    else ""
+                level_matching_rows = "".join(
+                    f"<tr><th>{_escape(tr('Level {level} matching', level=level_index + 1))}</th>"
+                    f"<td>{_escape(matching_network_description(network, tr))}</td></tr>"
+                    for level_index, network in enumerate(parameters.feed.level_matching_networks)
+                    if network is not None
                 )
                 wilkinson_rows = (
                     f"<tr><th>Divider design frequency</th><td>"
@@ -1443,7 +1442,7 @@ def render_construction_sheet(
                     f"{parameters.feed.characteristic_impedance_ohm:.1f} Ω star</td></tr>"
                     "<tr><th>Divider model</th><td>ideal quarter-wave branches and "
                     "star resistors</td></tr>"
-                    f"{level_matching_row}"
+                    f"{level_matching_rows}"
                 )
             feed_rows += f"""
 <tr><th>Feed network</th><td>{"Wilkinson N-port divider" if is_wilkinson else "splitter + phase lines (co-simulated lossless TL network)" if is_network else "splitter + phase lines"}</td></tr>

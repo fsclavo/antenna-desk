@@ -308,26 +308,39 @@ def test_dialog_builds_a_wilkinson_feed(qtbot: QtBot) -> None:
     assert "Wilkinson" in form._wilkinson_note.text()
 
 
-def test_dialog_sets_a_common_level_matching_network(qtbot: QtBot) -> None:
-    matching = design_l_network(100.0 + 0.0j, 14_100_000.0, source_impedance_ohm=50.0)
-    assert matching is not None
+def test_dialog_sets_individual_level_matching_networks(qtbot: QtBot) -> None:
+    matching_100 = design_l_network(
+        100.0 + 0.0j,
+        14_100_000.0,
+        source_impedance_ohm=50.0,
+    )
+    matching_25 = design_l_network(
+        25.0 + 0.0j,
+        14_100_000.0,
+        source_impedance_ohm=50.0,
+    )
+    assert matching_100 is not None
+    assert matching_25 is not None
     dialog = _dialog(qtbot)
     form = dialog._form
     index = form._feed_mode.findData(StackedYagiFeedMode.WILKINSON.value)
     form._feed_mode.setCurrentIndex(index)
     form._reference_line_field.configure(2.0)
     form._line_increment_field.configure(0.0)
-    form._level_matching.setEnabled(True)
-    form.set_level_matching_network(matching)
+    form.set_level_matching_network(0, matching_100)
+    form.set_level_matching_network(1, matching_25)
     form._update_geometry()
 
     parameters = dialog.parameters()
 
-    assert parameters.feed.level_matching_network == matching
-    assert "L network" in form._level_matching_summary.text()
-    assert form._level_matching.isEnabled() is True
+    assert parameters.feed.level_matching_networks == (matching_100, matching_25)
+    assert "L network" in form._level_matching_summaries[0].text()
+    assert "L network" in form._level_matching_summaries[1].text()
+    assert form._level_matching_buttons[0].isEnabled() is True
+    assert form._level_matching_buttons[1].isEnabled() is True
+    assert form._level_matching_rows[2].isHidden() is True
     phase_index = form._feed_mode.findData(StackedYagiFeedMode.PHASE_LINES.value)
     form._feed_mode.setCurrentIndex(phase_index)
     form._update_feed_controls()
-    assert form._level_matching.isEnabled() is False
-    assert form._level_matching_summary.text() == "Wilkinson mode only"
+    assert form._level_matching_buttons[0].isEnabled() is False
+    assert form._level_matching_summaries[0].text() == "Wilkinson mode only"

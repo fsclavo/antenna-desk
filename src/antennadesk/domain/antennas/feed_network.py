@@ -20,7 +20,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..common.units import ensure_positive
-from .matching_network import MatchingNetwork
+from .matching_network import LNetwork, MatchingNetwork, PiNetwork, TNetwork
 
 Matrix = list[list[complex]]
 Vector = list[complex]
@@ -434,6 +434,7 @@ def n_way_wilkinson(
     velocity_factor: float = 1.0,
     branch_velocity_factor: float = 1.0,
     level_matching_network: MatchingNetwork | None = None,
+    level_matching_networks: Sequence[MatchingNetwork | None] | None = None,
 ) -> NPortNetwork:
     """Return an equal N-way Wilkinson with feed lines to each output.
 
@@ -442,10 +443,11 @@ def n_way_wilkinson(
     impedance ``system_impedance_ohm * sqrt(N)``. The isolation network is a
     star of N resistors of ``system_impedance_ohm`` around a floating center.
     Each splitter output then runs through a feed line of the given length and
-    the system impedance to its level port. When ``level_matching_network`` is
-    provided, the same two-port network is inserted between each feed line and
-    its level port. The floating star center is regularized by a very high
-    numerical shunt; it is not a physical component.
+    the system impedance to its level port. ``level_matching_network`` applies
+    the same two-port network to every output; ``level_matching_networks``
+    supplies one entry per output, where ``None`` leaves that level unmatched.
+    Provide at most one of the two. The floating star center is regularized by
+    a very high numerical shunt; it is not a physical component.
     """
 
     ensure_positive(frequency_hz, name="frequency_hz")
@@ -462,12 +464,33 @@ def n_way_wilkinson(
         raise ValueError("branch_velocity_factor must not exceed 1")
     for length_m in feed_line_lengths_m:
         ensure_positive(length_m, name="feed_line_lengths_m")
+    if level_matching_network is not None and level_matching_networks is not None:
+        raise ValueError(
+            "provide either level_matching_network or level_matching_networks, not both"
+        )
+    if level_matching_networks is None:
+        networks: tuple[MatchingNetwork | None, ...] = (level_matching_network,) * port_count
+    else:
+        networks = tuple(level_matching_networks)
+        if not networks:
+            networks = (None,) * port_count
+        elif len(networks) != port_count:
+            raise ValueError("level_matching_networks must have one entry per output")
+    for network in networks:
+        if network is not None and not isinstance(network, (LNetwork, PiNetwork, TNetwork)):
+            raise ValueError("per-level matching supports L, Pi, or T networks only")
 
     branch_length_m = _SPEED_OF_LIGHT_M_PER_S / frequency_hz / 4.0 * branch_velocity_factor
     branch_impedance_ohm = system_impedance_ohm * math.sqrt(port_count)
     first_splitter_node = port_count + 1
     star_center = first_splitter_node + port_count
     matching_node_start = star_center + 1
+    matching_nodes = {
+        output_index: matching_node_start + slot
+        for slot, output_index in enumerate(
+            index for index, network in enumerate(networks) if network is not None
+        )
+    }
     branches: list[NetworkBranch] = []
     for output_index in range(port_count):
         splitter_node = first_splitter_node + output_index
@@ -487,11 +510,9 @@ def n_way_wilkinson(
                 impedance_ohm=complex(system_impedance_ohm, 0.0),
             )
         )
-        feed_line_end = (
-            matching_node_start + output_index
-            if level_matching_network is not None
-            else output_index + 1
-        )
+        matching_node = matching_nodes.get(output_index)
+        network = networks[output_index]
+        feed_line_end = matching_node if matching_node is not None else output_index + 1
         branches.append(
             TransmissionLineBranch(
                 node_a=splitter_node,
@@ -501,12 +522,12 @@ def n_way_wilkinson(
                 velocity_factor=velocity_factor,
             )
         )
-        if level_matching_network is not None:
+        if matching_node is not None and network is not None:
             branches.append(
                 TwoPortBranch(
-                    node_a=matching_node_start + output_index,
+                    node_a=matching_node,
                     node_b=output_index + 1,
-                    network=level_matching_network,
+                    network=network,
                 )
             )
     # The star center has no connection to the reference, so its common mode
@@ -522,7 +543,5 @@ def n_way_wilkinson(
     return NPortNetwork(
         port_names=("input", *(f"output-{index + 1}" for index in range(port_count))),
         branches=tuple(branches),
-        internal_node_count=(
-            2 * port_count + 1 if level_matching_network is not None else port_count + 1
-        ),
+        internal_node_count=port_count + 1 + len(matching_nodes),
     )

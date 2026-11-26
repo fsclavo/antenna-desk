@@ -175,7 +175,7 @@ def test_wilkinson_wrapper_with_level_matching_improves_the_input_swr() -> None:
         base_parameters,
         feed=replace(
             base_parameters.feed,
-            level_matching_network=matching,
+            level_matching_networks=(matching, matching),
         ),
     )
     matched_spec = replace(

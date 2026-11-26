@@ -1122,7 +1122,7 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
             splitter_loss_db=0.2,
             line_loss_db_per_100m=1.5,
             splitter_design_frequency_hz=14_100_000.0,
-            level_matching_network=matching,
+            level_matching_networks=(matching, matching),
         ),
     )
 
@@ -1136,4 +1136,5 @@ def test_stacked_yagi_wilkinson_summary_reports_the_divider() -> None:
     assert rows["Divider model"] == "ideal quarter-wave branches and star resistors"
     assert rows["Phase step"] == "set by the feed network"
     assert rows["Matched line loss"] == "1.50 dB/100 m"
-    assert rows["Level matching"].startswith("L network (series")
+    assert rows["Level 1 matching"].startswith("L network (series")
+    assert rows["Level 2 matching"].startswith("L network (series")

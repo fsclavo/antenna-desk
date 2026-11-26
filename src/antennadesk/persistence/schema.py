@@ -808,7 +808,7 @@ class StackedYagiFeedPayload(StrictModel):
     splitter_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
     splitter_design_frequency_hz: float = Field(default=0.0, ge=0.0)
-    level_matching_network: LNetworkPayload | None = None
+    level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
 
 
 class StackedYagiParametersPayload(StrictModel):
@@ -826,6 +826,11 @@ class StackedYagiParametersPayload(StrictModel):
             raise ValueError("a stacked Yagi does not support folded driven elements yet")
         if not math.isclose(self.yagi.transformer_ratio, 1.0, rel_tol=0.0, abs_tol=1e-12):
             raise ValueError("a stacked Yagi does not support a per-level feed transformer yet")
+        if (
+            self.feed.level_matching_networks
+            and len(self.feed.level_matching_networks) != self.count
+        ):
+            raise ValueError("level_matching_networks must have one entry per level")
         span = max(element.length_m for element in self.yagi.elements)
         if self.yagi.polarization is Polarization.VERTICAL and self.spacing_m <= span:
             raise ValueError("vertical-polarized stack levels would overlap; increase spacing_m")
@@ -939,7 +944,7 @@ class FeedNetworkSpecPayload(StrictModel):
     velocity_factor: float = Field(gt=0.0, le=1.0)
     splitter_excess_loss_db: float = Field(default=0.0, ge=0.0)
     line_loss_db_per_100m: float = Field(default=0.0, ge=0.0)
-    level_matching_network: LNetworkPayload | None = None
+    level_matching_networks: list[LNetworkPayload | None] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate_feed_network(self) -> Self:
@@ -947,6 +952,8 @@ class FeedNetworkSpecPayload(StrictModel):
             raise ValueError("feed_line_lengths_m must have one length per port")
         if any(length <= 0.0 for length in self.feed_line_lengths_m):
             raise ValueError("feed_line_lengths_m must be positive")
+        if self.level_matching_networks and len(self.level_matching_networks) != self.port_count:
+            raise ValueError("level_matching_networks must have one entry per port")
         return self
 
 
@@ -2261,11 +2268,10 @@ def _stacked_yagi_parameters_from_domain(
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
             splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
-            level_matching_network=(
-                _matching_network_from_domain(value.feed.level_matching_network)
-                if value.feed.level_matching_network is not None
-                else None
-            ),
+            level_matching_networks=[
+                _matching_network_from_domain(network) if network is not None else None
+                for network in value.feed.level_matching_networks
+            ],
         ),
     )
 
@@ -2445,11 +2451,10 @@ def _simulation_spec_from_domain(value: SimulationSpec) -> SimulationSpecPayload
                 velocity_factor=value.feed_network.velocity_factor,
                 splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
                 line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
-                level_matching_network=(
-                    _matching_network_from_domain(value.feed_network.level_matching_network)
-                    if value.feed_network.level_matching_network is not None
-                    else None
-                ),
+                level_matching_networks=[
+                    _matching_network_from_domain(network) if network is not None else None
+                    for network in value.feed_network.level_matching_networks
+                ],
             )
             if value.feed_network is not None
             else None
@@ -3658,10 +3663,9 @@ def _stacked_yagi_parameters_to_domain(
             splitter_loss_db=value.feed.splitter_loss_db,
             line_loss_db_per_100m=value.feed.line_loss_db_per_100m,
             splitter_design_frequency_hz=value.feed.splitter_design_frequency_hz,
-            level_matching_network=(
-                _matching_network_to_domain(value.feed.level_matching_network)
-                if value.feed.level_matching_network is not None
-                else None
+            level_matching_networks=tuple(
+                _matching_network_to_domain(network) if network is not None else None
+                for network in value.feed.level_matching_networks
             ),
         ),
     )
@@ -3806,10 +3810,9 @@ def _simulation_spec_to_domain(value: SimulationSpecPayload) -> SimulationSpec:
                 velocity_factor=value.feed_network.velocity_factor,
                 splitter_excess_loss_db=value.feed_network.splitter_excess_loss_db,
                 line_loss_db_per_100m=value.feed_network.line_loss_db_per_100m,
-                level_matching_network=(
-                    _matching_network_to_domain(value.feed_network.level_matching_network)
-                    if value.feed_network.level_matching_network is not None
-                    else None
+                level_matching_networks=tuple(
+                    _matching_network_to_domain(network) if network is not None else None
+                    for network in value.feed_network.level_matching_networks
                 ),
             )
             if value.feed_network is not None

@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-25
 **Latest published release:** `0.10.1` (2026-11-24)
-**Development schema:** `65`
+**Development schema:** `66`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
@@ -33,7 +33,7 @@
   [`ADR-0052`](ADR/0052-uniform-radial-droop.md).
 - DL6 stacked Yagi first slice is **implemented 2026-11-25** (ADR-0049):
   two to four identical Yagis on one vertical stack, ideal per-level sources,
-  schema 65, form and both catalog routes, per-port **Sources** results, front
+  schema 66, form and both catalog routes, per-port **Sources** results, front
   elevation scene, design/construction reports, multi-boom BOM, a real `nec2c`
   two-port test, a bounded spacing/phase optimizer constrained by the
   user-set maximum top height, and an optional splitter + phase-line feed
@@ -46,14 +46,13 @@
   the lossless input. A Wilkinson divider mode uses the pure-Python N-port
   solver: equal N-way quarter-wave branches, a star of isolation resistors,
   feed-line loss, and a reconstructed pattern from the solved port voltages.
-  Its primary SWR is the splitter input; the editor, schema 65, reports, and
-  tests expose it, including an optional common per-level L/Pi/T matching
-  network. A single shared mast and optional guy set are modeled once
+  Its primary SWR is the splitter input; the editor, schema 66, reports, and
+  tests expose it, including an optional L/Pi/T matching network on each level.
+  A single shared mast and optional guy set are modeled once
   across every level, and a beta/hairpin match is modeled at every driven
-  element. The loss-induced input-impedance shift, component tolerances,
-  individual per-level matching values, folded driven elements, and per-level
-  transformers remain unavailable. Evidence is C; no stacking
-  gain is claimed.
+  element. The loss-induced input-impedance shift, component tolerances, folded
+  driven elements, and per-level transformers remain unavailable. Evidence is C;
+  no stacking gain is claimed.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -97,7 +96,7 @@
 
 ## Next
 
-1. Continue DL6 with folded driven elements, Wilkinson component tolerances, individual per-level matching values, and optimizer integration.
+1. Continue DL6 with folded driven elements, Wilkinson component tolerances, and optimizer integration.
 2. Choose the next release slice after the 0.10.1 publication.
 3. Keep DL8 blocked until a validated terrain model or second engine exists.
 4. Keep the optional PF2/PF3 maintenance items separate from the release gate.
