@@ -1,0 +1,305 @@
+# ADR-0055 — Flower Pot half-wave family and electrical-length representation
+
+- **Status:** accepted 2026-11-26 for the FP1 scope; implementation pending, and
+  the physical-versus-electrical length representation must be selected by the
+  required spike before any schema or UI work
+- **Date:** 2026-11-26
+- **Related:** FP1, [`AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) §FP1,
+  [`GEOMETRY_PRESENTATION.md`](../GEOMETRY_PRESENTATION.md),
+  [ADR-0010](0010-first-class-generator-templates.md),
+  [ADR-0013](0013-frequency-first-dimension-estimation.md),
+  [ADR-0026](0026-family-optimizer-architecture.md),
+  [ADR-0037](0037-common-mode-return-model.md),
+  [ADR-0043](0043-design-versus-analysis-frequency.md)
+
+## Context
+
+The VK2ZOI "Flower Pot" is a **coaxially fed vertical half-wave dipole**:
+
+- the coax center conductor forms the top radiator;
+- the outside of the coax shield forms the bottom radiator;
+- the feed is the junction between them;
+- a resonant choke wound in the coax below the bottom radiator isolates the
+  feedline from the radiating shield;
+- the assembly sits inside PVC conduit, which loads the antenna electrically.
+
+It is **not an end-fed antenna**. Some sources call it an "end-fed resonant
+feedline dipole" because the coax reaches the antenna from the bottom, but the
+radiating structure is a center-fed dipole. It is also not a vertical with
+radials: the lower conductor is a radiating arm, not a ground plane.
+
+The published half-wave dimensions are physical cut lengths. For 2 m:
+
+```text
+top 457 mm + bottom 447 mm = 904 mm at about 146 MHz
+```
+
+A free-space half-wave at 146 MHz is about 1027 mm. A bare-wire NEC model with
+the physical 904 mm dimensions resonates well above the 2 m band because the
+coax dielectric, the conduit, and the end effect load the antenna electrically.
+The published construction survey reports an overall empirical factor of about
+`0.88` to `0.885` for the 2 m and 6 m builds. That factor is a construction
+correction, not the coax velocity factor.
+
+The current canonical model supports straight wires, one primary feed, optional
+sources, lumped RLC loads, two-port transmission lines, and a ground model. It
+does **not** support:
+
+- a coax cable as an inner conductor plus an outer shield with different
+  interior and exterior currents;
+- a dielectric coating or a dielectric radome;
+- a common-mode choke as a solver element;
+- a floating sleeve or a cylindrical conductor;
+- a shorted one-port coax stub;
+- a transmission line whose shield is also a radiating wire.
+
+The family optimizer and estimator contracts are well suited to a two-section
+vertical dipole. The missing capability is the representation of the coax
+construction, not the dipole itself.
+
+Only the half-wave version maps cleanly to the current straight-wire model.
+The other published variants need new primitives:
+
+| Variant | Missing primitive |
+|---|---|
+| Dual-band half-wave with a foil sleeve | Sleeve/cylinder conductor and its phasing coupling |
+| Single 5/8 | Shorted one-port coax stub in parallel at the feed |
+| Double 5/8 | Coax/TL radiator with a 75 Ω quarter-wave transformer |
+| Experimental dual-band high-gain | Sleeve, half-wave phasing line, and two driven sections |
+
+## Decision
+
+1. **Scope the first family to the half-wave Flower Pot**, with the published
+   2 m and 6 m starting dimensions. Do not add the 5/8, double 5/8, dual-band
+   sleeve, or high-gain variants in this ADR. Each needs its own spike and ADR.
+2. **Model the radiator as two collinear wires** with different radii and
+   materials: the top coax inner conductor and the bottom coax shield. The feed
+   is at their junction. The lower wire ends at the choke. The feedline below
+   the choke is the project `FeedLine`, not part of the antenna geometry.
+3. **Use an ideal choke in the MVP.** The lower radiator ends at the choke and
+   no feedline common-mode path is modeled. The UI, reports, and evidence must
+   state that the real choke impedance, its self-resonance, the common-mode
+   current, and the coax dielectric loss are not modeled. Do not synthesize a
+   choke R+jX from the published turns/former table.
+4. **Do not use display-only geometry.** The canonical `to_antenna()` model is
+   the model that is solved. If the solved model differs from the physical cut
+   lengths, the difference must be explicit in the family parameters and in the
+   construction report. A hidden simulation-only scale factor outside the
+   canonical model is not acceptable.
+5. **Resolve the physical-versus-electrical representation with a spike before
+   implementation.** The spike must compare the options in the next section
+   against the published 2 m and 6 m behaviour and select one. The selected
+   option is recorded in this ADR before schema work starts.
+6. **Expose the measured construction values.** The family parameters carry the
+   physical top and bottom cut lengths, their radii, the installation base
+   height, the conduit/coax construction context, and the empirical shortening
+   factor or the validated insulation/velocity parameter selected by the spike.
+   The construction sheet must show the physical cut list. The wire schedule
+   must show the canonical wires and label any electrical-equivalent length as
+   such. Neither table may be the only source of a build value.
+7. **Keep the lower tip above ground.** The base height is an installation
+   parameter; the family must not place the lower radiator endpoint at `z = 0`
+   or let the NEC ground clearance silently move it. A positive base height is
+   required, with a clear validation message.
+8. **Classify the feed as a balanced antenna with an integrated choke.** The
+   app must not require a separate current balun or classify the family as an
+   unbalanced vertical. The feed-connection detail should say: coax center to
+   the top radiator, shield to the bottom radiator, resonant choke at the base
+   of the lower radiator, no separate balun. Add the family to the feed-balance
+   and feed-connection coverage.
+9. **Evidence level B for the published starting dimensions, C for the coax and
+   choke equivalent.** The published source gives construction dimensions and
+   VSWR plots, not a numerical R+jX table or a calibrated gain measurement. The
+   catalog must not claim 50 Ω, a specific gain, or a validated choke. Scaled
+   frequencies outside the published 2 m/6 m rows are heuristic.
+10. **Persist with the next schema bump after the required spike** (schema 71
+    is current at this commit) and an additive/no-op migration for existing
+    files. The family payload is optional; old projects load unchanged.
+11. **Add the estimator and optimizer coverage required by ADR-0013 and
+    ADR-0026**, or record an explicit unavailable reason. The initial optimizer
+    may vary the top and bottom physical lengths; the shortening factor and
+    choke are construction context, not free variables, unless a later ADR
+    justifies otherwise.
+12. **Keep the deferred variants out of the catalog** until their primitives and
+    validation exist. A catalog entry that only draws a plain vertical dipole
+    is not a Flower Pot model.
+
+## Physical-versus-electrical spike
+
+The spike is a standalone NEC-2 investigation using the bundled `nec2c`; it does
+not need application code. It must compare:
+
+| Option | Canonical geometry | Solver model | Construction values | Risk |
+|---|---|---|---|---|
+| **A. Electrical equivalent + cut list** | Scaled by `1 / factor` | Correct resonance for the modelled band | Physical cut list separate | Medium: two lengths to explain and test |
+| **B. Physical geometry + insulation/velocity** | Physical | `IS`-style dielectric coating or a documented per-wire electrical-length scale | Physical and canonical are the same | High: new domain/solver capability and calibration |
+| **C. Physical geometry + lumped equivalent** | Physical | Series load that restores resonance | Physical | Medium: non-physical equivalent, frequency-specific |
+| **D. Bare physical wire** | Physical | No correction | Physical | Low, but **rejected**: it resonates in the wrong place and would mislead the builder |
+
+The spike must record, for 2 m and 6 m:
+
+- the bare-wire resonance and input impedance for the physical lengths;
+- the resonance and impedance for each corrected option;
+- sensitivity to top and bottom radii, base height, ground model, and
+  segmentation;
+- whether `nec2c` supports the `IS` insulated-wire card and whether a calibrated
+  coating reproduces the published band behaviour;
+- whether the chosen option preserves the published top/bottom split and the
+  physical feed height;
+- the difference between the canonical wire length and the physical cut length
+  that the construction sheet must disclose.
+
+The comparison target is the published VSWR behaviour and the published
+dimensions, not an invented R+jX value. The spike must not treat a VSWR plot as a
+precision impedance reference.
+
+Selection rule:
+
+1. Prefer **B** if `nec2c` supports a stable insulated-wire or per-wire
+   electrical-length representation and the result is reproducible across 2 m
+   and 6 m.
+2. Otherwise use **A** with a documented cut list and an explicit canonical
+   "electrical model" label.
+3. Use **C** only if A and B are both unavailable and the limitation is visible.
+4. Reject **D**.
+
+## Geometry presentation
+
+The construction view is elevation. The scene must:
+
+- draw both canonical wires and the feed at their junction;
+- dimension the top and bottom sections, the total radiator, and the base
+  height;
+- show the choke as a detail inset or overlay, not as a synthetic canonical
+  wire;
+- show the 2–3 mm feed gap and the heatshrink separator in a not-to-scale
+  detail inset;
+- show the PVC conduit as a non-conductive outline or note, not as a wire;
+- avoid a plan view that collapses the vertical wires to a point;
+- keep every displayed dimension anchored to the canonical model or to a
+  declared construction parameter.
+
+The scene contract test must preserve both wires and the feed, assert the
+construction view, assert no zero-length dimension, and assert that the choke
+and conduit overlays are not counted as canonical wires. The wire schedule must
+list both conductors with their radii and materials; a family-specific cut list
+must list the physical top/bottom lengths, the coax type, the choke turns and
+former, and the conduit length.
+
+## Estimator
+
+The frequency-first estimator covers the published 2 m and 6 m starting points:
+
+- physical total length approximately `0.44 λ`;
+- top/bottom split approximately `50.5 / 49.5` of the physical total;
+- default shortening factor `0.88` for grey PVC conduit, editable;
+- published rows: 457/447 mm at 146 MHz and 1273/1245 mm at 52.7 MHz;
+- choke starting table from VK2ZOI, with a warning that the choke must be
+  resonated and measured;
+- confidence B for the published rows, heuristic outside them;
+- a tolerance of 5% on the physical top and bottom lengths; no impedance or
+  gain tolerance is claimed;
+- warnings for conduit material, coax type, feedline/choke not modeled, and
+  installation height.
+
+The estimator must not claim a 50 Ω feedpoint or a gain value.
+
+## Optimizer
+
+The initial descriptor may vary the top and bottom physical lengths with:
+
+- a target-impedance or minimum-SWR objective at the design frequency;
+- hard constraints for positive lengths, a positive base height, and the
+  top/bottom construction envelope;
+- a deterministic seed and the normal budget profiles;
+- an Apply Best path through the family editor and a full simulation.
+
+The shortening/insulation representation, choke, conduit, and feedline are
+context, not optimizer variables, unless a later ADR defines a traceable model
+for them. The optimizer must not tune the model into a geometry that cannot be
+built.
+
+## Consequences
+
+Positive:
+
+- Adds a popular VHF/portable family that fits the existing Vertical catalog.
+- Reuses the straight-wire solver, estimator, optimizer, scene, and reporting
+  contracts; no new runtime dependency.
+- Makes the coax construction and its limits explicit instead of hiding them
+  behind a plain dipole.
+- Gives the project a documented path to the 5/8 and dual-band variants without
+  pretending they are already modeled.
+
+Costs:
+
+- A new family payload, schema bump, catalog entry, form/dialog, i18n/help,
+  geometry, reports, estimator, optimizer, and tests.
+- An explicit physical-versus-electrical length contract.
+- A new feed-connection/balance branch for an integrated choke.
+- A construction-only cut list and BOM rows for coax, conduit, choke former,
+  end cap, and tape.
+
+## Out of scope
+
+- Single 5/8, double 5/8, dual-band sleeve, and high-gain variants.
+- A choke R+jX synthesis from turns/former data; common-mode current; coax
+  shield radiation; dielectric loss; a dielectric conduit body.
+- A 70 cm single-band half-wave design outside the published choke table.
+- A 50 Ω, gain, bandwidth, or efficiency claim.
+- A new solver engine or an external circuit simulator.
+- Any change to the existing feed-line post-processing model or the project
+  container format beyond the additive family payload.
+
+## Acceptance
+
+- The spike compares options A–D at 2 m and 6 m and records the selected
+  representation in this ADR; no numerical reference is invented.
+- The family parameters, `to_antenna()`, scene, wire schedule, cut list, and
+  construction sheet agree on which lengths are canonical and which are
+  physical.
+- The construction view preserves both wires and the feed; the choke/conduit
+  overlays are not canonical wires; dimensions are non-zero and anchored.
+- The estimator reproduces the published 2 m and 6 m starting dimensions within
+  the documented 5% physical-length tolerance and reports the
+  choke/conduit/feedline limitations.
+- The feed connection says "integrated choke, no separate current balun" and
+  does not require the project current-balun record.
+- The family optimizer covers the top/bottom lengths, passes field-coverage,
+  budget, constraint, determinism, Apply Best, and solver QA, and does not claim
+  a validated 50 Ω match.
+- Old projects load unchanged at the new schema; the new payload round-trips.
+- EN/ES help is complete and in the manifest; the catalog routes work in both
+  New Antenna and Change Template.
+- A real `nec2c` case completes at 2 m and 6 m with a finite impedance and a
+  resonance consistent with the selected representation. No gain or impedance
+  claim is added.
+
+## Risks
+
+| Risk | Mitigation |
+|---|---|
+| The equivalent dipole does not reproduce the coax/choke behaviour | Spike first; label the limitation; compare with a measured build when available |
+| The user cuts the electrical length instead of the physical length | Show both; make the cut list authoritative; explicit copy in the form and construction sheet |
+| The published VSWR plot is treated as a numerical reference | Use it only as a qualitative band/behaviour check; do not invent R+jX |
+| The choke table is mistaken for an impedance model | State that it is a self-resonance construction guide; keep the choke ideal in the MVP |
+| The family is confused with an end-fed or a vertical with radials | Catalog description, help, and feed-connection detail state the topology explicitly |
+| Scope creep into the 5/8 and dual-band variants | Keep them out of the catalog until their ADRs and primitives exist |
+| VHF segmentation or thin-wire quality | Use the existing model-quality policy; add a real 2 m/6 m solver regression |
+
+## References
+
+- J. Bishop, VK2ZOI, "Half-Wave Flower Pot Antenna",
+  <https://vk2zoi.com/articles/half-wave-flower-pot/>.
+- J. Bishop, VK2ZOI, "Flower Pots",
+  <https://vk2zoi.com/flower-pots/>.
+- VK4PK, "My 6 Meter Flowerpot Antenna", BARC, 2021, construction survey,
+  <https://barc.org.au/assets/projects/flowerpot_antenna/VK4PK_My_6m_Flowerpot_Antenna-v1.0.pdf>.
+- J. Bishop, VK2ZOI, "Dual Band Half-Wave Flower Pot Antenna",
+  <https://vk2zoi.com/articles/dual-band-half-wave-flower-pot/>.
+- J. Bishop, VK2ZOI, "Single 5/8 Flower Pot Antenna",
+  <https://vk2zoi.com/articles/single-five-eighth-flower-pot/>.
+- J. Bishop, VK2ZOI, "Double 5/8 Flower Pot Antenna",
+  <https://vk2zoi.com/articles/double-five-eighth-flower-pot/>.
+- J. Bishop, VK2ZOI, "Experimental Dual Band High Gain Flower Pot Antenna",
+  <https://vk2zoi.com/articles/dual-band-high-gain-flower-pot/>.
