@@ -89,6 +89,13 @@
   scrollbar in English or Spanish, and unchanged parameter round-trips. The
   loaded-dipole orientation selector now shows its labels immediately. No
   solver, domain, schema, simulation, or report change.
+- UX53 is **implemented 2026-11-26**: Beverage, SCV, J-pole, and OCFD now use
+  the shared scaffold and two semantic columns, with the form scroll fallback
+  and actions outside. All four fit the 920×640 budget without a horizontal
+  scrollbar in English or Spanish, preserve parameter round-trips, and keep
+  the OCFD band-plan footer outside the scroll. At the large Spanish preset,
+  Beverage and SCV use a small vertical scroll while actions stay visible. No
+  solver, domain, schema, simulation, or report change.
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
@@ -133,7 +140,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX52 are implemented; continue with the UX53–UX55 dialog-layout waves or close the 1.2 presentation track.
+2. UX46–UX53 are implemented; continue with UX54–UX55 or close the 1.2 presentation track.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

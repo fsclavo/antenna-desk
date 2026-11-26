@@ -183,6 +183,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   The loaded-dipole orientation selector now shows its labels immediately. No
   solver, domain, schema, simulation, or report change.
 
+- **Wide dialogs for the complex family wave 2 (UX53).** Beverage, SCV,
+  J-pole, and OCFD now use the shared `FormDialogFrame` and `SectionedForm`
+  with two semantic columns, a form scroll fallback, and actions outside the
+  scroll. All four fit 920×640 without a horizontal scrollbar in English or
+  Spanish, and the OCFD band-plan footer stays outside the scroll. No solver,
+  domain, schema, simulation, or report change.
+
 ### Changed
 
 - **Shared Qt worker lifecycle (UX45).** All 14 UI `QThread` sites now run

@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
@@ -35,6 +34,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
+from .sectioned_form import FormColumn, FormLayoutMode, FormRow, FormSection, SectionedForm
 
 
 class JPoleForm(QWidget):
@@ -48,10 +48,12 @@ class JPoleForm(QWidget):
         parent: QWidget | None = None,
         *,
         display_units: DisplayUnits | None = None,
+        wide_layout: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
+        self._wide_layout = wide_layout
         self._unit_system = unit_system
         self._display_units = display_units or DisplayUnits(
             unit_system,
@@ -179,27 +181,43 @@ class JPoleForm(QWidget):
         self._geometry = QLabel(self)
         self._geometry.setWordWrap(True)
 
-        form = QFormLayout()
-        form.addRow(self._labels.label("field.frequency"), self._frequency)
-        form.addRow(self._labels.label("j_pole.radiator_height"), self._radiator_height)
-        form.addRow(self._labels.label("j_pole.stub_length"), self._stub_length)
-        form.addRow(self._labels.label("j_pole.spacing"), self._spacing)
-        form.addRow(self._labels.label("j_pole.feed_offset"), self._feed_offset)
-        form.addRow(self._labels.label("j_pole.gap"), self._gap)
-        form.addRow(self._labels.label("j_pole.base_height"), self._base_height)
-        form.addRow(self._folded)
-        form.addRow(self._labels.label("j_pole.wire_radius"), self._radius)
-        form.addRow(self._labels.label("field.material"), self._material)
-        form.addRow(self._labels.label("field.ground"), self._ground)
-        form.addRow(self._labels.label("field.soil_preset"), self._soil)
-        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
-        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        left_rows = [
+            FormRow("field.frequency", self._frequency),
+            FormRow("j_pole.radiator_height", self._radiator_height),
+            FormRow("j_pole.stub_length", self._stub_length),
+            FormRow("j_pole.spacing", self._spacing),
+            FormRow("j_pole.feed_offset", self._feed_offset),
+            FormRow("j_pole.gap", self._gap),
+            FormRow("j_pole.base_height", self._base_height),
+            FormRow(None, self._folded),
+        ]
+        right_rows = [
+            FormRow("j_pole.wire_radius", self._radius),
+            FormRow("field.material", self._material),
+            FormRow("field.ground", self._ground),
+            FormRow("field.soil_preset", self._soil),
+            FormRow("field.permittivity", self._permittivity),
+            FormRow("field.conductivity", self._conductivity),
+        ]
+        self._sectioned = SectionedForm(
+            (
+                FormSection(tuple(left_rows), column=FormColumn.LEFT),
+                FormSection(tuple(right_rows), column=FormColumn.RIGHT),
+            ),
+            mode=FormLayoutMode.TWO_COLUMN if wide_layout else FormLayoutMode.SINGLE,
+            label_factory=self._labels.label,
+            target_width_px=920 if wide_layout else None,
+            parent=self,
+        )
+        for form in self._sectioned.forms:
+            self._labels.bind_form(form)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._labels.bind_form(form)
-        layout.addLayout(form)
+        layout.addWidget(self._sectioned)
         layout.addWidget(self._geometry)
+        layout.addStretch(1)
+        self._sectioned.apply_tab_order()
 
         for widget in (
             self._frequency,

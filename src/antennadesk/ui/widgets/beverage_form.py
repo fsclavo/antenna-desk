@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QFormLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
@@ -41,6 +40,7 @@ from ..units import (
 from .form_i18n import FormLabels, retranslate_combo
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
+from .sectioned_form import FormColumn, FormLayoutMode, FormRow, FormSection, SectionedForm
 
 
 class BeverageForm(QWidget):
@@ -54,10 +54,12 @@ class BeverageForm(QWidget):
         parent: QWidget | None = None,
         *,
         display_units: DisplayUnits | None = None,
+        wide_layout: bool = False,
     ) -> None:
         super().__init__(parent)
         self._translator = translator
         self._labels = FormLabels(translator, self)
+        self._wide_layout = wide_layout
         self._unit_system = unit_system
         self._display_units = display_units or DisplayUnits(
             unit_system,
@@ -156,29 +158,43 @@ class BeverageForm(QWidget):
         self._transformer_hint = QLabel(translator.t("beverage.transformer_hint"), self)
         self._transformer_hint.setWordWrap(True)
 
-        form = QFormLayout()
-        form.addRow(self._labels.label("field.frequency"), self._frequency)
-        form.addRow(self._labels.label("field.length"), self._length)
-        form.addRow(self._labels.label("field.height"), self._height)
-        form.addRow(self._termination_enabled)
-        form.addRow(
-            self._labels.label("beverage.termination_resistance"), self._termination_resistance
+        left_rows = [
+            FormRow("field.frequency", self._frequency),
+            FormRow("field.length", self._length),
+            FormRow("field.height", self._height),
+            FormRow(None, self._termination_enabled),
+            FormRow("beverage.termination_resistance", self._termination_resistance),
+            FormRow("field.azimuth", self._azimuth),
+            FormRow("field.wire_radius", self._radius),
+            FormRow("beverage.transformer_ratio", self._transformer),
+        ]
+        right_rows = [
+            FormRow("field.material", self._material),
+            FormRow("field.ground", self._ground),
+            FormRow("field.soil_preset", self._soil),
+            FormRow("field.permittivity", self._permittivity),
+            FormRow("field.conductivity", self._conductivity),
+        ]
+        self._sectioned = SectionedForm(
+            (
+                FormSection(tuple(left_rows), column=FormColumn.LEFT),
+                FormSection(tuple(right_rows), column=FormColumn.RIGHT),
+            ),
+            mode=FormLayoutMode.TWO_COLUMN if wide_layout else FormLayoutMode.SINGLE,
+            label_factory=self._labels.label,
+            target_width_px=920 if wide_layout else None,
+            parent=self,
         )
-        form.addRow(self._labels.label("field.azimuth"), self._azimuth)
-        form.addRow(self._labels.label("field.wire_radius"), self._radius)
-        form.addRow(self._labels.label("beverage.transformer_ratio"), self._transformer)
-        form.addRow(self._labels.label("field.material"), self._material)
-        form.addRow(self._labels.label("field.ground"), self._ground)
-        form.addRow(self._labels.label("field.soil_preset"), self._soil)
-        form.addRow(self._labels.label("field.permittivity"), self._permittivity)
-        form.addRow(self._labels.label("field.conductivity"), self._conductivity)
+        for form in self._sectioned.forms:
+            self._labels.bind_form(form)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        self._labels.bind_form(form)
-        layout.addLayout(form)
+        layout.addWidget(self._sectioned)
         layout.addWidget(self._transformer_hint)
         layout.addWidget(self._geometry)
+        layout.addStretch(1)
+        self._sectioned.apply_tab_order()
 
         for widget in (
             self._frequency,

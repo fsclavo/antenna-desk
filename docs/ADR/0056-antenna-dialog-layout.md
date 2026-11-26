@@ -1,6 +1,6 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; implemented by UX50 and UX51, applied to UX52 wave 1
+- **Status:** accepted 2026-11-26; implemented by UX50 and UX51, applied to UX52 and UX53
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX55
 
@@ -133,7 +133,7 @@ Costs:
 - `AUTO` layout depends on an explicit target width; callers must pass it.
 
 UX52 later applied the standard to loaded dipole, biquad, Moxon, and magnetic
-loop without changing the guard contract. Out of scope: migrating the
-remaining families (UX53–UX55), changing `scaled_dialog_size()` semantics,
-changing the sidebar, and any solver, domain-model, schema, simulation,
-report, or numerical-reference change.
+loop, and UX53 applied it to Beverage, SCV, J-pole, and OCFD without changing
+the guard contract. Out of scope: the UX54–UX55 audit/closure, changing
+`scaled_dialog_size()` semantics, changing the sidebar, and any solver,
+domain-model, schema, simulation, report, or numerical-reference change.

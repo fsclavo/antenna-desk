@@ -6,25 +6,23 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QDialog,
-    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
-    QVBoxLayout,
     QWidget,
 )
 
 from ...domain.antennas.ocfd import OCFDParameters
 from ...domain.design.band_plan import BandPlan, default_band_plan
-from ..fonts import scaled_dialog_size
 from ..i18n import Translator
 from ..units import UnitSystem
+from ..widgets.form_dialog import FormDialogFrame
 from ..widgets.ocfd_form import OCFDForm
 from .band_analysis_dialog import BandAnalysisDialog
 
 
-class OCFDDialog(QDialog):
+class OCFDDialog(FormDialogFrame):
     def __init__(
         self,
         translator: Translator,
@@ -34,51 +32,52 @@ class OCFDDialog(QDialog):
         frequency_hz: float | None = None,
         parameters: OCFDParameters | None = None,
     ) -> None:
-        super().__init__(parent)
+        form = OCFDForm(
+            translator,
+            unit_system,
+            parameters,
+            None,
+            wide_layout=True,
+        )
+        if frequency_hz is not None and parameters is None:
+            form.set_frequency_hz(frequency_hz)
+        hint = QLabel(translator.t("ocfd.hint"))
+        hint.setWordWrap(True)
+        evidence = QLabel(translator.t("ocfd.evidence"))
+        evidence.setWordWrap(True)
+        band_plan_label = QLabel()
+        band_plan_label.setWordWrap(True)
+        band_plan_button = QPushButton(translator.t("band.choose"))
+        band_plan_button.clicked.connect(self._choose_band_plan)
+        band_container = QWidget()
+        band_layout = QHBoxLayout(band_container)
+        band_layout.setContentsMargins(0, 0, 0, 0)
+        band_layout.addWidget(band_plan_label, 1)
+        band_layout.addWidget(band_plan_button)
+
+        super().__init__(
+            title=translator.t("ocfd.title"),
+            form=form,
+            notes=(band_container, hint, evidence),
+            initial_size=(920, 640),
+            parent=parent,
+        )
         self._translator = translator
+        self._ocfd_form = form
         self._parameters: OCFDParameters | None = None
         self._band_plan: BandPlan | None = None
         self._band_plan_edited = False
-        self._form = OCFDForm(translator, unit_system, parameters, self)
-        if frequency_hz is not None and parameters is None:
-            self._form.set_frequency_hz(frequency_hz)
-        self._ground = self._form._ground
-        self._material = self._form._material
-
-        self.setWindowTitle(translator.t("ocfd.title"))
-        self.resize(*scaled_dialog_size(560, 560))
-
-        self._hint = QLabel(translator.t("ocfd.hint"), self)
-        self._hint.setWordWrap(True)
-        self._evidence = QLabel(translator.t("ocfd.evidence"), self)
-        self._evidence.setWordWrap(True)
-        self._band_plan_label = QLabel(self)
-        self._band_plan_label.setWordWrap(True)
-        self._band_plan_button = QPushButton(translator.t("band.choose"), self)
-        self._band_plan_button.clicked.connect(self._choose_band_plan)
-        band_layout = QHBoxLayout()
-        band_layout.addWidget(self._band_plan_label, 1)
-        band_layout.addWidget(self._band_plan_button)
-
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
-            parent=self,
-        )
-        buttons.accepted.connect(self._accept)
-        buttons.rejected.connect(self.reject)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._form)
-        layout.addLayout(band_layout)
-        layout.addWidget(self._hint)
-        layout.addWidget(self._evidence)
-        layout.addStretch(1)
-        layout.addWidget(buttons)
-        self._form.changed.connect(self._update_band_plan_label)
+        self._ground = form._ground
+        self._material = form._material
+        self._hint = hint
+        self._evidence = evidence
+        self._band_plan_label = band_plan_label
+        self._band_plan_button = band_plan_button
+        form.changed.connect(self._update_band_plan_label)
         self._update_band_plan_label()
 
     def parameters(self) -> OCFDParameters:
-        return self._form.parameters()
+        return self._ocfd_form.parameters()
 
     def _default_band_plan(self) -> BandPlan:
         return default_band_plan(self.parameters()).plan
