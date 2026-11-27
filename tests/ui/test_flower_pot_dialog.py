@@ -143,6 +143,37 @@ def test_form_applies_bilingual_help_to_physical_cut_fields(qtbot: QtBot) -> Non
     assert "Corte físico superior" in labels["flower_pot.top_length"].toolTip()
 
 
+def test_results_view_anchors_the_pattern_overlay_at_the_physical_feed(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.ui.widgets.results_view import ResultsView
+
+    parameters = flower_pot_2m()
+    design = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Flower Pot overlay",
+            variant_name="Flower Pot",
+            parameters=parameters,
+        )
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_design(design.designs[0])
+
+    overlay = view._pattern_3d._overlay
+    assert overlay is not None
+    assert overlay.feed == pytest.approx((0.0, 0.0, parameters.physical_feed_height_m))
+    assert overlay.center == pytest.approx(overlay.feed)
+    lowest = min(point[2] for wire in overlay.wires for point in (wire.start, wire.end))
+    assert lowest >= parameters.physical_feed_height_m - 1e-9
+    assert parameters.physical_junction_height_m > parameters.physical_feed_height_m
+
+
 def test_dialog_keeps_actions_visible_with_large_spanish(
     qtbot: QtBot,
 ) -> None:

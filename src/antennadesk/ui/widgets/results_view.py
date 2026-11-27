@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...domain.antennas.feed_line import FeedLine
+from ...domain.antennas.flower_pot import FlowerPotParameters
 from ...domain.antennas.matching_network import (
     LNetwork,
     MatchingNetwork,
@@ -791,14 +792,27 @@ class ResultsView(QWidget):
 
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design
-        self._pattern_3d.set_overlay(
-            overlay_from_model(
-                design.antenna if design is not None else None,
-                forward_azimuth=(
-                    forward_axis_azimuth(design.parameters) if design is not None else None
-                ),
-            )
+        overlay = overlay_from_model(
+            design.antenna if design is not None else None,
+            forward_azimuth=(
+                forward_axis_azimuth(design.parameters) if design is not None else None
+            ),
         )
+        if (
+            overlay is not None
+            and design is not None
+            and isinstance(design.parameters, FlowerPotParameters)
+        ):
+            # The pattern overlay is a physical-construction aid: anchor it at
+            # the feed connector, not at the NEC equivalent source at the arm
+            # junction. The geometry scene still marks both points separately.
+            anchor = (
+                0.0,
+                0.0,
+                design.parameters.physical_feed_height_m,
+            )
+            overlay = replace(overlay, feed=anchor, center=anchor)
+        self._pattern_3d.set_overlay(overlay)
         self._render_patterns()
         self._render_confidence()
 
