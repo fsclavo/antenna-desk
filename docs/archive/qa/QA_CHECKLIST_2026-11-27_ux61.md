@@ -1,14 +1,19 @@
 # UX61 layout closure checklist — 2026-11-27
 
-- **Status:** pending. This is a checklist, not a pass record.
+- **Status:** automated closure complete; manual desktop checklist pending.
 - **Scope:** UX58–UX61 generator-dialog layout track
 - **Automated baseline:** UX58 (96 DPI, 1× scale, 9–10 pt test font)
+- **Windows CI:** [run 46081455154](https://github.com/fsclavo/antenna-desk/actions/runs/46081455154), green on 3.12 and 3.13
 
 ## Automated result
 
-- Layout batch: **355 passed** in 30 s locally.
-- Full gate before this checklist: **4,966 passed, 1 skipped**; the skip is the
-  Windows-only console-hiding test.
+- Local layout batch: **356 passed** in 30 s.
+- Windows 3.12/3.13 layout batch: **330 passed** on both jobs, well under the
+  180 s timeout.
+- Windows baseline: `Segoe UI 9.00pt / 96 DPI / DPR 1.00 / fusion`.
+- Full gate: **4,967 passed, 1 skipped**; the skip is the Windows-only
+  console-hiding test.
+- README `tests` badge: passing on `main`.
 - Guard matrix: 26 dialogs × English/Spanish × Medium/Large × (920×640 and the
   documented initial size). No horizontal scrollbar, action box visible and
   outside the scroll.
@@ -45,4 +50,4 @@ UX61 and the track close only after:
 1. Windows 3.12 and 3.13 pass the real layout batch without `skip`/`xfail` or a
    platform exclusion.
 2. The manual checklist above is recorded for both desktops.
-3. The README `tests` badge is green on `main`.
+3. The README `tests` badge is green on `main`. (Automated: done.)

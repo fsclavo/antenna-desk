@@ -71,18 +71,16 @@ solver, domain model, project schema, container, report, or numerical
 reference. It is not part of the active 1.2 sequence; see §Antenna generator
 dialog layout standard.
 
-UX58–UX61 are a P1 CI and layout-quality track opened 2026-11-27. UX58 is
-implemented locally 2026-11-27; UX59–UX61 remain proposed and the Windows
-verification is pending. The README `tests` badge has been red since the 0.11.0
-publication: the Windows 3.12/3.13 jobs fail 22 dialog-layout assertions while
-Linux passes the same 1,203 tests, and the 3.12 job then stalls until its
-10-minute batch timeout. The track first makes the offscreen test baseline
-deterministic, then implements the single-column and nested `WrapLongRows`
-behavior already promised by ADR-0056, makes dialog and table sizing
-layout-based, and closes with a Large-font guard and a real Windows run. It
-changes no solver, domain model, project schema, report, or numerical
-reference. It is not part of the active 1.2 sequence; see §Windows layout
-baseline and cross-platform generator wrapping.
+UX58–UX61 are a P1 CI and layout-quality track opened 2026-11-27. The
+automated guards and the real Windows CI are green 2026-11-27; only the manual
+desktop checklist remains before the track closes. The README `tests` badge,
+red since 0.11.0 on Windows 3.12/3.13, is passing again. The track made the
+offscreen baseline deterministic, applied single-column and nested
+`WrapLongRows`, moved dialog and table sizing to the layout, added the
+Medium/Large guard, and resolved the Windows offscreen font. It changes no
+solver, domain model, project schema, report, or numerical reference. It is not
+part of the active 1.2 sequence; see §Windows layout baseline and
+cross-platform generator wrapping.
 
 FP1 is a VHF/portable catalog addition, not part of the active 1.2 sequence.
 Its length-representation spike is complete and ADR-0055 is updated;
@@ -124,7 +122,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
 | UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Implemented locally 2026-11-27; Windows CI verification pending.** Shared `configure_form_layout()` applies `WrapLongRows`, growing fields, zero margins, and explicit spacing to every family `QFormLayout`; single-column labels wrap. Local guard at 920/initial widths and Large font: no horizontal bars; layout batch 226 passed. See §UX59. |
 | UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Implemented locally 2026-11-27; Windows CI verification pending.** Initial width grows to the form minimum only when needed and stays under the `scaled_dialog_size()` screen cap; the Yagi table no longer uses `AdjustToContents`; the Basic Antenna template value has a compact policy. All 26 dialogs remain free of horizontal scrolling at 920 px and Large font locally; no 1000 px exception or column collapse was needed. See §UX60. |
-| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Automated guard implemented locally 2026-11-27; Windows CI and manual QA pending.** 26 dialogs × EN/ES × Medium/Large × (920×640 + initial size); no horizontal scrollbar, actions visible/outside the scroll. Layout batch: 355 passed. Checklist added at `archive/qa/QA_CHECKLIST_2026-11-27_ux61.md`; the README badge stays red until the real Windows run. See §UX61. |
+| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Automated guard and Windows CI green 2026-11-27; manual desktop checklist pending.** 26 dialogs × EN/ES × Medium/Large × (920×640 + initial size); no horizontal scrollbar, actions visible/outside the scroll. Windows 3.12/3.13 layout batch: 330 passed. README `tests` badge passing. Checklist: `archive/qa/QA_CHECKLIST_2026-11-27_ux61.md`. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -3124,9 +3122,8 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 
 ### UX61 — Large-font layout guard, Windows closure, and docs
 
-**Status:** automated guard implemented locally 2026-11-27; Windows CI and
-manual desktop QA pending. **Depends on:** UX58–UX60. **Effort:** S–M
-(1–2 days).
+**Status:** automated guard and Windows CI green 2026-11-27; manual desktop
+checklist pending. **Depends on:** UX58–UX60. **Effort:** S–M (1–2 days).
 
 **Scope:**
 
@@ -3174,20 +3171,23 @@ manual desktop QA pending. **Depends on:** UX58–UX60. **Effort:** S–M
   Medium/Large at the 600 px initial width.
 - The Yagi Large-font test now also asserts no horizontal scrollbar; the table
   policy and growth tests remain.
-- Local results: layout batch **355 passed**; full gate **4,966 passed, 1
+- Local results: layout batch **356 passed**; full gate **4,967 passed, 1
   skipped**; real `nec2c` integration: **186 passed**.
+- Windows CI run
+  [`46081455154`](https://github.com/fsclavo/antenna-desk/actions/runs/46081455154)
+  is green on 3.12 and 3.13. The Windows layout baseline is
+  `Segoe UI 9.00pt / 96 DPI / DPR 1.00 / fusion`, and the layout batch reports
+  **330 passed** on both jobs. The README `tests` badge is passing.
 - [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md)
   records the pending Linux/Windows desktop matrix. It is a checklist, not a
   pass record.
-- Still required for closure: the real Windows 3.12/3.13 run, the manual
-  light/dark and 125%/150% desktop pass on Linux and Windows, and a green
-  README `tests` badge on `main`. No platform exclusion or weakened assertion
-  was added.
+- Still required for closure: the manual light/dark and 125%/150% desktop pass
+  on Linux and Windows. No platform exclusion or weakened assertion was added.
 
-**Track order:** UX58 → UX59 → UX60 → UX61. All four are implemented locally;
-the Windows signal and manual checklist still have to be recorded before the
-track closes. Do not start with a Windows skip or a test-only width increase:
-both hide the user-facing issue.
+**Track order:** UX58 → UX59 → UX60 → UX61. All four are implemented; the
+Windows CI signal is green and the badge is passing. Only the manual desktop
+checklist remains before the track closes. Do not start with a Windows skip or
+a test-only width increase: both hide the user-facing issue.
 
 **Cross-cutting acceptance:**
 
@@ -3394,8 +3394,8 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,966 passed, 1 skipped** on 2026-11-27 after PF2 streaming
-  write, the DL3 managed-value closure, and the UX58–UX61 local layout work.
+- Full gate: **4,967 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write, the DL3 managed-value closure, and the UX58–UX61 layout work.
   The 0.11.1 release covers the optimizer close/cancel lifecycle fix. Real
   `nec2c` integration: **186 passed**. The suite also covers the QA and
   technical-debt closure,
@@ -3459,10 +3459,8 @@ decision:
   3.11–3.13 run the full UI suite. See
   [`ADR/0025`](ADR/0025-pyside6-version-pin.md). Do not weaken the remaining
   gates.
-- Known red CI (2026-11-27): the README `tests` badge is failing on Windows
-  Python 3.12/3.13 because of 22 generator-dialog layout assertions; Linux is
-  green. The Windows 3.12 batch also stalls at its 10-minute timeout after the
-  failures. Tracked as UX58–UX61 in §Windows layout baseline and
-  cross-platform generator wrapping. Do not skip the Windows jobs or weaken
-  the assertions while that track is open.
+- Resolved CI residue (2026-11-27): the Windows 3.12/3.13 generator-dialog
+  layout failures and the 3.12 batch stall are fixed by UX58–UX61. Windows and
+  Linux are green and the README `tests` badge is passing. Keep the Windows
+  jobs and assertions intact; do not replace them with a platform skip.
 - Recent work: use `git log --oneline`; do not maintain a commit list in this document.

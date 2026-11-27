@@ -39,8 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Medium/Large generator layout guard.** The fast UI batch covers 26 dialogs
   in English and Spanish at Medium and Large fonts, at 920×640 and each
   dialog's initial size, with no horizontal scrollbar and the action box
-  visible and outside the form scroll. Windows CI and the manual desktop
-  checklist remain the closure conditions.
+  visible and outside the form scroll. Windows 3.12/3.13 and Linux are green;
+  the README `tests` badge is passing. The manual desktop checklist remains.
 
 ## [0.11.1] - 2026-11-27
 
