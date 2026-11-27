@@ -257,6 +257,67 @@ def test_design_from_frequency_passes_the_current_template(
     window._dirty = False
 
 
+def test_design_from_frequency_preserves_flower_pot_model_context(
+    window: MainWindow,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    from antennadesk.domain.antennas.flower_pot import (
+        flower_pot_2m,
+        flower_pot_6m,
+    )
+    from antennadesk.domain.design import Confidence, DimensionEstimate
+
+    initial = replace(
+        flower_pot_2m(),
+        base_height_m=0.5,
+        top_radius_m=0.0008,
+        bottom_radius_m=0.002,
+        construction_shortening_factor=0.9,
+        electrical_length_scale=1.05,
+    )
+    estimated = flower_pot_6m()
+    use_parameters(window, initial)
+    captured: dict[str, object] = {}
+
+    class FakeDialog:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            captured.update(kwargs)
+
+        def exec(self) -> QDialog.DialogCode:
+            return QDialog.DialogCode.Accepted
+
+        def estimated_estimate(self) -> DimensionEstimate:
+            return DimensionEstimate(
+                parameters=estimated,
+                method_id="test.flower_pot",
+                confidence=Confidence.REFERENCE_SCALED,
+                tolerance_m=0.1,
+            )
+
+    monkeypatch.setattr(main_window_module, "DesignFromFrequencyDialog", FakeDialog)
+    window._dirty = False
+
+    window.design_from_frequency()
+
+    assert isinstance(captured["initial_parameters"], type(initial))
+    assert window._project is not None
+    design = window._project.design_by_id(window._design_id)
+    parameters = design.parameters
+    assert type(parameters) is type(initial)
+    assert parameters.frequency_hz == pytest.approx(52_700_000.0)
+    assert parameters.top_length_m == pytest.approx(estimated.top_length_m)
+    assert parameters.bottom_length_m == pytest.approx(estimated.bottom_length_m)
+    assert parameters.base_height_m >= estimated.lower_tip_extension_m + 0.05
+    assert parameters.top_radius_m == pytest.approx(initial.top_radius_m)
+    assert parameters.bottom_radius_m == pytest.approx(initial.bottom_radius_m)
+    assert parameters.construction_shortening_factor == pytest.approx(0.9)
+    assert parameters.electrical_length_scale == pytest.approx(1.05)
+    assert design.antenna_type == "flower_pot"
+    window._dirty = False
+
+
 def test_design_from_frequency_rejects_a_template_change(
     window: MainWindow,
     monkeypatch: pytest.MonkeyPatch,

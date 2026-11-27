@@ -12,6 +12,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -48,6 +49,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
+    CATALOG_TYPE_FLOWER_POT,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
     CATALOG_TYPE_HALF_SQUARE,
@@ -87,6 +89,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_DOUBLET,
         CATALOG_TYPE_ENDFED,
         CATALOG_TYPE_FAN_DIPOLE,
+        CATALOG_TYPE_FLOWER_POT,
         CATALOG_TYPE_G5RV,
         CATALOG_TYPE_INVERTED_V,
         CATALOG_TYPE_J_POLE,
@@ -94,6 +97,7 @@ _KNOWN_CUSTOM_GENERATORS = frozenset(
         CATALOG_TYPE_MOXON,
         CATALOG_TYPE_OCFD,
         CATALOG_TYPE_RINGO,
+        CATALOG_TYPE_FLOWER_POT,
         CATALOG_TYPE_HALF_SQUARE,
         CATALOG_TYPE_HEXBEAM,
         CATALOG_TYPE_BOBTAIL_CURTAIN,
@@ -176,6 +180,8 @@ def catalog_key_for(parameters: AntennaDesignParameters) -> str:
         return CATALOG_TYPE_SLIM_JIM if parameters.folded else CATALOG_TYPE_J_POLE
     if isinstance(parameters, RingoParameters):
         return CATALOG_TYPE_RINGO
+    if isinstance(parameters, FlowerPotParameters):
+        return CATALOG_TYPE_FLOWER_POT
     if isinstance(parameters, ScvParameters):
         return (
             CATALOG_TYPE_HALF_SQUARE

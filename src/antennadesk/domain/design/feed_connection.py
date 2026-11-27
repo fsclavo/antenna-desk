@@ -27,6 +27,11 @@ from ..antennas.feed_connection import (
     FeedTopology,
 )
 from ..antennas.feed_line import FeedLine
+from ..antennas.flower_pot import (
+    BOTTOM_RADIATOR_ID,
+    TOP_RADIATOR_ID,
+    FlowerPotParameters,
+)
 from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_l import InvertedLParameters
@@ -73,6 +78,15 @@ def _base_terminals(model: AntennaModel) -> tuple[FeedTerminal, FeedTerminal]:
     return (
         FeedTerminal("A", wire.id, model.feed.offset_m, "start"),
         FeedTerminal("B", None, None, "ground"),
+    )
+
+
+def _flower_pot_terminals(model: AntennaModel) -> tuple[FeedTerminal, FeedTerminal]:
+    top = model.wire_by_id(TOP_RADIATOR_ID)
+    bottom = model.wire_by_id(BOTTOM_RADIATOR_ID)
+    return (
+        FeedTerminal("A", top.id, model.feed.offset_m, "start"),
+        FeedTerminal("B", bottom.id, bottom.length_m, "end"),
     )
 
 
@@ -144,11 +158,18 @@ def _ratio(parameters: AntennaDesignParameters) -> float | None:
 
 
 def _summary(
+    parameters: AntennaDesignParameters,
     topology: FeedTopology,
     interface: FeedInterface,
     balance: FeedBalance,
     ratio: float | None,
 ) -> str:
+    if isinstance(parameters, FlowerPotParameters):
+        return (
+            "Coax center to the top radiator, shield to the bottom radiator; "
+            "integrated resonant choke at the base of the lower radiator; no "
+            "separate balun."
+        )
     if topology is FeedTopology.LOOP_GAP:
         return "Loop gap: A and B across the gap; verify the coupling or matching method."
     if topology is FeedTopology.APEX_GAP:
@@ -194,7 +215,12 @@ def _facts(
         recorded.append("Balun/unun loss configured")
 
     recommended: list[str] = []
-    if balun_requirement is BalunRequirement.REQUIRED:
+    if isinstance(parameters, FlowerPotParameters):
+        recommended.append(
+            "Use the integrated common-mode choke at the base of the lower radiator; "
+            "no separate current balun"
+        )
+    elif balun_requirement is BalunRequirement.REQUIRED:
         if interface is FeedInterface.TRANSFORMER and ratio is not None:
             recommended.append("Use a current balun/transformer at the modeled ratio")
         else:
@@ -224,6 +250,7 @@ def _facts(
 
 
 def _steps(
+    parameters: AntennaDesignParameters,
     *,
     topology: FeedTopology,
     interface: FeedInterface,
@@ -239,7 +266,12 @@ def _steps(
         steps.append("Keep the balanced line pair together and verify the tuner-side balun.")
     elif interface is FeedInterface.MULTI_PORT:
         steps.append("Build the combining network separately; it is not part of the antenna model.")
-    if topology in (
+    if isinstance(parameters, FlowerPotParameters):
+        steps.append(
+            "Form the common-mode choke below the lower radiator and verify its "
+            "resonance with the installed coax."
+        )
+    elif topology in (
         FeedTopology.BASE_FED_VERTICAL,
         FeedTopology.END_FED,
         FeedTopology.END_FED_STUB,
@@ -249,7 +281,12 @@ def _steps(
     return tuple(steps)
 
 
-def _limitations(*, topology: FeedTopology, interface: FeedInterface) -> tuple[str, ...]:
+def _limitations(
+    parameters: AntennaDesignParameters,
+    *,
+    topology: FeedTopology,
+    interface: FeedInterface,
+) -> tuple[str, ...]:
     limitations = [
         "This is a construction aid, not a solver result.",
         "The app does not model common-mode current or coax shield radiation.",
@@ -265,6 +302,11 @@ def _limitations(*, topology: FeedTopology, interface: FeedInterface) -> tuple[s
         )
     if topology is FeedTopology.BETA_HAIRPIN:
         limitations.append("The hairpin is a matching stub, not a balun.")
+    if isinstance(parameters, FlowerPotParameters):
+        limitations.append(
+            "The integrated choke is ideal; its impedance, self-resonance, and "
+            "power handling are not modeled."
+        )
     return tuple(limitations)
 
 
@@ -395,6 +437,16 @@ def _classify(
             float(gap) if gap is not None else None,
         )
 
+    if isinstance(parameters, FlowerPotParameters):
+        return (
+            FeedTopology.BASE_FED_VERTICAL,
+            FeedInterface.DIRECT_COAX,
+            _flower_pot_terminals(model),
+            "Integrated choke at the base of the lower radiator",
+            None,
+            None,
+        )
+
     if isinstance(parameters, (VerticalParameters, InvertedLParameters, RingoParameters)):
         return (
             FeedTopology.BASE_FED_VERTICAL,
@@ -509,7 +561,9 @@ def feed_connection_detail(
 
     balance = feed_balance(parameters)
     requirement = (
-        BalunRequirement.REQUIRED
+        BalunRequirement.NOT_REQUIRED
+        if isinstance(parameters, FlowerPotParameters)
+        else BalunRequirement.REQUIRED
         if requires_current_balun(parameters)
         else BalunRequirement.NOT_REQUIRED
         if balance is FeedBalance.UNBALANCED
@@ -537,7 +591,7 @@ def feed_connection_detail(
         balun_requirement=requirement,
         terminals=terminals,
         connections=_connections(interface, terminals),
-        summary=_summary(topology, interface, balance, ratio),
+        summary=_summary(parameters, topology, interface, balance, ratio),
         transformer_ratio=ratio,
         match_hardware=match_hardware,
         gap_m=gap,
@@ -545,6 +599,6 @@ def feed_connection_detail(
         recorded=recorded,
         recommended=recommended,
         not_modeled=not_modeled,
-        steps=_steps(topology=topology, interface=interface),
-        limitations=_limitations(topology=topology, interface=interface),
+        steps=_steps(parameters, topology=topology, interface=interface),
+        limitations=_limitations(parameters, topology=topology, interface=interface),
     )

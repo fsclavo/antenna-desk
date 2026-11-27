@@ -20,6 +20,7 @@ from ...antennas.endfed import (
     endfed_segmentation_overrides,
 )
 from ...antennas.fan_dipole import FanDipoleParameters, FanElement
+from ...antennas.flower_pot import FlowerPotParameters
 from ...antennas.folded_dipole import FoldedDipoleParameters
 from ...antennas.hexbeam import (
     HexbeamBand,
@@ -604,6 +605,50 @@ def j_pole_descriptor(parameters: JPoleParameters) -> AntennaOptimizerDescriptor
         return collect(*issues)
 
     return _descriptor("j_pole", tuple(variables), initial, build, validate)
+
+
+def flower_pot_descriptor(parameters: FlowerPotParameters) -> AntennaOptimizerDescriptor:
+    variables = (
+        _length(
+            "top_length_m",
+            "flower_pot.top_length",
+            "optimize.group.geometry",
+            parameters.top_length_m,
+            0.15,
+        ),
+        _length(
+            "bottom_length_m",
+            "flower_pot.bottom_length",
+            "optimize.group.geometry",
+            parameters.bottom_length_m,
+            0.15,
+        ),
+    )
+    initial = {
+        "top_length_m": parameters.top_length_m,
+        "bottom_length_m": parameters.bottom_length_m,
+    }
+
+    def build(values: Mapping[str, float]) -> FlowerPotParameters:
+        return replace(
+            parameters,
+            top_length_m=values["top_length_m"],
+            bottom_length_m=values["bottom_length_m"],
+        )
+
+    def validate(values: Mapping[str, float]) -> tuple[ConstraintViolation, ...]:
+        top = values["top_length_m"]
+        bottom = values["bottom_length_m"]
+        lower_tip = parameters.base_height_m - (parameters.electrical_length_scale - 1.0) * bottom
+        return collect(
+            positive_violation("top_length_m", top),
+            positive_violation("bottom_length_m", bottom),
+            violation("bottom_length_m", -lower_tip, "optimize.constraint.lower_tip")
+            if lower_tip <= 0.0
+            else None,
+        )
+
+    return _descriptor("flower_pot", variables, initial, build, validate)
 
 
 def ringo_descriptor(parameters: RingoParameters) -> AntennaOptimizerDescriptor:

@@ -424,7 +424,7 @@ class DesignFromFrequencyDialog(QDialog):
             visible.add("orientation")
         if family == "loop":
             visible.add("loop_shape")
-        if family in {"vertical", "j_pole"}:
+        if family in {"vertical", "j_pole", "flower_pot"}:
             visible.add("base_height")
         if family == "vertical":
             visible.update({"vertical_form", "radial_count"})

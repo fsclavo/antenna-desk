@@ -140,6 +140,7 @@ from ..domain.antennas.endfed import (
 from ..domain.antennas.family import antenna_family
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.g5rv import G5RV_DIPOLE_ID
 from ..domain.antennas.hexbeam import HexbeamParameters
@@ -361,6 +362,7 @@ from .widgets.discone_form import DisconeForm
 from .widgets.endfed_form import EndFedForm
 from .widgets.fan_dipole_form import FanDipoleForm
 from .widgets.feed_matching_summary import FeedMatchingSummary
+from .widgets.flower_pot_form import FlowerPotForm
 from .widgets.geometry_view import GeometryView, GeometryViewMode
 from .widgets.hexbeam_form import HexbeamForm
 from .widgets.inverted_l_form import InvertedLForm
@@ -899,6 +901,18 @@ class MainWindow(QMainWindow):
         self._ringo_scroll.setMinimumWidth(340)
         self._ringo_scroll.setMaximumWidth(480)
 
+        self._flower_pot_form = FlowerPotForm(
+            self._translator,
+            self._unit_system,
+            parent=self,
+        )
+        self._flower_pot_form.changed.connect(self._on_form_changed)
+        self._flower_pot_scroll = QScrollArea(self)
+        self._flower_pot_scroll.setWidgetResizable(True)
+        self._flower_pot_scroll.setWidget(self._flower_pot_form)
+        self._flower_pot_scroll.setMinimumWidth(340)
+        self._flower_pot_scroll.setMaximumWidth(480)
+
         self._scv_form = ScvForm(self._translator, self._unit_system, parent=self)
         self._scv_form.changed.connect(self._on_form_changed)
         self._scv_scroll = QScrollArea(self)
@@ -1049,6 +1063,7 @@ class MainWindow(QMainWindow):
             (self._endfed_form, self._endfed_scroll, 480),
             (self._j_pole_form, self._j_pole_scroll, 480),
             (self._ringo_form, self._ringo_scroll, 480),
+            (self._flower_pot_form, self._flower_pot_scroll, 480),
             (self._scv_form, self._scv_scroll, 480),
             (self._biquad_form, self._biquad_scroll, 480),
             (self._beverage_form, self._beverage_scroll, 480),
@@ -1238,6 +1253,7 @@ class MainWindow(QMainWindow):
         self._design_stack.addWidget(self._endfed_scroll)
         self._design_stack.addWidget(self._j_pole_scroll)
         self._design_stack.addWidget(self._ringo_scroll)
+        self._design_stack.addWidget(self._flower_pot_scroll)
         self._design_stack.addWidget(self._scv_scroll)
         self._design_stack.addWidget(self._biquad_scroll)
         self._design_stack.addWidget(self._beverage_scroll)
@@ -1905,6 +1921,7 @@ class MainWindow(QMainWindow):
         self._feed_matching_summary.retranslate()
         self._j_pole_form.retranslate()
         self._ringo_form.retranslate()
+        self._flower_pot_form.retranslate()
         self._scv_form.retranslate()
         self._biquad_form.retranslate()
         self._beverage_form.retranslate()
@@ -2792,6 +2809,9 @@ class MainWindow(QMainWindow):
         elif isinstance(design.parameters, RingoParameters):
             self._design_stack.setCurrentWidget(self._ringo_scroll)
             self._ringo_form.set_parameters(design.parameters)
+        elif isinstance(design.parameters, FlowerPotParameters):
+            self._design_stack.setCurrentWidget(self._flower_pot_scroll)
+            self._flower_pot_form.set_parameters(design.parameters)
         elif isinstance(design.parameters, ScvParameters):
             self._design_stack.setCurrentWidget(self._scv_scroll)
             self._scv_form.set_parameters(design.parameters)
@@ -3415,6 +3435,37 @@ class MainWindow(QMainWindow):
             return self._project
         if isinstance(previous_design.parameters, RingoParameters):
             parameters = self._ringo_form.parameters()
+            updated = UpdateDipoleDesign().execute(
+                UpdateDipoleDesignCommand(
+                    project=self._project,
+                    design_id=self._design_id,
+                    parameters=parameters,
+                    loads=loads_override,
+                    transmission_lines=transmission_lines_override,
+                )
+            )
+            updated = replace(updated, name=project_name)
+            self._project = updated
+            design = updated.design_by_id(self._design_id)
+            if parameters != previous_design.parameters or attachments_changed:
+                self._invalidate_design_result(self._design_id)
+                self._results.set_result(None)
+            self._loads = design.antenna.loads
+            self._transmission_lines = design.antenna.transmission_lines
+            self._results.set_design(design)
+            self._set_geometry_model(design)
+            self._auto_select_view(design)
+            self._project_name_updating = True
+            self._project_name.setText(project_name)
+            self._project_name_updating = False
+            self._form_dirty = False
+            self._mark_project_dirty()
+            self._update_title()
+            self._update_actions()
+            self._update_height_control()
+            return self._project
+        if isinstance(previous_design.parameters, FlowerPotParameters):
+            parameters = self._flower_pot_form.parameters()
             updated = UpdateDipoleDesign().execute(
                 UpdateDipoleDesignCommand(
                     project=self._project,
@@ -6455,6 +6506,20 @@ class MainWindow(QMainWindow):
             updates.update(folded=previous.folded, gap_m=previous.gap_m)
         elif isinstance(previous, RingoParameters) and isinstance(estimated, RingoParameters):
             updates["ring_sides"] = previous.ring_sides
+        elif isinstance(previous, FlowerPotParameters) and isinstance(
+            estimated, FlowerPotParameters
+        ):
+            updates.update(
+                base_height_m=max(
+                    previous.base_height_m,
+                    estimated.base_height_m,
+                    estimated.lower_tip_extension_m + 0.05,
+                ),
+                top_radius_m=previous.top_radius_m,
+                bottom_radius_m=previous.bottom_radius_m,
+                construction_shortening_factor=previous.construction_shortening_factor,
+                electrical_length_scale=previous.electrical_length_scale,
+            )
         elif isinstance(previous, QuadBeamParameters) and isinstance(estimated, QuadBeamParameters):
             updates.update(
                 reflector_scale=previous.reflector_scale,
@@ -7728,6 +7793,7 @@ class MainWindow(QMainWindow):
             self._endfed_form,
             self._j_pole_form,
             self._ringo_form,
+            self._flower_pot_form,
             self._scv_form,
             self._biquad_form,
             self._beverage_form,

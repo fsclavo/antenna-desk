@@ -13,6 +13,11 @@ from antennadesk.domain.antennas.feed_connection import (
     FeedInterface,
     FeedTopology,
 )
+from antennadesk.domain.antennas.flower_pot import (
+    BOTTOM_RADIATOR_ID,
+    TOP_RADIATOR_ID,
+    flower_pot_2m,
+)
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.materials import COPPER
 from antennadesk.domain.antennas.stacked_yagi import (
@@ -141,6 +146,23 @@ def test_vertical_base_feed_uses_the_ground_return() -> None:
     assert detail.balun_requirement is BalunRequirement.NOT_REQUIRED
     assert detail.terminals[1].side == "ground"
     assert detail.terminals[1].wire_id is None
+
+
+def test_flower_pot_reports_an_integrated_choke_without_a_separate_balun() -> None:
+    parameters = flower_pot_2m()
+    detail = feed_connection_detail(parameters, parameters.to_antenna())
+
+    assert detail.topology is FeedTopology.BASE_FED_VERTICAL
+    assert detail.interface is FeedInterface.DIRECT_COAX
+    assert detail.balance is FeedBalance.BALANCED
+    assert detail.balun_requirement is BalunRequirement.NOT_REQUIRED
+    assert detail.terminals[0].wire_id == TOP_RADIATOR_ID
+    assert detail.terminals[1].wire_id == BOTTOM_RADIATOR_ID
+    assert "integrated resonant choke" in detail.summary
+    assert "no separate balun" in detail.summary
+    assert "integrated common-mode choke" in " ".join(detail.recommended)
+    assert "Form the common-mode choke" in " ".join(detail.steps)
+    assert "integrated choke is ideal" in " ".join(detail.limitations)
 
 
 def test_endfed_uses_the_transformer_and_counterpoise() -> None:

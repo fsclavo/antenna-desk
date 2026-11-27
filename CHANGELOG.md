@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Flower Pot half-wave family (FP1, schema 72).** A first-class VK2ZOI-style
+  coax vertical with two collinear wires, a feed at their junction, an ideal
+  common-mode choke, published 2 m/6 m physical cut rows, and an explicit
+  **1.087 NEC electrical model scale** kept separate from the 0.88 construction
+  factor. The lower electrical tip is validated above ground, the catalog and
+  editor work in both routes with EN/ES help, the estimator and bounded
+  top/bottom optimizer are registered, the elevation scene dimensions the
+  physical cuts and shows a not-to-scale choke inset, and the design summary,
+  construction cut list, BOM, and integrated-choke feed detail are present. A
+  real `nec2c` 2 m/6 m regression completes with finite impedance. No 50 Ω,
+  gain, bandwidth, or choke-impedance claim is made; the 5/8, double 5/8,
+  sleeve, and high-gain variants remain out of scope.
 - **Stacked Yagi first slice (DL6).** Two to four identical Yagis can be
   composed on one vertical stack with a level count, boom spacing, ideal phase
   step, and additional-level voltage ratio. In ideal and phase-line mode level 1

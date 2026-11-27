@@ -17,6 +17,10 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
+from antennadesk.domain.antennas.flower_pot import (
+    FLOWER_POT_ELECTRICAL_LENGTH_SCALE,
+    FlowerPotParameters,
+)
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
@@ -212,6 +216,21 @@ def _ringo(frequency_hz: float) -> AntennaDesignParameters:
         ring_diameter_m=0.05 * wavelength,
         ring_height_m=0.5 * _height(frequency_hz),
         wire_radius_m=_radius(frequency_hz),
+    )
+
+
+def _flower_pot(frequency_hz: float) -> AntennaDesignParameters:
+    wavelength = _wavelength(frequency_hz)
+    top = 0.44 * wavelength * 0.505
+    bottom = 0.44 * wavelength * 0.495
+    tip_extension = bottom * (FLOWER_POT_ELECTRICAL_LENGTH_SCALE - 1.0)
+    return FlowerPotParameters(
+        frequency_hz=frequency_hz,
+        top_length_m=top,
+        bottom_length_m=bottom,
+        top_radius_m=_radius(frequency_hz),
+        bottom_radius_m=_radius(frequency_hz),
+        base_height_m=max(_height(frequency_hz), tip_extension + 0.05),
     )
 
 
@@ -448,6 +467,7 @@ CASES = (
     _MatrixCase("inverted-l", _inverted_l, ALL_FREQUENCIES),
     _MatrixCase("j-pole", _j_pole, ALL_FREQUENCIES),
     _MatrixCase("ringo", _ringo, ALL_FREQUENCIES),
+    _MatrixCase("flower-pot", _flower_pot, ALL_FREQUENCIES),
     _MatrixCase("moxon", _moxon, ALL_FREQUENCIES),
     _MatrixCase("yagi", _yagi, ALL_FREQUENCIES),
     _MatrixCase("biquad", _biquad, ALL_FREQUENCIES),

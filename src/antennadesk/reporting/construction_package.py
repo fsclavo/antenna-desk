@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.load import ParallelLoad, SeriesLoad
 from ..domain.antennas.stacked_yagi import (
     StackedYagiFeedMode,
@@ -154,6 +155,54 @@ def hardware_bom_items(
             quantity="1",
             unit="pcs",
             note="—",
+        ),
+        *(
+            [
+                HardwareBomRow(
+                    key="coax_radiator",
+                    label="Coax radiator",
+                    quantity=f"{parameters.physical_total_length_m:.2f}",
+                    unit="m",
+                    note="Physical top + bottom cuts",
+                ),
+                HardwareBomRow(
+                    key="support_conduit",
+                    label="Support conduit",
+                    quantity=f"{parameters.physical_total_length_m:.2f}",
+                    unit="m",
+                    note="Non-conductive; starting estimate",
+                ),
+                HardwareBomRow(
+                    key="common_mode_choke",
+                    label="Common-mode choke",
+                    quantity="1",
+                    unit="pcs",
+                    note="Construction item; choke impedance not modeled",
+                ),
+                HardwareBomRow(
+                    key="choke_former",
+                    label="Choke former",
+                    quantity="1",
+                    unit="pcs",
+                    note="Construction item; verify the published winding",
+                ),
+                HardwareBomRow(
+                    key="end_cap",
+                    label="End cap",
+                    quantity="1",
+                    unit="pcs",
+                    note="—",
+                ),
+                HardwareBomRow(
+                    key="feedpoint_seal",
+                    label="Feedpoint seal",
+                    quantity="1",
+                    unit="pcs",
+                    note="Seal and strain relief",
+                ),
+            ]
+            if isinstance(parameters, FlowerPotParameters)
+            else []
         ),
         HardwareBomRow(
             key="mast",

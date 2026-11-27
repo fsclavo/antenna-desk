@@ -19,6 +19,13 @@ from ..antennas.fan_dipole import (
     FanDipoleParameters,
     FanElement,
 )
+from ..antennas.flower_pot import (
+    ANTENNA_TYPE_FLOWER_POT,
+    FLOWER_POT_2M_FREQUENCY_HZ,
+    FLOWER_POT_6M_FREQUENCY_HZ,
+    FLOWER_POT_ELECTRICAL_LENGTH_SCALE,
+    FlowerPotParameters,
+)
 from ..antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
@@ -62,6 +69,8 @@ from .formulas import (
     SOURCE_G3TXQ_HEXBEAM,
     SOURCE_M0UKD_J_POLE,
     SOURCE_PA9X_EFHW,
+    SOURCE_VK2ZOI_FLOWER_POT,
+    SOURCE_VK4PK_6M_FLOWER_POT,
     default_radial_length_m,
     five_eighth_wave_length_m,
     half_wave_length_m,
@@ -467,6 +476,57 @@ def estimate_ocfd(intent: DesignIntent) -> DimensionEstimate:
     )
 
 
+def estimate_flower_pot(intent: DesignIntent) -> DimensionEstimate:
+    wavelength = wavelength_m(intent.frequency_hz)
+    physical_total = 0.44 * wavelength
+    top = physical_total * 0.505
+    bottom = physical_total * 0.495
+    # The NEC-equivalent lower tip extends below the physical cut by the
+    # electrical scale. Keep it clear of the ground plane even when the
+    # requested installation height is lower than that extension.
+    scaled_tip_extension = bottom * (FLOWER_POT_ELECTRICAL_LENGTH_SCALE - 1.0)
+    base_height = max(intent.base_height_m, 1.0, scaled_tip_extension + 0.05)
+    reference = any(
+        math.isclose(intent.frequency_hz, frequency, rel_tol=0.01)
+        for frequency in (FLOWER_POT_2M_FREQUENCY_HZ, FLOWER_POT_6M_FREQUENCY_HZ)
+    )
+    parameters = FlowerPotParameters(
+        frequency_hz=intent.frequency_hz,
+        top_length_m=top,
+        bottom_length_m=bottom,
+        base_height_m=base_height,
+        material=intent.material,
+        ground=intent.ground,
+    )
+    return DimensionEstimate(
+        parameters=parameters,
+        method_id="flower_pot.half_wave_construction_rows",
+        confidence=Confidence.REFERENCE_SCALED if reference else Confidence.HEURISTIC,
+        tolerance_m=physical_total * 0.05,
+        source_ids=(SOURCE_VK2ZOI_FLOWER_POT, SOURCE_VK4PK_6M_FLOWER_POT),
+        assumptions=(
+            "estimator.assumption.height_and_ground",
+            "estimator.assumption.flower_pot_construction",
+        ),
+        warnings=(
+            "estimator.warning.starting_point",
+            "estimator.warning.flower_pot_construction",
+            "estimator.warning.flower_pot_choke",
+            "estimator.warning.flower_pot_electrical",
+        ),
+        rows=(
+            _length_row("flower_pot.top_length", top),
+            _length_row("flower_pot.bottom_length", bottom),
+            _length_row("field.length", physical_total),
+            _length_row("flower_pot.base_height", base_height),
+            _length_row(
+                "flower_pot.construction_factor", parameters.construction_shortening_factor
+            ),
+            _length_row("flower_pot.electrical_scale", parameters.electrical_length_scale),
+        ),
+    )
+
+
 def estimate_j_pole(intent: DesignIntent) -> DimensionEstimate:
     stub = quarter_wave_length_m(intent.frequency_hz)
     # A J pole is a half-wave radiator above a quarter-wave matching stub.
@@ -755,6 +815,7 @@ ESTIMATORS = {
     ANTENNA_TYPE_ENDFED: estimate_endfed,
     ANTENNA_TYPE_OCFD: estimate_ocfd,
     ANTENNA_TYPE_J_POLE: estimate_j_pole,
+    ANTENNA_TYPE_FLOWER_POT: estimate_flower_pot,
     ANTENNA_TYPE_RINGO: estimate_ringo,
     ANTENNA_TYPE_QUAD_BEAM: estimate_quad_beam,
     ANTENNA_TYPE_YAGI: estimate_yagi,

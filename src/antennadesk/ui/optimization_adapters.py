@@ -19,6 +19,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -83,6 +84,10 @@ ADAPTERS: dict[type[AntennaDesignParameters], OptimizationUiAdapter] = {
     RingoParameters: OptimizationUiAdapter(
         lambda window, parameters: window._typed_simulation_spec(parameters),
         lambda window, parameters: window._ringo_form.set_parameters(parameters),
+    ),
+    FlowerPotParameters: OptimizationUiAdapter(
+        lambda window, parameters: window._typed_simulation_spec(parameters),
+        lambda window, parameters: window._flower_pot_form.set_parameters(parameters),
     ),
     ScvParameters: OptimizationUiAdapter(
         lambda window, parameters: window._typed_simulation_spec(parameters),

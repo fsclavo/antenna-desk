@@ -172,7 +172,8 @@ between:
   chooses the projection that shows the principal plane instead of asking you
   to pick an arbitrary projection:
   - vertical-plane antennas (J-Pole, Slim Jim, vertical loops, vertical
-    Yagi/Moxon, half-square, bobtail, biquad, Ringo) use the front elevation;
+    Yagi/Moxon, half-square, bobtail, biquad, Ringo, Flower Pot) use the front
+    elevation;
   - horizontal planar antennas and beams (Yagi, Moxon, log-periodic, hexbeam,
     trapped Yagi, T2FD, folded dipole, horizontal loop) use the top view;
   - a cubical quad uses the top boom layout;
@@ -303,7 +304,7 @@ Use the **Estimate Dimensions...** button above the design panel or
 **Design → Estimate Dimensions...** to refine the template already loaded in the
 editor. The dialog supports wire and folded dipoles, loops (generic, quad,
 delta), verticals in 1/4λ, 1/2λ, and 5/8λ, inverted-V, fan dipoles, end-fed
-wires, OCFD, J Pole, Slim Jim, Ringo, Yagi, Moxon, and T2FD. The half-square
+wires, OCFD, J Pole, Slim Jim, Ringo, Flower Pot, Yagi, Moxon, and T2FD. The half-square
 and bobtail-curtain templates have no frequency-first estimator; set their
 dimensions from a published design or tune them with the solver. The
 log-periodic editor starts from the published Cebik 10 m reference and scales
@@ -803,6 +804,33 @@ first-class experimental templates. The construction view is the front
 elevation; it dimensions the radiator or upper section, the stub or lower
 section, the left leg, the gap, the stub spacing, the feed offset, and the base
 height.
+
+## Create a Flower Pot
+
+Choose **File → New Antenna... → Flower Pot** to generate the half-wave VK2ZOI
+coax vertical. The antenna is two collinear radiating sections fed at their
+junction: the coax center conductor is the top section and the outside of the
+shield is the bottom section. A resonant common-mode choke below the bottom
+section isolates the feed line; the project feed line starts below the choke
+and is not part of the antenna geometry.
+
+The editor separates two quantities that must not be confused:
+
+- the **physical cut lengths** that the builder cuts: 0.457 m top and 0.447 m
+  bottom at 146 MHz, or 1.273 m and 1.245 m at 52.7 MHz;
+- the **NEC electrical model scale**, fixed at 1.087 and applied centered on the
+  feed only to obtain the solved equivalent. The lower electrical tip extends
+  below the physical bottom cut, so the base height must keep that scaled tip
+  above ground.
+
+The 0.88 construction shortening factor is a separate published construction
+factor, not a velocity factor and not interchangeable with 1.087. The
+**Load 2 m** and **Load 6 m** buttons restore the published rows. The choke is
+ideal in the model; its impedance, self-resonance, common-mode current, coax
+dielectric loss, and the PVC conduit loading are not modeled. The template does
+not claim 50 Ω, gain, or bandwidth. The construction view is the front
+elevation, with physical cut dimensions, the feed height, the electrical tail,
+and a not-to-scale choke inset.
 
 ## Create an end-fed half-wave (EFHW)
 
@@ -2600,6 +2628,7 @@ The following typed families have a complete joint optimizer:
 - inverted-V and inverted-L;
 - J Pole and Slim Jim;
 - Ringo;
+- Flower Pot;
 - half square and bobtail curtain;
 - biquad and double biquad;
 - Beverage receiving wire;

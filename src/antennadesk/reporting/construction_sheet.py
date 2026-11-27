@@ -16,6 +16,7 @@ from ..domain.antennas.dipole import DipoleParameters
 from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters
 from ..domain.antennas.fan_dipole import FanDipoleParameters
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -1114,6 +1115,35 @@ def render_construction_sheet(
             length=f"{parameters.radiator_height_m:.4f}",
             diameter=f"{parameters.ring_diameter_m:.4f}",
             ring_height=f"{parameters.ring_height_m:.4f}",
+        )
+    elif isinstance(parameters, FlowerPotParameters):
+        feed_rows = f"""
+<tr><th>Physical top cut</th><td>{_length(parameters.top_length_m, display_units)}</td></tr>
+<tr><th>Physical bottom cut</th><td>{_length(parameters.bottom_length_m, display_units)}</td></tr>
+<tr><th>Physical total</th><td>{_length(parameters.physical_total_length_m, display_units)}</td></tr>
+<tr><th>Bottom cut height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
+<tr><th>Feed height above ground</th><td>{_length(parameters.physical_feed_height_m, display_units)}</td></tr>
+<tr><th>Electrical model total</th><td>{_length(parameters.electrical_total_length_m, display_units)}</td></tr>
+<tr><th>Electrical lower tip</th><td>{_length(parameters.electrical_lower_tip_m, display_units)}</td></tr>
+<tr><th>Wire schedule</th><td>{_escape(tr("scaled electrical model; use the cut list above"))}</td></tr>
+<tr><th>Choke</th><td>ideal, not modeled</td></tr>
+"""
+        construction_note = _note(
+            tr,
+            "Cut the top coax section to {top} m and the bottom section to "
+            "{bottom} m. Mount the lower cut {base} m above ground. The solver "
+            "uses 1.087-scaled electrical lengths centered on the feed; the extra "
+            "lower electrical tail is model-only. Fit a common-mode choke at the "
+            "feed; its impedance is not modeled.",
+            top=f"{parameters.top_length_m:.4f}",
+            bottom=f"{parameters.bottom_length_m:.4f}",
+            base=f"{parameters.base_height_m:.4f}",
+        )
+        construction_note += _note(
+            tr,
+            "Use the published coax and a non-conductive conduit. Leave a drain "
+            "path at the lower end, seal the feedpoint, and do not add a separate "
+            "balun; the choke is integrated.",
         )
     elif isinstance(parameters, JPoleParameters):
         feed_rows = f"""

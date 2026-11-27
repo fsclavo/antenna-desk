@@ -34,6 +34,7 @@ from .dialogs.antenna_catalog_dialog import (
     CATALOG_TYPE_DOUBLET,
     CATALOG_TYPE_ENDFED,
     CATALOG_TYPE_FAN_DIPOLE,
+    CATALOG_TYPE_FLOWER_POT,
     CATALOG_TYPE_FOLDED_DIPOLE,
     CATALOG_TYPE_G5RV,
     CATALOG_TYPE_HALF_SQUARE,
@@ -75,6 +76,7 @@ from .dialogs.discone_dialog import DisconeDialog
 from .dialogs.doublet_dialog import DoubletDialog
 from .dialogs.endfed_dialog import EndFedDialog
 from .dialogs.fan_dipole_dialog import FanDipoleDialog
+from .dialogs.flower_pot_dialog import FlowerPotDialog
 from .dialogs.g5rv_dialog import G5RVDialog
 from .dialogs.hexbeam_dialog import HexbeamDialog
 from .dialogs.inverted_l_dialog import InvertedLDialog
@@ -152,6 +154,7 @@ def _dialog_class(name: str) -> Callable[..., QDialog]:
         "DoubletDialog": DoubletDialog,
         "EndFedDialog": EndFedDialog,
         "FanDipoleDialog": FanDipoleDialog,
+        "FlowerPotDialog": FlowerPotDialog,
         "G5RVDialog": G5RVDialog,
         "HexbeamDialog": HexbeamDialog,
         "InvertedLDialog": InvertedLDialog,
@@ -327,6 +330,7 @@ NEW_BUILDERS: dict[str, NewBuilder] = {
     CATALOG_TYPE_STACKED_YAGI: _new_simple("StackedYagiDialog", None),
     CATALOG_TYPE_MOXON: _new_simple("MoxonDialog", "Moxon"),
     CATALOG_TYPE_RINGO: _new_simple("RingoDialog", "Ringo"),
+    CATALOG_TYPE_FLOWER_POT: _new_simple("FlowerPotDialog", None),
     CATALOG_TYPE_MAGNETIC_LOOP: _new_simple("MagneticLoopDialog", "Magnetic loop"),
     CATALOG_TYPE_OCFD: _new_simple(
         "OCFDDialog",
@@ -518,6 +522,7 @@ CHANGE_BUILDERS: dict[str, ChangeBuilder] = {
     CATALOG_TYPE_STACKED_YAGI: _change_simple("StackedYagiDialog"),
     CATALOG_TYPE_MOXON: _change_simple("MoxonDialog"),
     CATALOG_TYPE_RINGO: _change_simple("RingoDialog"),
+    CATALOG_TYPE_FLOWER_POT: _change_simple("FlowerPotDialog"),
     CATALOG_TYPE_MAGNETIC_LOOP: _change_simple("MagneticLoopDialog"),
     CATALOG_TYPE_OCFD: _change_simple("OCFDDialog"),
     CATALOG_TYPE_VERTICAL: _change_simple("VerticalDialog"),

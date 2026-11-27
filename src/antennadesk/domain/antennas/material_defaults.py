@@ -53,6 +53,7 @@ _COPPER_TEMPLATES = frozenset(
         "delta_loop",
         "quad_loop",
         "magnetic_loop",
+        "flower_pot",
         "custom",
     }
 )

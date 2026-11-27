@@ -44,6 +44,28 @@ def test_hardware_bom_has_a_practical_starting_set(
     assert rows["Balun / unun"][0] == "0"
 
 
+def test_flower_pot_hardware_bom_adds_an_ideal_choke_row(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.flower_pot import flower_pot_2m
+
+    design = sample_project.designs[0].with_parameters(flower_pot_2m())
+    rows = dict(
+        (item, (quantity, unit, note))
+        for item, quantity, unit, note in hardware_bom_rows(sample_project, design)
+    )
+
+    assert rows["Coax radiator"][0] == "0.90"
+    assert rows["Coax radiator"][1] == "m"
+    assert rows["Support conduit"][0] == "0.90"
+    assert rows["Common-mode choke"][0] == "1"
+    assert rows["Common-mode choke"][1] == "pcs"
+    assert rows["Common-mode choke"][2] == "Construction item; choke impedance not modeled"
+    assert rows["Choke former"][0] == "1"
+    assert rows["End cap"][0] == "1"
+    assert rows["Feedpoint seal"][0] == "1"
+
+
 def test_coil_and_trap_rows_report_target_values(
     sample_project: Project,
 ) -> None:

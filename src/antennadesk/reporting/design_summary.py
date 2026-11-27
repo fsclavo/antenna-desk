@@ -16,6 +16,7 @@ from ..domain.antennas.discone import DisconeParameters
 from ..domain.antennas.endfed import EndFedParameters, EndFedPreset
 from ..domain.antennas.fan_dipole import FanDipoleParameters
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.folded_dipole import FoldedDipoleParameters
 from ..domain.antennas.hexbeam import (
     HexbeamBandSetKind,
@@ -1048,6 +1049,35 @@ def design_summary_rows(
                 ("Feed offset", _length(parameters.feed_offset_m, display_units)),
                 ("Base height", _length(parameters.base_height_m, display_units)),
                 ("Folded", "yes" if parameters.folded else "no"),
+                ("Ground", ground_text(parameters.ground, labeler)),
+            ]
+        )
+        return tuple(rows)
+    if isinstance(parameters, FlowerPotParameters):
+        rows.extend(
+            [
+                ("Type", "Flower Pot"),
+                ("Physical top", _length(parameters.top_length_m, display_units)),
+                ("Physical bottom", _length(parameters.bottom_length_m, display_units)),
+                ("Physical total", _length(parameters.physical_total_length_m, display_units)),
+                ("Electrical top", _length(parameters.electrical_top_length_m, display_units)),
+                (
+                    "Electrical bottom",
+                    _length(parameters.electrical_bottom_length_m, display_units),
+                ),
+                (
+                    "Electrical total",
+                    _length(parameters.electrical_total_length_m, display_units),
+                ),
+                ("Construction factor", f"{parameters.construction_shortening_factor:g}"),
+                ("Electrical model scale", f"{parameters.electrical_length_scale:g}"),
+                ("Base height", _length(parameters.base_height_m, display_units)),
+                ("Feed height", _length(parameters.physical_feed_height_m, display_units)),
+                (
+                    "Electrical lower tip",
+                    _length(parameters.electrical_lower_tip_m, display_units),
+                ),
+                ("Choke", "ideal, not modeled"),
                 ("Ground", ground_text(parameters.ground, labeler)),
             ]
         )

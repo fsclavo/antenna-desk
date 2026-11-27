@@ -18,6 +18,7 @@ from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .discone import ANTENNA_TYPE_DISCONE, DisconeParameters
 from .endfed import ANTENNA_TYPE_ENDFED, EndFedParameters
 from .fan_dipole import ANTENNA_TYPE_FAN_DIPOLE, FanDipoleParameters
+from .flower_pot import ANTENNA_TYPE_FLOWER_POT, FlowerPotParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .hexbeam import ANTENNA_TYPE_HEXBEAM, HexbeamParameters
 from .inverted_l import ANTENNA_TYPE_INVERTED_L, InvertedLParameters
@@ -77,6 +78,7 @@ AntennaDesignParameters = (
     | HexbeamParameters
     | JPoleParameters
     | RingoParameters
+    | FlowerPotParameters
     | ScvParameters
     | BiquadParameters
     | BeverageParameters
@@ -145,6 +147,8 @@ def antenna_type_for(parameters: AntennaDesignParameters) -> str:
         return ANTENNA_TYPE_J_POLE
     if isinstance(parameters, RingoParameters):
         return ANTENNA_TYPE_RINGO
+    if isinstance(parameters, FlowerPotParameters):
+        return ANTENNA_TYPE_FLOWER_POT
     if isinstance(parameters, ScvParameters):
         return (
             ANTENNA_TYPE_HALF_SQUARE
@@ -219,6 +223,8 @@ def primary_dimension_m(parameters: AntennaDesignParameters) -> float:
         return parameters.driven_length_m
     if isinstance(parameters, T2FDParameters):
         return parameters.length_m
+    if isinstance(parameters, FlowerPotParameters):
+        return parameters.physical_total_length_m
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return parameters.dipole_total_length_m
     if isinstance(parameters, ZeppParameters):
@@ -320,6 +326,13 @@ def with_primary_dimension(
         )
     if isinstance(parameters, T2FDParameters):
         return parameters.with_length(dimension_m)
+    if isinstance(parameters, FlowerPotParameters):
+        ratio = dimension_m / parameters.physical_total_length_m
+        return replace(
+            parameters,
+            top_length_m=parameters.top_length_m * ratio,
+            bottom_length_m=parameters.bottom_length_m * ratio,
+        )
     if isinstance(parameters, TransmissionLineDoubletParameters):
         return replace(parameters, dipole_total_length_m=dimension_m)
     if isinstance(parameters, ZeppParameters):

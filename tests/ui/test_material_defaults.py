@@ -18,6 +18,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import DisconeParameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters
+from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.hexbeam import HexbeamParameters
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
@@ -90,6 +91,7 @@ _ALUMINUM_CLASSES = (
 _COPPER_CLASSES = (
     DipoleParameters,
     FoldedDipoleParameters,
+    FlowerPotParameters,
     LoopParameters,
     MagneticLoopParameters,
     OCFDParameters,
@@ -139,7 +141,7 @@ def test_template_mapping_covers_every_catalog_entry() -> None:
     catalog_keys = {entry.key for entry in ENTRIES}
 
     assert set(TEMPLATE_MATERIAL_DEFAULTS) == catalog_keys
-    assert len(TEMPLATE_MATERIAL_DEFAULTS) == 42
+    assert len(TEMPLATE_MATERIAL_DEFAULTS) == 43
     assert default_material_for_template("unknown") is COPPER
 
 

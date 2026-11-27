@@ -40,6 +40,8 @@ SOURCE_CEBIK_MOXON = "cebik.moxon_review.table1"
 SOURCE_G3TXQ_HEXBEAM = "g3txq.broadband_hexbeam.20m_reference"
 SOURCE_CEBIK_T2FD = "cebik.t2fd.wide_long"
 SOURCE_DL6WU_YAGI = "cebik.dl6wu.32_element_rsgb"
+SOURCE_VK2ZOI_FLOWER_POT = "vk2zoi.flower_pot.half_wave_rows"
+SOURCE_VK4PK_6M_FLOWER_POT = "vk4pk.6m_flower_pot.construction"
 SOURCE_APPLICATION_PRESET = "antennadesk.heuristic.application_preset"
 
 

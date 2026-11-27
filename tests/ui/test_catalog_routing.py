@@ -23,6 +23,7 @@ from antennadesk.domain.antennas.endfed import (
 )
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
+from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
@@ -250,6 +251,11 @@ def _parameters_for(key: str) -> object:
             frequency_hz=29_000_000.0,
             radiator_height_m=5.0,
             ring_diameter_m=0.5,
+        ),
+        "flower_pot": FlowerPotParameters(
+            frequency_hz=146_000_000.0,
+            top_length_m=0.457,
+            bottom_length_m=0.447,
         ),
         "half_square": scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
         "bobtail_curtain": scv_parameters(ScvKind.BOBTAIL_CURTAIN, 7_150_000.0),

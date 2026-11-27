@@ -93,7 +93,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
 | DL8 | Full terrain model | XL | DL7, validated model | **Post-1.2.** Only with a validated terrain model or a second engine; otherwise explicitly unavailable. See §DL8. |
 | VR1 | Sloped vertical radials with uniform droop | M | ADR; next schema bump; vertical family | **Implemented 2026-11-24.** One uniform downward droop with physical radial length, ground-tip validation, schema 61, EN/ES editor/help, scene/report/live-tuning coverage, and a locked optimizer variable with a hard tip-clearance constraint. No per-radial angles, no performance claim, and the phased vertical is excluded. See §VR1 and ADR-0052. |
-| FP1 | Flower Pot half-wave family | L | ADR-0055; next schema bump | **Spike complete 2026-11-26; implementation pending.** The length spike selected Option A: an explicit 1.087 NEC electrical scale over the published physical cut lengths, with both factors shown separately. Add the VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m, with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, catalog/form/scene/reports, an estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
+| FP1 | Flower Pot half-wave family | L | ADR-0055; schema 72 | **Implemented 2026-11-26.** The length spike selected Option A: an explicit 1.087 NEC electrical scale over the published physical cut lengths, with both factors shown separately. The VK2ZOI-style coaxially fed vertical half-wave dipole for 2 m/6 m is in the catalog with two canonical wires, a feed at the junction, an ideal choke, physical cut lengths, editor/help, scene, reports/BOM, estimator, and a bounded top/bottom optimizer. No 5/8, double 5/8, dual-band sleeve, or high-gain variant. Evidence B for published dimensions, C for the coax/choke equivalent; no 50 Ω or gain claim. See §FP1 and ADR-0055. |
 | UX45 | Shared Qt worker lifecycle | M–L | short lifecycle ADR; no active feature slice | **Done 2026-11-25.** All 14 `QThread` sites use `ui/workers/task_runner.TaskRunner`: one controller owns start, queued GUI delivery, generation/stale-result rejection, cancellation, completion, failure, bounded close, and detached teardown. Modal project I/O and end-fed use the same controller. An architecture guard forbids `QThread(` and `moveToThread(` outside the controller. See §UX45 and ADR-0053. |
 | UX46 | 3D lobe orientation indicators | S | none | **Implemented 2026-11-26.** First layer. Max-gain ray, same-elevation back ray with F/B, antenna azimuth line/arrow or vertical dot, azimuth-ring labels, and Front/Back only for families with an explicit forward axis. Shared antenna color and feed marker. No solver, domain, schema, or report change. See §UX46. |
 | UX47 | Plan mini-map in the 3D lobe | S | UX46 | **Implemented 2026-11-26.** Top-view inset with the canonical footprint, shared feed marker, antenna azimuth, and max-gain azimuth; theme-aware, hidden at minimum size, and suppressed when it would collide with the max label. No synthetic family shape and no new engine. See §UX47. |
@@ -1444,9 +1444,10 @@ current 1.1/1.2 priorities.
 
 ## FP1 — Flower Pot half-wave family
 
-**Status:** **spike complete 2026-11-26; implementation pending.** **Priority:**
-P2 catalog/VHF, after the current 1.2 work. The length spike selected Option A
-and ADR-0055 is updated; schema/UI work may start as the next bounded slice.
+**Status:** **implemented 2026-11-26 (schema 72).** **Priority:** P2
+catalog/VHF. The length spike selected Option A, ADR-0055 is implemented, and
+the family is in the catalog with both routes, estimator, optimizer, scene,
+reports, and real `nec2c` 2 m/6 m coverage.
 **Decision:** [ADR-0055](ADR/0055-flower-pot-half-wave-family.md), with the
 spike in [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 
@@ -1480,11 +1481,13 @@ validated 50 Ω match, gain, or choke impedance.
   inline editor/dialog, EN/ES labels and help, adaptive length fields, and the
   feed-connection/balance detail for an integrated choke.
 - Add the elevation scene with two wires, feed, top/bottom/total/base
-  dimensions, a choke detail inset, a feed-gap detail, and a non-wire conduit
-  outline. Do not expose a plan view that collapses the vertical wires.
+  dimensions, a labeled not-to-scale choke detail inset, and a conduit note.
+  The feed gap remains an as-built dimension. Do not expose a plan view that
+  collapses the vertical wires.
 - Add the estimator for the published 2 m/6 m rows: physical total about
-  `0.44 λ`, split about `50.5 / 49.5`, shortening factor `0.88`, choke table,
-  confidence B for the published rows and heuristic outside them.
+  `0.44 λ`, split about `50.5 / 49.5`, shortening factor `0.88`, confidence B
+  for the published rows and heuristic outside them. No numeric choke table is
+  embedded; the choke stays ideal until measured data exists.
 - Add the family optimizer for the top and bottom physical lengths, with
   positive-length, base-height, and construction-envelope constraints; target
   impedance or minimum SWR at the design frequency. The shortening factor and
@@ -1496,6 +1499,17 @@ validated 50 Ω match, gain, or choke impedance.
   braided-shield requirement.
 - Add a real `nec2c` 2 m/6 m regression with finite impedance and a resonance
   consistent with the selected representation.
+
+**Delivered:** `FlowerPotParameters` with physical top/bottom cuts, both radii,
+base height, the separate 0.88 construction factor and 1.087 NEC model scale,
+material, and ground. Two collinear wires are generated with the feed at the
+junction and the scaled lower tip validated above ground. Schema 72 adds the
+payload with an additive 71→72 migration. The catalog, editor/dialog, EN/ES
+help, estimator, top/bottom family optimizer, elevation scene with choke inset,
+design summary, construction cut list, BOM rows for the coax radiator, conduit,
+choke/former, end cap, and feedpoint seal, feed-balance/connection detail for
+the integrated choke, and real `nec2c` 2 m/6 m regression are in place. The conduit and feed gap remain visible construction notes; neither is a
+synthetic wire.
 
 **Explicitly out of scope:** single 5/8 (needs a shorted one-port stub), double
 5/8 (needs a coax/TL radiator), dual-band sleeve (needs a sleeve/cylinder and
@@ -2898,7 +2912,7 @@ decision:
 
 ## Current baseline
 
-- Schema: **71**; container version 1.
+- Schema: **72**; container version 1.
 - Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
   technical-debt closure, main-window extractions, save/load size invariant
   fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,

@@ -20,6 +20,20 @@ REPORT_SPANISH: dict[str, str] = {
     "Coax center": "Centro del coaxil",
     "Coax shield": "Malla del coaxil",
     "Common-mode choke": "Choke de modo común",
+    "Coax radiator": "Radiador de coaxil",
+    "Support conduit": "Conduit de soporte",
+    "Choke former": "Soporte del choke",
+    "End cap": "Tapa terminal",
+    "Feedpoint seal": "Sellado de la alimentación",
+    "Physical top + bottom cuts": "Cortes físicos superior e inferior",
+    "Non-conductive; starting estimate": "No conductivo; estimación inicial",
+    "Construction item; choke impedance not modeled": (
+        "Ítem de construcción; impedancia del choke no modelada"
+    ),
+    "Construction item; verify the published winding": (
+        "Ítem de construcción; verificá el bobinado publicado"
+    ),
+    "Seal and strain relief": "Sellar y aliviar la tensión",
     "Direct coax": "Coaxil directo",
     "no balun recorded": "sin balún registrado",
     "1:1 current balun": "Balún de corriente 1:1",
@@ -146,6 +160,23 @@ REPORT_SPANISH: dict[str, str] = {
     ),
     "Cut or prepare the feed gap and leave clearance for the feed hardware.": (
         "Cortá o prepará el gap de alimentación y dejá espacio para el herraje."
+    ),
+    "Cut the top coax section to {top} m and the bottom section to {bottom} m. "
+    "Mount the lower cut {base} m above ground. The solver uses 1.087-scaled "
+    "electrical lengths centered on the feed; the extra lower electrical tail is "
+    "model-only. Fit a common-mode choke at the feed; its impedance is not modeled.": (
+        "Cortá la sección superior del coaxil a {top} m y la inferior a {bottom} m. "
+        "Montá el corte inferior a {base} m sobre el suelo. El solver usa longitudes "
+        "eléctricas escaladas por 1,087 centradas en la alimentación; la cola "
+        "eléctrica inferior extra es solo del modelo. Colocá un choke de modo común "
+        "en la alimentación; su impedancia no está modelada."
+    ),
+    "Use the published coax and a non-conductive conduit. Leave a drain path at "
+    "the lower end, seal the feedpoint, and do not add a separate balun; the choke "
+    "is integrated.": (
+        "Usá el coaxil publicado y un conduit no conductivo. Dejá un camino de "
+        "drenaje en el extremo inferior, sellá el punto de alimentación y no "
+        "agregues un balún separado; el choke es integrado."
     ),
     "Connect terminal A and terminal B to the interface as shown.": (
         "Conectá el terminal A y el terminal B a la interfaz como se muestra."
@@ -623,6 +654,20 @@ REPORT_SPANISH: dict[str, str] = {
     "Tuning gap": "Separación de sintonía",
     "Turning radius": "Radio de giro",
     "Type": "Tipo",
+    "scaled electrical model; use the cut list above": (
+        "modelo eléctrico escalado; usá la lista de cortes de arriba"
+    ),
+    "Physical top": "Corte físico superior",
+    "Physical bottom": "Corte físico inferior",
+    "Physical total": "Total físico",
+    "Electrical top": "Corte eléctrico superior",
+    "Electrical bottom": "Corte eléctrico inferior",
+    "Electrical total": "Total eléctrico",
+    "Electrical model scale": "Escala del modelo eléctrico",
+    "Electrical lower tip": "Punta eléctrica inferior",
+    "Construction factor": "Factor de construcción",
+    "Choke": "Choke",
+    "ideal, not modeled": "ideal, no modelado",
     "Units": "Unidades",
     "Updated": "Actualizado",
     "Vertical element length": "Largo del elemento",

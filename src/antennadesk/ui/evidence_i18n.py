@@ -324,6 +324,24 @@ EVIDENCE_SPANISH: dict[str, dict[str, str]] = {
         "tolerance": "No aplicable (estructural)",
         "limitation": "No hay referencia numérica independiente.",
     },
+    "flower_pot": {
+        "source": (
+            "VK2ZOI, «The Flower Pot Antenna»: construcción de media onda para "
+            "2 m con cortes de coaxil de 0,457 m superior y 0,447 m inferior; "
+            "relevamiento de construcción de 6 m de VK4PK con cortes de 1,273 m "
+            "superior y 1,245 m inferior"
+        ),
+        "tolerance": (
+            "Alrededor de 1% en los largos de corte publicados de 2 m y 6 m; el "
+            "estimador de 0,44λ es una regla inicial"
+        ),
+        "limitation": (
+            "Solo largos de corte publicados. El modelo NEC aplica una escala "
+            "eléctrica separada de 1,087 centrada en la alimentación; impedancia, "
+            "ganancia, ancho de banda, suelo, mástil y comportamiento del choke no "
+            "están validados. El choke es ideal y no forma parte de la geometría."
+        ),
+    },
     "half_square": {
         "source": (
             "L. B. Cebik, W4RNL, «SCVs: A Family Album», tabla 1 (7,15 MHz): "

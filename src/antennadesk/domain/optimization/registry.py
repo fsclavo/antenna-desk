@@ -20,6 +20,7 @@ from ..antennas.dipole import DipoleParameters
 from ..antennas.discone import DisconeParameters
 from ..antennas.endfed import EndFedParameters, EndFedPreset
 from ..antennas.fan_dipole import FanDipoleParameters
+from ..antennas.flower_pot import FlowerPotParameters
 from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_l import InvertedLParameters
@@ -53,6 +54,7 @@ from .families.typed import (
     discone_descriptor,
     endfed_descriptor,
     fan_dipole_descriptor,
+    flower_pot_descriptor,
     folded_dipole_descriptor,
     hexbeam_band_descriptor,
     hexbeam_descriptor,
@@ -173,6 +175,8 @@ def _optimizer_availability(
         return OptimizerAvailability(descriptor=j_pole_descriptor(parameters))
     if isinstance(parameters, RingoParameters):
         return OptimizerAvailability(descriptor=ringo_descriptor(parameters))
+    if isinstance(parameters, FlowerPotParameters):
+        return OptimizerAvailability(descriptor=flower_pot_descriptor(parameters))
     if isinstance(parameters, OCFDParameters):
         return OptimizerAvailability(descriptor=ocfd_descriptor(parameters))
     if isinstance(parameters, EndFedParameters):
@@ -225,6 +229,7 @@ SUPPORTED_OPTIMIZER_TYPES = frozenset(
         InvertedLParameters,
         JPoleParameters,
         RingoParameters,
+        FlowerPotParameters,
         ScvParameters,
         BiquadParameters,
         BeverageParameters,

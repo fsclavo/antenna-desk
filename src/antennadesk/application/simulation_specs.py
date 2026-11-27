@@ -27,6 +27,7 @@ from ..domain.antennas.endfed import (
     endfed_segmentation_overrides,
 )
 from ..domain.antennas.fan_dipole import FanDipoleParameters
+from ..domain.antennas.flower_pot import FlowerPotParameters
 from ..domain.antennas.g5rv import G5RV_DIPOLE_ID
 from ..domain.antennas.hexbeam import HexbeamParameters
 from ..domain.antennas.inverted_l import InvertedLParameters
@@ -432,6 +433,27 @@ def _j_pole_spec(parameters: JPoleParameters, context: SimulationSpecContext) ->
     )
 
 
+def _flower_pot_spec(
+    parameters: FlowerPotParameters,
+    context: SimulationSpecContext,
+) -> SimulationSpec:
+    model = parameters.to_antenna()
+    frequency_hz = parameters.frequency_hz
+    return SimulationSpec(
+        frequency_plan=FrequencyPlan.sweep(
+            frequency_hz * 0.95,
+            frequency_hz * 1.05,
+            DEFAULT_GENERATED_SWEEP_POINTS,
+        ),
+        segmentation=aligned_policy_for_model(
+            model,
+            frequency_hz * 1.05,
+            SegmentationPolicy(min_segments_per_wire=3),
+        ),
+        far_field=far_field_request(context.pattern_step_deg, parameters.ground),
+    )
+
+
 def _ringo_spec(parameters: RingoParameters, context: SimulationSpecContext) -> SimulationSpec:
     model = parameters.to_antenna()
     frequency_hz = parameters.frequency_hz
@@ -758,6 +780,7 @@ _BUILDERS: dict[type[object], Builder] = {
     EndFedParameters: _endfed_spec,
     JPoleParameters: _j_pole_spec,
     RingoParameters: _ringo_spec,
+    FlowerPotParameters: _flower_pot_spec,
     ScvParameters: _scv_spec,
     BiquadParameters: _biquad_spec,
     BeverageParameters: _beverage_spec,

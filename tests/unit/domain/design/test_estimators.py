@@ -621,6 +621,48 @@ def test_endfed_length_matches_the_arrl_efhw_kit() -> None:
         assert "pa9x.efhw.counterpoise" in estimate.source_ids
 
 
+def test_flower_pot_estimate_matches_the_published_2m_construction_row() -> None:
+    from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
+
+    estimate = estimate_intent(_intent("flower_pot", frequency_hz=146_000_000.0))
+    parameters = estimate.parameters
+
+    assert isinstance(parameters, FlowerPotParameters)
+    assert parameters.top_length_m == pytest.approx(0.457, abs=0.002)
+    assert parameters.bottom_length_m == pytest.approx(0.447, abs=0.002)
+    assert parameters.base_height_m == pytest.approx(1.0)
+    assert parameters.electrical_length_scale == pytest.approx(1.087)
+    assert parameters.construction_shortening_factor == pytest.approx(0.88)
+    assert estimate.confidence is Confidence.REFERENCE_SCALED
+    assert "vk2zoi.flower_pot.half_wave_rows" in estimate.source_ids
+    assert "estimator.warning.flower_pot_electrical" in estimate.warnings
+
+
+def test_flower_pot_estimate_matches_the_published_6m_construction_row() -> None:
+    estimate = estimate_intent(_intent("flower_pot", frequency_hz=52_700_000.0))
+    parameters = estimate.parameters
+
+    assert parameters.top_length_m == pytest.approx(1.273, abs=0.01)
+    assert parameters.bottom_length_m == pytest.approx(1.245, abs=0.01)
+    assert estimate.confidence is Confidence.REFERENCE_SCALED
+    assert "vk4pk.6m_flower_pot.construction" in estimate.source_ids
+
+
+def test_flower_pot_estimate_keeps_the_scaled_tip_above_ground_below_vhf() -> None:
+    parameters = estimate_intent(
+        _intent("flower_pot", frequency_hz=3_500_000.0, base_height_m=0.0)
+    ).parameters
+
+    assert parameters.electrical_lower_tip_m > 0.0
+    assert parameters.base_height_m > parameters.lower_tip_extension_m
+
+
+def test_flower_pot_estimate_is_a_heuristic_away_from_the_published_rows() -> None:
+    estimate = estimate_intent(_intent("flower_pot", frequency_hz=100_000_000.0))
+
+    assert estimate.confidence is Confidence.HEURISTIC
+
+
 def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:
     from antennadesk.domain.antennas.ocfd import OCFDParameters
     from antennadesk.domain.antennas.ringo import RingoParameters
@@ -682,11 +724,13 @@ def test_fan_estimate_uses_the_lowest_band_as_design_frequency() -> None:
 
 def test_estimator_type_for_the_current_template() -> None:
     ringo = estimate_intent(_intent("ringo")).parameters
+    flower_pot = estimate_intent(_intent("flower_pot", frequency_hz=146_000_000.0)).parameters
     dipole = estimate_intent(_intent("wire_dipole")).parameters
     quad_beam = estimate_intent(_intent("quad_beam")).parameters
     hexbeam = estimate_intent(_intent("hexbeam")).parameters
 
     assert estimator_type_for(ringo) == "ringo"
+    assert estimator_type_for(flower_pot) == "flower_pot"
     assert estimator_type_for(dipole) == "wire_dipole"
     assert estimator_type_for(quad_beam) == "quad_beam"
     assert estimator_type_for(hexbeam) == "hexbeam"

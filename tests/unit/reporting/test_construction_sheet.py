@@ -504,6 +504,33 @@ def test_drooped_vertical_construction_sheet_lists_the_slope(
     assert "Slope them 20.0° downward" in sheet
 
 
+def test_flower_pot_construction_sheet_lists_physical_cuts_and_choke(
+    sample_project: Project,
+) -> None:
+    from antennadesk.domain.antennas.flower_pot import flower_pot_2m
+
+    design = sample_project.designs[0]
+    flower_pot = design.with_parameters(flower_pot_2m())
+    sheet = render_construction_sheet(sample_project, flower_pot, None)
+
+    assert "Physical top cut" in sheet
+    assert "0.4570 m" in sheet
+    assert "Physical bottom cut" in sheet
+    assert "0.4470 m" in sheet
+    assert "Physical total" in sheet
+    assert "0.9040 m" in sheet
+    assert "Electrical model total" in sheet
+    assert "0.9826 m" in sheet
+    assert "Electrical lower tip" in sheet
+    assert "0.9611 m" in sheet
+    assert "scaled electrical model; use the cut list above" in sheet
+    assert "Choke" in sheet
+    assert "ideal, not modeled" in sheet
+    assert "Fit a common-mode choke" in sheet
+    assert "Common-mode choke" in sheet
+    assert "Use the published coax and a non-conductive conduit" in sheet
+
+
 def test_scv_construction_sheet_lists_the_array_wires(
     sample_project: Project,
 ) -> None:

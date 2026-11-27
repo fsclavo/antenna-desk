@@ -657,6 +657,26 @@ def test_ringo_parameters_round_trip() -> None:
     assert restored.designs[0].antenna_type == "ringo"
 
 
+def test_flower_pot_parameters_round_trip() -> None:
+    from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
+
+    parameters = FlowerPotParameters(
+        frequency_hz=146_000_000.0,
+        top_length_m=0.457,
+        bottom_length_m=0.447,
+        top_radius_m=0.0005,
+        bottom_radius_m=0.0015,
+        base_height_m=1.2,
+    )
+    original = _project(parameters, "Flower Pot")
+
+    document = document_from_project(original)
+    restored = project_from_document(document)
+
+    assert restored.designs[0].parameters == parameters
+    assert restored.designs[0].antenna_type == "flower_pot"
+
+
 def test_half_square_parameters_round_trip() -> None:
     from antennadesk.domain.antennas.scv import ScvKind, scv_parameters
 

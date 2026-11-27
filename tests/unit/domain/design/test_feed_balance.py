@@ -7,6 +7,7 @@ from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.discone import discone_parameters
 from antennadesk.domain.antennas.endfed import EndFedParameters
 from antennadesk.domain.antennas.feed import FeedPoint
+from antennadesk.domain.antennas.flower_pot import flower_pot_2m
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.inverted_l import InvertedLParameters
@@ -63,6 +64,13 @@ def test_balanced_families_require_a_current_balun() -> None:
 
     for parameters in balanced:
         assert requires_current_balun(parameters) is True, type(parameters).__name__
+
+
+def test_flower_pot_is_balanced_with_an_integrated_choke() -> None:
+    parameters = flower_pot_2m()
+
+    assert feed_balance(parameters) is FeedBalance.BALANCED
+    assert requires_current_balun(parameters) is False
 
 
 def test_unbalanced_families_do_not_require_a_current_balun() -> None:

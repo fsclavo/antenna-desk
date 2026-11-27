@@ -15,6 +15,7 @@ from ..antennas.custom import CustomAntennaParameters
 from ..antennas.design import AntennaDesignParameters
 from ..antennas.dipole import DipoleParameters
 from ..antennas.feed_connection import FeedBalance
+from ..antennas.flower_pot import FlowerPotParameters
 from ..antennas.folded_dipole import FoldedDipoleParameters
 from ..antennas.hexbeam import HexbeamParameters
 from ..antennas.inverted_v import InvertedVParameters
@@ -36,6 +37,7 @@ from ..antennas.zepp import ZeppParameters
 _BALANCED_TYPES = (
     BiquadParameters,
     DipoleParameters,
+    FlowerPotParameters,
     FoldedDipoleParameters,
     HexbeamParameters,
     InvertedVParameters,
@@ -66,6 +68,10 @@ def feed_balance(parameters: AntennaDesignParameters) -> FeedBalance:
 
 
 def requires_current_balun(parameters: AntennaDesignParameters) -> bool:
-    """Return True when the family normally needs a current balun or choke."""
+    """Return True when the family normally needs a separate current balun."""
 
+    if isinstance(parameters, FlowerPotParameters):
+        # The choke is wound on the same coax below the lower radiator; it is
+        # part of the antenna construction, not a separate feed accessory.
+        return False
     return feed_balance(parameters) is FeedBalance.BALANCED

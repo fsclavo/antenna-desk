@@ -34,6 +34,12 @@ from ...domain.antennas.fan_dipole import (
     ANTENNA_TYPE_FAN_DIPOLE,
     FanDipoleParameters,
 )
+from ...domain.antennas.flower_pot import (
+    ANTENNA_TYPE_FLOWER_POT,
+    BOTTOM_RADIATOR_ID,
+    TOP_RADIATOR_ID,
+    FlowerPotParameters,
+)
 from ...domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FoldedDipoleParameters,
@@ -150,6 +156,7 @@ _TYPE_KEYS: dict[str, str] = {
     ANTENNA_TYPE_ENDFED: "catalog.endfed",
     ANTENNA_TYPE_J_POLE: "catalog.j_pole",
     ANTENNA_TYPE_RINGO: "catalog.ringo",
+    ANTENNA_TYPE_FLOWER_POT: "catalog.flower_pot",
     ANTENNA_TYPE_HALF_SQUARE: "catalog.half_square",
     ANTENNA_TYPE_BOBTAIL_CURTAIN: "catalog.bobtail_curtain",
     ANTENNA_TYPE_BIQUAD: "catalog.biquad",
@@ -185,6 +192,7 @@ def effective_antenna_type(
         if generator in {
             "j_pole",
             "ringo",
+            "flower_pot",
             "half_square",
             "bobtail_curtain",
             "biquad",
@@ -2274,6 +2282,99 @@ def _add_ringo_dimensions(
     )
 
 
+def _add_flower_pot_dimensions(
+    model: AntennaModel,
+    parameters: object | None,
+    factory: _Factory,
+    dimensions: list[Dimension],
+    insets: list[SceneInset],
+    notes: list[str],
+    translator: Translator,
+) -> None:
+    top = next((wire for wire in model.wires if wire.id == TOP_RADIATOR_ID), None)
+    bottom = next((wire for wire in model.wires if wire.id == BOTTOM_RADIATOR_ID), None)
+    if top is None or bottom is None or not factory.projection.vertical:
+        return
+    feed_z = max(top.start.z_m, bottom.end.z_m)
+    if isinstance(parameters, FlowerPotParameters):
+        top_cut = parameters.top_length_m
+        bottom_cut = parameters.bottom_length_m
+        base_z = parameters.base_height_m
+        electrical_tip = parameters.electrical_lower_tip_m
+    else:
+        top_cut = abs(top.end.z_m - top.start.z_m)
+        bottom_cut = abs(bottom.end.z_m - bottom.start.z_m)
+        base_z = min(bottom.start.z_m, bottom.end.z_m)
+        electrical_tip = base_z
+    x = factory.project(top.start).x_m
+    dimensions.append(
+        factory.vertical_dimension(
+            x,
+            feed_z,
+            feed_z + top_cut,
+            top_cut,
+            side="right",
+            priority=90,
+            label=translator.t("geometry.top_cut"),
+        )
+    )
+    dimensions.append(
+        factory.vertical_dimension(
+            x,
+            base_z,
+            feed_z,
+            bottom_cut,
+            side="left",
+            priority=85,
+            label=translator.t("geometry.bottom_cut"),
+        )
+    )
+    dimensions.append(
+        factory.vertical_dimension(
+            x,
+            0.0,
+            feed_z,
+            feed_z,
+            side="left",
+            priority=75,
+            label=translator.t("geometry.feed_height"),
+        )
+    )
+    if electrical_tip < base_z - 1e-9:
+        dimensions.append(
+            factory.vertical_dimension(
+                x,
+                electrical_tip,
+                base_z,
+                base_z - electrical_tip,
+                side="right",
+                priority=60,
+                label=translator.t("geometry.electrical_tail"),
+            )
+        )
+    notes.append(translator.t("flower_pot.scene_note"))
+    coil = [ScenePoint(0.0, 0.0), ScenePoint(0.0, 0.02)]
+    for index in range(5):
+        coil.append(ScenePoint(0.02, 0.03 + index * 0.018))
+        coil.append(ScenePoint(-0.02, 0.048 + index * 0.018))
+    coil.extend([ScenePoint(0.0, 0.12), ScenePoint(0.0, 0.16)])
+    insets.append(
+        SceneInset(
+            label=translator.t("flower_pot.choke_inset"),
+            polylines=(
+                ScenePolyline(
+                    (
+                        ScenePoint(0.0, 0.0),
+                        ScenePoint(0.0, 0.16),
+                    ),
+                    role="overlay",
+                ),
+                ScenePolyline(tuple(coil), role="overlay"),
+            ),
+        )
+    )
+
+
 def _is_vertical_array(parameters: object | None) -> bool:
     return isinstance(parameters, (YagiParameters, MoxonParameters)) and (
         parameters.polarization is Polarization.VERTICAL
@@ -3424,6 +3525,46 @@ def _summary(
                 f"{_format_length(ring_height, translator, display_units)}",
             ]
         )
+    elif isinstance(parameters, FlowerPotParameters) or antenna_type == ANTENNA_TYPE_FLOWER_POT:
+        if isinstance(parameters, FlowerPotParameters):
+            top_length = parameters.top_length_m
+            bottom_length = parameters.bottom_length_m
+            physical_total = parameters.physical_total_length_m
+            electrical_total = parameters.electrical_total_length_m
+            feed_height = parameters.physical_feed_height_m
+            lower_tip = parameters.electrical_lower_tip_m
+        else:
+            top_wire = next(
+                (wire for wire in model.wires if wire.id == TOP_RADIATOR_ID),
+                max(model.wires, key=lambda wire: abs(wire.end.z_m - wire.start.z_m)),
+            )
+            bottom_wire = next(
+                (wire for wire in model.wires if wire.id == BOTTOM_RADIATOR_ID),
+                min(model.wires, key=lambda wire: abs(wire.end.z_m - wire.start.z_m)),
+            )
+            top_length = top_wire.length_m
+            bottom_length = bottom_wire.length_m
+            physical_total = top_length + bottom_length
+            electrical_total = physical_total
+            feed_height = max(top_wire.start.z_m, bottom_wire.end.z_m)
+            lower_tip = min(bottom_wire.start.z_m, bottom_wire.end.z_m)
+        parts.extend(
+            [
+                f"{translator.t('flower_pot.top_length').lower()} "
+                f"{_format_length(top_length, translator, display_units)}",
+                f"{translator.t('flower_pot.bottom_length').lower()} "
+                f"{_format_length(bottom_length, translator, display_units)}",
+                f"{translator.t('field.length').lower()} "
+                f"{_format_length(physical_total, translator, display_units)}",
+                f"{translator.t('flower_pot.electrical_total').lower()} "
+                f"{_format_length(electrical_total, translator, display_units)}",
+                f"{translator.t('geometry.feed_height').lower()} "
+                f"{_format_length(feed_height, translator, display_units)}",
+                f"{translator.t('flower_pot.electrical_lower_tip').lower()} "
+                f"{_format_length(lower_tip, translator, display_units)}",
+                translator.t("flower_pot.choke_note"),
+            ]
+        )
     elif isinstance(parameters, ScvParameters) or antenna_type in {
         ANTENNA_TYPE_HALF_SQUARE,
         ANTENNA_TYPE_BOBTAIL_CURTAIN,
@@ -4387,6 +4528,16 @@ def build_scene(
         )
     elif effective_type == ANTENNA_TYPE_RINGO:
         _add_ringo_dimensions(model, factory, dimensions, insets, translator)
+    elif effective_type == ANTENNA_TYPE_FLOWER_POT:
+        _add_flower_pot_dimensions(
+            model,
+            parameters,
+            factory,
+            dimensions,
+            insets,
+            notes,
+            translator,
+        )
     elif effective_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
         _add_scv_dimensions(
             model,

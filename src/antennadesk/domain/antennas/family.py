@@ -14,6 +14,7 @@ from .dipole import ANTENNA_TYPE_WIRE_DIPOLE, DipoleParameters
 from .discone import DisconeParameters
 from .endfed import EndFedParameters
 from .fan_dipole import FanDipoleParameters
+from .flower_pot import FlowerPotParameters
 from .folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE, FoldedDipoleParameters
 from .hexbeam import HexbeamParameters
 from .inverted_l import InvertedLParameters
@@ -62,6 +63,7 @@ _GENERATOR_FAMILIES: dict[str, AntennaFamily] = {
     "j_pole": AntennaFamily.VERTICAL,
     "slim_jim": AntennaFamily.VERTICAL,
     "ringo": AntennaFamily.VERTICAL,
+    "flower_pot": AntennaFamily.VERTICAL,
     "half_square": AntennaFamily.VERTICAL,
     "bobtail_curtain": AntennaFamily.VERTICAL,
     "biquad": AntennaFamily.LOOP,
@@ -111,6 +113,8 @@ def antenna_family(parameters: AntennaDesignParameters) -> AntennaFamily:
     if isinstance(parameters, JPoleParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, RingoParameters):
+        return AntennaFamily.VERTICAL
+    if isinstance(parameters, FlowerPotParameters):
         return AntennaFamily.VERTICAL
     if isinstance(parameters, ScvParameters):
         return AntennaFamily.VERTICAL
@@ -178,6 +182,8 @@ def antenna_template_id(parameters: AntennaDesignParameters) -> str:
         return "j_pole"
     if isinstance(parameters, RingoParameters):
         return "ringo"
+    if isinstance(parameters, FlowerPotParameters):
+        return "flower_pot"
     if isinstance(parameters, ScvParameters):
         return parameters.kind.value
     if isinstance(parameters, BiquadParameters):

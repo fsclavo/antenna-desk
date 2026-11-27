@@ -1,6 +1,6 @@
 # Evidence audit
 
-**Date:** 2026-11-05; updated 2026-11-16
+**Date:** 2026-11-05; updated 2026-11-26
 **Scope:** catalog templates classified as experimental in
 `src/antennadesk/domain/design/evidence.py`.
 
@@ -205,7 +205,7 @@ published reference supplies a traceable numeric metric or measured impedance.
 ## Current summary
 
 - **A, reference-backed:** 5 templates.
-- **B, published/heuristic:** 24 templates.
+- **B, published/heuristic:** 25 templates.
 - **C, experimental:** 13 templates, all with a documented limitation.
 
 The `half_square` and `bobtail_curtain` templates entered the catalog at level B

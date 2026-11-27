@@ -16,6 +16,7 @@ from antennadesk.ui.widgets.biquad_form import BiquadForm
 from antennadesk.ui.widgets.discone_form import DisconeForm
 from antennadesk.ui.widgets.endfed_form import EndFedForm
 from antennadesk.ui.widgets.fan_dipole_form import FanDipoleForm
+from antennadesk.ui.widgets.flower_pot_form import FlowerPotForm
 from antennadesk.ui.widgets.hexbeam_form import HexbeamForm
 from antennadesk.ui.widgets.inverted_l_form import InvertedLForm
 from antennadesk.ui.widgets.inverted_v_form import InvertedVForm
@@ -56,6 +57,7 @@ FORMS = (
     (EndFedForm, "field.design_frequency"),
     (JPoleForm, "j_pole.radiator_height"),
     (RingoForm, "ringo.radiator_height"),
+    (FlowerPotForm, "flower_pot.top_length"),
     (ScvForm, "scv.horizontal_length"),
     (BiquadForm, "biquad.loop_side"),
     (BeverageForm, "beverage.termination_resistance"),

@@ -1358,6 +1358,14 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "Vertical radiator with a parallel matching stub.",
         Language.SPANISH: "Radiador vertical con stub de adaptación paralelo.",
     },
+    "catalog.flower_pot": {
+        Language.ENGLISH: "Flower Pot",
+        Language.SPANISH: "Flower Pot",
+    },
+    "catalog.flower_pot.description": {
+        Language.ENGLISH: "Half-wave coax vertical with an ideal common-mode choke at the feed.",
+        Language.SPANISH: "Vertical de coaxil de media onda con choke de modo común ideal en la alimentación.",
+    },
     "catalog.half_square": {
         Language.ENGLISH: "Half square",
         Language.SPANISH: "Medio cuadrado",
@@ -2873,6 +2881,18 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "feed height",
         Language.SPANISH: "altura de alimentación",
     },
+    "geometry.top_cut": {
+        Language.ENGLISH: "top cut",
+        Language.SPANISH: "corte superior",
+    },
+    "geometry.bottom_cut": {
+        Language.ENGLISH: "bottom cut",
+        Language.SPANISH: "corte inferior",
+    },
+    "geometry.electrical_tail": {
+        Language.ENGLISH: "electrical tail",
+        Language.SPANISH: "cola eléctrica",
+    },
     "geometry.feed_offset": {
         Language.ENGLISH: "feed offset",
         Language.SPANISH: "desplazamiento de alimentación",
@@ -3164,6 +3184,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "the included angle changes the feed impedance",
         Language.SPANISH: "el ángulo incluido cambia la impedancia de alimentación",
     },
+    "estimator.assumption.flower_pot_construction": {
+        Language.ENGLISH: (
+            "physical cuts follow the published construction rows; the electrical "
+            "model is a separate calibration"
+        ),
+        Language.SPANISH: (
+            "los cortes físicos siguen las filas publicadas de construcción; el "
+            "modelo eléctrico es una calibración separada"
+        ),
+    },
     "estimator.assumption.endfed_matching": {
         Language.ENGLISH: (
             "the transformer ratio and counterpoise are starting values; verify "
@@ -3291,6 +3321,30 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "estimator.warning.ringo_heuristic": {
         Language.ENGLISH: "Ringo proportions are an application preset, not a universal formula",
         Language.SPANISH: "las proporciones del Ringo son un preset de la aplicación, no una fórmula universal",
+    },
+    "estimator.warning.flower_pot_construction": {
+        Language.ENGLISH: (
+            "cut lengths assume the published coax and grey PVC conduit; verify "
+            "your materials and choke"
+        ),
+        Language.SPANISH: (
+            "los largos de corte suponen el coaxil y el conduit de PVC gris "
+            "publicados; verificá tus materiales y el choke"
+        ),
+    },
+    "estimator.warning.flower_pot_electrical": {
+        Language.ENGLISH: (
+            "the NEC model uses a 1.087 scale centered on the feed; the physical "
+            "cuts remain the construction authority"
+        ),
+        Language.SPANISH: (
+            "el modelo NEC usa una escala 1,087 centrada en la alimentación; los "
+            "cortes físicos siguen siendo la autoridad de construcción"
+        ),
+    },
+    "estimator.warning.flower_pot_choke": {
+        Language.ENGLISH: "the common-mode choke is ideal and not modeled; verify it for the installation",
+        Language.SPANISH: "el choke de modo común es ideal y no está modelado; verificalo para la instalación",
     },
     "estimator.warning.yagi_not_unique": {
         Language.ENGLISH: "a Yagi design is not unique; gain, bandwidth and F/B trade off",
@@ -4644,6 +4698,65 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "help.ringo.ring_height": {
         Language.ENGLISH: "Height of the matching ring above ground.",
         Language.SPANISH: "Altura del anillo de adaptación sobre el suelo.",
+    },
+    "help.flower_pot.top_length": {
+        Language.ENGLISH: (
+            "Physical top coax cut from the feed junction to the upper end. Use the "
+            "published cut list, not the scaled electrical length."
+        ),
+        Language.SPANISH: (
+            "Corte físico superior del coaxil desde la unión de alimentación hasta "
+            "el extremo. Usá la lista física, no la longitud eléctrica escalada."
+        ),
+    },
+    "help.flower_pot.bottom_length": {
+        Language.ENGLISH: (
+            "Physical bottom coax cut from the lower end to the feed junction. The "
+            "solver adds the electrical tail below this cut."
+        ),
+        Language.SPANISH: (
+            "Corte físico inferior del coaxil desde el extremo inferior hasta la "
+            "unión de alimentación. El solver agrega la cola eléctrica debajo."
+        ),
+    },
+    "help.flower_pot.base_height": {
+        Language.ENGLISH: (
+            "Height of the lower physical cut above ground. The scaled electrical "
+            "lower tip must stay above the ground plane."
+        ),
+        Language.SPANISH: (
+            "Altura del corte físico inferior sobre el suelo. La punta eléctrica "
+            "escalada debe quedar sobre el plano de tierra."
+        ),
+    },
+    "help.flower_pot.construction_factor": {
+        Language.ENGLISH: (
+            "Published construction shortening factor (default 0.88) for the coax "
+            "and grey PVC conduit. It is not the 1.087 NEC electrical scale and "
+            "does not change the solved geometry."
+        ),
+        Language.SPANISH: (
+            "Factor de acortamiento de construcción publicado (0,88 por defecto) "
+            "para el coaxil y el conduit de PVC gris. No es la escala eléctrica NEC "
+            "de 1,087 ni cambia la geometría resuelta."
+        ),
+    },
+    "help.flower_pot.top_radius": {
+        Language.ENGLISH: (
+            "Radius of the upper conductor in the NEC model, normally the coax center conductor."
+        ),
+        Language.SPANISH: (
+            "Radio del conductor superior en el modelo NEC, normalmente el "
+            "conductor central del coaxil."
+        ),
+    },
+    "help.flower_pot.bottom_radius": {
+        Language.ENGLISH: (
+            "Radius of the lower conductor in the NEC model, normally the coax braid."
+        ),
+        Language.SPANISH: (
+            "Radio del conductor inferior en el modelo NEC, normalmente la malla del coaxil."
+        ),
     },
     "help.scv.vertical_height": {
         Language.ENGLISH: (
@@ -12994,6 +13107,119 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
             "de fase transpuesta. El elemento trasero termina la línea y el frontal "
             "es la alimentación."
         ),
+    },
+    "flower_pot.title": {
+        Language.ENGLISH: "Flower Pot Generator",
+        Language.SPANISH: "Generador Flower Pot",
+    },
+    "flower_pot.top_length": {
+        Language.ENGLISH: "Top cut length",
+        Language.SPANISH: "Largo del corte superior",
+    },
+    "flower_pot.bottom_length": {
+        Language.ENGLISH: "Bottom cut length",
+        Language.SPANISH: "Largo del corte inferior",
+    },
+    "flower_pot.base_height": {
+        Language.ENGLISH: "Bottom cut height",
+        Language.SPANISH: "Altura del corte inferior",
+    },
+    "flower_pot.construction_factor": {
+        Language.ENGLISH: "Construction factor",
+        Language.SPANISH: "Factor de construcción",
+    },
+    "flower_pot.top_radius": {
+        Language.ENGLISH: "Top conductor radius (mm)",
+        Language.SPANISH: "Radio del conductor superior (mm)",
+    },
+    "flower_pot.bottom_radius": {
+        Language.ENGLISH: "Bottom conductor radius (mm)",
+        Language.SPANISH: "Radio del conductor inferior (mm)",
+    },
+    "flower_pot.electrical_total": {
+        Language.ENGLISH: "Electrical total",
+        Language.SPANISH: "Total eléctrico",
+    },
+    "flower_pot.electrical_lower_tip": {
+        Language.ENGLISH: "Electrical lower tip",
+        Language.SPANISH: "Punta eléctrica inferior",
+    },
+    "flower_pot.geometry": {
+        Language.ENGLISH: "Physical {physical} {unit} · electrical {electrical} {unit} · feed {feed} {unit}",
+        Language.SPANISH: "Físico {physical} {unit} · eléctrico {electrical} {unit} · alimentación {feed} {unit}",
+    },
+    "flower_pot.model_note": {
+        Language.ENGLISH: (
+            "Physical cuts drive construction. The solver uses 1.087-scaled "
+            "electrical lengths centered on the feed; the lower electrical tip "
+            "extends below the bottom cut."
+        ),
+        Language.SPANISH: (
+            "Los cortes físicos definen la construcción. El solver usa longitudes "
+            "eléctricas escaladas por 1,087 centradas en la alimentación; la punta "
+            "eléctrica inferior se extiende debajo del corte inferior."
+        ),
+    },
+    "flower_pot.scene_note": {
+        Language.ENGLISH: (
+            "Solid wires are the NEC model at 1.087 scale. The top and bottom cut "
+            "dimensions are physical; the extra electrical tail is model-only. "
+            "The common-mode choke is ideal and not drawn."
+        ),
+        Language.SPANISH: (
+            "Los hilos sólidos son el modelo NEC a escala 1,087. Las cotas de corte "
+            "superior e inferior son físicas; la cola eléctrica extra es solo del "
+            "modelo. El choke de modo común es ideal y no se dibuja."
+        ),
+    },
+    "flower_pot.choke_inset": {
+        Language.ENGLISH: "Choke detail · not to scale",
+        Language.SPANISH: "Detalle del choke · no a escala",
+    },
+    "flower_pot.choke_note": {
+        Language.ENGLISH: "choke: ideal, not modeled",
+        Language.SPANISH: "choke: ideal, no modelado",
+    },
+    "flower_pot.hint": {
+        Language.ENGLISH: (
+            "The half-wave Flower Pot is a coax vertical fed at the junction of two "
+            "collinear sections. Enter the physical cut lengths; the choke is ideal "
+            "and the feed line is outside the geometry."
+        ),
+        Language.SPANISH: (
+            "El Flower Pot de media onda es una vertical de coaxil alimentada en la "
+            "unión de dos secciones colineales. Ingresá los cortes físicos; el choke "
+            "es ideal y la línea de alimentación queda fuera de la geometría."
+        ),
+    },
+    "flower_pot.evidence": {
+        Language.ENGLISH: (
+            "Published 2 m and 6 m construction rows are the starting cuts. The NEC "
+            "equivalent applies a separate 1.087 scale; impedance, gain, bandwidth "
+            "and choke behavior are not independently validated."
+        ),
+        Language.SPANISH: (
+            "Las filas publicadas de 2 m y 6 m son los cortes iniciales. El "
+            "equivalente NEC aplica una escala separada de 1,087; impedancia, "
+            "ganancia, ancho de banda y comportamiento del choke no están "
+            "validados independientemente."
+        ),
+    },
+    "flower_pot.load_2m": {
+        Language.ENGLISH: "Load 2 m published row (146 MHz)",
+        Language.SPANISH: "Cargar fila publicada de 2 m (146 MHz)",
+    },
+    "flower_pot.load_2m_hint": {
+        Language.ENGLISH: "Sets 146 MHz, 0.457 m top cut, 0.447 m bottom cut, and a 1.0 m base height.",
+        Language.SPANISH: "Configura 146 MHz, corte superior 0,457 m, corte inferior 0,447 m y altura de base 1,0 m.",
+    },
+    "flower_pot.load_6m": {
+        Language.ENGLISH: "Load 6 m published row (52.7 MHz)",
+        Language.SPANISH: "Cargar fila publicada de 6 m (52,7 MHz)",
+    },
+    "flower_pot.load_6m_hint": {
+        Language.ENGLISH: "Sets 52.7 MHz, 1.273 m top cut, 1.245 m bottom cut, and a 1.0 m base height.",
+        Language.SPANISH: "Configura 52,7 MHz, corte superior 1,273 m, corte inferior 1,245 m y altura de base 1,0 m.",
     },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",

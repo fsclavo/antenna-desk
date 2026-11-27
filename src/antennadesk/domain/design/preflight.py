@@ -17,6 +17,7 @@ from ..antennas.antenna import AntennaModel
 from ..antennas.beverage import BeverageParameters
 from ..antennas.endfed import EndFedParameters
 from ..antennas.fan_dipole import FanDipoleParameters
+from ..antennas.flower_pot import FlowerPotParameters
 from ..antennas.geometry_checks import wire_pair_issues
 from ..antennas.inverted_l import InvertedLParameters
 from ..antennas.inverted_v import InvertedVParameters
@@ -454,6 +455,7 @@ _END_FEED_IS_EXPECTED = (
     BeverageParameters,
     EndFedParameters,
     FanDipoleParameters,
+    FlowerPotParameters,
     InvertedLParameters,
     InvertedVParameters,
     PhasedVerticalParameters,

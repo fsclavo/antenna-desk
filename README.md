@@ -10,7 +10,7 @@ amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
 **Status:** pre-1.0. Latest published release: `0.10.1` (2026-11-24). The
-current development schema is `71`; unreleased work is tracked in
+current development schema is `72`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
 Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
@@ -18,14 +18,14 @@ is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,
 inverted-Vs, inverted-Ls, OCFDs, end-fed wires, slopers, random wires, doublets,
-J Poles, Slim Jims, Ringos, half squares, bobtail curtains, biquads, double
-biquads, Beverage receiving wires, loaded/linked dipoles, verticals, and loaded
-verticals are supported.
+J Poles, Slim Jims, Ringos, Flower Pots, half squares, bobtail curtains,
+biquads, double biquads, Beverage receiving wires, loaded/linked dipoles,
+verticals, and loaded verticals are supported.
 Yagi and Moxon arrays support horizontal or vertical polarization with a
 horizontal boom, plus optional folded driven elements and beta/hairpin
 matching stubs. The log-periodic array uses a straight-element τ/σ geometry and
 a transposed phase-line feed; its starting design is the published Cebik 10 m
-reference. Projects use a versioned ZIP container with schema 71, per-entry
+reference. Projects use a versioned ZIP container with schema 72, per-entry
 validation, deterministic writes, and no legacy reader. VNA CSV import
 and measured/simulated comparison are available. A source-backed materials
 reference covers wire, coax, ferrite, and insulators, and coax presets can
@@ -162,7 +162,7 @@ truth for each topic, every ADR, and the archived plans.
   10°, 5°, 2°, or 1°.
 - Save/open of versioned `.antennadesk` ZIP containers with multiple design
   variants, lazy run loading, design-only recovery, and a save-design-only
-  action. The current development schema is `71`; gzip, plain JSON, and older
+  action. The current development schema is `72`; gzip, plain JSON, and older
   schemas are rejected. The format and its limits are in
   [`docs/DOMAIN_MODEL.md`](docs/DOMAIN_MODEL.md#schema-policy).
 - A/B variant comparison with metrics, SWR charts, and pattern overlays.
@@ -173,7 +173,8 @@ truth for each topic, every ADR, and the archived plans.
   family, no generic fallback, and a joint deterministic differential-evolution
   plus local-search engine. Every geometry, feed, and family-load variable is
   searched together; topology remains a user choice. Supported families include
-  dipoles, loops, verticals, inverted-V/L, J Pole, Ringo, SCV, biquad, Beverage,
+  dipoles, loops, verticals, inverted-V/L, J Pole, Ringo, Flower Pot, SCV, biquad,
+  Beverage,
   loaded/linked dipole, OCFD, EndFed, fan/trap/T2FD, Yagi, and Moxon, with
   target impedance, minimum SWR, maximum gain, maximum front-to-back, maximum
   efficiency, maximum bandwidth, and weighted multi-objective scores.
@@ -217,7 +218,7 @@ truth for each topic, every ADR, and the archived plans.
 - Custom straight-wire antennas with a coordinate editor, template-to-custom
   conversion, a parametric Yagi generator with an editable element table and
   NBS starting preset, Moxon, fan dipole, end-fed with optional counterpoise
-  and transformer, J Pole, Slim Jim, Ringo, inverted-V, inverted-L,
+  and transformer, J Pole, Slim Jim, Ringo, Flower Pot, inverted-V, inverted-L,
   off-center-fed dipole, and vertical generators, experimental ground radial
   generator, practical NEC-2 deck import, and basic MMANA-GAL `.maa` geometry
   import, plus series/parallel RLC loads, load markers, and report rows.

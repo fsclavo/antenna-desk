@@ -1,8 +1,7 @@
 # ADR-0055 — Flower Pot half-wave family and electrical-length representation
 
-- **Status:** accepted 2026-11-26 for the FP1 scope; the required
-  physical-versus-electrical spike is complete and selected Option A;
-  implementation is pending
+- **Status:** accepted and implemented 2026-11-26 for the FP1 scope; the
+  required physical-versus-electrical spike is complete and selected Option A
 - **Date:** 2026-11-26
 - **Related:** FP1, [`AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) §FP1,
   [`GEOMETRY_PRESENTATION.md`](../GEOMETRY_PRESENTATION.md),
@@ -202,11 +201,10 @@ The construction view is elevation. The scene must:
   lengths; label the latter as the solver equivalent;
 - dimension the top and bottom sections, the total radiator, the base height,
   and the electrical lower-tip extension;
-- show the choke as a detail inset or overlay, not as a synthetic canonical
-  wire;
-- show the 2–3 mm feed gap and the heatshrink separator in a not-to-scale
-  detail inset;
-- show the PVC conduit as a non-conductive outline or note, not as a wire;
+- show the choke as a labeled, not-to-scale detail inset, not as a synthetic
+  canonical wire; the feed gap remains an as-built construction dimension;
+- state the PVC conduit and common-mode choke as construction notes, not as
+  wires;
 - avoid a plan view that collapses the vertical wires to a point;
 - keep every displayed dimension anchored to the canonical model or to a
   declared construction parameter.
@@ -215,8 +213,10 @@ The scene contract test must preserve both wires and the feed, assert the
 construction view, assert no zero-length dimension, and assert that the choke
 and conduit overlays are not counted as canonical wires. The wire schedule must
 list both conductors with their radii, materials, and scaled electrical
-lengths; a family-specific cut list must list the physical top/bottom lengths,
-the coax type, the choke turns and former, and the conduit length.
+lengths and state that they are the electrical model; the family-specific cut
+list must list the physical top and bottom lengths. The coax, conduit, and
+choke remain explicit construction notes, and no numeric choke table is embedded
+until measured data exists.
 
 ## Estimator
 
@@ -229,8 +229,8 @@ The frequency-first estimator covers the published 2 m and 6 m starting points:
 - published rows: 457/447 mm at 146 MHz and 1273/1245 mm at 52.7 MHz;
 - electrical model scale `1.087` for `to_antenna()`, separate from the
   construction factor and labelled as a NEC calibration;
-- choke starting table from VK2ZOI, with a warning that the choke must be
-  resonated and measured;
+- no numeric choke table is embedded: the choke is a construction item with a
+  warning that it must be resonated and measured before it can be modeled;
 - confidence B for the published rows, heuristic outside them;
 - a tolerance of 5% on the physical top and bottom lengths; no impedance or
   gain tolerance is claimed;
@@ -299,8 +299,8 @@ Costs:
   and which are physical.
 - The scaled electrical lower-tip extension is visible and validated against
   the base height.
-- The construction view preserves both wires and the feed; the choke/conduit
-  overlays are not canonical wires; dimensions are non-zero and anchored.
+- The construction view preserves both wires and the feed; the choke inset and
+  conduit note are not canonical wires; dimensions are non-zero and anchored.
 - The estimator reproduces the published 2 m and 6 m starting dimensions within
   the documented 5% physical-length tolerance and reports the
   choke/conduit/feedline limitations.

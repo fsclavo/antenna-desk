@@ -44,6 +44,10 @@ from ..domain.antennas.fan_dipole import (
 )
 from ..domain.antennas.feed import FeedPoint, Source
 from ..domain.antennas.feed_line import FeedLine
+from ..domain.antennas.flower_pot import (
+    ANTENNA_TYPE_FLOWER_POT,
+    FlowerPotParameters,
+)
 from ..domain.antennas.folded_dipole import (
     ANTENNA_TYPE_FOLDED_DIPOLE,
     FOLDED_DIPOLE_REFERENCE_TRANSFORMER_RATIO,
@@ -419,6 +423,19 @@ class RingoParametersPayload(StrictModel):
     ring_height_m: float = Field(default=0.0, ge=0.0)
     ring_sides: int = Field(default=16, ge=3, le=128)
     wire_radius_m: float = Field(default=0.001, gt=0.0)
+    material: MaterialPayload
+    ground: GroundPayload
+
+
+class FlowerPotParametersPayload(StrictModel):
+    frequency_hz: float = Field(gt=0.0)
+    top_length_m: float = Field(gt=0.0)
+    bottom_length_m: float = Field(gt=0.0)
+    top_radius_m: float = Field(default=0.0005, gt=0.0)
+    bottom_radius_m: float = Field(default=0.0015, gt=0.0)
+    base_height_m: float = Field(default=1.0, gt=0.0)
+    construction_shortening_factor: float = Field(default=0.88, ge=0.5, le=1.0)
+    electrical_length_scale: float = Field(default=1.087, ge=0.5, le=1.5)
     material: MaterialPayload
     ground: GroundPayload
 
@@ -1183,6 +1200,7 @@ ParameterPayload = (
     | QuadBeamParametersPayload
     | JPoleParametersPayload
     | RingoParametersPayload
+    | FlowerPotParametersPayload
     | ScvParametersPayload
     | BiquadParametersPayload
     | BeverageParametersPayload
@@ -1234,6 +1252,8 @@ def _payload_antenna_type(value: ParameterPayload) -> str:
         return ANTENNA_TYPE_J_POLE
     if isinstance(value, RingoParametersPayload):
         return ANTENNA_TYPE_RINGO
+    if isinstance(value, FlowerPotParametersPayload):
+        return ANTENNA_TYPE_FLOWER_POT
     if isinstance(value, ScvParametersPayload):
         return (
             ANTENNA_TYPE_HALF_SQUARE
@@ -1306,6 +1326,8 @@ def _parameters_payload_class(antenna_type: str) -> type[ParameterPayload] | Non
         return JPoleParametersPayload
     if antenna_type == ANTENNA_TYPE_RINGO:
         return RingoParametersPayload
+    if antenna_type == ANTENNA_TYPE_FLOWER_POT:
+        return FlowerPotParametersPayload
     if antenna_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
         return ScvParametersPayload
     if antenna_type in {ANTENNA_TYPE_BIQUAD, ANTENNA_TYPE_DOUBLE_BIQUAD}:
@@ -1786,6 +1808,8 @@ def _parameters_from_domain(value: AntennaDesignParameters) -> ParameterPayload:
         return _j_pole_parameters_from_domain(value)
     if isinstance(value, RingoParameters):
         return _ringo_parameters_from_domain(value)
+    if isinstance(value, FlowerPotParameters):
+        return _flower_pot_parameters_from_domain(value)
     if isinstance(value, ScvParameters):
         return _scv_parameters_from_domain(value)
     if isinstance(value, BiquadParameters):
@@ -1883,6 +1907,21 @@ def _ringo_parameters_from_domain(value: RingoParameters) -> RingoParametersPayl
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
         wire_radius_m=value.wire_radius_m,
+        material=_material_from_domain(value.material),
+        ground=_ground_from_domain(value.ground),
+    )
+
+
+def _flower_pot_parameters_from_domain(value: FlowerPotParameters) -> FlowerPotParametersPayload:
+    return FlowerPotParametersPayload(
+        frequency_hz=value.frequency_hz,
+        top_length_m=value.top_length_m,
+        bottom_length_m=value.bottom_length_m,
+        top_radius_m=value.top_radius_m,
+        bottom_radius_m=value.bottom_radius_m,
+        base_height_m=value.base_height_m,
+        construction_shortening_factor=value.construction_shortening_factor,
+        electrical_length_scale=value.electrical_length_scale,
         material=_material_from_domain(value.material),
         ground=_ground_from_domain(value.ground),
     )
@@ -3148,6 +3187,10 @@ def _parameters_to_domain(value: DesignPayload) -> AntennaDesignParameters:
         if not isinstance(value.parameters, RingoParametersPayload):
             raise ValueError("Ringo parameters have the wrong shape")
         return _ringo_parameters_to_domain(value.parameters)
+    if value.antenna_type == ANTENNA_TYPE_FLOWER_POT:
+        if not isinstance(value.parameters, FlowerPotParametersPayload):
+            raise ValueError("Flower Pot parameters have the wrong shape")
+        return _flower_pot_parameters_to_domain(value.parameters)
     if value.antenna_type in {ANTENNA_TYPE_HALF_SQUARE, ANTENNA_TYPE_BOBTAIL_CURTAIN}:
         if not isinstance(value.parameters, ScvParametersPayload):
             raise ValueError("self-contained vertical array parameters have the wrong shape")
@@ -3296,6 +3339,21 @@ def _ringo_parameters_to_domain(value: RingoParametersPayload) -> RingoParameter
         ring_height_m=value.ring_height_m,
         ring_sides=value.ring_sides,
         wire_radius_m=value.wire_radius_m,
+        material=_material_to_domain(value.material),
+        ground=_ground_to_domain(value.ground),
+    )
+
+
+def _flower_pot_parameters_to_domain(value: FlowerPotParametersPayload) -> FlowerPotParameters:
+    return FlowerPotParameters(
+        frequency_hz=value.frequency_hz,
+        top_length_m=value.top_length_m,
+        bottom_length_m=value.bottom_length_m,
+        top_radius_m=value.top_radius_m,
+        bottom_radius_m=value.bottom_radius_m,
+        base_height_m=value.base_height_m,
+        construction_shortening_factor=value.construction_shortening_factor,
+        electrical_length_scale=value.electrical_length_scale,
         material=_material_to_domain(value.material),
         ground=_ground_to_domain(value.ground),
     )

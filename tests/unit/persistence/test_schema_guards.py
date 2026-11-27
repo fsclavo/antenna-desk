@@ -20,6 +20,7 @@ from antennadesk.domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
 from antennadesk.domain.antennas.discone import ANTENNA_TYPE_DISCONE
 from antennadesk.domain.antennas.endfed import ANTENNA_TYPE_ENDFED
 from antennadesk.domain.antennas.fan_dipole import ANTENNA_TYPE_FAN_DIPOLE
+from antennadesk.domain.antennas.flower_pot import ANTENNA_TYPE_FLOWER_POT
 from antennadesk.domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
 from antennadesk.domain.antennas.hexbeam import ANTENNA_TYPE_HEXBEAM
 from antennadesk.domain.antennas.inverted_l import ANTENNA_TYPE_INVERTED_L
@@ -80,6 +81,7 @@ DECLARED_TYPES = (
     ANTENNA_TYPE_QUAD_BEAM,
     ANTENNA_TYPE_J_POLE,
     ANTENNA_TYPE_RINGO,
+    ANTENNA_TYPE_FLOWER_POT,
     ANTENNA_TYPE_HALF_SQUARE,
     ANTENNA_TYPE_BOBTAIL_CURTAIN,
     ANTENNA_TYPE_BIQUAD,

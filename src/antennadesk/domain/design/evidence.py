@@ -454,6 +454,25 @@ EVIDENCE: dict[str, EvidenceEntry] = {
         tolerance="Not applicable (structural)",
         limitation="No independent numerical reference.",
     ),
+    "flower_pot": EvidenceEntry(
+        template="flower_pot",
+        level=EvidenceLevel.PUBLISHED,
+        source=(
+            "VK2ZOI, 'The Flower Pot Antenna': half-wave 2 m construction with "
+            "0.457 m top and 0.447 m bottom coax cuts; VK4PK 6 m construction "
+            "survey with 1.273 m top and 1.245 m bottom cuts"
+        ),
+        tolerance=(
+            "About 1% on the published 2 m and 6 m cut lengths; the 0.44λ "
+            "estimator is a starting rule"
+        ),
+        limitation=(
+            "Published cut lengths only. The NEC model applies a separate 1.087 "
+            "electrical scale centered on the feed; impedance, gain, bandwidth, "
+            "ground, mast, and choke behavior are not validated. The choke is "
+            "ideal and is not part of the geometry."
+        ),
+    ),
     "half_square": EvidenceEntry(
         template="half_square",
         level=EvidenceLevel.PUBLISHED,

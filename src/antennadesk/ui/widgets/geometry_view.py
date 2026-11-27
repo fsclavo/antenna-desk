@@ -47,6 +47,7 @@ from PySide6.QtWidgets import QApplication, QSizePolicy, QWidget
 
 from ...domain.antennas.antenna import AntennaModel
 from ...domain.antennas.dipole import ANTENNA_TYPE_WIRE_DIPOLE
+from ...domain.antennas.flower_pot import BOTTOM_RADIATOR_ID, TOP_RADIATOR_ID
 from ...domain.antennas.folded_dipole import ANTENNA_TYPE_FOLDED_DIPOLE
 from ...domain.antennas.geometry import Point3D
 from ...domain.antennas.j_pole import ANTENNA_TYPE_J_POLE
@@ -485,6 +486,8 @@ class GeometryView(QWidget):
             return ANTENNA_TYPE_J_POLE
         if any(wire.id.startswith("ring-") for wire in model.wires):
             return "ringo"
+        if {wire.id for wire in model.wires} == {TOP_RADIATOR_ID, BOTTOM_RADIATOR_ID}:
+            return "flower_pot"
         if any(wire.id.startswith("element-") for wire in model.wires):
             return "yagi"
         if len(model.wires) == 1:

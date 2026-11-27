@@ -51,6 +51,8 @@ pytestmark = [
         ("j_pole", 146_000_000.0, {"folded": False}),
         ("j_pole", 146_000_000.0, {"folded": True}),
         ("ringo", 146_000_000.0, {}),
+        ("flower_pot", 146_000_000.0, {}),
+        ("flower_pot", 52_700_000.0, {}),
         ("yagi", 146_000_000.0, {"yagi_elements": 5}),
         ("moxon", 14_170_000.0, {}),
     ],

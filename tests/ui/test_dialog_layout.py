@@ -22,6 +22,7 @@ from antennadesk.ui.dialogs.biquad_dialog import BiquadDialog
 from antennadesk.ui.dialogs.discone_dialog import DisconeDialog
 from antennadesk.ui.dialogs.endfed_dialog import EndFedDialog
 from antennadesk.ui.dialogs.fan_dipole_dialog import FanDipoleDialog
+from antennadesk.ui.dialogs.flower_pot_dialog import FlowerPotDialog
 from antennadesk.ui.dialogs.hexbeam_dialog import HexbeamDialog
 from antennadesk.ui.dialogs.inverted_l_dialog import InvertedLDialog
 from antennadesk.ui.dialogs.inverted_v_dialog import InvertedVDialog
@@ -84,6 +85,7 @@ REGISTRY: tuple[DialogCase, ...] = (
     DialogCase("basic_antenna", BasicAntennaDialog),
     DialogCase("fan_dipole", FanDipoleDialog),
     DialogCase("ringo", RingoDialog),
+    DialogCase("flower_pot", FlowerPotDialog),
     DialogCase("inverted_v", InvertedVDialog),
     DialogCase("inverted_l", InvertedLDialog),
 )
@@ -166,7 +168,7 @@ def test_generator_dialog_layout_guard(
 def test_registry_covers_every_family_generator_dialog() -> None:
     names = [case.name for case in REGISTRY]
 
-    assert len(names) == len(set(names)) == 25
+    assert len(names) == len(set(names)) == 26
 
 
 def test_guard_rejects_a_deliberately_tall_form_without_scroll(qtbot: QtBot) -> None:

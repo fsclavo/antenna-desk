@@ -30,6 +30,7 @@ from antennadesk.domain.antennas.endfed import (
 )
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
+from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
@@ -476,6 +477,19 @@ def _cases() -> tuple[FamilyCase, ...]:
             ("Ringo", "diameter 0.50 m"),
         ),
         FamilyCase(
+            "flower_pot",
+            FlowerPotParameters(
+                frequency_hz=146_000_000.0,
+                top_length_m=0.457,
+                bottom_length_m=0.447,
+                base_height_m=1.0,
+            ),
+            "flower_pot",
+            2,
+            GeometryViewMode.ELEVATION,
+            ("Flower Pot", "top cut length", "electrical total"),
+        ),
+        FamilyCase(
             "half_square",
             scv_parameters(ScvKind.HALF_SQUARE, 7_150_000.0),
             "half_square",
@@ -869,6 +883,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         dipole,
         endfed,
         fan_dipole,
+        flower_pot,
         folded_dipole,
         inverted_l,
         inverted_v,
@@ -891,6 +906,7 @@ def test_every_domain_antenna_type_has_a_presentation_family() -> None:
         dipole,
         endfed,
         fan_dipole,
+        flower_pot,
         folded_dipole,
         inverted_l,
         inverted_v,

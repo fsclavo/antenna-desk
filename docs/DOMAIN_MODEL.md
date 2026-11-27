@@ -339,6 +339,20 @@ Slim Jim folded rectangle with top and bottom connectors and a gap in one
 vertical leg. The feed offset is measured from the stub base. The generator is
 experimental.
 
+### FlowerPotParameters
+
+A first-class half-wave Flower Pot coax vertical. ``top_length_m`` and
+``bottom_length_m`` are the **physical coax cut lengths**; ``top_radius_m`` and
+``bottom_radius_m`` model the center conductor and braid/outer conductor.
+``construction_shortening_factor`` (default 0.88) is the published construction
+factor. ``electrical_length_scale`` (default 1.087) is a separate NEC model
+calibration applied by ``to_antenna()``, centered on the feed, so the solved
+wires are longer than the physical cuts. The family keeps the feed height fixed
+and validates the **scaled electrical lower tip** against ``base_height_m``.
+The common-mode choke is ideal and is not part of the geometry; the feed line
+below it is the project ``FeedLine``. The 5/8, double 5/8, dual-band sleeve,
+and high-gain variants are not modeled.
+
 ### EndFedParameters
 
 A first-class single-wire antenna fed at one end, with separate feed and far-end
@@ -685,7 +699,8 @@ reconstructs OCFD parameters from legacy custom designs.
 `OCFDParameters`, `VerticalParameters`, `InvertedVParameters`,
 `InvertedLParameters`, `YagiParameters`, `MoxonParameters`,
 `FanDipoleParameters`, `EndFedParameters`,
-`JPoleParameters`, `RingoParameters`, `ScvParameters`, `BiquadParameters`,
+`JPoleParameters`, `RingoParameters`, `FlowerPotParameters`, `ScvParameters`,
+`BiquadParameters`,
 `BeverageParameters`, `LoadedDipoleParameters`, `PhasedVerticalParameters`,
 `QuadBeamParameters`, `LogPeriodicParameters`, `DisconeParameters`,
 `TrapYagiParameters`, `HexbeamParameters`,
@@ -942,7 +957,7 @@ Limits are enforced on both save and load: 64 MiB container, 256 MiB total
 expanded, 1 MiB manifest, 64 MiB per entry, 10,000 entries, and 255 bytes per
 path. The reader reads each entry through a bounded stream and verifies the
 actual size, CRC32, and SHA-256 against the manifest; declared sizes are not
-trusted. The current schema is `71`; the application writes version 71 and
+trusted. The current schema is `72`; the application writes version 72 and
 rejects gzip, plain JSON, and every schema below 59. A 59 container adds the
 optional `site_ground: null` metadata on open; a 60 container loads vertical
 designs at `radial_droop_deg = 0`, so their canonical geometry is unchanged; a
@@ -973,7 +988,7 @@ migration.
 
 ## Schema policy
 
-- Current version: `71`.
+- Current version: `72`.
 - Container version 1 and schema versions 59 through 70 are accepted. A 59
   container adds `project.site_ground: null`, a 60 container adds the default
   `radial_droop_deg = 0` on open, 61 is the metadata-only predecessor of the
