@@ -123,7 +123,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX57 | 3D back ray at the actual rear gain | S | UX46 | **Implemented 2026-11-26.** The same-elevation back ray ends at `max gain − F/B`, not at the forward peak radius. A missing or non-finite F/B hides the ray and label, and the minimum-distance guard hides a degenerate marker. No solver, domain, schema, or report change. See §UX57. |
 | UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
 | UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Implemented locally 2026-11-27; Windows CI verification pending.** Shared `configure_form_layout()` applies `WrapLongRows`, growing fields, zero margins, and explicit spacing to every family `QFormLayout`; single-column labels wrap. Local guard at 920/initial widths and Large font: no horizontal bars; layout batch 226 passed. See §UX59. |
-| UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Proposed; P1.** Grow the initial dialog width to the form minimum only when needed, capped by `scaled_dialog_size()`; remove or constrain the Yagi table's `AdjustToContents`; fix the Basic Antenna template control. All 26 dialogs stay free of horizontal scrolling at 920 px and Large font. Document any 1000 px exception or one-column collapse. See §UX60. |
+| UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Implemented locally 2026-11-27; Windows CI verification pending.** Initial width grows to the form minimum only when needed and stays under the `scaled_dialog_size()` screen cap; the Yagi table no longer uses `AdjustToContents`; the Basic Antenna template value has a compact policy. All 26 dialogs remain free of horizontal scrolling at 920 px and Large font locally; no 1000 px exception or column collapse was needed. See §UX60. |
 | UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Proposed; P1.** Add the compact Medium/Large EN/ES guard (no horizontal at 920, actions visible, vertical allowed only at Large), update ADR-0056/STATUS/CHANGELOG and the manual QA record, and confirm the README `tests` badge is green on `main` with no platform exclusions. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
@@ -3069,7 +3069,8 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 
 ### UX60 — Layout-based dialog sizing and Yagi table width
 
-**Status:** proposed; P1. **Depends on:** UX59. **Effort:** S–M (1–3 days).
+**Status:** implemented locally 2026-11-27; Windows CI verification pending.
+**Depends on:** UX59. **Effort:** S–M (1–3 days).
 
 **Scope:**
 
@@ -3102,6 +3103,24 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
   horizontal form scrollbar appears.
 - The Windows 3.12/3.13 layout batch is green.
 - No change to solver specs, schema, reports, or parameter defaults.
+
+**Implementation (2026-11-27):**
+
+- `scaled_dialog_size()` accepts an optional `minimum_width`; `FormDialogFrame`
+  measures the form, notes, buttons, and scroll chrome after building its
+  layout, grows only when that minimum exceeds the requested width, and applies
+  the existing 90%-screen cap.
+- `YagiForm` sets `AdjustIgnored` on the wide element table, so the table keeps
+  its internal horizontal scroll instead of driving the dialog width. The
+  140 px minimum height and stretch growth remain.
+- `DipoleForm` gives the family and template values an `Ignored` horizontal
+  policy, a zero minimum width, and full-text tooltips; the template row is
+  compact at 560 px and Large font.
+- Two-column `SectionedForm` uses 5 px vertical spacing instead of 6 px to keep
+  the Yagi default height free of a vertical scrollbar.
+- Local verification: layout batch **247 passed**; full UI **2,024 passed**.
+  No 1000 px exception or one-column collapse was needed. Windows 3.12/3.13
+  verification remains pending.
 
 ### UX61 — Large-font layout guard, Windows closure, and docs
 
@@ -3141,12 +3160,11 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 - ADR-0056, STATUS, CHANGELOG, and the QA record are consistent with the code
   and with the actual CI run.
 
-**Track order:** UX58 → UX59 → UX60 → UX61. UX58 and UX59 are implemented
-locally; UX60 and UX61 remain. The Windows signal still has to be recorded on
-the real runner before the track closes. UX59 and UX60 may share a change set
-if the diff stays small, but their acceptance stays separate. UX61 closes the
-track only after the real Windows run is green. Do not start with a Windows
-skip or a test-only width increase: both hide the user-facing issue.
+**Track order:** UX58 → UX59 → UX60 → UX61. UX58–UX60 are implemented
+locally; UX61 remains. The Windows signal still has to be recorded on the real
+runner before the track closes. UX61 closes the track only after the real
+Windows run is green. Do not start with a Windows skip or a test-only width
+increase: both hide the user-facing issue.
 
 **Cross-cutting acceptance:**
 
@@ -3353,8 +3371,8 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,851 passed, 1 skipped** on 2026-11-27 after PF2 streaming
-  write, the DL3 managed-value closure, and the UX58/UX59 local layout work.
+- Full gate: **4,858 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write, the DL3 managed-value closure, and the UX58–UX60 local layout work.
   The 0.11.1 release covers the optimizer close/cancel lifecycle fix. Real
   `nec2c` integration: **186 passed**. The suite also covers the QA and
   technical-debt closure,

@@ -1,7 +1,8 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline and
-  UX59 wrapping added 2026-11-27; UX60–UX61 pending Windows verification
+- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline,
+  UX59 wrapping, and UX60 layout-based sizing added 2026-11-27; UX61 pending
+  Windows verification
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, UX58, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX61
 
@@ -144,6 +145,27 @@ word-wrap so the Yagi height budget does not regress. The regression tests
 cover synthetic very-long English and Spanish labels at 560 px and 920 px, the
 full 26-dialog guard at 920×640 with Large Spanish, and the twelve UX54
 initial widths with Large Spanish.
+
+## UX60 layout-based sizing (2026-11-27)
+
+`FormDialogFrame` now builds its layout first and then asks for
+`scaled_dialog_size(..., minimum_width=...)` using the measured form, note,
+button, and scroll-chrome minimum. The requested 560–940 px width remains the
+first choice; the frame only grows when the content cannot fit, and the
+existing 90%-screen cap still wins. A two-column `SectionedForm` uses 5 px
+vertical spacing instead of 6 px to keep the Yagi default height free of a
+vertical scrollbar.
+
+The Yagi element table uses `AdjustIgnored`, so it scrolls internally instead
+of driving the dialog width through its content hint. The 140 px minimum height
+and stretch growth remain. The Basic Antenna family/template values use an
+`Ignored` horizontal size policy with a zero minimum width and full-text
+tooltips, keeping the 560 px dialog compact at Large font.
+
+All 26 registry dialogs remain free of horizontal scrolling at 920 px and at
+their narrow initial widths with Large font locally. No 1000 px exception or
+one-column collapse was required. The real Windows run remains the closure
+condition.
 
 ## UX54 audit: scroll-heavy generator dialogs
 

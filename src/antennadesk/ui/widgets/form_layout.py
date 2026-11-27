@@ -10,7 +10,11 @@ FORM_HORIZONTAL_SPACING_PX = 8
 FORM_VERTICAL_SPACING_PX = 6
 
 
-def configure_form_layout(form: QFormLayout) -> QFormLayout:
+def configure_form_layout(
+    form: QFormLayout,
+    *,
+    vertical_spacing: int = FORM_VERTICAL_SPACING_PX,
+) -> QFormLayout:
     """Apply the generator-form width and wrapping contract.
 
     Long labels wrap instead of forcing a horizontal scrollbar, non-fixed
@@ -22,5 +26,5 @@ def configure_form_layout(form: QFormLayout) -> QFormLayout:
     form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
     form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
     form.setHorizontalSpacing(FORM_HORIZONTAL_SPACING_PX)
-    form.setVerticalSpacing(FORM_VERTICAL_SPACING_PX)
+    form.setVerticalSpacing(vertical_spacing)
     return form

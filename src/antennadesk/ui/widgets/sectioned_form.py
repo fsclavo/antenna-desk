@@ -93,7 +93,12 @@ class SectionedForm(QWidget):
         columns.setContentsMargins(0, 0, 0, 0)
         columns.setSpacing(24 if column_count == 2 else 0)
         for column_sections in assigned:
-            form = configure_form_layout(QFormLayout())
+            # Two columns are denser; 5 px keeps the Yagi default height free
+            # of a vertical scrollbar while single-column forms stay readable.
+            form = configure_form_layout(
+                QFormLayout(),
+                vertical_spacing=5 if column_count == 2 else 6,
+            )
             self._populate(form, column_sections)
             self._forms.append(form)
             columns.addLayout(form, 1)

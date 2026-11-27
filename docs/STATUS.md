@@ -216,6 +216,13 @@
   layout batch: **226 passed**; full UI suite: **2,017 passed**. Windows
   3.12/3.13 verification is pending. See
   [`ADR-0056`](ADR/0056-antenna-dialog-layout.md).
+- UX60 layout-based dialog sizing is **implemented locally 2026-11-27**.
+  `FormDialogFrame` grows only to the measured form/chrome minimum and keeps
+  the screen cap; the Yagi table uses `AdjustIgnored`; Basic Antenna's
+  template/family values are compact. Local layout batch: **247 passed**; full
+  UI suite: **2,024 passed**. No width exception or column collapse was needed.
+  Windows 3.12/3.13 verification is pending. See
+  [`ADR-0056`](ADR/0056-antenna-dialog-layout.md).
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.
@@ -228,11 +235,10 @@
 
 ## Next
 
-1. Continue the P1 Windows layout/CI track with **UX60–UX61**. UX58 and UX59
-   are implemented locally; the next slice makes dialog/table sizing
-   layout-based, then closes with the Large-font guard and the Windows run.
-   The README `tests` badge remains red until that Windows verification
-   passes. No schema or solver change.
+1. Close the P1 Windows layout/CI track with **UX61**. UX58–UX60 are
+   implemented locally; UX61 adds the Large-font guard, updates the QA record,
+   and records the real Windows run. The README `tests` badge remains red until
+   that Windows verification passes. No schema or solver change.
 2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
 3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision

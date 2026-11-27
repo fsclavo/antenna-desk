@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QFormLayout
+from PySide6.QtWidgets import QAbstractScrollArea, QApplication, QFormLayout
 from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
@@ -135,6 +135,13 @@ def test_table_grows_when_extra_height_is_available(qtbot: QtBot) -> None:
     assert dialog._table.height() > dialog._table.minimumHeight()
 
 
+def test_table_does_not_drive_the_form_width(qtbot: QtBot) -> None:
+    dialog = YagiDialog(Translator(Language.SPANISH), UnitSystem.METRIC)
+    qtbot.addWidget(dialog)
+
+    assert dialog._table.sizeAdjustPolicy() is QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored
+
+
 @pytest.mark.parametrize("language", [Language.ENGLISH, Language.SPANISH])
 def test_actions_stay_visible_when_the_form_scrolls(
     qtbot: QtBot,
@@ -184,6 +191,7 @@ def test_dialog_avoids_horizontal_scrolling_with_large_spanish(
         _show(dialog, qtbot, 920, 640)
 
         assert dialog._form.minimumSizeHint().width() <= dialog._scroll.viewport().width()
+        assert dialog._scroll.horizontalScrollBar().maximum() == 0
         assert dialog._buttons.isVisible() is True
         assert dialog._buttons.geometry().bottom() <= dialog.rect().bottom()
     finally:

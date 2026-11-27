@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QSpinBox,
     QVBoxLayout,
     QWidget,
@@ -98,9 +99,19 @@ class DipoleForm(QWidget):
         self._template_value = QLabel(self)
         self._change_template = QPushButton(self)
         self._change_template.clicked.connect(self.change_template_requested.emit)
+        self._template_value.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Preferred,
+        )
+        self._template_value.setMinimumWidth(0)
         self._template_control = QWidget(self)
+        self._template_control.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Preferred,
+        )
         template_layout = QHBoxLayout(self._template_control)
         template_layout.setContentsMargins(0, 0, 0, 0)
+        template_layout.setSpacing(4)
         template_layout.addWidget(self._template_value, 1)
         template_layout.addWidget(self._change_template)
 
@@ -205,6 +216,11 @@ class DipoleForm(QWidget):
             spin.setSuffix(" MHz")
 
         self._family_value = QLabel(self)
+        self._family_value.setSizePolicy(
+            QSizePolicy.Policy.Ignored,
+            QSizePolicy.Policy.Preferred,
+        )
+        self._family_value.setMinimumWidth(0)
         self._form_layout = QFormLayout()
         configure_form_layout(self._form_layout)
         form = self._form_layout
@@ -297,6 +313,7 @@ class DipoleForm(QWidget):
     def _label(self, key: str) -> QLabel:
         label = QLabel(self)
         label.setObjectName(key)
+        label.setWordWrap(True)
         apply_help(label, self._translator, key)
         return label
 
@@ -636,15 +653,17 @@ class DipoleForm(QWidget):
         self._set_row_visible(self._transformer, is_folded or is_loop)
         self._set_row_visible(self._sides, is_loop)
         self._set_row_visible(self._sag, is_dipole)
-        self._family_value.setText(
-            self._translator.t("family.loop" if is_loop else "family.dipole")
-        )
+        family_text = self._translator.t("family.loop" if is_loop else "family.dipole")
+        self._family_value.setText(family_text)
+        self._family_value.setToolTip(family_text)
         template_label = {
             ANTENNA_TYPE_WIRE_DIPOLE: "antenna_type.wire_dipole",
             ANTENNA_TYPE_FOLDED_DIPOLE: "antenna_type.folded_dipole",
             ANTENNA_TYPE_LOOP: "antenna_type.loop",
         }[antenna_type]
-        self._template_value.setText(self._translator.t(template_label))
+        template_text = self._translator.t(template_label)
+        self._template_value.setText(template_text)
+        self._template_value.setToolTip(template_text)
         labels = self._labels()
         length_label = labels.get("field.length")
         if length_label is not None:

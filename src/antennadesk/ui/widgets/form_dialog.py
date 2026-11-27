@@ -40,7 +40,6 @@ class FormDialogFrame(QDialog):
         self._form = form
         self._notes = tuple(notes)
         self.setWindowTitle(title)
-        self.resize(*scaled_dialog_size(*initial_size))
 
         self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
@@ -64,6 +63,24 @@ class FormDialogFrame(QDialog):
         for note in self._notes:
             layout.addWidget(note)
         layout.addWidget(self._buttons)
+        self.resize(
+            *scaled_dialog_size(
+                *initial_size,
+                minimum_width=self._minimum_content_width(layout),
+            )
+        )
+
+    def _minimum_content_width(self, layout: QVBoxLayout) -> int:
+        """Return the form/chrome width needed before the screen cap applies."""
+
+        content = max(self._form.minimumWidth(), self._form.minimumSizeHint().width())
+        if self._scroll is not None:
+            content = max(content, self._scroll.minimumSizeHint().width())
+        for note in self._notes:
+            content = max(content, note.minimumSizeHint().width())
+        content = max(content, self._buttons.minimumSizeHint().width())
+        margins = layout.contentsMargins()
+        return content + margins.left() + margins.right()
 
     @property
     def form(self) -> QWidget:

@@ -376,8 +376,9 @@ class YagiForm(QWidget):
         element_buttons.addWidget(self._preset)
         element_buttons.addStretch(1)
 
-        if wide_layout:
-            self._table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        # UX60: the table keeps its own scroll area; it must not drive the
+        # dialog width through its content size hint.
+        self._table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         if wide_layout:

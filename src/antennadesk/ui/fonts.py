@@ -70,17 +70,23 @@ def scaled_font_copy(font: QFont) -> QFont:
     return scaled
 
 
-def scaled_dialog_size(width: int, height: int) -> tuple[int, int]:
+def scaled_dialog_size(
+    width: int,
+    height: int,
+    *,
+    minimum_width: int = 0,
+) -> tuple[int, int]:
     """Scale a dialog's preferred size and cap it to the available screen.
 
     A tall dialog at a large font scale can exceed the screen height even though
     its content is inside a scroll area. Capping the initial size keeps the
     title bar, buttons, and scroll area reachable; the user can still resize the
-    dialog larger.
+    dialog larger. ``minimum_width`` lets a caller raise the width to the form's
+    actual minimum before the same screen cap is applied.
     """
 
     scale = current_font_scale()
-    scaled_width = max(320, round(width * scale))
+    scaled_width = max(320, round(width * scale), minimum_width)
     scaled_height = max(240, round(height * scale))
     app = QApplication.instance()
     if isinstance(app, QApplication):

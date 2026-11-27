@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   spacing; one-column labels wrap and two-column layouts keep their height
   budget. Long Spanish labels no longer force horizontal scrolling in the
   tested dialogs.
+- **Layout-based generator dialog sizing.** The frame grows to the measured
+  form/chrome minimum only when needed and keeps the 90%-screen cap. The Yagi
+  element table no longer drives the dialog width, and Basic Antenna's
+  family/template values have a compact policy at narrow widths and Large font.
 
 ## [0.11.1] - 2026-11-27
 
