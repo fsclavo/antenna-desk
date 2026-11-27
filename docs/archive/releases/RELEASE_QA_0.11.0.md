@@ -75,6 +75,19 @@ The release is published at
 <https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.0>.
 Native packages are unsigned; verify the published checksums before installing.
 
+## Publication verification (2026-11-27)
+
+All six published binaries were downloaded from the GitHub release and checked:
+
+- `sha256sum -c` — **all six checksums OK**.
+- Wheel and sdist metadata report version `0.11.0`.
+- The published AppImage reports `0.11.0` with `--version`.
+- The Debian package reports version `0.11.0` and contains the bundled `nec2c`
+  binary plus its source/license notices.
+- The Windows portable zip contains `AntennaDesk.exe` and `nec2c.exe`.
+- The Windows installer and portable zip checksums are OK. The installer itself
+  is smoke-tested in the tag workflow.
+
 ## Known limitations
 
 - The measured broadband splitter/isolation model remains unavailable until
