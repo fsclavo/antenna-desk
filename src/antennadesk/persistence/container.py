@@ -11,18 +11,18 @@ and a future session can load runs lazily.
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 import os
 import re
 import tempfile
 import zipfile
 import zlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import Literal, TypeVar
+from typing import IO, Literal, TypeVar, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -36,7 +36,7 @@ from ..application.project_limits import (
     MAX_PATH_BYTES,
     MAX_PROJECT_UNCOMPRESSED_BYTES,
 )
-from ..application.project_payload import PreparedProject, ProjectLimits
+from ..application.project_payload import PreparedProject, PreparedSpool, ProjectLimits
 from ..application.project_session import (
     ProjectSession,
 )
@@ -51,6 +51,7 @@ from .constants import (
     PROJECT_FORMAT,
     SCHEMA_VERSION,
 )
+from .container_writer import ContainerSpool, StagedEntry
 from .errors import ProjectFormatError, ProjectTooLargeError, UnsupportedSchemaVersion
 from .schema import (
     DesignPayload,
@@ -60,9 +61,10 @@ from .schema import (
     ProjectMetadataPayload,
     ProjectPayload,
     SimulationRunPayload,
-    document_from_project,
     project_from_document,
+    project_payload_from_project,
     simulation_run_from_payload,
+    simulation_run_payload_from_run,
 )
 
 MANIFEST_NAME = "manifest.json"
@@ -76,8 +78,6 @@ RAW_OUTPUT_SUFFIX = ".raw-output.txt"
 DESIGN_FORMAT: Literal["antennadesk.design"] = "antennadesk.design"
 RUN_FORMAT: Literal["antennadesk.run"] = "antennadesk.run"
 OPTIMIZATION_FORMAT: Literal["antennadesk.optimization"] = "antennadesk.optimization"
-
-_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 _ENTRY_NAME = re.compile(r"^[A-Za-z0-9._/-]+$")
@@ -245,12 +245,6 @@ def _migrate_level_matching_networks(
         _migrate_level_matching_networks(child, count)
 
 
-@dataclass(frozen=True, slots=True)
-class _Entry:
-    kind: EntryKind
-    data: bytes
-
-
 class ProjectContainerRepository:
     """Read and write versioned ZIP project containers.
 
@@ -262,13 +256,32 @@ class ProjectContainerRepository:
     # -- public repository API ------------------------------------------------
 
     def save(self, project: Project, path: Path) -> None:
-        self.write_payload(path, self.prepare_payload(project))
+        prepared = self.prepare_payload(project)
+        try:
+            self.write_payload(path, prepared)
+        finally:
+            prepared.close()
 
     def prepare_payload(self, project: Project) -> PreparedProject:
-        entries = self._build_entries(project)
-        self._check_entry_limits(entries)
-        payload, manifest_bytes = self._build_container(project, entries)
-        return self._prepared(entries, payload, manifest_bytes)
+        limits = self._limits()
+        spool = ContainerSpool(limits)
+        try:
+            for path, kind, data in self._iter_project_entries(project):
+                spool.add_bytes(path, kind, data)
+            staged = spool.close_stage()
+            manifest = self._build_manifest(project, staged, limits)
+            size = spool.write_container(manifest, MANIFEST_NAME)
+            expanded = sum(entry.uncompressed_bytes for entry in staged) + len(manifest)
+            return self._prepared_from_spool(
+                spool,
+                size=size,
+                entry_count=len(staged) + 1,
+                expanded_bytes=expanded,
+                limits=limits,
+            )
+        except BaseException:
+            spool.cleanup()
+            raise
 
     def prepare_session_payload(
         self,
@@ -297,7 +310,6 @@ class ProjectContainerRepository:
                 full = full.with_latest_simulation_runs_only(updated_at=project.updated_at)
             return self.prepare_payload(full)
 
-        entries = self._build_entries(project)
         design_ids = {design.id for design in project.designs}
         existing_ids = {run.id for run in project.simulation_runs}
         retained_ids = set(session.retained_run_ids())
@@ -308,12 +320,6 @@ class ProjectContainerRepository:
             and index.id not in existing_ids
             and (not retained_only or index.id in retained_ids)
         ]
-        copied = store.copy_entries([index.id for index in source_runs])
-        for path, data in copied.items():
-            kind = _kind_for_path(path)
-            if kind is None:
-                raise ProjectFormatError(f"unexpected copied run entry: {path}")
-            entries[path] = _Entry(kind, data)
         runs = [
             RunIndexEntry(
                 id=index.id,
@@ -336,51 +342,102 @@ class ProjectContainerRepository:
         retained = [index.id for index in source_runs if index.id in retained_ids] + [
             run.id for run in project.simulation_runs
         ]
-        self._check_entry_limits(entries)
-        payload, manifest_bytes = self._build_container(
-            project,
-            entries,
-            runs=runs,
-            retained_run_ids=retained,
-        )
-        return self._prepared(entries, payload, manifest_bytes)
 
-    def _prepared(
+        limits = self._limits()
+        spool = ContainerSpool(limits)
+        try:
+            for path, kind, data in self._iter_project_entries(project):
+                spool.add_bytes(path, kind, data)
+            with store.copied_entry_streams([index.id for index in source_runs]) as streams:
+                for path, listed, source in streams:
+                    copied_kind = _kind_for_path(path)
+                    if copied_kind is None:
+                        raise ProjectFormatError(f"unexpected copied run entry: {path}")
+                    staged = spool.add_stream(
+                        path,
+                        copied_kind,
+                        source,
+                        expected_bytes=listed.uncompressed_bytes,
+                    )
+                    self._verify_copied_entry(staged, listed)
+            staged_entries = spool.close_stage()
+            manifest = self._build_manifest(
+                project,
+                staged_entries,
+                limits,
+                runs=runs,
+                retained_run_ids=retained,
+            )
+            size = spool.write_container(manifest, MANIFEST_NAME)
+            expanded = sum(entry.uncompressed_bytes for entry in staged_entries) + len(manifest)
+            return self._prepared_from_spool(
+                spool,
+                size=size,
+                entry_count=len(staged_entries) + 1,
+                expanded_bytes=expanded,
+                limits=limits,
+            )
+        except BaseException:
+            spool.cleanup()
+            raise
+
+    def _limits(self) -> ProjectLimits:
+        return ProjectLimits(
+            container_bytes=MAX_CONTAINER_BYTES,
+            expanded_bytes=MAX_PROJECT_UNCOMPRESSED_BYTES,
+            manifest_bytes=MAX_MANIFEST_BYTES,
+            entry_bytes=MAX_ENTRY_BYTES,
+            entries=MAX_ENTRIES,
+            path_bytes=MAX_PATH_BYTES,
+        )
+
+    def _prepared_from_spool(
         self,
-        entries: dict[str, _Entry],
-        payload: bytes,
-        manifest_bytes: int,
+        spool: ContainerSpool,
+        *,
+        size: int,
+        entry_count: int,
+        expanded_bytes: int,
+        limits: ProjectLimits,
     ) -> PreparedProject:
-        expanded = sum(len(entry.data) for entry in entries.values()) + manifest_bytes
-        if expanded > MAX_PROJECT_UNCOMPRESSED_BYTES:
+        if expanded_bytes > limits.expanded_bytes:
             raise ProjectTooLargeError(
                 "project entries are too large when expanded "
-                f"({expanded} bytes; limit is {MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
-                size=expanded,
-                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
+                f"({expanded_bytes} bytes; limit is {limits.expanded_bytes} bytes)",
+                size=expanded_bytes,
+                limit=limits.expanded_bytes,
                 expanded=True,
             )
-        if len(payload) > MAX_CONTAINER_BYTES:
+        if size > limits.container_bytes:
             raise ProjectTooLargeError(
                 "project container is too large "
-                f"({len(payload)} bytes; limit is {MAX_CONTAINER_BYTES} bytes)",
-                size=len(payload),
-                limit=MAX_CONTAINER_BYTES,
+                f"({size} bytes; limit is {limits.container_bytes} bytes)",
+                size=size,
+                limit=limits.container_bytes,
                 expanded=False,
             )
+        directory = spool.release_directory()
         return PreparedProject(
-            payload=payload,
-            entry_count=len(entries) + 1,
-            expanded_bytes=expanded,
-            limits=ProjectLimits(
-                container_bytes=MAX_CONTAINER_BYTES,
-                expanded_bytes=MAX_PROJECT_UNCOMPRESSED_BYTES,
-                manifest_bytes=MAX_MANIFEST_BYTES,
-                entry_bytes=MAX_ENTRY_BYTES,
-                entries=MAX_ENTRIES,
-                path_bytes=MAX_PATH_BYTES,
+            entry_count=entry_count,
+            expanded_bytes=expanded_bytes,
+            limits=limits,
+            spool=PreparedSpool(
+                path=spool.container_path,
+                compressed_bytes=size,
+                owner=directory,
             ),
         )
+
+    @staticmethod
+    def _verify_copied_entry(staged: StagedEntry, listed: ManifestEntry) -> None:
+        if staged.uncompressed_bytes != listed.uncompressed_bytes:
+            raise ProjectFormatError(f"size mismatch for project entry {staged.path}")
+        if staged.crc32 != listed.crc32:
+            raise ProjectFormatError(f"CRC mismatch for project entry {staged.path}")
+        if staged.sha256 != listed.sha256:
+            raise ProjectFormatError(f"SHA-256 mismatch for project entry {staged.path}")
+        if listed.kind != staged.kind:
+            raise ProjectFormatError(f"manifest kind does not match entry path: {staged.path}")
 
     def write_payload(self, path: Path, payload: PreparedProject) -> None:
         if payload.compressed_bytes > MAX_CONTAINER_BYTES:
@@ -391,9 +448,14 @@ class ProjectContainerRepository:
                 limit=MAX_CONTAINER_BYTES,
                 expanded=False,
             )
-        if not zipfile.is_zipfile(io.BytesIO(payload.payload)):
+        try:
+            with payload.open_binary() as stream:
+                valid_zip = zipfile.is_zipfile(stream)
+        except OSError as exc:
+            raise ProjectFormatError(f"could not read prepared project payload: {exc}") from exc
+        if not valid_zip:
             raise ProjectFormatError("prepared project payload is not a valid ZIP container")
-        self._atomic_write(Path(path), payload.payload)
+        self._atomic_write_prepared(Path(path), payload)
 
     def load(self, path: Path) -> Project:
         return self.open_session(path).materialize()
@@ -579,13 +641,19 @@ class ProjectContainerRepository:
             raise ProjectFormatError(f"invalid project data: {exc}") from exc
 
     def serialized_size(self, project: Project) -> int:
-        return self.prepare_payload(project).compressed_bytes
+        prepared = self.prepare_payload(project)
+        try:
+            return prepared.compressed_bytes
+        finally:
+            prepared.close()
 
     # -- write ----------------------------------------------------------------
 
-    def _build_entries(self, project: Project) -> dict[str, _Entry]:
-        document = document_from_project(project)
-        payload = document.project
+    def _iter_project_entries(
+        self,
+        project: Project,
+    ) -> Iterator[tuple[str, EntryKind, bytes]]:
+        payload = project_payload_from_project(project, include_runs=False)
         project_data = payload.model_dump(mode="json")
         project_data.pop("designs", None)
         project_data.pop("simulation_runs", None)
@@ -594,9 +662,7 @@ class ProjectContainerRepository:
             schema_version=SCHEMA_VERSION,
             project=ProjectMetadataPayload.model_validate(project_data),
         )
-        entries: dict[str, _Entry] = {
-            PROJECT_NAME: _Entry("metadata", _json_bytes(metadata)),
-        }
+        yield PROJECT_NAME, "metadata", _json_bytes(metadata)
         for design in payload.designs:
             design_data = design.model_dump(mode="json")
             summary = design_data.pop("optimization_summary", None)
@@ -605,10 +671,7 @@ class ProjectContainerRepository:
                 schema_version=SCHEMA_VERSION,
                 design=DesignPayload.model_validate(design_data),
             )
-            entries[f"{DESIGN_DIR}/{design.id}.json"] = _Entry(
-                "design",
-                _json_bytes(design_document),
-            )
+            yield f"{DESIGN_DIR}/{design.id}.json", "design", _json_bytes(design_document)
             if summary is not None:
                 optimization = OptimizationDocument(
                     format=OPTIMIZATION_FORMAT,
@@ -616,11 +679,13 @@ class ProjectContainerRepository:
                     design_id=design.id,
                     summary=OptimizationSummaryPayload.model_validate(summary),
                 )
-                entries[f"{OPTIMIZATION_DIR}/{design.id}.json"] = _Entry(
+                yield (
+                    f"{OPTIMIZATION_DIR}/{design.id}.json",
                     "optimization",
                     _json_bytes(optimization),
                 )
-        for run in payload.simulation_runs:
+        for domain_run in project.simulation_runs:
+            run = simulation_run_payload_from_run(domain_run)
             run_data = run.model_dump(mode="json")
             result = run_data["result"]
             raw_input = result.pop("raw_input", "")
@@ -630,42 +695,40 @@ class ProjectContainerRepository:
                 schema_version=SCHEMA_VERSION,
                 run=SimulationRunPayload.model_validate(run_data),
             )
-            entries[f"{RUN_DIR}/{run.id}.json"] = _Entry("run", _json_bytes(run_document))
+            yield f"{RUN_DIR}/{run.id}.json", "run", _json_bytes(run_document)
             if raw_input:
-                entries[f"{RUN_DIR}/{run.id}{RAW_INPUT_SUFFIX}"] = _Entry(
+                yield (
+                    f"{RUN_DIR}/{run.id}{RAW_INPUT_SUFFIX}",
                     "raw-input",
                     raw_input.encode("utf-8"),
                 )
             if raw_output:
-                entries[f"{RUN_DIR}/{run.id}{RAW_OUTPUT_SUFFIX}"] = _Entry(
+                yield (
+                    f"{RUN_DIR}/{run.id}{RAW_OUTPUT_SUFFIX}",
                     "raw-output",
                     raw_output.encode("utf-8"),
                 )
-        return entries
 
-    def _build_container(
+    def _build_manifest(
         self,
         project: Project,
-        entries: dict[str, _Entry],
+        staged: Iterable[StagedEntry],
+        limits: ProjectLimits,
         *,
         runs: list[RunIndexEntry] | None = None,
         retained_run_ids: list[UUID] | None = None,
-    ) -> tuple[bytes, int]:
-        preliminary = _zip_bytes(entries)
-        with zipfile.ZipFile(io.BytesIO(preliminary)) as archive:
-            compressed = {info.filename: info.compress_size for info in archive.infolist()}
-        manifest_entries = []
-        for path, entry in entries.items():
-            manifest_entries.append(
-                ManifestEntry(
-                    path=path,
-                    kind=entry.kind,
-                    uncompressed_bytes=len(entry.data),
-                    compressed_bytes=compressed[path],
-                    crc32=zlib.crc32(entry.data) & 0xFFFFFFFF,
-                    sha256=hashlib.sha256(entry.data).hexdigest(),
-                )
+    ) -> bytes:
+        manifest_entries = [
+            ManifestEntry(
+                path=entry.path,
+                kind=cast(EntryKind, entry.kind),
+                uncompressed_bytes=entry.uncompressed_bytes,
+                compressed_bytes=entry.compressed_bytes,
+                crc32=entry.crc32,
+                sha256=entry.sha256,
             )
+            for entry in staged
+        ]
         if runs is None:
             runs = [
                 RunIndexEntry(
@@ -694,51 +757,15 @@ class ProjectContainerRepository:
             retention=RetentionPayload(retained_run_ids=retained_run_ids),
         )
         manifest_bytes = _json_bytes(manifest)
-        if len(manifest_bytes) > MAX_MANIFEST_BYTES:
+        if len(manifest_bytes) > limits.manifest_bytes:
             raise ProjectTooLargeError(
                 "project manifest is too large "
-                f"({len(manifest_bytes)} bytes; limit is {MAX_MANIFEST_BYTES} bytes)",
+                f"({len(manifest_bytes)} bytes; limit is {limits.manifest_bytes} bytes)",
                 size=len(manifest_bytes),
-                limit=MAX_MANIFEST_BYTES,
+                limit=limits.manifest_bytes,
                 expanded=True,
             )
-        return _zip_bytes(entries, manifest_bytes), len(manifest_bytes)
-
-    def _check_entry_limits(self, entries: dict[str, _Entry]) -> None:
-        if len(entries) + 1 > MAX_ENTRIES:
-            raise ProjectTooLargeError(
-                f"project container has too many entries ({len(entries) + 1}; "
-                f"limit is {MAX_ENTRIES})",
-                size=len(entries) + 1,
-                limit=MAX_ENTRIES,
-                expanded=False,
-            )
-        total = 0
-        for path, entry in entries.items():
-            if len(path.encode("utf-8")) > MAX_PATH_BYTES:
-                raise ProjectTooLargeError(
-                    f"project entry path is too long ({path!r})",
-                    size=len(path),
-                    limit=MAX_PATH_BYTES,
-                    expanded=False,
-                )
-            if len(entry.data) > MAX_ENTRY_BYTES:
-                raise ProjectTooLargeError(
-                    f"project entry {path} is too large "
-                    f"({len(entry.data)} bytes; limit is {MAX_ENTRY_BYTES} bytes)",
-                    size=len(entry.data),
-                    limit=MAX_ENTRY_BYTES,
-                    expanded=True,
-                )
-            total += len(entry.data)
-        if total > MAX_PROJECT_UNCOMPRESSED_BYTES:
-            raise ProjectTooLargeError(
-                "project entries are too large when expanded "
-                f"({total} bytes; limit is {MAX_PROJECT_UNCOMPRESSED_BYTES} bytes)",
-                size=total,
-                limit=MAX_PROJECT_UNCOMPRESSED_BYTES,
-                expanded=True,
-            )
+        return manifest_bytes
 
     # -- read -----------------------------------------------------------------
 
@@ -1008,7 +1035,7 @@ class ProjectContainerRepository:
         return payload
 
     @staticmethod
-    def _atomic_write(path: Path, payload: bytes) -> None:
+    def _atomic_write_prepared(path: Path, payload: PreparedProject) -> None:
         parent = path.parent
         if not parent.is_dir():
             raise ProjectFormatError(f"project directory does not exist: {parent}")
@@ -1020,7 +1047,7 @@ class ProjectContainerRepository:
         temporary = Path(temporary_name)
         try:
             with os.fdopen(descriptor, "wb") as handle:
-                handle.write(payload)
+                payload.copy_to(handle)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary, path)
@@ -1076,8 +1103,17 @@ class ContainerRunStore:
             raise ProjectFormatError(f"run design id does not match the manifest: {run_id}")
         return simulation_run_from_payload(payloads[0])
 
-    def copy_entries(self, run_ids: Iterable[UUID]) -> dict[str, bytes]:
-        """Copy the serialized entries for these runs without parsing them."""
+    @contextmanager
+    def copied_entry_streams(
+        self,
+        run_ids: Iterable[UUID],
+    ) -> Iterator[Iterator[tuple[str, ManifestEntry, IO[bytes]]]]:
+        """Yield uncompressed entry streams for these runs without materializing them.
+
+        The manifest is the authority for each entry's size, CRC32, and SHA-256;
+        callers verify those values after streaming. The source archive stays
+        open for the lifetime of the context.
+        """
 
         paths: set[str] = set()
         for run_id in run_ids:
@@ -1090,11 +1126,33 @@ class ContainerRunStore:
             )
         listed = {entry.path: entry for entry in self.manifest.entries if entry.path in paths}
         if not listed:
-            return {}
+            yield iter(())
+            return
         with zipfile.ZipFile(self.path) as archive:
             infos = archive.infolist()
             self.repository._validate_archive_entries(infos)
-            return self.repository._read_entries(archive, infos, listed)
+            by_name = {info.filename: info for info in infos}
+
+            def entries() -> Iterator[tuple[str, ManifestEntry, IO[bytes]]]:
+                for path, entry in listed.items():
+                    kind = _kind_for_path(path)
+                    if kind is None:
+                        raise ProjectFormatError(f"unexpected copied run entry: {path}")
+                    if entry.kind != kind:
+                        raise ProjectFormatError(f"manifest kind does not match entry path: {path}")
+                    info = by_name.get(path)
+                    if info is None:
+                        raise ProjectFormatError(f"copied run entry is missing: {path}")
+                    if info.compress_size != entry.compressed_bytes:
+                        raise ProjectFormatError(
+                            f"compressed size mismatch for project entry {path}"
+                        )
+                    if info.file_size != entry.uncompressed_bytes:
+                        raise ProjectFormatError(f"size mismatch for project entry {path}")
+                    with archive.open(info) as source:
+                        yield path, entry, source
+
+            yield entries()
 
     def load_all_runs(self) -> tuple[SimulationRun, ...]:
         listed = {entry.path: entry for entry in self.manifest.entries if _is_run_entry(entry.path)}
@@ -1121,29 +1179,6 @@ def _json_bytes(value: BaseModel) -> bytes:
     data = value.model_dump(mode="json")
     text = json.dumps(data, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     return (text + "\n").encode("utf-8")
-
-
-def _zip_bytes(entries: dict[str, _Entry], manifest: bytes | None = None) -> bytes:
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(
-        buffer,
-        "w",
-        compression=zipfile.ZIP_DEFLATED,
-        compresslevel=6,
-    ) as archive:
-        if manifest is not None:
-            _writestr(archive, MANIFEST_NAME, manifest)
-        for path in sorted(entries):
-            _writestr(archive, path, entries[path].data)
-    return buffer.getvalue()
-
-
-def _writestr(archive: zipfile.ZipFile, path: str, data: bytes) -> None:
-    info = zipfile.ZipInfo(path, date_time=_ZIP_TIMESTAMP)
-    info.compress_type = zipfile.ZIP_DEFLATED
-    info.create_system = 3
-    info.external_attr = 0o644 << 16
-    archive.writestr(info, data)
 
 
 def _is_run_entry(path: str) -> bool:

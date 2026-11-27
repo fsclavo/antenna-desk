@@ -25,10 +25,12 @@ class ProjectRepository(Protocol):
         """Open *path* without its simulation runs, for recovery."""
 
     def prepare_payload(self, project: Project) -> PreparedProject:
-        """Serialize and compress *project* without writing it to disk.
+        """Serialize and size-check *project* for a later atomic write.
 
-        Raises ``ProjectPayloadTooLargeError`` when the payload exceeds a
-        storage or reopen limit.
+        The returned payload may use a bounded temporary spool instead of
+        holding the whole container in memory. Raises
+        ``ProjectPayloadTooLargeError`` when the payload exceeds a storage or
+        reopen limit.
         """
 
     def prepare_session_payload(
@@ -38,7 +40,7 @@ class ProjectRepository(Protocol):
         *,
         retained_only: bool = False,
     ) -> PreparedProject:
-        """Prepare a save that copies unloaded runs from the session source."""
+        """Prepare a save that streams unloaded runs from the session source."""
 
     def write_payload(self, path: Path, payload: PreparedProject) -> None:
         """Write a prepared payload atomically."""

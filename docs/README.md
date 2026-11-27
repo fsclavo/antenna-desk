@@ -152,6 +152,7 @@ Completed plans and release/QA records are in [`archive/`](archive/).
 - [ADR-0054 — N-port feed-network solver for splitter isolation and matching](ADR/0054-bounded-multiport-feed-network.md)
 - [ADR-0055 — Flower Pot half-wave family and electrical-length representation](ADR/0055-flower-pot-half-wave-family.md)
 - [ADR-0056 — Antenna generator dialog layout and height budget](ADR/0056-antenna-dialog-layout.md)
+- [ADR-0057 — Streaming project-container write](ADR/0057-streaming-container-write.md)
 
 ## Archive
 

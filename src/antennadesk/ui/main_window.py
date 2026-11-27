@@ -73,6 +73,7 @@ from ..application.project_limits import (
     MAX_PROJECT_SIZE_BYTES,
     PROJECT_SIZE_WARNING_BYTES,
 )
+from ..application.project_payload import PreparedProject
 from ..application.project_session import ProjectSession
 from ..application.simulation_specs import (
     DEFAULT_GENERATED_SWEEP_POINTS,
@@ -6073,6 +6074,7 @@ class MainWindow(QMainWindow):
         if retained_only is None:
             retained_only = self._retained_only_on_save
         before = self._history_snapshot()
+        prepared: PreparedProject | None = None
         try:
             if design_only:
                 project = self._apply_fields()
@@ -6139,6 +6141,9 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             self._show_error(self._translator.t("error.save", message=str(exc)))
             return False
+        finally:
+            if prepared is not None:
+                prepared.close()
         self._current_path = path
         if design_only:
             self._project = project

@@ -2896,7 +2896,11 @@ def _bom_costs_from_domain(value: BomCostRecord) -> BomCostPayload:
     )
 
 
-def _project_from_domain(value: Project) -> ProjectPayload:
+def _project_from_domain(
+    value: Project,
+    *,
+    include_runs: bool = True,
+) -> ProjectPayload:
     return ProjectPayload(
         id=value.id,
         name=value.name,
@@ -2904,7 +2908,11 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         created_at=value.created_at,
         updated_at=value.updated_at,
         designs=[_design_from_domain(design) for design in value.designs],
-        simulation_runs=[_simulation_run_from_domain(run) for run in value.simulation_runs],
+        simulation_runs=(
+            [_simulation_run_from_domain(run) for run in value.simulation_runs]
+            if include_runs
+            else []
+        ),
         measurements=[_measurement_from_domain(measurement) for measurement in value.measurements],
         measurement_sessions=[
             _measurement_session_from_domain(session) for session in value.measurement_sessions
@@ -2936,6 +2944,22 @@ def _project_from_domain(value: Project) -> ProjectPayload:
         ),
         bom_costs=(_bom_costs_from_domain(value.bom_costs) if value.bom_costs else None),
     )
+
+
+def project_payload_from_project(
+    project: Project,
+    *,
+    include_runs: bool = True,
+) -> ProjectPayload:
+    """Convert a domain project to its payload without forcing every run at once."""
+
+    return _project_from_domain(project, include_runs=include_runs)
+
+
+def simulation_run_payload_from_run(run: SimulationRun) -> SimulationRunPayload:
+    """Convert one domain run to its container payload."""
+
+    return _simulation_run_from_domain(run)
 
 
 def document_from_project(project: Project) -> ProjectDocument:

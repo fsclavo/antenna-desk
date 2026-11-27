@@ -485,7 +485,12 @@ def test_import_rejects_a_project_without_designs(
     tmp_path: Path,
 ) -> None:
     project = replace(sample_project, designs=())
-    payload = ProjectContainerRepository().prepare_payload(project).payload
+    prepared = ProjectContainerRepository().prepare_payload(project)
+    try:
+        assert prepared.spool is not None
+        payload = prepared.spool.path.read_bytes()
+    finally:
+        prepared.close()
     manifest = {
         "format": "antennadesk.project_bundle",
         "format_version": 1,

@@ -67,6 +67,32 @@ def _write_entries(path: Path, entries: dict[str, bytes]) -> None:
             archive.writestr(info, entries[name])
 
 
+def _legacy_container_bytes(path: Path) -> bytes:
+    """Rebuild the container with the original manifest-first writestr writer."""
+
+    with zipfile.ZipFile(path) as archive:
+        manifest = archive.read("manifest.json")
+        entries = {
+            info.filename: archive.read(info)
+            for info in archive.infolist()
+            if info.filename != "manifest.json"
+        }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(
+        buffer,
+        "w",
+        compression=zipfile.ZIP_DEFLATED,
+        compresslevel=6,
+    ) as archive:
+        for name, data in [("manifest.json", manifest), *sorted(entries.items())]:
+            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.create_system = 3
+            info.external_attr = 0o644 << 16
+            archive.writestr(info, data)
+    return buffer.getvalue()
+
+
 def _write_container(path: Path, entries: dict[str, bytes]) -> None:
     manifest = json.loads(entries["manifest.json"])
     preliminary = io.BytesIO()
@@ -375,6 +401,31 @@ def test_save_never_writes_a_project_that_load_would_reject(
     repository.save(sample_project, path)
 
     assert repository.load(path) == sample_project
+
+
+def test_prepare_failure_removes_the_temporary_spool(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from antennadesk.persistence import container_writer
+
+    created: list[Any] = []
+    original = container_writer.tempfile.TemporaryDirectory
+
+    def tracking(*args: Any, **kwargs: Any) -> Any:
+        directory = original(*args, **kwargs)
+        created.append(directory)
+        return directory
+
+    monkeypatch.setattr(container_writer.tempfile, "TemporaryDirectory", tracking)
+    monkeypatch.setattr(container_module, "MAX_ENTRY_BYTES", 8)
+
+    with pytest.raises(ProjectTooLargeError):
+        repository.prepare_payload(sample_project)
+
+    assert created
+    assert not Path(created[0].name).exists()
 
 
 def test_unknown_project_format_is_rejected(
@@ -891,10 +942,98 @@ def test_prepared_payload_can_be_written_without_recompression(
     path = tmp_path / "prepared.antennadesk"
 
     payload = repository.prepare_payload(sample_project)
-    repository.write_payload(path, payload)
+    try:
+        repository.write_payload(path, payload)
 
-    assert path.read_bytes() == payload.payload
-    assert repository.serialized_size(sample_project) == payload.compressed_bytes
+        assert payload.payload is None
+        assert payload.spool is not None
+        assert path.read_bytes() == payload.spool.path.read_bytes()
+        assert repository.serialized_size(sample_project) == payload.compressed_bytes
+    finally:
+        payload.close()
+
+
+def test_prepared_spool_is_cleaned_up_after_close(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+) -> None:
+    prepared = repository.prepare_payload(sample_project)
+    assert prepared.spool is not None
+    spool_path = prepared.spool.path
+    assert spool_path.is_file()
+
+    prepared.close()
+
+    assert not spool_path.exists()
+
+
+def test_streamed_container_writer_is_byte_identical_to_writestr(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=2)
+    path = tmp_path / "streamed.antennadesk"
+
+    prepared = repository.prepare_payload(project)
+    try:
+        repository.write_payload(path, prepared)
+    finally:
+        prepared.close()
+
+    assert path.read_bytes() == _legacy_container_bytes(path)
+
+
+def test_copied_run_entries_are_byte_identical_to_a_materialized_save(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=3)
+    source = tmp_path / "source.antennadesk"
+    repository.save(project, source)
+    session = repository.open_session(source)
+
+    prepared = repository.prepare_session_payload(session, session.project)
+    copied = tmp_path / "copied.antennadesk"
+    try:
+        repository.write_payload(copied, prepared)
+    finally:
+        prepared.close()
+
+    materialized = tmp_path / "materialized.antennadesk"
+    repository.save(project, materialized)
+
+    assert copied.read_bytes() == materialized.read_bytes()
+    assert repository.load(copied) == project
+
+
+def test_prepare_session_payload_streams_copied_entries_without_reading_them(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    project = _project_with_runs(sample_project, count=2)
+    source = tmp_path / "source.antennadesk"
+    repository.save(project, source)
+    session = repository.open_session(source)
+    original = repository._read_entries
+
+    def fail(data: dict[str, bytes]) -> object:
+        del data
+        raise AssertionError("the streaming save must not materialize copied entries")
+
+    monkeypatch.setattr(repository, "_read_entries", fail)
+    prepared = repository.prepare_session_payload(session, session.project)
+    target = tmp_path / "streamed-copy.antennadesk"
+    try:
+        repository.write_payload(target, prepared)
+    finally:
+        prepared.close()
+    monkeypatch.setattr(repository, "_read_entries", original)
+
+    assert repository.load(target) == project
 
 
 def test_round_trip_with_a_project_feed_line(
@@ -2014,6 +2153,28 @@ def test_prepare_session_payload_copies_runs_without_materializing(
 
     monkeypatch.setattr(repository, "_read_runs", original)
     assert repository.load(target) == project
+
+
+def test_copied_run_hash_mismatch_aborts_the_streaming_save(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    project = _project_with_runs(sample_project, count=1)
+    source = tmp_path / "corrupt-source.antennadesk"
+    repository.save(project, source)
+    entries = _read_entries(source)
+    manifest = json.loads(entries["manifest.json"])
+    run_entry = next(entry for entry in manifest["entries"] if entry["kind"] == "run")
+    run_entry["sha256"] = "0" * 64
+    entries["manifest.json"] = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+    _write_entries(source, entries)
+    session = repository.open_session(source)
+
+    with pytest.raises(ProjectFormatError, match="SHA-256 mismatch"):
+        repository.prepare_session_payload(session, session.project)
+
+    assert not list(tmp_path.glob(".corrupt-source.antennadesk.*.tmp"))
 
 
 def test_prepare_session_payload_adds_new_runs(

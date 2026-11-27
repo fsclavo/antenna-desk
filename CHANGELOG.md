@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   managed values. The new controls use the normal debounced preview,
   cancellation, stale-result guard, and apply/full-run path.
 
+### Changed
+
+- **Streaming project-container write.** Saving and compaction now stage
+  entries in a bounded temporary spool, write the manifest-first container one
+  entry at a time, and stream unchanged runs from the source container instead
+  of materializing them. The output remains byte-identical, the exact
+  compressed/expanded sizes and atomic replacement are unchanged, and the
+  copy-entry save/compact benchmark peak RSS fell from 174/84 MB to 45 MB.
+
 ## [0.11.1] - 2026-11-27
 
 ### Fixed

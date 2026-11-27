@@ -227,14 +227,17 @@ def _generate(
         )
     repository = ProjectContainerRepository()
     prepared = repository.prepare_payload(project)
-    repository.write_payload(path, prepared)
-    elapsed = time.perf_counter() - started
-    print(
-        f"generate: runs={len(project.simulation_runs)} "
-        f"container_mb={prepared.compressed_bytes / (1024 * 1024):.1f} "
-        f"expanded_mb={prepared.expanded_bytes / (1024 * 1024):.1f} "
-        f"elapsed={elapsed:.2f}s"
-    )
+    try:
+        repository.write_payload(path, prepared)
+        elapsed = time.perf_counter() - started
+        print(
+            f"generate: runs={len(project.simulation_runs)} "
+            f"container_mb={prepared.compressed_bytes / (1024 * 1024):.1f} "
+            f"expanded_mb={prepared.expanded_bytes / (1024 * 1024):.1f} "
+            f"elapsed={elapsed:.2f}s"
+        )
+    finally:
+        prepared.close()
 
 
 def _open_session(path: Path) -> tuple[ProjectContainerRepository, object]:
@@ -274,7 +277,10 @@ def _run_step(path: Path, step: str) -> None:
         full = session.materialize()
         prepared = repository.prepare_payload(full)
         output = path.with_name(path.stem + ".saved.antennadesk")
-        repository.write_payload(output, prepared)
+        try:
+            repository.write_payload(output, prepared)
+        finally:
+            prepared.close()
         elapsed = time.perf_counter() - started
         print(
             _line(
@@ -288,7 +294,10 @@ def _run_step(path: Path, step: str) -> None:
     if step == "save-lazy":
         prepared = repository.prepare_session_payload(session, session.project)
         output = path.with_name(path.stem + ".lazy-saved.antennadesk")
-        repository.write_payload(output, prepared)
+        try:
+            repository.write_payload(output, prepared)
+        finally:
+            prepared.close()
         elapsed = time.perf_counter() - started
         print(
             _line(
@@ -307,7 +316,10 @@ def _run_step(path: Path, step: str) -> None:
         )
         prepared = repository.prepare_payload(compacted)
         output = path.with_name(path.stem + ".compacted.antennadesk")
-        repository.write_payload(output, prepared)
+        try:
+            repository.write_payload(output, prepared)
+        finally:
+            prepared.close()
         elapsed = time.perf_counter() - started
         print(
             _line(
@@ -329,7 +341,10 @@ def _run_step(path: Path, step: str) -> None:
             retained_only=True,
         )
         output = path.with_name(path.stem + ".lazy-compacted.antennadesk")
-        repository.write_payload(output, prepared)
+        try:
+            repository.write_payload(output, prepared)
+        finally:
+            prepared.close()
         elapsed = time.perf_counter() - started
         print(
             _line(
@@ -349,7 +364,10 @@ def _run_step(path: Path, step: str) -> None:
         )
         prepared = repository.prepare_payload(project)
         output = path.with_name(path.stem + ".design-only.antennadesk")
-        repository.write_payload(output, prepared)
+        try:
+            repository.write_payload(output, prepared)
+        finally:
+            prepared.close()
         elapsed = time.perf_counter() - started
         print(
             _line(

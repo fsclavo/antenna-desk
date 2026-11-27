@@ -1,6 +1,6 @@
 # Autonomous execution backlog
 
-**Date:** 2026-11-26
+**Date:** 2026-11-27
 **Status:** active execution queue.
 
 This is the only active execution queue. It contains shippable items,
@@ -36,8 +36,8 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 
 PF1 is a P0 reliability insertion outside the antenna wave; it landed before
 any further project-format change. It is closed after manual validation on
-2026-11-24; the optional streaming write and pattern-level lazy loading are
-deferred follow-ups.
+2026-11-24. PF2 streaming write is done 2026-11-27; pattern-level lazy loading
+(PF3) remains deferred.
 
 VR1 is a vertical-geometry enhancement implemented ahead of the remaining 1.1/1.2
 items. It is bounded to one uniform droop, physical radial length, schema 61, and
@@ -80,7 +80,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
 | PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. Optional follow-ups are tracked as PF2 (streaming write) and PF3 (pattern-level lazy loading). See §PF1. |
-| PF2 | Streaming container write | M | PF1 (closed) | **Proposed; optional.** Write and compact a container one entry at a time to the atomic destination or a bounded spool; stream copied runs from the source ZIP instead of materializing them. Preserve deterministic bytes, manifest hashes, limits, and the save/load invariant. See §PF2. |
+| PF2 | Streaming container write | M | PF1 (closed) | **Done 2026-11-27.** Two-phase temporary spool, manifest-first output, streamed copied runs, exact sizes, and atomic replace. Output remains byte-identical; lazy save/compact peak RSS fell from 174/84 MB to 45 MB. See §PF2 and ADR-0057. |
 | PF3 | Pattern-level lazy loading | L | PF1 (closed); pattern-entry ADR; PF2 soft | **Proposed; optional.** Split far-field patterns into validated per-run entries and load them only for the Pattern/3D/report consumers. Distinguish "not loaded/available" from "no pattern"; prune patterns independently. See §PF3. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
@@ -161,7 +161,8 @@ four runs with five 2° patterns and 8 MB of raw text each (118 MB expanded,
 The remaining cost is the selected run itself: one 2° run with five patterns
 still allocates about 400 MB of domain objects. Pattern-level lazy loading is a
 separate future decision; the save/compact path no longer multiplies that cost
-by the full history.
+by the full history. PF2 later reduced the copy-entry save/compact rows to
+45 MB; see §PF2.
 
 **Goal:** replace the single gzip JSON envelope with a versioned ZIP container
 whose entries can be validated, loaded, and pruned independently; enforce one
@@ -240,14 +241,16 @@ MAX_PATH_BYTES                   = 255
 
 ### Save/load contract
 
-- **Implemented:** immutable `PreparedProject` with `payload`,
-  `compressed_bytes`, `uncompressed_bytes`, `entry_count`, and `limits`.
-  `ProjectRepository.prepare_payload()` returns it; `write_payload(path,
-  prepared)` writes it atomically.
-- `prepare_payload()` builds every entry, sums the uncompressed bytes, and
-  raises `ProjectTooLargeError` **before** the final replace if any compressed,
-  expanded, entry, count, or path limit is exceeded. A successful `save()` must
-  always produce a file that `load()` accepts; add a round-trip invariant test.
+- **Implemented:** immutable `PreparedProject` with `compressed_bytes`,
+  `expanded_bytes`, `entry_count`, and `limits`. Production values carry a
+  `PreparedSpool`; the small in-memory `payload` compatibility path remains for
+  callers that already hold bytes. `ProjectRepository.prepare_payload()`
+  returns it; `write_payload(path, prepared)` streams it atomically.
+- `prepare_payload()` stages entries in a bounded spool, sums the uncompressed
+  bytes, and raises `ProjectTooLargeError` **before** the final replace if any
+  compressed, expanded, entry, count, or path limit is exceeded. A successful
+  `save()` must always produce a file that `load()` accepts; the round-trip
+  invariant test covers the streaming path.
 - Write to a temporary file in the destination directory, `fsync`, then
   `os.replace`; never leave a partial `.antennadesk`. Keep the previous file
   intact on failure.
@@ -350,19 +353,19 @@ manual recovery of the one existing pre-container project.
 
 ## PF2 — Streaming container write
 
-**Status:** proposed 2026-11-24; optional; not started. **Priority:** P3
-memory and save-time performance. **Trigger:** the PF1 benchmark shows the
-copy-entry save path at 174 MB peak RSS and the materialized path at 1,614 MB
-for the generated four-run project; `PreparedProject.payload` still holds the
-whole container in memory.
+**Status:** **Done 2026-11-27.** **Priority:** P3 memory and save-time
+performance. **Trigger:** the PF1 benchmark showed the copy-entry save path at
+174 MB peak RSS and the materialized path at 1,614 MB for the generated
+four-run project; `PreparedProject.payload` still held the whole container in
+memory.
 
-**Current cost:** `prepare_payload()` builds every entry, `_build_container()`
-calls `_zip_bytes(entries)` once to learn compressed sizes and a second time
-with the manifest to produce the final bytes, and `write_payload()` validates
-those bytes through `io.BytesIO` before `_atomic_write()` writes them. Peak
-memory therefore includes all entry payloads plus the intermediate and final
-containers. Copied run entries are read into `bytes` by `copy_entries()` even
-though they are not parsed.
+**Former cost:** `prepare_payload()` built every entry, `_build_container()`
+called `_zip_bytes(entries)` once to learn compressed sizes and a second time
+with the manifest to produce the final bytes, and `write_payload()` validated
+those bytes through `io.BytesIO` before `_atomic_write()` wrote them. Peak
+memory therefore included all entry payloads plus the intermediate and final
+containers. Copied run entries were read into `bytes` by `copy_entries()` even
+though they were not parsed.
 
 **Goal:** write and compact a container directly to the atomic destination (or
 to a bounded temporary spool) one entry at a time, so peak memory scales with
@@ -370,7 +373,7 @@ the largest entry and I/O buffers rather than the whole history. The saved file
 must remain byte-identical to the current deterministic writer and satisfy the
 same limits, manifest hashes, and save/load invariant.
 
-**Recommended design:**
+**Design (implemented 2026-11-27):**
 
 1. Keep the manifest-first, sorted-entry, fixed-timestamp, ZIP level-6 format.
    Because the manifest needs each entry's compressed size, CRC32, and SHA-256,
@@ -382,20 +385,20 @@ same limits, manifest hashes, and save/load invariant.
    A one-pass variant that writes the manifest last would be simpler but
    changes byte order and risks reader/golden churn; do not choose it without a
    format decision.
-2. Add a container writer that accepts entries as streams/chunks, not only
-   `bytes`. Copied run entries should stream from the source ZIP to the spool
-   or final ZIP while the existing manifest CRC/SHA is verified, without
-   materializing the full entry.
-3. Replace the `PreparedProject.payload: bytes` contract with a prepared spool
-   handle that exposes `compressed_bytes`, `expanded_bytes`, `entry_count`,
-   `limits`, `write_to(path)`, and a cleanup path. If a compatibility slice is
-   preferred, keep the in-memory path behind a documented size threshold and
-   use the spool above it; do not maintain two different output formats.
+2. The container writer accepts entries as streams/chunks, not only `bytes`.
+   Copied run entries stream from the source ZIP to the spool while the existing
+   manifest CRC/SHA is verified, without materializing the full entry.
+3. `PreparedProject` carries a prepared spool handle that exposes
+   `compressed_bytes`, `expanded_bytes`, `entry_count`, `limits`, a binary
+   stream, and a cleanup path. The repository keeps the atomic
+   `write_payload(path, prepared)` port and streams the spool into the
+   destination temporary file. The in-memory `payload` path remains only for
+   small callers and test doubles; both produce the same output format.
 4. Enforce per-entry, entry-count, expanded, and container limits while
    streaming. If the compressed container exceeds `MAX_CONTAINER_BYTES`,
    abort, unlink the temporary file, and raise `ProjectTooLargeError` without
-   touching the previous project. Derive the exact save/load invariant test
-   from this path.
+   touching the previous project. The save/load invariant test covers this
+   path.
 5. Keep the save dialog's compressed/expanded sizes honest. Phase 1 computes
    the exact compressed sizes and can still prepare the payload in a worker;
    only the final write becomes streaming. Do not replace exact sizes with
@@ -449,6 +452,42 @@ format.
 
 **Effort:** M (1–2 weeks including benchmark and failure tests). **Release:**
 unassigned; optional maintenance after PF1.
+
+**Implementation (2026-11-27):**
+
+- `persistence/container_writer.ContainerSpool` stages each entry in a
+  temporary ZIP, records the exact compressed size/CRC32/SHA-256, then writes
+  the final manifest-first container by streaming the staged entries.
+- Production `PreparedProject` values carry a `PreparedSpool` file handle and
+  stream it into the atomic destination. The in-memory `payload` path remains
+  for small callers and unit-test doubles; both produce the same ZIP format.
+- `ContainerRunStore.copied_entry_streams()` opens the source container once
+  and yields each unchanged run entry as a bounded stream; the writer verifies
+  the manifest size, CRC32, SHA-256, and kind.
+- `_iter_project_entries()` converts one run at a time instead of building a
+  second `ProjectPayload` with every run.
+- Limits are checked while adding each entry; a failure removes the spool and
+  the destination is never replaced.
+- ADR-0057 records the two-phase decision and the rejected one-pass and
+  raw-deflate-copy alternatives.
+
+**Measured benchmark (2026-11-27):** same generated four-run project
+(118 MB expanded, 1.1 MB container), one process per operation:
+
+| Step | Time | Peak RSS |
+|---|---:|---:|
+| open (lazy) | 0.00 s | 41 MB |
+| select one run | 5.38 s | 682 MB |
+| save (materialized) | 37.99 s | 1,659 MB |
+| save (copy entries) | 1.22 s | 45 MB |
+| compact (materialized) | 23.82 s | 1,660 MB |
+| compact (copy entries) | 0.30 s | 45 MB |
+| save design only | 0.01 s | 42 MB |
+
+The copy-entry save and compact paths no longer scale with the full history.
+The materialized paths are dominated by `ProjectSession.materialize()` and the
+domain run objects, not by the container writer; PF3 is the follow-up for
+pattern-level lazy loading.
 
 **Likely files:** `persistence/container.py`, `application/project_payload.py`
 (prepared-spool contract), `application/ports/project_repository.py`,
@@ -2949,10 +2988,13 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,325 passed, 1 skipped** on 2026-11-24 after the QA and
-  technical-debt closure, main-window extractions, save/load size invariant
-  fix, PF1 container, lazy open/save/compact, PreparedProject, DL7 site ground,
-  and VR1 radial droop (typed simulation specs, pattern presets, and
+- Full gate: **4,806 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write and the DL3 managed-value closure; the 0.11.1 release covers the
+  optimizer close/cancel lifecycle fix. Real `nec2c` integration: **186
+  passed**. The suite also covers the QA and technical-debt closure,
+  main-window extractions, the save/load size invariant fix, PF1 container,
+  lazy open/save/compact, PreparedProject, DL7 site ground, and VR1 radial
+  droop (typed simulation specs, pattern presets, and
   pattern-budget planning in the application layer, plus
   catalog/template routing in `ui/catalog.py`, export dialogs/writers in
   `ui/exporters.py`, VNA/NEC/MMANA import parsing in `ui/import_actions.py`,

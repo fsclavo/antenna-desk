@@ -185,12 +185,21 @@
   64) with separate project, design, run, raw-text, and optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
   gzip/plain-JSON reader or migration from schema 58 and older. Opening is
-  lazy through a `ProjectSession`; saving and compaction copy unchanged run
+  lazy through a `ProjectSession`; saving and compaction stream unchanged run
   entries and serialize only new runs. Design-only recovery and
   **File → Save Design Only...** are available, and `PreparedProject` reports
-  honest compressed/expanded sizes. Optional follow-ups are tracked as PF2
-  (streaming container write) and PF3 (pattern-level lazy loading). See
+  honest compressed/expanded sizes. PF2 streaming write is **done 2026-11-27**
+  (see below); PF3 pattern-level lazy loading remains optional. See
   [`ADR-0050`](ADR/0050-zip-project-container.md).
+- PF2 streaming container write is **done 2026-11-27**. Saving and compaction
+  stage entries in a bounded temporary spool, write the manifest-first
+  container one entry at a time, and stream unchanged runs from the source
+  container. The bytes remain identical to the previous writer, limits and
+  atomic replacement are unchanged, and the UI still reports exact compressed
+  and expanded sizes. The benchmark's copy-entry save/compact peak RSS fell
+  from 174/84 MB to 45 MB; materialized saves remain dominated by the
+  materialized domain runs. See
+  [`ADR-0057`](ADR/0057-streaming-container-write.md).
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.

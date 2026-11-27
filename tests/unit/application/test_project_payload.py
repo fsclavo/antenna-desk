@@ -4,9 +4,16 @@
 
 from __future__ import annotations
 
+import io
+from pathlib import Path
+
 import pytest
 
-from antennadesk.application.project_payload import PreparedProject, ProjectLimits
+from antennadesk.application.project_payload import (
+    PreparedProject,
+    PreparedSpool,
+    ProjectLimits,
+)
 
 
 def test_prepared_project_reports_both_sizes() -> None:
@@ -21,6 +28,42 @@ def test_prepared_project_reports_both_sizes() -> None:
     assert prepared.compressed_bytes == 2
     assert prepared.expanded_bytes == 100
     assert prepared.entry_count == 2
+
+
+def test_prepared_project_requires_exactly_one_storage_source(tmp_path: Path) -> None:
+    spool_path = tmp_path / "container.antennadesk"
+    spool_path.write_bytes(b"PK")
+    with pytest.raises(ValueError, match="exactly one payload or spool"):
+        PreparedProject(entry_count=1, expanded_bytes=0)
+    with pytest.raises(ValueError, match="exactly one payload or spool"):
+        PreparedProject(
+            b"PK",
+            entry_count=1,
+            expanded_bytes=0,
+            spool=PreparedSpool(spool_path, 2),
+        )
+
+
+def test_prepared_project_copies_a_spool_to_a_target(tmp_path: Path) -> None:
+    spool_path = tmp_path / "container.antennadesk"
+    spool_path.write_bytes(b"PK\x03\x04prepared")
+    prepared = PreparedProject(
+        entry_count=1,
+        expanded_bytes=12,
+        spool=PreparedSpool(spool_path, spool_path.stat().st_size),
+    )
+    target = io.BytesIO()
+
+    prepared.copy_to(target)
+
+    assert prepared.payload is None
+    assert prepared.compressed_bytes == spool_path.stat().st_size
+    assert target.getvalue() == b"PK\x03\x04prepared"
+
+
+def test_prepared_spool_rejects_a_missing_file(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="does not exist"):
+        PreparedSpool(tmp_path / "missing.antennadesk", 2)
 
 
 def test_prepared_project_rejects_an_empty_entry_set() -> None:

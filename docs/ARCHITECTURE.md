@@ -395,9 +395,10 @@ keeps schema concerns out of the domain while still rejecting malformed or
 untrusted files.
 
 Project files use the `antennadesk.project` ZIP container with container
-version 1 and schema version 63. Saves are atomic: build the container in
-memory, write a temporary file in the target directory, flush and `fsync`,
-then replace the destination with `os.replace`. Autosave uses the
+version 1 and current schema version 73. Saves are atomic: prepare a bounded
+temporary spool, stream the container into a temporary file in the target
+directory, flush and `fsync`, then replace the destination with `os.replace`.
+Autosave uses the
 application-data recovery folder: it writes a design-only project container
 (without completed simulation runs or raw solver output) atomically, then a
 small JSON metadata sidecar, and never replaces the project file. It is
@@ -405,15 +406,15 @@ debounced after design edits and skipped above 2 MB. A normal save or close
 removes both; startup offers recover or discard. Recording a simulation result
 alone does not trigger autosave. The schema and container history is
 single-sourced in [`DOMAIN_MODEL.md`](DOMAIN_MODEL.md#schema-policy); the
-current build has no gzip/plain-JSON reader and migrates schema 59 and 60 in
-place on open.
+current build has no gzip/plain-JSON reader and migrates schemas 59 through 72
+in place on open.
 
 Simulation runs are persisted as immutable runs (introduced in schema 30). Raw
 solver text is stored in optional separate entries so it can be omitted without
 rewriting the normalized result. Project files are versioned ZIP containers
-(container version 1, schema version 63) with a manifest, project metadata,
-designs, runs, raw text, and optimization summaries as separate validated
-entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
+(container version 1, current schema version 73) with a manifest, project
+metadata, designs, runs, raw text, and optimization summaries as separate
+validated entries. Saves are atomic and deterministic. The UI warns at 32 MB, blocks a
 container above 64 MB, blocks total expanded entries above 256 MB, and offers
 simulation-history compaction. Opening reads the manifest, metadata, and
 designs, then exposes runs through a `ProjectSession` that loads only the
@@ -423,15 +424,19 @@ zip bomb or a manifest mismatch is rejected before the domain model is built.
 An optional project-level `SiteGroundProfile` is carried by the simulation
 specification; the NEC adapter emits the second-medium/cliff fields and
 `RP 2`/`RP 3`, with the explicit far-field-only limitation.
-`prepare_payload()` returns a `PreparedProject` with the exact payload,
-compressed and expanded sizes, entry count, and limits; the UI reports both
-sizes. Saving a `ProjectSession` copies unchanged run entries directly from the
+`prepare_payload()` returns a `PreparedProject` with the exact compressed and
+expanded sizes, entry count, and limits; production values carry a temporary
+spool file instead of the whole container in memory, and the UI reports both
+sizes. The writer stages each entry in a temporary ZIP, builds the
+manifest-first container by streaming those entries, and writes it atomically.
+Saving a `ProjectSession` streams unchanged run entries directly from the
 source container, serializes only new runs, and reopens the session from the
 saved file. Compaction uses the same path with the retained run ids. If a custom
 run store or new in-memory runs make the copy ambiguous, the repository falls
 back to materializing the run tuple. Gzip, plain
 JSON, and schema 58 and older are rejected; the project has not shipped to
-users. See [ADR-0050](ADR/0050-zip-project-container.md).
+users. See [ADR-0050](ADR/0050-zip-project-container.md) and
+[ADR-0057](ADR/0057-streaming-container-write.md).
 
 Multiband analysis is an application-level batch over the existing single-band
 solver boundary. `AnalyzeBands` runs one `SimulationSpec` per selected band,

@@ -40,9 +40,11 @@ to be supported.
    expanded bytes, manifest bytes, per-entry bytes, entry count, and path
    bytes. Do not trust manifest-declared sizes; read bounded streams and
    verify CRC32/SHA-256.
-4. `prepare_payload()` returns an immutable `PreparedProject` with payload,
+4. `prepare_payload()` returns an immutable `PreparedProject` with the exact
    compressed bytes, expanded bytes, entry count, and limits. A successful save
-   must always produce a file `load()` accepts.
+   must always produce a file `load()` accepts. The payload is a temporary
+   spool handle rather than an in-memory byte string; ADR-0057 covers the
+   two-phase streaming writer.
 5. Load the project, the selected design, and the latest retained run at open
    time. Load older runs and optimizations on demand through an application
    `ProjectSession`/`ProjectResultStore`; keep the domain `Project` immutable.
@@ -96,9 +98,10 @@ Slice 2 has started: opening uses a manifest-indexed `ProjectSession`; only
 the selected design's latest run or batch is materialized, a failed oversized
 open offers design-only recovery, and **File → Save Design Only...** writes
 metadata and designs without runs or optimization summaries. `PreparedProject`
-is now the repository return type and carries the payload, compressed and
-expanded sizes, entry count, and limits. Saving and compaction copy unchanged
-run entries from the source container, serialize only new runs, and reopen the
-session after writing. The remaining optimization is streaming the container
-write instead of holding its bytes in memory, plus any pattern-level lazy
-loading needed by reports or visualization.
+is now the repository return type and carries the compressed and expanded
+sizes, entry count, limits, and a temporary spool handle. Saving and compaction
+stream unchanged run entries from the source container, serialize only new
+runs, write the manifest-first container one entry at a time, and reopen the
+session after writing. The streaming writer landed in ADR-0057 and keeps the
+output byte-identical. Pattern-level lazy loading remains a separate decision
+for reports and visualization.

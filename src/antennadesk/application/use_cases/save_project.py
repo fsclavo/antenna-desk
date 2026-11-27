@@ -19,7 +19,7 @@ class SaveProject:
     repository: ProjectRepository
 
     def prepare(self, project: Project) -> PreparedProject:
-        """Validate and serialize a project without writing it to disk."""
+        """Validate and prepare a project for a later atomic write."""
 
         raise_if_errors(project.validate())
         return self.repository.prepare_payload(project)
@@ -46,4 +46,8 @@ class SaveProject:
         self.repository.write_payload(path, payload)
 
     def execute(self, project: Project, path: Path) -> None:
-        self.write(path, self.prepare(project))
+        prepared = self.prepare(project)
+        try:
+            self.write(path, prepared)
+        finally:
+            prepared.close()
