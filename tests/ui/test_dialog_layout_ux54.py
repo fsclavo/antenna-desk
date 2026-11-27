@@ -8,9 +8,9 @@ from dataclasses import dataclass
 
 import pytest
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.ui.dialogs.basic_antenna_dialog import BasicAntennaDialog
 from antennadesk.ui.dialogs.discone_dialog import DisconeDialog
@@ -111,7 +111,7 @@ def test_ux59_large_spanish_initial_width_has_no_horizontal_bar(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(FontSize.LARGE)
     try:
         dialog = case.dialog_type(Translator(Language.SPANISH), UnitSystem.METRIC)

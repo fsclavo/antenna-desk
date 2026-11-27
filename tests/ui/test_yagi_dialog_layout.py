@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 import pytest
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QAbstractScrollArea, QApplication, QFormLayout
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
 from antennadesk.ui.i18n import Language, Translator
@@ -183,7 +183,7 @@ def test_dialog_avoids_horizontal_scrolling_with_large_spanish(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(FontSize.LARGE)
     try:
         dialog = YagiDialog(Translator(Language.SPANISH), UnitSystem.METRIC)

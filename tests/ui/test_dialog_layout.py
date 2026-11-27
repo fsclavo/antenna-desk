@@ -7,7 +7,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -16,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.ui.dialogs.basic_antenna_dialog import BasicAntennaDialog
 from antennadesk.ui.dialogs.beverage_dialog import BeverageDialog
@@ -206,7 +206,7 @@ def test_ux59_large_font_at_920_has_no_horizontal_bar(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(FontSize.LARGE)
     try:
         dialog = case.dialog_type(Translator(Language.SPANISH), UnitSystem.METRIC)
@@ -238,7 +238,7 @@ def test_ux61_medium_large_layout_matrix(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(font_size)
     try:
         dialog = case.dialog_type(Translator(language), UnitSystem.METRIC)

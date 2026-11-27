@@ -9,9 +9,10 @@ from pathlib import Path
 import pytest
 from main_window_support import FakeSolver
 from PySide6.QtCore import QSettings
-from PySide6.QtGui import QFont, QPalette
+from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QApplication, QDialog, QStyleFactory
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.ui.dialogs.preferences_dialog import PreferencesDialog
@@ -57,7 +58,7 @@ def test_system_language_resolves_to_a_supported_language() -> None:
 
 
 def test_font_sizes_are_relative_to_the_base_font() -> None:
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
 
     assert controller.size is FontSize.MEDIUM
     assert controller.font_for(FontSize.SMALL).pointSizeF() == pytest.approx(9.0)
@@ -67,7 +68,7 @@ def test_font_sizes_are_relative_to_the_base_font() -> None:
 
 def test_applying_font_sizes_restores_the_base_font(qtbot: QtBot) -> None:
     app = _application()
-    base = QFont("Sans Serif", 10)
+    base = resolved_test_font(10.0)
     app.setFont(base)
     controller = FontSizeController(base)
 
@@ -84,7 +85,7 @@ def test_applying_font_sizes_restores_the_base_font(qtbot: QtBot) -> None:
 
 
 def test_pixel_sized_fonts_keep_using_pixels() -> None:
-    base = QFont("Sans Serif")
+    base = resolved_test_font(10.0)
     base.setPixelSize(16)
     controller = FontSizeController(base)
 
@@ -94,7 +95,7 @@ def test_pixel_sized_fonts_keep_using_pixels() -> None:
 
 
 def test_small_font_has_a_legibility_floor() -> None:
-    controller = FontSizeController(QFont("Sans Serif", 6))
+    controller = FontSizeController(resolved_test_font(6.0))
 
     assert controller.font_for(FontSize.SMALL).pointSizeF() == pytest.approx(6.0)
 
@@ -222,7 +223,7 @@ def test_in_memory_store_round_trips_preferences() -> None:
 
 def test_main_window_font_size_applies_and_persists(qtbot: QtBot) -> None:
     app = _application()
-    base = QFont("Sans Serif", 10)
+    base = resolved_test_font(10.0)
     app.setFont(base)
     preferences = InMemoryPreferencesStore()
     controller = FontSizeController(base)
@@ -254,7 +255,7 @@ def test_main_window_font_size_applies_and_persists(qtbot: QtBot) -> None:
 
 def test_main_window_starts_with_the_saved_font_size(qtbot: QtBot) -> None:
     app = _application()
-    base = QFont("Sans Serif", 10)
+    base = resolved_test_font(10.0)
     app.setFont(base)
     preferences = InMemoryPreferencesStore(UiPreferences(font_size=FontSize.LARGE))
     controller = FontSizeController(base)

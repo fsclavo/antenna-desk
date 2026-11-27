@@ -9,6 +9,7 @@ from helpers import make_completed_result
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QTableWidget
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 import antennadesk.ui.widgets.geometry_view as geometry_module
 import antennadesk.ui.widgets.polar_pattern_view as polar_module
@@ -48,7 +49,7 @@ def _application() -> QApplication:
 
 
 def _controller() -> FontSizeController:
-    base = QFont("Sans Serif", 10)
+    base = resolved_test_font(10.0)
     _application().setFont(base)
     return FontSizeController(base)
 

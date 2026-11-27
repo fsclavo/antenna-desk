@@ -8,9 +8,10 @@ from collections.abc import Iterator
 
 import pytest
 from main_window_support import FakeSolver, export_nec_deck
-from PySide6.QtGui import QFont, QFontDatabase, QFontInfo, QPalette
+from PySide6.QtGui import QFont, QFontInfo, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.persistence.container import ProjectContainerRepository
 from antennadesk.simulation.preflight import run_preflight
@@ -32,15 +33,10 @@ def _pin_layout_baseline_font(app: QApplication) -> None:
     if not info.family() or info.pointSizeF() <= 0:
         # The Windows offscreen platform can expose an unresolved application
         # font. Resolve a real system family before fixing the point size.
-        font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
+        font = resolved_test_font(LAYOUT_BASELINE_MIN_POINT_SIZE)
         info = QFontInfo(font)
-    if not info.family():
-        font = QFont("Sans Serif")
-        info = QFontInfo(font)
-    if LAYOUT_BASELINE_MIN_POINT_SIZE <= info.pointSizeF() <= LAYOUT_BASELINE_MAX_POINT_SIZE:
-        app.setFont(font)
-        return
-    font.setPointSizeF(LAYOUT_BASELINE_MIN_POINT_SIZE)
+    if not LAYOUT_BASELINE_MIN_POINT_SIZE <= info.pointSizeF() <= LAYOUT_BASELINE_MAX_POINT_SIZE:
+        font.setPointSizeF(LAYOUT_BASELINE_MIN_POINT_SIZE)
     app.setFont(font)
 
 

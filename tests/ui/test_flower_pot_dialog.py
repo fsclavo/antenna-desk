@@ -7,9 +7,9 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialogButtonBox, QLabel
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.domain.antennas.flower_pot import (
     FLOWER_POT_2M_BOTTOM_LENGTH_M,
@@ -183,7 +183,7 @@ def test_dialog_keeps_actions_visible_at_the_initial_width(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(font_size)
     try:
         dialog = FlowerPotDialog(Translator(language), UnitSystem.METRIC)

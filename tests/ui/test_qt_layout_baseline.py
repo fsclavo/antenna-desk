@@ -7,8 +7,9 @@ from __future__ import annotations
 import math
 import os
 
-from PySide6.QtGui import QFontInfo, QFontMetrics, QGuiApplication
+from PySide6.QtGui import QFontDatabase, QFontInfo, QFontMetrics, QGuiApplication
 from PySide6.QtWidgets import QApplication
+from qt_font_support import resolved_test_font
 
 
 def test_qt_layout_baseline_is_documented_and_deterministic() -> None:
@@ -27,6 +28,7 @@ def test_qt_layout_baseline_is_documented_and_deterministic() -> None:
     available = screen.availableGeometry()
     height = metrics.height()
     advance = metrics.horizontalAdvance("Frecuencia (MHz)")
+    family_count = len(QFontDatabase.families())
 
     # Keep this line visible in the Windows CI log: the layout batch runs with
     # -s so the next environment change is diagnosable from the run itself.
@@ -36,6 +38,7 @@ def test_qt_layout_baseline_is_documented_and_deterministic() -> None:
         f"pixel_size={info.pixelSize()}px dpi={dpi:.1f} "
         f"device_pixel_ratio={ratio:.2f} style={app.style().name()!r} "
         f"font_height={height}px advance={advance}px "
+        f"families={family_count} "
         f"available={available.width()}x{available.height()}",
         flush=True,
     )
@@ -52,3 +55,11 @@ def test_qt_layout_baseline_is_documented_and_deterministic() -> None:
     assert available.width() > 0
     assert available.height() > 0
     assert app.style().name()
+    assert family_count > 0
+
+
+def test_resolved_test_font_has_a_real_family() -> None:
+    info = QFontInfo(resolved_test_font(9.0))
+
+    assert info.family()
+    assert 9.0 <= info.pointSizeF() <= 10.0

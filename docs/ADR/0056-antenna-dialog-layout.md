@@ -114,9 +114,10 @@ The offscreen layout guard now runs on one documented platform baseline:
   the platform resolves outside that range, and restores the original font,
   palette, style, and S/M/L scale after every UI test. If the platform exposes
   an unresolved application font (observed on Windows offscreen as an empty
-  family at -0.75 pt), the fixture resolves
-  `QFontDatabase.systemFont(GeneralFont)` first. Production font sizing and
-  `scaled_dialog_size()` are unchanged.
+  family at -0.75 pt), `tests/ui/qt_font_support.py` picks a common real
+  family (Segoe UI, Arial, Noto Sans, DejaVu Sans, or Liberation Sans) or adds
+  a standard system font file when Qt exposes no families. Production font
+  sizing and `scaled_dialog_size()` are unchanged.
 - `tests/ui/test_qt_layout_baseline.py` records the resolved family, point and
   pixel size, logical DPI, device pixel ratio, style, font height, a mixed-width
   text advance, and the available screen. It asserts the 9–10 pt range and

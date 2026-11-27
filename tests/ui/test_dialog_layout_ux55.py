@@ -8,9 +8,9 @@ from dataclasses import dataclass
 
 import pytest
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox
 from pytestqt.qtbot import QtBot
+from qt_font_support import resolved_test_font
 
 from antennadesk.ui.dialogs.fan_dipole_dialog import FanDipoleDialog
 from antennadesk.ui.dialogs.inverted_l_dialog import InvertedLDialog
@@ -86,7 +86,7 @@ def test_ux55_compact_dialogs_fit_large_spanish(
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
-    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller = FontSizeController(resolved_test_font(10.0))
     controller.apply(FontSize.LARGE)
     try:
         dialog = case.dialog_type(Translator(Language.SPANISH), UnitSystem.METRIC)
