@@ -37,7 +37,8 @@ acceptance, evidence, and risk are in §Product trust and station wave below.
 PF1 is a P0 reliability insertion outside the antenna wave; it landed before
 any further project-format change. It is closed after manual validation on
 2026-11-24. PF2 streaming write is done 2026-11-27; pattern-level lazy loading
-(PF3) remains deferred.
+(PF3) is deferred 2026-11-27 because it requires a pattern-entry ADR and a
+container/schema change.
 
 VR1 is a vertical-geometry enhancement implemented ahead of the remaining 1.1/1.2
 items. It is bounded to one uniform droop, physical radial length, schema 61, and
@@ -79,9 +80,9 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 
 | ID | Task | Size | Depends on | Acceptance |
 |---|---|---|---|---|
-| PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. Optional follow-ups are tracked as PF2 (streaming write) and PF3 (pattern-level lazy loading). See §PF1. |
+| PF1 | ZIP project container and honest size contract | L | none | **Done 2026-11-24; manual validation passed.** A project that saves always reopens; design, runs, and optimizations are separate validated ZIP entries; per-entry/total limits apply on save and load; old runs are compacted by the save flow; oversized projects can be recovered design-only. No backward compatibility. PF2 is done; PF3 is deferred. See §PF1. |
 | PF2 | Streaming container write | M | PF1 (closed) | **Done 2026-11-27.** Two-phase temporary spool, manifest-first output, streamed copied runs, exact sizes, and atomic replace. Output remains byte-identical; lazy save/compact peak RSS fell from 174/84 MB to 45 MB. See §PF2 and ADR-0057. |
-| PF3 | Pattern-level lazy loading | L | PF1 (closed); pattern-entry ADR; PF2 soft | **Proposed; optional.** Split far-field patterns into validated per-run entries and load them only for the Pattern/3D/report consumers. Distinguish "not loaded/available" from "no pattern"; prune patterns independently. See §PF3. |
+| PF3 | Pattern-level lazy loading | L | PF1 (closed); pattern-entry ADR; schema decision | **Deferred 2026-11-27.** Requires a pattern-entry ADR and a container/schema change, so it is not scheduled in the 0.11.x patch line. Split far-field patterns into validated per-run entries and load them only for the Pattern/3D/report consumers; distinguish "not loaded/available" from "no pattern". Revisit only when open/select memory becomes a release blocker. See §PF3. |
 | B4 | Fan-dipole coupling calibration | M | measurement | A coupled-fan measurement is reproduced; no scalar correction is invented |
 | C7h | Optional 6 m HexBeam band | S | C7c; published 6 m row | Add the published 6 m driver/reflector/tip-spacer row and vertical offset, with the same frame-fit validation, editor option, reports, and evidence note. No performance claim. |
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
@@ -140,9 +141,10 @@ on demand, a failed oversized open offers design-only recovery, and
 `PreparedProject` now carries the payload, compressed/expanded sizes, entry
 count, and limits. Saving and compaction copy unchanged run entries from the
 source container and serialize only new runs; they reopen the session after
-writing. The optional follow-ups are tracked as PF2 (streaming write) and PF3
-(pattern-level lazy loading); PF1's container and save/load contract stay
-unchanged. See [ADR-0050](ADR/0050-zip-project-container.md).
+writing. PF2 (streaming write) is done 2026-11-27; PF3 (pattern-level lazy
+loading) is deferred because it requires a pattern-entry ADR and a
+container/schema change. PF1's container and save/load contract stay unchanged.
+See [ADR-0050](ADR/0050-zip-project-container.md).
 
 **Scale benchmark (2026-11-21):** `scripts/benchmark_project_io.py` generated
 four runs with five 2° patterns and 8 MB of raw text each (118 MB expanded,
@@ -418,7 +420,8 @@ changing when the UI prepares or saves; a binary pattern store or sidecar
 database.
 
 **Dependencies:** PF1 closed. No schema, solver, or domain dependency.
-PF3 benefits from this path but does not require it.
+PF3 would benefit from this path but is deferred pending its ADR and schema
+decision.
 
 **Acceptance:**
 
@@ -486,8 +489,8 @@ unassigned; optional maintenance after PF1.
 
 The copy-entry save and compact paths no longer scale with the full history.
 The materialized paths are dominated by `ProjectSession.materialize()` and the
-domain run objects, not by the container writer; PF3 is the follow-up for
-pattern-level lazy loading.
+domain run objects, not by the container writer; PF3 (pattern-level lazy
+loading) is deferred pending its ADR and a schema decision.
 
 **Likely files:** `persistence/container.py`, `application/project_payload.py`
 (prepared-spool contract), `application/ports/project_repository.py`,
@@ -496,11 +499,19 @@ pattern-level lazy loading.
 
 ## PF3 — Pattern-level lazy loading
 
-**Status:** proposed 2026-11-24; optional; not started. **Priority:** P3 memory
-on open/select and report responsiveness. **Trigger:** PF1 lazy loading is per
-run, not per pattern. The benchmark shows a selected 2° run with five patterns
-at about 682 MB peak RSS (roughly 400 MB of domain objects), while impedance,
-SWR, and currents are much smaller and are usually needed first.
+**Status:** **Deferred 2026-11-27.** Requires a pattern-entry ADR and a
+container-format/schema change; not scheduled in the 0.11.x patch line.
+**Priority:** P3 memory on open/select and report responsiveness. **Trigger:**
+PF1 lazy loading is per run, not per pattern. The benchmark shows a selected 2°
+run with five patterns at about 682 MB peak RSS (roughly 400 MB of domain
+objects), while impedance, SWR, and currents are much smaller and are usually
+needed first.
+
+**Decision (2026-11-27):** do not start PF3 now. PF2 removed the writer-side
+duplication; the remaining open/select cost is the selected run itself, which
+is a separate container and application-accessor change. Revisit only when
+open/select memory becomes a release blocker and the pattern-entry ADR is
+accepted.
 
 **Current cost:** `ProjectSession` loads metadata/designs eagerly and runs on
 demand, but `ContainerRunStore.load_run()` reads the complete `runs/<id>.json`
@@ -609,8 +620,8 @@ benchmark. Keep the fully materialized path available as a parity oracle until
 the last consumer migrates.
 
 **Effort:** L (2–4 weeks including format, accessor, consumers, and tests).
-**Release:** unassigned; optional maintenance after PF2 or after the current
-1.2 work if open/select memory becomes a release blocker.
+**Release:** deferred; unassigned. Reconsider only after the pattern-entry ADR
+is accepted and open/select memory becomes a release blocker.
 
 **Likely files:** `persistence/container.py`, `persistence/schema.py` (run and
 pattern payloads), `application/project_session.py`,
@@ -618,25 +629,20 @@ pattern payloads), `application/project_session.py`,
 `ui/widgets/results_view.py`, pattern/3D views, `reporting/`, and the
 persistence, session, UI, reporting, and benchmark tests.
 
-**Recommended sequence (PF2/PF3):**
+**Sequence decision (PF2/PF3, 2026-11-27):**
 
-1. Keep PF2 and PF3 in separate change sets; do not bundle either one with an
-   antenna or UI feature.
-2. PF2 can start first: it is a self-contained writer change with a
-   byte-identical oracle, and it reduces save memory before PF3 adds more
-   entries.
-3. PF3 must not start before its pattern-entry ADR is accepted. PF2 is a soft
-   dependency, so PF3 may run first only if open/select memory becomes the
-   release blocker.
-4. Migrate PF3 consumers one at a time (Pattern tab, 3D view, comparison,
-   reports, pattern-bearing CSV) and keep the fully materialized path as a
-   parity oracle until the last consumer migrates.
-5. Benchmark both items with `scripts/benchmark_project_io.py`; record peak
-   RSS and wall time for open, select one run, materialized save, copy-entry
-   save, compact, and design-only save.
-6. Do not change PF1's container version, entry order, compression level, or
-   deterministic output in either item without an explicit ADR; keep the
-   save/load invariant test green.
+1. PF2 is done and closed in ADR-0057. Do not reopen the writer for PF3.
+2. PF3 is deferred until its pattern-entry ADR is accepted. The ADR must decide
+   the entry layout, manifest index, container version, and the explicit
+   `NOT_LOADED`/`AVAILABLE`/`PRUNED`/`NO_PATTERN` state before any code change.
+3. When it is resumed, migrate consumers one at a time (Pattern tab, 3D view,
+   comparison, reports, pattern-bearing CSV) and keep the fully materialized
+   path as a parity oracle until the last consumer migrates.
+4. Benchmark PF3 with `scripts/benchmark_project_io.py`; record peak RSS and
+   wall time for open, select one run, and the affected report/pattern paths.
+5. Do not change PF1's container version, entry order, compression level, or
+   deterministic output without an explicit ADR; keep the save/load invariant
+   test green.
 
 ## Product trust and station wave
 

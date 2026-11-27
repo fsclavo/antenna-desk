@@ -7,7 +7,8 @@
 - **Date:** 2026-11-20
 - **Supersedes:** [ADR-0021](0021-compressed-project-files.md)
 - **Follow-ups:** [`AUTONOMOUS_BACKLOG.md`](../AUTONOMOUS_BACKLOG.md) §PF2
-  (streaming container write) and §PF3 (pattern-level lazy loading)
+  (streaming container write, done 2026-11-27) and §PF3 (pattern-level lazy
+  loading, deferred pending its ADR and schema decision)
 - **Related:** `docs/AUTONOMOUS_BACKLOG.md` §PF1
 
 ## Context
@@ -103,5 +104,6 @@ sizes, entry count, limits, and a temporary spool handle. Saving and compaction
 stream unchanged run entries from the source container, serialize only new
 runs, write the manifest-first container one entry at a time, and reopen the
 session after writing. The streaming writer landed in ADR-0057 and keeps the
-output byte-identical. Pattern-level lazy loading remains a separate decision
-for reports and visualization.
+output byte-identical. Pattern-level lazy loading remains deferred pending a
+pattern-entry ADR; it changes the container/schema and is not part of the
+0.11.x patch line.

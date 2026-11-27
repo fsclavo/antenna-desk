@@ -189,7 +189,8 @@
   entries and serialize only new runs. Design-only recovery and
   **File → Save Design Only...** are available, and `PreparedProject` reports
   honest compressed/expanded sizes. PF2 streaming write is **done 2026-11-27**
-  (see below); PF3 pattern-level lazy loading remains optional. See
+  (see below). PF3 pattern-level lazy loading is **deferred** because it
+  requires a pattern-entry ADR and a container/schema change. See
   [`ADR-0050`](ADR/0050-zip-project-container.md).
 - PF2 streaming container write is **done 2026-11-27**. Saving and compaction
   stage entries in a bounded temporary spool, write the manifest-first

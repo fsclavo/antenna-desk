@@ -65,8 +65,9 @@ unchanged. A byte-for-byte test rebuilds the container with the old
 - **Keep the whole container in memory below a threshold.** Allowed only if it
   does not create a second output format. The production path always uses the
   spool; the in-memory path is retained for callers that already hold bytes.
-- **Split patterns into separate entries.** That is PF3 and changes the
-  container schema; it is not part of this decision.
+- **Split patterns into separate entries.** That is PF3; it changes the
+  container format/schema and is deferred pending its own ADR. It is not part
+  of this decision.
 
 ## Consequences
 
