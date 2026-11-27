@@ -39,7 +39,8 @@ tolerance.
 
 ## Current state
 
-**Latest published release:** `0.11.0` (2026-11-27). The 1.0 Confidence wave is
+**Latest published release:** `0.11.0` (2026-11-27). Release candidate:
+`0.11.1` (prepared 2026-11-27). The 1.0 Confidence wave is
 complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
 1.2 has DL3 implemented, DL6 first-slice work, and a bounded DL7 implementation. DL4 is canceled.
 See [`STATUS.md`](STATUS.md)

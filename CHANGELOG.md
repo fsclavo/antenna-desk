@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-27
+
 ### Fixed
 
 - **Optimizer dialog close and cancel lifecycle.** The family, length,
@@ -2777,7 +2779,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Project documentation: blueprint, ADR-0001, project decisions, and solver
   evaluation.
 
-[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/fsclavo/antenna-desk/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.1
 [0.11.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.0
 [0.10.1]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.1
 [0.10.0]: https://github.com/fsclavo/antenna-desk/releases/tag/v0.10.0

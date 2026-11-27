@@ -2,16 +2,19 @@
 
 **Updated:** 2026-11-27
 **Latest published release:** `0.11.0` (2026-11-27)
+**Release candidate:** `0.11.1` (prepared 2026-11-27)
 **Development schema:** `73`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
 
-- A **post-0.11.0 fix on main** prevents optimizer dialogs from closing while
-  their worker thread is running. Cancel is enabled during the run, Close is
-  disabled, and the Close/Esc path now cancels instead of destroying the
-  `QThread`. Regression tests cover the trapped-Yagi family optimizer and the
-  element optimizer. A patch release is pending.
+- 0.11.1 is **prepared 2026-11-27** as a patch release. It prevents optimizer
+  dialogs from closing while their worker thread is running: Cancel is enabled
+  during the run, Close is disabled, and the Close/Esc path cancels instead of
+  destroying the `QThread`. Regression tests cover the trapped-Yagi family
+  optimizer and the element optimizer. Full gate: **4,790 passed, 1 skipped**;
+  real `nec2c` integration: **186 passed**. The tag and published assets are
+  pending. See [`RELEASE_QA_0.11.1.md`](archive/releases/RELEASE_QA_0.11.1.md).
 - 0.11.0 is **published 2026-11-27**. It packages the UX46–UX57 3D pattern
   and dialog-layout work, the extended DL6 stacked-Yagi feed network and
   tolerance checks, and FP1 with schema 73. Full gate: **4,787 passed, 1
@@ -200,7 +203,7 @@
 
 ## Next
 
-1. 0.11.0 publication is verified; complete any remaining target-desktop smoke test and close the release.
+1. Publish 0.11.1 and verify its artifacts.
 2. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 3. Choose the next bounded family or release slice after 0.11.0; keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.

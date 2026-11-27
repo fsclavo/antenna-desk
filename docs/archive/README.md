@@ -11,7 +11,7 @@ current state; they are not the current source of truth.
 
 ### Releases
 
-- [`releases/`](releases/) — release QA records from 0.4.0 through 0.11.0.
+- [`releases/`](releases/) — release QA records from 0.4.0 through 0.11.1.
   Each record describes the checks and artifacts at that release.
 
 ### Quality assurance
