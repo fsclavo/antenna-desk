@@ -1,18 +1,18 @@
 # Project status
 
 **Updated:** 2026-11-27
-**Latest published release:** `0.10.1` (2026-11-24)
-**Release candidate:** `0.11.0` (prepared 2026-11-27)
+**Latest published release:** `0.11.0` (2026-11-27)
 **Development schema:** `73`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
 
-- 0.11.0 is **prepared 2026-11-27** as a release candidate. It packages the
-  UX46–UX57 3D pattern and dialog-layout work, the extended DL6 stacked-Yagi
-  feed network and tolerance checks, and FP1 with schema 73. Full gate:
-  **4,787 passed, 1 skipped**; real `nec2c` integration: **186 passed**. The
-  tag and published assets are pending. See
+- 0.11.0 is **published 2026-11-27**. It packages the UX46–UX57 3D pattern
+  and dialog-layout work, the extended DL6 stacked-Yagi feed network and
+  tolerance checks, and FP1 with schema 73. Full gate: **4,787 passed, 1
+  skipped**; real `nec2c` integration: **186 passed**. The tag workflow
+  produced and published the wheel/sdist, AppImage, Debian package, Windows
+  installer, portable zip, and checksums. See
   [`RELEASE_QA_0.11.0.md`](archive/releases/RELEASE_QA_0.11.0.md).
 - 0.10.1 is published (2026-11-24) with the refreshed application icon and
   the live-tuning GUI-thread worker fix. Windows 3.11/3.12/3.13 and Linux CI
@@ -193,7 +193,7 @@
 
 ## Next
 
-1. Publish 0.11.0, verify the tag workflow and published artifacts, then record the publication.
+1. Verify the published 0.11.0 artifacts and checksums on the target desktops.
 2. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 3. Choose the next bounded family or release slice after 0.11.0; keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.

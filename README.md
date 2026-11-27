@@ -9,11 +9,11 @@ Desktop application for designing, simulating, and building antennas for
 amateur radio. Local-first, Linux and Windows, powered by a NEC-2
 electromagnetic engine.
 
-**Status:** pre-1.0. Latest published release: `0.10.1` (2026-11-24). The
+**Status:** pre-1.0. Latest published release: `0.11.0` (2026-11-27). The
 current development schema is `73`; unreleased work is tracked in
 [`docs/STATUS.md`](docs/STATUS.md). The antenna catalog, estimators, simulation,
 measurements, optimization, matching, and reporting flows are implemented.
-Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.9.0`
+Native AppImage, Debian, and Windows packages include `nec2c`. Version `0.11.0`
 is published; signing is optional and deferred for later releases. Center-fed
 dipoles, folded dipoles, trap dipoles, T2FDs, vertical and horizontal loops,
 magnetic loops, custom wires, Yagis, Moxon, log-periodic arrays, fan dipoles,

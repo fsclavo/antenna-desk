@@ -4,7 +4,7 @@
 - **Date:** 2026-11-27
 - **Tag:** `v0.11.0`
 - **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.0>
-- **Status:** release candidate; tag and asset publication pending
+- **Status:** published 2026-11-27
 - **Schema:** 73
 - **Previous release:** `0.10.1` (2026-11-24)
 
@@ -60,15 +60,20 @@ This minor release packages the unreleased work since 0.10.1:
 
 ## Packaging
 
+- Tag workflow
+  [`46033456924`](https://github.com/fsclavo/antenna-desk/actions/runs/46033456924)
+  completed successfully.
+- Published assets: wheel, sdist, Linux AppImage, Debian package, Windows
+  installer, Windows portable zip, and one `.sha256` file per binary (12 assets).
 - `uv build --out-dir …` produced `antennadesk-0.11.0-py3-none-any.whl`
   (1.3 MiB) and `antennadesk-0.11.0.tar.gz` (2.1 MiB).
 - Wheel metadata reports version `0.11.0`.
 - `python -m antennadesk.ui.app --version` reports `0.11.0`.
 - `uv lock --check` passes.
 
-The tag workflow builds the Linux AppImage and Debian package, and the Windows
-installer and portable zip with bundled `nec2c`, then verifies the checksums.
-Native package publication and the tag CI matrix are pending.
+The release is published at
+<https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.0>.
+Native packages are unsigned; verify the published checksums before installing.
 
 ## Known limitations
 
