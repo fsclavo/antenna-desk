@@ -209,6 +209,13 @@
   batch passes 182 tests; Windows 3.12/3.13 verification is pending. See
   [`ADR-0056`](ADR/0056-antenna-dialog-layout.md) and
   [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#windows-layout-baseline-and-cross-platform-generator-wrapping-proposed-2026-11-27).
+- UX59 long-label wrapping is **implemented locally 2026-11-27**. A shared
+  `configure_form_layout()` applies `WrapLongRows`, growing fields, zero
+  margins, and explicit spacing to every family `QFormLayout`; one-column
+  labels wrap while two-column layouts keep the existing height budget. Local
+  layout batch: **226 passed**; full UI suite: **2,017 passed**. Windows
+  3.12/3.13 verification is pending. See
+  [`ADR-0056`](ADR/0056-antenna-dialog-layout.md).
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.
@@ -221,12 +228,11 @@
 
 ## Next
 
-1. Continue the P1 Windows layout/CI track with **UX59–UX61**. UX58 is
-   implemented locally; the next slice applies `WrapLongRows` to single-column
-   and nested forms, then makes dialog/table sizing layout-based, and closes
-   with the Large-font guard and the Windows run. The README `tests` badge
-   remains red until that Windows verification passes. No schema or solver
-   change.
+1. Continue the P1 Windows layout/CI track with **UX60–UX61**. UX58 and UX59
+   are implemented locally; the next slice makes dialog/table sizing
+   layout-based, then closes with the Large-font guard and the Windows run.
+   The README `tests` badge remains red until that Windows verification
+   passes. No schema or solver change.
 2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
 3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision

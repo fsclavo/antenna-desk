@@ -38,6 +38,9 @@ class FormLabels:
     def label(self, key: str, control: QWidget | None = None) -> QLabel:
         label = QLabel(self._translator.t(key), self._parent)
         label.setObjectName(key)
+        # Single-column generator forms wrap long labels. Two-column
+        # SectionedForm layouts override this to keep the row budget.
+        label.setWordWrap(True)
         self._labels[label] = key
         if control is not None:
             self._controls[label] = control

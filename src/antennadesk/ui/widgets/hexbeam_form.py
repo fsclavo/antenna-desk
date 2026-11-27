@@ -57,6 +57,7 @@ from ..units import (
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
+from .form_layout import configure_form_layout
 from .form_units import (
     LengthField,
     LengthFieldSpec,
@@ -300,6 +301,7 @@ class HexbeamForm(QWidget):
         self._geometry.setWordWrap(True)
 
         form = QFormLayout()
+        configure_form_layout(form)
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._starting)
         form.addRow(self._labels.label("hexbeam.driver_half"), self._driver_half)

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import pytest
 from PySide6.QtCore import QPoint
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QDialogButtonBox
 from pytestqt.qtbot import QtBot
 
@@ -24,6 +25,7 @@ from antennadesk.ui.dialogs.trap_dipole_dialog import TrapDipoleDialog
 from antennadesk.ui.dialogs.trap_yagi_dialog import TrapYagiDialog
 from antennadesk.ui.dialogs.vertical_dialog import VerticalDialog
 from antennadesk.ui.i18n import Language, Translator
+from antennadesk.ui.preferences import FontSize, FontSizeController
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.form_dialog import FormDialogFrame
 
@@ -100,6 +102,33 @@ def test_ux54_primary_controls_are_visible(
     assert buttons.isVisible() is True
     assert buttons.geometry().bottom() <= dialog.rect().bottom()
     assert dialog._scroll.horizontalScrollBar().maximum() == 0
+
+
+@pytest.mark.parametrize("case", CASES, ids=[case.name for case in CASES])
+def test_ux59_large_spanish_initial_width_has_no_horizontal_bar(
+    qtbot: QtBot,
+    case: AuditCase,
+) -> None:
+    app = QApplication.instance()
+    assert isinstance(app, QApplication)
+    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller.apply(FontSize.LARGE)
+    try:
+        dialog = case.dialog_type(Translator(Language.SPANISH), UnitSystem.METRIC)
+        qtbot.addWidget(dialog)
+        dialog.resize(case.size[0], min(case.size[1], 640))
+        dialog.show()
+        qtbot.wait(10)
+        QApplication.processEvents()
+
+        assert dialog._scroll is not None
+        assert dialog._scroll.horizontalScrollBar().maximum() == 0
+        buttons = dialog.findChild(QDialogButtonBox)
+        assert buttons is not None
+        assert buttons.isVisible() is True
+        assert buttons.geometry().bottom() <= dialog.rect().bottom()
+    finally:
+        controller.apply(FontSize.MEDIUM)
 
 
 @pytest.mark.parametrize("case", CASES, ids=[case.name for case in CASES])

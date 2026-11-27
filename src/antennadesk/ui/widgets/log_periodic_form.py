@@ -53,6 +53,7 @@ from ..units import (
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
+from .form_layout import configure_form_layout
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .table_headers import fit_header_sections
@@ -208,6 +209,7 @@ class LogPeriodicForm(QWidget):
         self._evidence.setWordWrap(True)
 
         form = QFormLayout()
+        configure_form_layout(form)
         form.addRow(self._labels.label("log_periodic.frequency_low"), self._frequency_low)
         form.addRow(self._labels.label("log_periodic.frequency_high"), self._frequency_high)
         form.addRow(self._labels.label("log_periodic.longest_element"), self._longest_element)

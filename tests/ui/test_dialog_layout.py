@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
@@ -43,6 +44,7 @@ from antennadesk.ui.dialogs.trap_yagi_dialog import TrapYagiDialog
 from antennadesk.ui.dialogs.vertical_dialog import VerticalDialog
 from antennadesk.ui.dialogs.yagi_dialog import YagiDialog
 from antennadesk.ui.i18n import Language, Translator
+from antennadesk.ui.preferences import FontSize, FontSizeController
 from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.form_dialog import FormDialogFrame
 from antennadesk.ui.widgets.yagi_form import YagiForm
@@ -163,6 +165,34 @@ def test_generator_dialog_layout_guard(
         assert issues, f"{case.name} now passes; remove the exception: {case.exception}"
         return
     assert issues == (), f"{case.name} ({language.value}): " + "; ".join(issues)
+
+
+@pytest.mark.parametrize("case", REGISTRY, ids=[case.name for case in REGISTRY])
+def test_ux59_large_font_at_920_has_no_horizontal_bar(
+    qtbot: QtBot,
+    case: DialogCase,
+) -> None:
+    app = QApplication.instance()
+    assert isinstance(app, QApplication)
+    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller.apply(FontSize.LARGE)
+    try:
+        dialog = case.dialog_type(Translator(Language.SPANISH), UnitSystem.METRIC)
+        qtbot.addWidget(dialog)
+        dialog.resize(WIDTH_BUDGET_PX, HEIGHT_BUDGET_PX)
+        dialog.show()
+        QApplication.processEvents()
+
+        if dialog._scroll is not None:
+            assert dialog._scroll.horizontalScrollBar().maximum() == 0
+        else:
+            assert dialog._form.minimumSizeHint().width() <= dialog.width()
+        buttons = dialog.findChild(QDialogButtonBox)
+        assert buttons is not None
+        assert buttons.isVisible() is True
+        assert buttons.geometry().bottom() <= dialog.rect().bottom()
+    finally:
+        controller.apply(FontSize.MEDIUM)
 
 
 def test_registry_covers_every_family_generator_dialog() -> None:

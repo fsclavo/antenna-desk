@@ -65,6 +65,7 @@ from ..units import (
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
+from .form_layout import configure_form_layout
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 
@@ -204,6 +205,7 @@ class EndFedForm(QWidget):
         self._loading_coil_group.setCheckable(True)
         self._loading_coil_group.setChecked(False)
         coil_form = QFormLayout(self._loading_coil_group)
+        configure_form_layout(coil_form)
         self._loading_coil_offset = QDoubleSpinBox(self._loading_coil_group)
         self._loading_coil_offset.setDecimals(3)
         self._loading_coil_offset.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
@@ -247,6 +249,7 @@ class EndFedForm(QWidget):
             "endfed.design_matching_network",
         )
         design_form = QFormLayout(self._design_network_group)
+        configure_form_layout(design_form)
         self._design_topology = QComboBox(self._design_network_group)
         for topology in ("l", "pi", "t"):
             self._design_topology.addItem(
@@ -272,6 +275,7 @@ class EndFedForm(QWidget):
         )
         self._design_loaded_q_widget = QWidget(self._design_network_group)
         loaded_q_form = QFormLayout(self._design_loaded_q_widget)
+        configure_form_layout(loaded_q_form)
         loaded_q_form.setContentsMargins(0, 0, 0, 0)
         loaded_q_form.addRow(
             self._labels.label(
@@ -313,6 +317,7 @@ class EndFedForm(QWidget):
 
         self._design_series_widget = QWidget(self._design_network_group)
         series_form = QFormLayout(self._design_series_widget)
+        configure_form_layout(series_form)
         series_form.setContentsMargins(0, 0, 0, 0)
         series_form.addRow(
             self._labels.label("endfed.design_matching_series_l", self._design_series_l),
@@ -325,6 +330,7 @@ class EndFedForm(QWidget):
 
         self._design_shunt_widget = QWidget(self._design_network_group)
         shunt_form = QFormLayout(self._design_shunt_widget)
+        configure_form_layout(shunt_form)
         shunt_form.setContentsMargins(0, 0, 0, 0)
         shunt_form.addRow(
             self._labels.label("endfed.design_matching_shunt_l", self._design_shunt_l),
@@ -338,6 +344,7 @@ class EndFedForm(QWidget):
 
         self._design_pi_widget = QWidget(self._design_network_group)
         pi_form = QFormLayout(self._design_pi_widget)
+        configure_form_layout(pi_form)
         pi_form.setContentsMargins(0, 0, 0, 0)
         pi_form.addRow(
             self._labels.label(
@@ -370,6 +377,7 @@ class EndFedForm(QWidget):
 
         self._design_t_widget = QWidget(self._design_network_group)
         t_form = QFormLayout(self._design_t_widget)
+        configure_form_layout(t_form)
         t_form.setContentsMargins(0, 0, 0, 0)
         t_form.addRow(
             self._labels.label(
@@ -552,6 +560,7 @@ class EndFedForm(QWidget):
             translator.t("endfed.common_mode_choke_source_placeholder")
         )
         choke_form = QFormLayout(self._common_mode_choke_group)
+        configure_form_layout(choke_form)
         choke_form.addRow(
             self._labels.label("endfed.common_mode_choke_resistance", self._choke_resistance),
             self._choke_resistance,
@@ -664,6 +673,7 @@ class EndFedForm(QWidget):
             self._apply_preset_defaults()
 
         form = QFormLayout()
+        configure_form_layout(form)
         form.addRow(self._labels.label("field.template"), self._preset_label)
         form.addRow(self._labels.label("field.design_frequency"), self._frequency)
         form.addRow(self._labels.label("field.length"), self._length)

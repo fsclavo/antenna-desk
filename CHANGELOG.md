@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   96 DPI / 1× environment, normalize and restore a 9–10 pt test font, record the
   resolved font/DPI/style metrics, and run the dense generator-layout guard in
   an isolated 180 s CI batch. Production font and dialog sizing are unchanged.
+- **Generator form long-label wrapping.** Every family `QFormLayout` now uses
+  the shared `WrapLongRows` policy with zero outer margins and explicit
+  spacing; one-column labels wrap and two-column layouts keep their height
+  budget. Long Spanish labels no longer force horizontal scrolling in the
+  tested dialogs.
 
 ## [0.11.1] - 2026-11-27
 

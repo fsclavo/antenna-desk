@@ -61,6 +61,7 @@ from ..units import (
     diameter_to_m,
     diameter_unit_key,
 )
+from .form_layout import configure_form_layout
 from .form_units import LengthField, LengthFieldSpec
 from .ground_presets import GroundPresetController
 
@@ -205,6 +206,7 @@ class DipoleForm(QWidget):
 
         self._family_value = QLabel(self)
         self._form_layout = QFormLayout()
+        configure_form_layout(self._form_layout)
         form = self._form_layout
         form.addRow(self._label("field.frequency"), self._frequency)
         form.addRow(self._label("field.family"), self._family_value)

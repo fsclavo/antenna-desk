@@ -122,7 +122,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Implemented 2026-11-26.** The overlay is centered on the feed projected onto the beam symmetry plane for families with an explicit forward axis; the feed marker keeps its real cross-boom offset. Verticals, dipoles, loops without a declared axis, and custom models remain feed-centered. The uniform 35% scale is measured from the new center. No solver, domain, schema, or report change. See §UX56. |
 | UX57 | 3D back ray at the actual rear gain | S | UX46 | **Implemented 2026-11-26.** The same-elevation back ray ends at `max gain − F/B`, not at the forward peak radius. A missing or non-finite F/B hides the ray and label, and the minimum-distance guard hides a degenerate marker. No solver, domain, schema, or report change. See §UX57. |
 | UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
-| UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Proposed; P1.** Apply `WrapLongRows` and explicit spacing to single-column `SectionedForm` and every plain `QFormLayout` in the family forms, including nested groups. No horizontal scrollbar at 920 px or the initial 560–620 px widths in EN/ES; Large font keeps no horizontal bar and actions visible. Add a synthetic long-label regression test. See §UX59. |
+| UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Implemented locally 2026-11-27; Windows CI verification pending.** Shared `configure_form_layout()` applies `WrapLongRows`, growing fields, zero margins, and explicit spacing to every family `QFormLayout`; single-column labels wrap. Local guard at 920/initial widths and Large font: no horizontal bars; layout batch 226 passed. See §UX59. |
 | UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Proposed; P1.** Grow the initial dialog width to the form minimum only when needed, capped by `scaled_dialog_size()`; remove or constrain the Yagi table's `AdjustToContents`; fix the Basic Antenna template control. All 26 dialogs stay free of horizontal scrolling at 920 px and Large font. Document any 1000 px exception or one-column collapse. See §UX60. |
 | UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Proposed; P1.** Add the compact Medium/Large EN/ES guard (no horizontal at 920, actions visible, vertical allowed only at Large), update ADR-0056/STATUS/CHANGELOG and the manual QA record, and confirm the README `tests` badge is green on `main` with no platform exclusions. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
@@ -3011,7 +3011,8 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 
 ### UX59 — Wrap long form rows across generator dialogs
 
-**Status:** proposed; P1. **Depends on:** UX58. **Effort:** M (2–4 days).
+**Status:** implemented locally 2026-11-27; Windows CI verification pending.
+**Depends on:** UX58. **Effort:** M (2–4 days).
 
 **Scope:**
 
@@ -3047,6 +3048,24 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 - Parameter round-trips, tab order, help labels, and help coverage are
   unchanged.
 - `ruff`, both `mypy` passes, and the full pytest gate are green.
+
+**Implementation (2026-11-27):**
+
+- `ui/widgets/form_layout.py` defines `configure_form_layout()` with
+  `WrapLongRows`, `AllNonFixedFieldsGrow`, zero margins, 8 px horizontal
+  spacing, and 6 px vertical spacing.
+- `SectionedForm` uses the helper for single- and two-column forms. Labels in
+  one-column layouts wrap; two-column layouts keep the row-wrap policy without
+  forcing label word-wrap, preserving the Yagi height budget.
+- `FormLabels.label()` wraps by default for plain family forms; two-column
+  `SectionedForm` overrides it. Every `QFormLayout` in `ui/widgets/*_form.py`
+  now goes through the helper, including nested EndFed network groups.
+- Tests cover the helper contract, long English/Spanish labels at 560/920 px,
+  the full 26-dialog guard at 920×640 with Large Spanish, and the twelve
+  scroll-heavy initial widths with Large Spanish. Local layout batch:
+  **226 passed**; full UI suite: **2,017 passed**.
+- Pending: the Windows 3.12/3.13 run. If a failure remains, UX60 owns the
+  layout-based sizing fix; do not weaken the assertion.
 
 ### UX60 — Layout-based dialog sizing and Yagi table width
 
@@ -3122,11 +3141,12 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 - ADR-0056, STATUS, CHANGELOG, and the QA record are consistent with the code
   and with the actual CI run.
 
-**Track order:** UX58 → UX59 → UX60 → UX61. UX58 must land first so the
-Windows signal is trustworthy. UX59 and UX60 may share a change set if the
-diff stays small, but their acceptance stays separate. UX61 closes the track
-only after the real Windows run is green. Do not start with a Windows skip or
-a test-only width increase: both hide the user-facing issue.
+**Track order:** UX58 → UX59 → UX60 → UX61. UX58 and UX59 are implemented
+locally; UX60 and UX61 remain. The Windows signal still has to be recorded on
+the real runner before the track closes. UX59 and UX60 may share a change set
+if the diff stays small, but their acceptance stays separate. UX61 closes the
+track only after the real Windows run is green. Do not start with a Windows
+skip or a test-only width increase: both hide the user-facing issue.
 
 **Cross-cutting acceptance:**
 
@@ -3333,8 +3353,8 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,807 passed, 1 skipped** on 2026-11-27 after PF2 streaming
-  write, the DL3 managed-value closure, and the UX58 local layout baseline.
+- Full gate: **4,851 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write, the DL3 managed-value closure, and the UX58/UX59 local layout work.
   The 0.11.1 release covers the optimizer close/cancel lifecycle fix. Real
   `nec2c` integration: **186 passed**. The suite also covers the QA and
   technical-debt closure,

@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .form_layout import configure_form_layout
+
 
 class FormLayoutMode(StrEnum):
     SINGLE = "single"
@@ -91,12 +93,7 @@ class SectionedForm(QWidget):
         columns.setContentsMargins(0, 0, 0, 0)
         columns.setSpacing(24 if column_count == 2 else 0)
         for column_sections in assigned:
-            form = QFormLayout()
-            form.setContentsMargins(0, 0, 0, 0)
-            form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
-            if column_count == 2:
-                form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
-                form.setVerticalSpacing(6)
+            form = configure_form_layout(QFormLayout())
             self._populate(form, column_sections)
             self._forms.append(form)
             columns.addLayout(form, 1)
@@ -163,9 +160,9 @@ class SectionedForm(QWidget):
                 if row.label is None:
                     form.addRow(row.control)
                 elif isinstance(row.label, QLabel):
+                    row.label.setWordWrap(self._column_count == 1)
                     form.addRow(row.label, row.control)
                 else:
-                    form.addRow(
-                        self._label_factory(row.label, row.control),
-                        row.control,
-                    )
+                    label = self._label_factory(row.label, row.control)
+                    label.setWordWrap(self._column_count == 1)
+                    form.addRow(label, row.control)

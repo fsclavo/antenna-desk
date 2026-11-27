@@ -49,6 +49,7 @@ from ..units import (
     length_unit_key,
 )
 from .form_i18n import FormLabels
+from .form_layout import configure_form_layout
 from .form_units import LengthField, LengthFieldSpec
 from .starting_dimensions import StartingDimensionsState
 from .yagi_form import YagiForm
@@ -332,6 +333,7 @@ class StackedYagiForm(QWidget):
         self._wilkinson_note.setVisible(False)
 
         form = QFormLayout()
+        configure_form_layout(form)
         form.addRow(self._labels.label("stacked_yagi.level_count"), self._level_count)
         form.addRow(self._labels.label("stacked_yagi.spacing"), self._spacing)
         form.addRow(

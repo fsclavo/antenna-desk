@@ -1,7 +1,7 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline added
-  2026-11-27; UX59–UX61 pending Windows verification
+- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline and
+  UX59 wrapping added 2026-11-27; UX60–UX61 pending Windows verification
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, UX58, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX61
 
@@ -123,6 +123,27 @@ The offscreen layout guard now runs on one documented platform baseline:
 - The `WrapLongRows` rule in the accessibility section remains the contract for
   single-column forms; the deterministic baseline makes it testable, and UX59
   applies it across the forms.
+
+## UX59 shared form-width policy (2026-11-27)
+
+`ui/widgets/form_layout.configure_form_layout()` is the single
+`QFormLayout` policy for generator forms:
+
+- `WrapLongRows` moves a long label above its field instead of widening the
+  form;
+- `AllNonFixedFieldsGrow` lets fields use the available width;
+- content margins are zero, with an explicit 8 px horizontal and 6 px vertical
+  spacing so the system style cannot change the width contract;
+- every `QFormLayout` in `ui/widgets/*_form.py` uses it, including the nested
+  EndFed network groups.
+
+`SectionedForm` applies the helper to both single- and two-column layouts.
+One-column labels wrap by default, including `FormLabels` labels in plain
+family forms. Two-column layouts keep the row-wrap policy but override label
+word-wrap so the Yagi height budget does not regress. The regression tests
+cover synthetic very-long English and Spanish labels at 560 px and 920 px, the
+full 26-dialog guard at 920×640 with Large Spanish, and the twelve UX54
+initial widths with Large Spanish.
 
 ## UX54 audit: scroll-heavy generator dialogs
 

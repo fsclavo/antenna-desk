@@ -49,6 +49,7 @@ from ..units import (
     radius_to_m,
 )
 from .form_i18n import FormLabels, retranslate_combo
+from .form_layout import configure_form_layout
 from .form_units import LengthField, LengthFieldSpec, apply_radius_units
 from .ground_presets import GroundPresetController
 from .radial_presets import RadialPresetController
@@ -217,6 +218,7 @@ class VerticalForm(QWidget):
         self._coil_summary.setWordWrap(True)
 
         coil_form = QFormLayout(self._coil_group)
+        configure_form_layout(coil_form)
         coil_form.addRow(self._coil_enabled)
         coil_form.addRow(self._labels.label("vertical.loading_coil_offset"), self._coil_offset)
         coil_form.addRow(
@@ -262,6 +264,7 @@ class VerticalForm(QWidget):
         self._top_hat_radius_field.configure(0.5)
 
         top_hat_form = QFormLayout(self._top_hat_group)
+        configure_form_layout(top_hat_form)
         top_hat_form.addRow(self._top_hat_enabled)
         top_hat_form.addRow(
             self._labels.label("vertical.top_hat_radius"),
@@ -280,6 +283,7 @@ class VerticalForm(QWidget):
             self._coil_offset_field.configure(1.0)
 
         form = QFormLayout()
+        configure_form_layout(form)
         form.addRow(self._labels.label("field.frequency"), self._frequency)
         form.addRow(self._labels.label("vertical.height"), self._height)
         form.addRow(self._labels.label("vertical.base_height"), self._base_height)
