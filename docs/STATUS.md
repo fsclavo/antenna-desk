@@ -63,8 +63,9 @@
 - UX46–UX49 are **implemented 2026-11-26**: the 3D lobe shows the
   maximum-gain ray, same-elevation back ray with F/B for explicit beam axes,
   antenna azimuth/vertical marker, azimuth reference ring, compact labels, a
-  top-view plan inset, and a feed-centered canonical antenna overlay with
-  Auto/Full/Outline modes. The geometry controls include an opt-in **Link 3D
+  top-view plan inset, and a canonical antenna overlay centered on the beam
+  symmetry plane for explicit-forward-axis families (feed-centered otherwise),
+  with Auto/Full/Outline modes. The geometry controls include an opt-in **Link 3D
   views** camera link that syncs yaw/pitch only, resets both cameras on design
   change, and turns off with an explanation in Construction view. The
   construction-sheet isometric export keeps a fixed 38°/26° camera.
@@ -117,6 +118,12 @@
   project-bundle schema, release, and DL6 documentation and added a schema
   guard; see
   [`archive/qa/QA_PASS_2026-11-26.md`](archive/qa/QA_PASS_2026-11-26.md).
+- UX56–UX57 are **implemented 2026-11-26**: the schematic 3D antenna overlay
+  now centers on the beam symmetry plane for families with an explicit forward
+  axis while keeping the feed marker at its real offset, and the dashed
+  same-elevation back ray ends at the actual rear gain. The back ray and label
+  are hidden when F/B is unavailable or the marker is too close to the origin.
+  No solver, domain, schema, or report change.
 - FP1 is **implemented 2026-11-26** (schema 72, ADR-0055). The half-wave Flower
   Pot is a first-class VHF family: two collinear wires with the feed at the
   junction, an ideal common-mode choke, published 2 m/6 m physical cut rows, an
@@ -172,7 +179,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX55 and FP1 are implemented; the half-wave Flower Pot ships at schema 72. Choose the next bounded family or release slice, and keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
+2. UX46–UX57 and FP1 are implemented; the half-wave Flower Pot ships at schema 72. Choose the next bounded family or release slice, and keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

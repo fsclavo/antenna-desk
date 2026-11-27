@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **3D lobe presentation corrections (UX56–UX57).** The schematic antenna
+  overlay now centers on the beam symmetry plane for families with an explicit
+  forward axis, while the feed marker keeps its real cross-boom offset;
+  verticals, dipoles, loops without a declared axis, and custom models remain
+  feed-centered. The dashed same-elevation back ray now ends at the actual rear
+  gain (`max gain − F/B`) and is hidden when F/B is unavailable or the marker is
+  below the legibility guard. No solver, domain, schema, or report change.
 - **Flower Pot half-wave family (FP1, schema 72).** A first-class VK2ZOI-style
   coax vertical with two collinear wires, a feed at their junction, an ideal
   common-mode choke, published 2 m/6 m physical cut rows, and an explicit

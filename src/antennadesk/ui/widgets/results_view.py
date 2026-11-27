@@ -792,7 +792,12 @@ class ResultsView(QWidget):
     def set_design(self, design: DesignVariant | None) -> None:
         self._design = design
         self._pattern_3d.set_overlay(
-            overlay_from_model(design.antenna if design is not None else None)
+            overlay_from_model(
+                design.antenna if design is not None else None,
+                forward_azimuth=(
+                    forward_axis_azimuth(design.parameters) if design is not None else None
+                ),
+            )
         )
         self._render_patterns()
         self._render_confidence()

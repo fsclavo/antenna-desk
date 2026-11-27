@@ -1657,10 +1657,11 @@ with a large top load.
   support wires are thinner and dashed. **Auto** draws every wire below the
   display budget and a derived outline above it; **Full** always draws every
   wire; **Outline** is a simplified convex-hull projection for large arrays.
-  The 3D lobe also shows a maximum-gain ray, a dashed same-elevation back ray
-  with the project F/B value when the family has an explicit forward axis, an
-  antenna azimuth marker, and a top-view plan inset with the feed and azimuth
-  arrows. The **Metric** selector changes the cut titles, axis labels, polar
+  The 3D lobe also shows a maximum-gain ray and a dashed same-elevation back ray
+  ending at the actual rear gain when the family has an explicit forward axis
+  and a finite F/B; the label carries the project F/B value. An antenna azimuth
+  marker and a top-view plan inset with the feed and azimuth arrows complete the
+  orientation aids. The **Metric** selector changes the cut titles, axis labels, polar
   footers, 3D label, and cursor readout.
   The geometry panel has a **Link 3D** checkbox, off by default. Enabling
   it switches Construction to 3D, if needed, and adopts the geometry camera;

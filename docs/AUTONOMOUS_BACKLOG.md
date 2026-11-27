@@ -52,13 +52,13 @@ reused by UX47/UX48. They do not change the solver, domain model, project schema
 pattern storage, or report format, and add no 3D engine or dependency. See §3D
 pattern orientation and comparison.
 
-UX56–UX57 are proposed presentation-only follow-ups to that track: UX56 centers
-the schematic antenna overlay on the beam symmetry plane for families with an
-explicit forward axis, fixing the plan-view offset visible on side-fed quad
-loops; UX57 draws the same-elevation back ray to the actual rear gain instead of
-reusing the forward maximum radius. They change no solver, domain model,
-project schema, pattern storage, or report format. See §3D lobe presentation
-corrections.
+UX56–UX57 are implemented presentation-only follow-ups to that track: UX56
+centers the schematic antenna overlay on the beam symmetry plane for families
+with an explicit forward axis, fixing the plan-view offset visible on side-fed
+quad loops; UX57 draws the same-elevation back ray to the actual rear gain
+instead of reusing the forward maximum radius. They change no solver, domain
+model, project schema, pattern storage, or report format. See §3D lobe
+presentation corrections.
 
 UX50–UX55 are implemented and fix the Yagi dialog's unreachable action area
 as the reference implementation. The compact-family migration and the
@@ -105,8 +105,8 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX53 | Complex family dialogs, wave 2 | M | UX51 | **Implemented 2026-11-26.** Beverage, SCV, J-pole, and OCFD use `FormDialogFrame` and `SectionedForm` with two semantic columns, scroll fallback, and actions outside. All four fit 920×640 without horizontal scrolling in EN/ES; the OCFD band-plan footer stays outside the scroll; large Spanish adds only a small vertical scroll for Beverage/SCV. Parameter round-trips and family tests are unchanged. See §UX53. |
 | UX54 | Scroll-heavy family dialog audit | M–L | UX51 | **Implemented 2026-11-26.** All twelve scroll-heavy dialogs use `FormDialogFrame` with a single semantic column and actions outside the scroll. ADR-0056 records the per-dialog decision; no two-column migration was needed. Stacked Yagi promotes its level/spacing/feed controls above the embedded editor. Primary fields are visible at 1920×1080 and 1366×768, with no horizontal scrollbar. No solver/schema change. See §UX54. |
 | UX55 | Compact families, visual QA, and track closure | S–M | UX51 for start; UX52–UX54 for closure | **Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L use `FormDialogFrame` without scroll and stay compact/single-column. All 25 family dialogs are in the guard with no exceptions. A 400-check offscreen matrix (light/dark, Medium/Large, EN/ES, 1366×768/1920×1080) passed with no action outside the dialog and no horizontal scrollbar. The manual desktop 125%/150% check passed, including Large font. See §UX55 and `archive/qa/QA_PASS_2026-11-26_ux55.md`. |
-| UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Proposed 2026-11-26; not started.** Center the schematic overlay on the feed projected onto the beam symmetry plane for families with an explicit forward axis; keep the feed marker at its real cross-boom offset; keep feed-centering for verticals, dipoles, loops without a declared axis, and custom models. Fixes the quad-beam plan-view offset without changing the pattern data or the 3D scale. No solver, domain, schema, or report change. See §UX56. |
-| UX57 | 3D back ray at the actual rear gain | S | UX46 | **Proposed 2026-11-26; not started.** Draw the same-elevation back ray to the rear gain (`max gain − F/B`) instead of reusing the forward peak radius; hide it when F/B is unavailable. The label already reports the correct F/B. No solver, domain, schema, or report change. See §UX57. |
+| UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Implemented 2026-11-26.** The overlay is centered on the feed projected onto the beam symmetry plane for families with an explicit forward axis; the feed marker keeps its real cross-boom offset. Verticals, dipoles, loops without a declared axis, and custom models remain feed-centered. The uniform 35% scale is measured from the new center. No solver, domain, schema, or report change. See §UX56. |
+| UX57 | 3D back ray at the actual rear gain | S | UX46 | **Implemented 2026-11-26.** The same-elevation back ray ends at `max gain − F/B`, not at the forward peak radius. A missing or non-finite F/B hides the ray and label, and the minimum-distance guard hides a degenerate marker. No solver, domain, schema, or report change. See §UX57. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -1855,8 +1855,8 @@ uses `PolarPatternView`, not this widget, and is out of scope.
   antipodal direction and call it "Back": in ground mode the exact antipodal of
   a low-angle lobe falls below the ground plane and is not sampled. If an exact
   antipodal reference is added later, label it "Opposite direction", not
-  "Back". **Follow-up (proposed 2026-11-26):** UX57 replaces the forward-radius
-  back marker with the actual rear gain; the direction and F/B data path stay.
+  "Back". **Superseded for back-ray length by UX57 (implemented 2026-11-26):** the
+  direction and F/B data path stay; the marker now uses the actual rear gain.
 - **Visual identity.** Add one theme-aware antenna color role and one feed-marker
   painter used by both `GeometryView`'s 3D view and `RadiationPattern3DView`.
   The feed marker must have the same color, shape, and radius in both. Do not
@@ -1917,9 +1917,9 @@ the canonical wire snapshot, feed-centers it, applies one uniform scale,
 preserves support wires (thinner/dashed), and draws the shared feed marker.
 Outline mode is a convex-hull projection of the canonical endpoints. The PNG
 export uses the existing `grab()` path and respects the overlay state.
-**Follow-up (proposed 2026-11-26):** UX56 revises the centering rule for
-families with an explicit forward axis; the feed-centered rule remains the
-default for non-beam families.
+**Superseded for explicit-forward-axis families by UX56 (implemented
+2026-11-26):** those families center on the beam symmetry plane; the
+feed-centered rule remains the default for non-beam families.
 
 **Scope:** opt-in canonical wireframe inside the 3D lobe.
 
@@ -2034,7 +2034,7 @@ change; no new engine.
 4. **UX47 after UX46, in parallel with UX48/UX49.** It reuses the UX46
    azimuth/max-gain data and visual tokens; it must not block either later
    layer.
-5. **UX56–UX57 after UX46, with UX56 also after UX48.** They are proposed
+5. **UX56–UX57 after UX46, with UX56 also after UX48.** They are implemented
    corrections to the overlay centering and back-ray radius; see §3D lobe
    presentation corrections. They do not change the pattern data or the 3D
    scale. UX56 and UX57 are independent and may land in either order.
@@ -2094,6 +2094,15 @@ unchanged. Do not fold in the 44 dB scale discussion or the plan-envelope
 behavior from UX46; they are out of scope.
 
 ### UX56 — Center the 3D antenna overlay on the beam symmetry plane
+
+**Implemented 2026-11-26.** `AntennaOverlay` carries a presentation-only
+`center` (default: the feed) and `overlay_from_model(..., forward_azimuth=...)`
+projects the feed onto the bounding-box symmetry plane of the non-support
+wires. `ResultsView.set_design()` supplies the declared forward axis; the view
+translates wires by `center`, scales from `center`, and draws the shared feed
+marker at its real `(feed - center) * scale` offset. The note and help text
+describe the family-aware centering. Pure tests cover azimuth 0/90, the real
+cross-boom offset, the 35% extent, a center-fed Yagi, and the non-beam default.
 
 **Goal:** make the schematic overlay's symmetry axis coincide with the lobe
 axis in the azimuth/plan projection for families with an explicit forward axis,
@@ -2225,6 +2234,13 @@ non-beam behavior. There is no numerical risk.
 **Effort:** S–M (1–2 days), including tests, help, and docs.
 
 ### UX57 — Draw the 3D back ray at the actual rear gain
+
+**Implemented 2026-11-26.** `back_gain_db()` returns `forward - max(F/B, 0)`,
+or `None` for a missing/non-finite F/B. `_shows_back_ray()` requires a declared
+forward axis and a finite F/B. The paint path uses the rear gain and hides the
+ray/label when the projected marker is below the minimum-distance guard. Pure
+tests cover finite, zero, missing, non-finite, and anomalous negative F/B, plus
+the normalized radius ratio.
 
 **Goal:** make the dashed back ray's length encode the same F/B that its label
 reports. The direction is already correct (same θ, φ+180°); only the radius is

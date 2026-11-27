@@ -12,7 +12,11 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.pattern_overlay import OverlayMode
-from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
+from antennadesk.ui.widgets.radiation_pattern_3d_view import (
+    RadiationPattern3DView,
+    back_gain_db,
+    pattern_radius_fraction,
+)
 
 POINTS = (
     (0.0, 0.0, 12.3),
@@ -41,6 +45,34 @@ def test_pattern_3d_accepts_orientation_and_back_ray_metadata(qtbot: QtBot) -> N
     assert view._back_label() == "Back (same elevation) · F/B 12.3 dB"
     assert view._antenna_label() == "Antenna φ=90°"
     assert "φ=90°" in view._max_gain_label_with_azimuth((75.0, 90.0, 12.34))
+
+
+def test_back_gain_uses_the_f_b_and_handles_missing_or_anomalous_values() -> None:
+    assert back_gain_db(10.0, 6.0) == pytest.approx(4.0)
+    assert back_gain_db(10.0, 0.0) == pytest.approx(10.0)
+    assert back_gain_db(10.0, None) is None
+    assert back_gain_db(10.0, float("nan")) is None
+    assert back_gain_db(10.0, -3.0) == pytest.approx(10.0)
+    rear = back_gain_db(10.0, 6.0)
+    assert rear is not None
+    assert pattern_radius_fraction(rear, -30.0, 10.0) == pytest.approx(34.0 / 40.0)
+    assert pattern_radius_fraction(10.0, -30.0, 10.0) == pytest.approx(1.0)
+
+
+def test_pattern_3d_hides_the_back_ray_without_a_finite_f_b(qtbot: QtBot) -> None:
+    view = RadiationPattern3DView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_points(POINTS, forward_azimuth=0.0, front_to_back_db=None)
+    assert view._shows_back_ray() is False
+    assert view._back_gain(10.0) is None
+
+    view.set_points(POINTS, forward_azimuth=0.0, front_to_back_db=float("inf"))
+    assert view._shows_back_ray() is False
+
+    view.set_points(POINTS, forward_azimuth=0.0, front_to_back_db=6.0)
+    assert view._shows_back_ray() is True
+    assert view._back_gain(10.0) == pytest.approx(4.0)
 
 
 def test_pattern_3d_vertical_antenna_uses_a_dot_not_a_front_axis(qtbot: QtBot) -> None:
@@ -159,6 +191,37 @@ def test_results_view_passes_forward_axis_and_front_to_back(
     image_path = tmp_path / "pattern-overlay.png"
     view.save_pattern_image(image_path)
     assert image_path.read_bytes().startswith(b"\x89PNG")
+
+
+def test_results_view_centers_a_quad_overlay_on_the_symmetry_plane(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.application.use_cases.create_dipole_project import (
+        CreateDipoleProject,
+        CreateDipoleProjectCommand,
+    )
+    from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
+    from antennadesk.ui.widgets.results_view import ResultsView
+
+    parameters = quad_beam_parameters(frequency_hz=14_100_000.0, azimuth_deg=0.0)
+    design = CreateDipoleProject().execute(
+        CreateDipoleProjectCommand(
+            project_name="Quad overlay",
+            variant_name="Quad",
+            parameters=parameters,
+        )
+    )
+    view = ResultsView(Translator(Language.ENGLISH))
+    qtbot.addWidget(view)
+
+    view.set_design(design.designs[0])
+
+    overlay = view._pattern_3d._overlay
+    assert overlay is not None
+    assert overlay.center is not None
+    assert overlay.center[1] == pytest.approx(0.0)
+    assert overlay.feed[1] < overlay.center[1]
+    assert "Schematic" in view._pattern_3d._overlay_note()
 
 
 def test_pattern_3d_draws_a_plan_inset_with_footprint_and_feed(qtbot: QtBot) -> None:

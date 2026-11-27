@@ -10,6 +10,7 @@ import pytest
 from pytestqt.qtbot import QtBot
 
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.quad_beam import quad_beam_parameters
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.pattern_overlay import (
@@ -25,7 +26,7 @@ from antennadesk.ui.pattern_overlay import (
 from antennadesk.ui.widgets.radiation_pattern_3d_view import RadiationPattern3DView
 
 
-def test_overlay_is_feed_centered_and_uses_one_uniform_scale() -> None:
+def test_overlay_uses_one_uniform_scale_from_its_center() -> None:
     model = YagiParameters(
         frequency_hz=14_100_000.0,
         elements=(
@@ -45,6 +46,61 @@ def test_overlay_is_feed_centered_and_uses_one_uniform_scale() -> None:
 
     assert max(distances) == pytest.approx(OVERLAY_EXTENT_FRACTION)
     assert all(distance <= OVERLAY_EXTENT_FRACTION + 1e-12 for distance in distances)
+
+
+@pytest.mark.parametrize("azimuth_deg", [0.0, 90.0])
+def test_beam_overlay_centers_on_the_symmetry_plane(azimuth_deg: float) -> None:
+    parameters = quad_beam_parameters(frequency_hz=14_100_000.0, azimuth_deg=azimuth_deg)
+    overlay = overlay_from_model(
+        parameters.to_antenna(),
+        forward_azimuth=azimuth_deg,
+    )
+    assert overlay is not None
+    assert overlay.center is not None
+
+    points = [
+        point for wire in overlay.wires if not wire.support for point in (wire.start, wire.end)
+    ]
+    center_x = (min(point[0] for point in points) + max(point[0] for point in points)) / 2.0
+    center_y = (min(point[1] for point in points) + max(point[1] for point in points)) / 2.0
+    angle = math.radians(azimuth_deg)
+    cross = (-math.sin(angle), math.cos(angle))
+    offset = (overlay.feed[0] - center_x) * cross[0] + (overlay.feed[1] - center_y) * cross[1]
+
+    assert (
+        (overlay.center[0] - center_x) * cross[0] + (overlay.center[1] - center_y) * cross[1]
+    ) == pytest.approx(0.0, abs=1e-9)
+    assert overlay.feed[0] - overlay.center[0] == pytest.approx(offset * cross[0])
+    assert overlay.feed[1] - overlay.center[1] == pytest.approx(offset * cross[1])
+    assert overlay.center[2] == pytest.approx(overlay.feed[2])
+    assert overlay.center != overlay.feed
+
+    scale = overlay_scale(overlay)
+    distances = [
+        math.dist(point, overlay.center) * scale
+        for wire in overlay.wires
+        for point in (wire.start, wire.end)
+    ]
+    assert max(distances) == pytest.approx(OVERLAY_EXTENT_FRACTION)
+
+
+def test_center_fed_beam_and_non_beam_overlays_keep_the_feed_center() -> None:
+    yagi = YagiParameters(
+        frequency_hz=14_100_000.0,
+        elements=(
+            YagiElement(position_m=0.0, length_m=10.2, radius_m=0.001),
+            YagiElement(position_m=2.1, length_m=9.8, radius_m=0.001),
+        ),
+        height_m=10.0,
+        azimuth_deg=90.0,
+    )
+    beam = overlay_from_model(yagi.to_antenna(), forward_azimuth=90.0)
+    vertical = overlay_from_model(yagi.to_antenna())
+    assert beam is not None
+    assert vertical is not None
+
+    assert beam.center == pytest.approx(beam.feed)
+    assert vertical.center == pytest.approx(vertical.feed)
 
 
 def test_overlay_keeps_support_wires_and_excludes_transmission_lines() -> None:

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -30,6 +31,11 @@ class OverlayWire:
 class AntennaOverlay:
     wires: tuple[OverlayWire, ...]
     feed: tuple[float, float, float]
+    center: tuple[float, float, float] | None = None
+
+    def __post_init__(self) -> None:
+        if self.center is None:
+            object.__setattr__(self, "center", self.feed)
 
     @property
     def wire_count(self) -> int:
@@ -40,8 +46,47 @@ def _support_wire(wire_id: str) -> bool:
     return wire_id == "mast" or wire_id.startswith("guy-")
 
 
-def overlay_from_model(model: AntennaModel | None) -> AntennaOverlay | None:
-    """Return a feed-centered presentation snapshot, or None without a model."""
+def _symmetry_center(
+    wires: tuple[OverlayWire, ...],
+    feed: tuple[float, float, float],
+    forward_azimuth: float | None,
+) -> tuple[float, float, float]:
+    """Return the pattern-origin proxy for the overlay translation.
+
+    Beam families use the feed projected onto the beam symmetry plane, which is
+    the bounding-box center of the non-support wires in the horizontal plane.
+    The feed itself keeps its real cross-boom offset for the marker.
+    """
+
+    if forward_azimuth is None:
+        return feed
+    points = [point for wire in wires if not wire.support for point in (wire.start, wire.end)]
+    if not points:
+        return feed
+    center_x = (min(point[0] for point in points) + max(point[0] for point in points)) / 2.0
+    center_y = (min(point[1] for point in points) + max(point[1] for point in points)) / 2.0
+    angle = math.radians(forward_azimuth)
+    cross_x = -math.sin(angle)
+    cross_y = math.cos(angle)
+    offset = (feed[0] - center_x) * cross_x + (feed[1] - center_y) * cross_y
+    return (
+        feed[0] - offset * cross_x,
+        feed[1] - offset * cross_y,
+        feed[2],
+    )
+
+
+def overlay_from_model(
+    model: AntennaModel | None,
+    *,
+    forward_azimuth: float | None = None,
+) -> AntennaOverlay | None:
+    """Return a presentation snapshot, or None without a model.
+
+    Families with a declared forward axis are centered on the beam symmetry
+    plane; all other families remain feed-centered. The feed marker keeps its
+    real offset in both cases.
+    """
 
     if model is None:
         return None
@@ -57,22 +102,28 @@ def overlay_from_model(model: AntennaModel | None) -> AntennaOverlay | None:
     )
     if not wires:
         return None
+    feed_point = (feed.x_m, feed.y_m, feed.z_m)
     return AntennaOverlay(
         wires=wires,
-        feed=(feed.x_m, feed.y_m, feed.z_m),
+        feed=feed_point,
+        center=_symmetry_center(wires, feed_point, forward_azimuth),
     )
 
 
 def overlay_scale(overlay: AntennaOverlay) -> float:
     """Return the uniform scale that puts the largest extent at 35 % radius."""
 
-    feed = overlay.feed
+    center = overlay.center or overlay.feed
     maximum = 0.0
     for wire in overlay.wires:
         for point in (wire.start, wire.end):
             maximum = max(
                 maximum,
-                ((point[0] - feed[0]) ** 2 + (point[1] - feed[1]) ** 2 + (point[2] - feed[2]) ** 2)
+                (
+                    (point[0] - center[0]) ** 2
+                    + (point[1] - center[1]) ** 2
+                    + (point[2] - center[2]) ** 2
+                )
                 ** 0.5,
             )
     return OVERLAY_EXTENT_FRACTION / max(maximum, 1e-9)

@@ -2425,14 +2425,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.pattern.overlay_show": {
         Language.ENGLISH: (
-            "Overlay the canonical antenna wireframe on the pattern. It is "
-            "feed-centered and schematic: orientation is exact, but size and "
-            "height are not to scale."
+            "Overlay the canonical antenna wireframe. Beam families are centered "
+            "on the beam symmetry plane; other families are feed-centered. "
+            "Orientation is exact; size and height are not to scale; the feed "
+            "marker keeps its real offset."
         ),
         Language.SPANISH: (
-            "Superpone el wireframe canónico de la antena al patrón. Está centrado "
-            "en la alimentación y es esquemático: la orientación es exacta, pero "
-            "tamaño y altura no están a escala."
+            "Superponé el esquema canónico. Las familias de haz se centran en su "
+            "plano de simetría; las demás, en la alimentación. Orientación exacta; "
+            "tamaño y altura no a escala; el marcador de alimentación conserva su "
+            "desplazamiento real."
         ),
     },
     "help.pattern.overlay_mode": {
@@ -10122,6 +10124,16 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "pattern.overlay_schematic": {
         Language.ENGLISH: "Schematic: orientation exact; size and height are not to scale.",
         Language.SPANISH: "Esquema: orientación exacta; tamaño y altura no a escala.",
+    },
+    "pattern.overlay_centered": {
+        Language.ENGLISH: (
+            "Schematic: centered on the beam symmetry plane; orientation exact; "
+            "size and height are not to scale."
+        ),
+        Language.SPANISH: (
+            "Esquema: centrado en el plano de simetría del haz; orientación exacta; "
+            "tamaño y altura no a escala."
+        ),
     },
     "pattern.overlay_outline": {
         Language.ENGLISH: "Outline: simplified envelope; choose Full for every wire.",

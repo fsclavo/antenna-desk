@@ -67,6 +67,27 @@ def gain_color(normalized: float, alpha: int = GAIN_LINE_ALPHA) -> QColor:
     )
 
 
+def pattern_radius_fraction(gain: float, min_gain: float, max_gain: float) -> float:
+    """Map a gain to the normalized 3D pattern radius, before the paint floor."""
+
+    if max_gain <= min_gain:
+        return 0.0
+    return max((gain - min_gain) / (max_gain - min_gain), 0.0)
+
+
+def back_gain_db(forward_gain: float, front_to_back_db: float | None) -> float | None:
+    """Return the rear gain for the same-elevation back ray.
+
+    The F/B passed by ``ResultsView`` is already computed from the original
+    far field at the forward maximum's elevation. A negative value is a data
+    anomaly; clamp it to zero so the back ray cannot exceed the forward radius.
+    """
+
+    if front_to_back_db is None or not math.isfinite(front_to_back_db):
+        return None
+    return forward_gain - max(front_to_back_db, 0.0)
+
+
 @dataclass(frozen=True, slots=True)
 class _MeshVertex:
     x: float
@@ -628,7 +649,14 @@ class RadiationPattern3DView(QWidget):
         )
 
     def _shows_back_ray(self) -> bool:
-        return self._forward_azimuth is not None
+        return (
+            self._forward_azimuth is not None
+            and self._front_to_back_db is not None
+            and math.isfinite(self._front_to_back_db)
+        )
+
+    def _back_gain(self, forward_gain: float) -> float | None:
+        return back_gain_db(forward_gain, self._front_to_back_db)
 
     def _back_label(self) -> str:
         if self._front_to_back_db is not None and math.isfinite(self._front_to_back_db):
@@ -766,6 +794,10 @@ class RadiationPattern3DView(QWidget):
         if self._effective_overlay_mode() is OverlayMode.OUTLINE:
             return self._translator.t("pattern.overlay_outline")
         note = self._translator.t("pattern.overlay_schematic")
+        if self._overlay is not None:
+            center = self._overlay.center or self._overlay.feed
+            if math.dist(center, self._overlay.feed) > 1e-9:
+                note = self._translator.t("pattern.overlay_centered")
         if self._overlay is not None and any(wire.support for wire in self._overlay.wires):
             note = f"{note} {self._translator.t('pattern.overlay_supports')}"
         return note
@@ -778,14 +810,15 @@ class RadiationPattern3DView(QWidget):
         if not self._overlay_visible or self._overlay is None:
             return
         overlay = self._overlay
+        center = overlay.center or overlay.feed
         feed = overlay.feed
         scale = overlay_scale(overlay)
 
         def point(value: tuple[float, float, float]) -> QPointF:
             return screen_world(
-                (value[0] - feed[0]) * scale,
-                (value[1] - feed[1]) * scale,
-                (value[2] - feed[2]) * scale,
+                (value[0] - center[0]) * scale,
+                (value[1] - center[1]) * scale,
+                (value[2] - center[2]) * scale,
             )
 
         mode = self._effective_overlay_mode()
@@ -805,7 +838,16 @@ class RadiationPattern3DView(QWidget):
                 painter.setPen(QPen(self._colors.antenna, 1.5, Qt.PenStyle.DashLine))
                 painter.setBrush(Qt.BrushStyle.NoBrush)
                 painter.drawPolygon(QPolygonF([QPointF(x, y) for x, y in hull]))
-        draw_feed_marker(painter, screen_world(0.0, 0.0, 0.0), self._colors.feed, radius=4.0)
+        draw_feed_marker(
+            painter,
+            screen_world(
+                (feed[0] - center[0]) * scale,
+                (feed[1] - center[1]) * scale,
+                (feed[2] - center[2]) * scale,
+            ),
+            self._colors.feed,
+            radius=4.0,
+        )
         painter.setFont(scaled_font(7))
         painter.setPen(self._colors.secondary_text)
         metrics = painter.fontMetrics()
@@ -942,7 +984,7 @@ class RadiationPattern3DView(QWidget):
         ) -> tuple[float, float, float]:
             theta = math.radians(theta_deg)
             phi = math.radians(phi_deg)
-            radial = max((gain - min_gain) / (max_gain - min_gain), 0.0)
+            radial = pattern_radius_fraction(gain, min_gain, max_gain)
             radius = max(radial, 0.02)
             x = math.sin(theta) * math.cos(phi) * radius
             y = math.sin(theta) * math.sin(phi) * radius
@@ -1103,18 +1145,20 @@ class RadiationPattern3DView(QWidget):
 
         max_point = mesh.max_point
         marker = screen(*max_point)
+        max_ray_px = math.hypot(marker.x() - origin.x(), marker.y() - origin.y())
         back_marker: QPointF | None = None
-        if self._shows_back_ray():
-            back_marker = screen(
+        back_gain = self._back_gain(max_point[2]) if self._shows_back_ray() else None
+        if back_gain is not None:
+            candidate = screen(
                 max_point[0],
                 (max_point[1] + 180.0) % 360.0,
-                max_point[2],
+                back_gain,
             )
+            distance = math.hypot(candidate.x() - origin.x(), candidate.y() - origin.y())
+            if distance >= max(8.0, max_ray_px * 0.03):
+                back_marker = candidate
         self._draw_arrow(painter, origin, marker, self._colors.feed)
-        if (
-            back_marker is not None
-            and math.hypot(back_marker.x() - origin.x(), back_marker.y() - origin.y()) > 2.0
-        ):
+        if back_marker is not None:
             self._draw_arrow(
                 painter,
                 origin,
