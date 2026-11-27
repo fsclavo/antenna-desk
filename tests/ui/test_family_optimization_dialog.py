@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import threading
+
 import pytest
 from main_window_support import FakeSolver
 from PySide6.QtCore import Qt
@@ -24,6 +26,19 @@ from antennadesk.ui.units import UnitSystem
 from antennadesk.ui.widgets.task_progress import TaskProgressState
 
 
+class BlockingSolver(FakeSolver):
+    """Keep the optimizer worker alive until the test releases it."""
+
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self.release = threading.Event()
+
+    def run(self, model, spec, **kwargs):  # type: ignore[no-untyped-def]
+        self.started.set()
+        self.release.wait(10.0)
+        return super().run(model, spec, **kwargs)
+
+
 def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
     parameters = DipoleParameters(
         frequency_hz=7_100_000.0,
@@ -31,6 +46,7 @@ def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
         height_m=8.0,
     )
     language = kwargs.pop("language", Language.ENGLISH)
+    solver = kwargs.pop("solver", None)
     assert isinstance(language, Language)
     availability = optimizer_availability(parameters)
     assert availability.descriptor is not None
@@ -43,7 +59,7 @@ def _dialog(**kwargs: object) -> FamilyOptimizationDialog:
     return FamilyOptimizationDialog(
         Translator(language),
         UnitSystem.METRIC,
-        FakeSolver(),
+        solver if isinstance(solver, FakeSolver) else FakeSolver(),
         availability.descriptor,
         base_spec,
         **kwargs,  # type: ignore[arg-type]
@@ -408,6 +424,79 @@ def test_family_dialog_reports_estimated_evaluations(qtbot: QtBot) -> None:
     assert dialog._task_progress.progress_value == 25
     assert "25 / ~100" in dialog._task_progress.text
     assert "0.75" in dialog._task_progress.text
+
+
+def test_family_dialog_locks_close_and_cancels_without_destroying_the_worker(
+    qtbot: QtBot,
+) -> None:
+    solver = BlockingSolver()
+    dialog = _dialog(solver=solver)
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    dialog._start()
+    assert solver.started.wait(5.0)
+    qtbot.waitUntil(lambda: dialog._runner.is_running, timeout=5_000)
+
+    assert dialog._cancel.isEnabled()
+    assert not dialog._close.isEnabled()
+
+    dialog.reject()
+
+    assert dialog.isVisible()
+    assert dialog._runner.is_running
+    assert dialog._cancel_token is not None
+    assert dialog._cancel_token.is_cancelled()
+
+    solver.release.set()
+    try:
+        qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
+    finally:
+        if dialog._runner.is_running:
+            dialog._runner.close(2_000)
+
+
+def test_trapped_yagi_dialog_locks_close_and_cancels_without_destroying_the_worker(
+    qtbot: QtBot,
+) -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    parameters = trap_yagi_parameters()
+    availability = optimizer_availability(parameters)
+    assert availability.descriptor is not None
+    solver = BlockingSolver()
+    dialog = FamilyOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        solver,
+        availability.descriptor,
+        SimulationSpec(
+            frequency_plan=FrequencyPlan.single(parameters.frequency_hz),
+            far_field=far_field_request(5.0, parameters.ground),
+        ),
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    dialog._start()
+    assert solver.started.wait(5.0)
+    qtbot.waitUntil(lambda: dialog._runner.is_running, timeout=5_000)
+    assert dialog._cancel.isEnabled()
+    assert not dialog._close.isEnabled()
+
+    dialog.reject()
+
+    assert dialog.isVisible()
+    assert dialog._runner.is_running
+    assert dialog._cancel_token is not None
+    assert dialog._cancel_token.is_cancelled()
+
+    solver.release.set()
+    try:
+        qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
+    finally:
+        if dialog._runner.is_running:
+            dialog._runner.close(2_000)
 
 
 def test_family_dialog_marks_progress_as_cancelling(qtbot: QtBot) -> None:

@@ -909,6 +909,7 @@ class FamilyOptimizationDialog(QDialog):
         selected = len(self._selected_indices())
         self._run.setEnabled(not running and selected > 0)
         self._cancel.setEnabled(running)
+        self._close.setEnabled(not running)
         self._export.setEnabled(not running and self._result is not None)
         self._apply.setEnabled(not running and self._selected_parameters is not None)
         self._apply_best_swr.setEnabled(not running and self._best_swr_evaluation() is not None)
@@ -1072,8 +1073,8 @@ class FamilyOptimizationDialog(QDialog):
         )
         worker = FamilyOptimizationWorker(self._solver, command)
         worker.progress.connect(self._on_progress)
-        self._update_controls()
         self._runner.start(worker, cancel=self._cancel_token)
+        self._update_controls()
 
     def _cancel_run(self) -> None:
         if self._cancel_token is not None:
@@ -1310,6 +1311,12 @@ class FamilyOptimizationDialog(QDialog):
 
     def selected_result(self) -> OptimizeAntennaResult | None:
         return self._result
+
+    def reject(self) -> None:
+        if self._runner.is_running:
+            self._cancel_run()
+            return
+        super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._runner.is_running:

@@ -618,8 +618,8 @@ class ElementOptimizationDialog(QDialog):
         )
         worker = ElementOptimizationWorker(self._solver, command)
         worker.progress.connect(self._on_progress)
-        self._update_controls()
         self._runner.start(worker, cancel=self._cancel_token)
+        self._update_controls()
 
     def _cancel_run(self) -> None:
         if self._cancel_token is not None:
@@ -806,6 +806,12 @@ class ElementOptimizationDialog(QDialog):
 
     def selected_parameters(self) -> AntennaDesignParameters | None:
         return self._selected_parameters
+
+    def reject(self) -> None:
+        if self._runner.is_running:
+            self._cancel_run()
+            return
+        super().reject()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._runner.is_running:

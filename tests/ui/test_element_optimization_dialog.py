@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
+import threading
+
 import pytest
 from helpers import wait_for_condition
 from PySide6.QtCore import Qt
@@ -71,6 +73,65 @@ class AnalyticalSolver:
                 ),
             ),
         )
+
+
+class BlockingAnalyticalSolver(AnalyticalSolver):
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self.release = threading.Event()
+
+    def run(self, model, spec, **kwargs):  # type: ignore[no-untyped-def]
+        self.started.set()
+        self.release.wait(10.0)
+        return super().run(model, spec, **kwargs)
+
+
+def test_element_dialog_locks_close_and_cancels_without_destroying_the_worker(
+    qtbot: QtBot,
+) -> None:
+    base = DipoleParameters(frequency_hz=7_100_000.0, total_length_m=20.0, height_m=8.0)
+
+    def build(values: dict[str, float]) -> DipoleParameters:
+        return DipoleParameters(
+            frequency_hz=values["__frequency_hz"],
+            total_length_m=values["length_m"],
+            height_m=base.height_m,
+        )
+
+    solver = BlockingAnalyticalSolver()
+    dialog = ElementOptimizationDialog(
+        Translator(Language.ENGLISH),
+        UnitSystem.METRIC,
+        solver,
+        SimulationSpec(frequency_plan=FrequencyPlan.single(7_100_000.0)),
+        title_key="element_optimize.yagi_title",
+        variables=(ElementOptimizationVariable("length_m", "Length", 20.0),),
+        build_parameters=build,
+        objectives=(ElementOptimizationObjective.TARGET_IMPEDANCE,),
+        default_frequency_hz=7_100_000.0,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+
+    dialog._start()
+    assert solver.started.wait(5.0)
+    qtbot.waitUntil(lambda: dialog._runner.is_running, timeout=5_000)
+    assert dialog._cancel.isEnabled()
+    assert not dialog._close.isEnabled()
+
+    dialog.reject()
+
+    assert dialog.isVisible()
+    assert dialog._runner.is_running
+    assert dialog._cancel_token is not None
+    assert dialog._cancel_token.is_cancelled()
+
+    solver.release.set()
+    try:
+        qtbot.waitUntil(lambda: not dialog._runner.is_running, timeout=15_000)
+    finally:
+        if dialog._runner.is_running:
+            dialog._runner.close(2_000)
 
 
 def test_generic_element_dialog_applies_optimized_parameters(qtbot: QtBot) -> None:

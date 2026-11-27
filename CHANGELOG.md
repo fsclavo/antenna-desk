@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Optimizer dialog close and cancel lifecycle.** The family, length,
+  synthesis, and element optimization dialogs now update their controls after
+  the `TaskRunner` starts, so Cancel is enabled and Close is disabled during a
+  run. The Close button and Esc route through cancellation while a worker is
+  active instead of hiding the dialog and destroying its running `QThread`.
+  This fixes the manual trapped-Yagi optimization crash
+  (`QThread: Destroyed while thread is still running`) on Linux and Windows.
+
 ## [0.11.0] - 2026-11-27
 
 ### Added

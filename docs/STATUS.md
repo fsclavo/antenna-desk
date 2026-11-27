@@ -7,6 +7,11 @@
 
 ## Where we are
 
+- A **post-0.11.0 fix on main** prevents optimizer dialogs from closing while
+  their worker thread is running. Cancel is enabled during the run, Close is
+  disabled, and the Close/Esc path now cancels instead of destroying the
+  `QThread`. Regression tests cover the trapped-Yagi family optimizer and the
+  element optimizer. A patch release is pending.
 - 0.11.0 is **published 2026-11-27**. It packages the UX46–UX57 3D pattern
   and dialog-layout work, the extended DL6 stacked-Yagi feed network and
   tolerance checks, and FP1 with schema 73. Full gate: **4,787 passed, 1
