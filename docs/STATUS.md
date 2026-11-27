@@ -1,8 +1,8 @@
 # Project status
 
-**Updated:** 2026-11-26
+**Updated:** 2026-11-27
 **Latest published release:** `0.10.1` (2026-11-24)
-**Development schema:** `72`
+**Development schema:** `73`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
@@ -124,15 +124,17 @@
   same-elevation back ray ends at the actual rear gain. The back ray and label
   are hidden when F/B is unavailable or the marker is too close to the origin.
   No solver, domain, schema, or report change.
-- FP1 is **implemented 2026-11-26** (schema 72, ADR-0055). The half-wave Flower
-  Pot is a first-class VHF family: two collinear wires with the feed at the
-  junction, an ideal common-mode choke, published 2 m/6 m physical cut rows, an
-  explicit **1.087 NEC electrical model scale** kept separate from the 0.88
-  construction factor, scaled-tip ground validation, catalog/editor routes,
-  EN/ES help, estimator, top/bottom optimizer, elevation scene with a choke
-  inset, design summary, construction cut list, BOM choke row, integrated-choke
-  feed detail, and real `nec2c` 2 m/6 m regression. No 50 Ω, gain, bandwidth, or
-  choke-impedance claim is made. See
+- FP1 is **implemented 2026-11-26** (schema 72; feed/choke semantics revised at
+  schema 73, ADR-0055). The half-wave Flower Pot is a first-class VHF family:
+  two collinear wires forming the radiating arms, a physical feed at the bottom
+  of the choke, the construction-only choke height (45 mm at 2 m, 63 mm at 6 m),
+  an ideal common-mode choke, published 2 m/6 m physical cut rows, an explicit
+  **1.087 NEC electrical model scale** with its source at the arm junction and
+  kept separate from the 0.88 construction factor, scaled-tip ground validation,
+  catalog/editor routes, EN/ES help, estimator, top/bottom optimizer, elevation
+  scene with physical feed/choke and a choke inset, design summary, construction
+  cut list, BOM choke row, integrated-choke feed detail, and real `nec2c` 2 m/6 m
+  regression. No 50 Ω, gain, bandwidth, or choke-impedance claim is made. See
   [ADR-0055](ADR/0055-flower-pot-half-wave-family.md) and
   [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
@@ -179,7 +181,7 @@
 ## Next
 
 1. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-2. UX46–UX57 and FP1 are implemented; the half-wave Flower Pot ships at schema 72. Choose the next bounded family or release slice, and keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
+2. UX46–UX57 and FP1 are implemented; the half-wave Flower Pot ships at schema 73. Choose the next bounded family or release slice, and keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
 3. Choose the next release slice after the 0.10.1 publication.
 4. Keep DL8 blocked until a validated terrain model or second engine exists.
 5. Keep the optional PF2/PF3 maintenance items separate from the release gate.

@@ -65,7 +65,7 @@ warnings, and a dimension tolerance.
 | End-fed / EFHW | published EFHW wire: 66 ft on 40 m, 33 ft on 20 m, 16 ft on 10 m; `0.05λ` counterpoise; 49:1 transformer | heuristic | ARRL kit and PA9X rule; the editor exposes explicit 40/20/10 m preset buttons; transformer and counterpoise remain starting points |
 | OCFD | half-wave total, feed at 1/3, 4:1 ideal transformer | heuristic | Existing synthesis can refine length/feed; actual balun ratio depends on height and feed offset |
 | J Pole / Slim Jim | J Pole: 0.75λ overall, 0.5λ radiator, 0.25λ stub; Slim Jim: 0.5λ radiator above a 0.25λ folded stub and gap | empirical | M0UKD published rule and G2BCX 2 m length; feed offset and stub still need tuning |
-| Flower Pot (half-wave) | published physical rows: 457+447 mm at 146 MHz and 1273+1245 mm at 52.7 MHz; otherwise `0.44λ` total split 50.5/49.5 | reference scaled at the two published rows; heuristic elsewhere | 0.88 construction factor and 1.087 NEC model scale are separate; the scaled lower tip must clear the base height; choke ideal |
+| Flower Pot (half-wave) | published physical rows: 457+447 mm at 146 MHz and 1273+1245 mm at 52.7 MHz; otherwise `0.44λ` total split 50.5/49.5 | reference scaled at the two published rows; heuristic elsewhere | physical feed at the bottom of the choke; construction-only choke height 45 mm (2 m) / 63 mm (6 m); 0.88 construction factor and 1.087 NEC model scale are separate; choke ideal |
 | Zepp | 0.5λ radiator above a 0.25λ two-wire stub; spacing and radius set the stub impedance | empirical | Published 3/4-wave topology; the real second conductor is modeled, but the 1:1 choke and common-mode current are not |
 | Ringo | 0.725-wave vertical with a small horizontal matching ring, calibrated for the simplified AntennaDesk geometry | heuristic | Not a universal commercial Ringo formula |
 | Yagi | DL6WU 2–32 element trimming reference scaled by frequency | reference scaled | No unique Yagi design; the editor starts at 145 MHz with the NBS five-element preset scaled from its 50.1 MHz reference; optimize for the target; horizontal or vertical polarization; a folded driven element starts with an ideal 4:1 transformer |
@@ -214,11 +214,14 @@ The estimator sets `construction_shortening_factor = 0.88` and
 `electrical_length_scale = 1.087` as two distinct parameters. The 0.88 value is
 the published construction factor; the 1.087 value is the NEC calibration
 selected by the FP1 spike and is applied by `to_antenna()` centered on the
-feed. Neither is a velocity factor, and the two are never interchangeable. The
-estimate raises the base height when necessary so the scaled electrical lower
-tip stays above ground, and it warns that the cut list assumes the published
-coax/PVC construction, that the choke is ideal, and that the physical cuts
-remain the construction authority.
+junction/NEC equivalent source. Neither is a velocity factor, and the two are
+never interchangeable. `base_height_m` is the physical feed at the bottom of
+the choke; `choke_height_m` is construction-only: 45 mm at 146 MHz and 63 mm at
+52.7 MHz, with a 45 mm starting value elsewhere. The lower cut starts at feed
+plus choke. The estimate raises the feed height when necessary so the scaled
+electrical lower tip stays above ground, and it warns that the cut list assumes
+the published coax/PVC construction, that the choke is ideal, and that the
+physical cuts remain the construction authority.
 
 Confidence is reference-scaled within 1% of the two published frequencies and
 heuristic elsewhere. The tolerance is 5% of the physical total length. The

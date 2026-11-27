@@ -808,29 +808,34 @@ height.
 ## Create a Flower Pot
 
 Choose **File → New Antenna... → Flower Pot** to generate the half-wave VK2ZOI
-coax vertical. The antenna is two collinear radiating sections fed at their
-junction: the coax center conductor is the top section and the outside of the
-shield is the bottom section. A resonant common-mode choke below the bottom
-section isolates the feed line; the project feed line starts below the choke
-and is not part of the antenna geometry.
+coax vertical. The physical feed connector is at the bottom of the choke; the
+choke isolates the feedline below it from the radiating structure. Above the
+choke are the full-coax lower arm (the outside of the shield radiates) and the
+center-only upper arm. The two arms meet at the shield end. The solver uses a
+center-fed two-wire **equivalent** with its source at that junction, not at the
+physical feed.
 
-The editor separates two quantities that must not be confused:
+The editor separates these quantities:
 
-- the **physical cut lengths** that the builder cuts: 0.457 m top and 0.447 m
-  bottom at 146 MHz, or 1.273 m and 1.245 m at 52.7 MHz;
+- **feed height**: the physical connector at the bottom of the choke;
+- **choke height**: construction-only, 45 mm for the published 2 m row and
+  63 mm for 6 m; the lower cut starts above it;
+- the **physical cut lengths**: 0.457 m top and 0.447 m bottom at 146 MHz, or
+  1.273 m and 1.245 m at 52.7 MHz;
 - the **NEC electrical model scale**, fixed at 1.087 and applied centered on the
-  feed only to obtain the solved equivalent. The lower electrical tip extends
-  below the physical bottom cut, so the base height must keep that scaled tip
-  above ground.
+  junction/source only to obtain the solved equivalent. The lower electrical
+  tip extends below the physical lower cut, so the feed plus choke must keep
+  that scaled tip above ground.
 
 The 0.88 construction shortening factor is a separate published construction
 factor, not a velocity factor and not interchangeable with 1.087. The
-**Load 2 m** and **Load 6 m** buttons restore the published rows. The choke is
-ideal in the model; its impedance, self-resonance, common-mode current, coax
-dielectric loss, and the PVC conduit loading are not modeled. The template does
-not claim 50 Ω, gain, or bandwidth. The construction view is the front
-elevation, with physical cut dimensions, the feed height, the electrical tail,
-and a not-to-scale choke inset.
+**Load 2 m** and **Load 6 m** buttons restore the published rows, including the
+choke height. The choke is ideal in the model; its impedance, self-resonance,
+common-mode current, coax dielectric loss, and the PVC conduit loading are not
+modeled. The template does not claim 50 Ω, gain, or bandwidth. The construction
+view is the front elevation, showing the physical feed, the choke, the lower
+and upper cuts, the junction/NEC source, the electrical tail, and a
+not-to-scale choke inset.
 
 ## Create an end-fed half-wave (EFHW)
 

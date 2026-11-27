@@ -166,9 +166,9 @@ def _summary(
 ) -> str:
     if isinstance(parameters, FlowerPotParameters):
         return (
-            "Coax center to the top radiator, shield to the bottom radiator; "
-            "integrated resonant choke at the base of the lower radiator; no "
-            "separate balun."
+            "Physical feed at the bottom of the choke. At the NEC equivalent "
+            "junction, coax center feeds the top arm and the shield feeds the "
+            "lower arm. Integrated resonant choke; no separate balun."
         )
     if topology is FeedTopology.LOOP_GAP:
         return "Loop gap: A and B across the gap; verify the coupling or matching method."
@@ -306,6 +306,10 @@ def _limitations(
         limitations.append(
             "The integrated choke is ideal; its impedance, self-resonance, and "
             "power handling are not modeled."
+        )
+        limitations.append(
+            "The feed-connection schematic uses the NEC equivalent arm junction; "
+            "the physical feed is below the choke."
         )
     return tuple(limitations)
 

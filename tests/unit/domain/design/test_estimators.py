@@ -631,6 +631,11 @@ def test_flower_pot_estimate_matches_the_published_2m_construction_row() -> None
     assert parameters.top_length_m == pytest.approx(0.457, abs=0.002)
     assert parameters.bottom_length_m == pytest.approx(0.447, abs=0.002)
     assert parameters.base_height_m == pytest.approx(1.0)
+    assert parameters.choke_height_m == pytest.approx(0.045)
+    assert parameters.lower_cut_height_m == pytest.approx(1.045)
+    assert parameters.physical_junction_height_m == pytest.approx(
+        parameters.lower_cut_height_m + parameters.bottom_length_m
+    )
     assert parameters.electrical_length_scale == pytest.approx(1.087)
     assert parameters.construction_shortening_factor == pytest.approx(0.88)
     assert estimate.confidence is Confidence.REFERENCE_SCALED
@@ -644,6 +649,11 @@ def test_flower_pot_estimate_matches_the_published_6m_construction_row() -> None
 
     assert parameters.top_length_m == pytest.approx(1.273, abs=0.01)
     assert parameters.bottom_length_m == pytest.approx(1.245, abs=0.01)
+    assert parameters.choke_height_m == pytest.approx(0.063)
+    assert parameters.lower_cut_height_m == pytest.approx(1.063)
+    assert parameters.physical_junction_height_m == pytest.approx(
+        parameters.lower_cut_height_m + parameters.bottom_length_m
+    )
     assert estimate.confidence is Confidence.REFERENCE_SCALED
     assert "vk4pk.6m_flower_pot.construction" in estimate.source_ids
 
@@ -654,13 +664,14 @@ def test_flower_pot_estimate_keeps_the_scaled_tip_above_ground_below_vhf() -> No
     ).parameters
 
     assert parameters.electrical_lower_tip_m > 0.0
-    assert parameters.base_height_m > parameters.lower_tip_extension_m
+    assert parameters.lower_cut_height_m > parameters.lower_tip_extension_m
 
 
 def test_flower_pot_estimate_is_a_heuristic_away_from_the_published_rows() -> None:
     estimate = estimate_intent(_intent("flower_pot", frequency_hz=100_000_000.0))
 
     assert estimate.confidence is Confidence.HEURISTIC
+    assert estimate.parameters.choke_height_m == pytest.approx(0.045)
 
 
 def test_ocfd_and_ringo_estimates_have_valid_special_geometry() -> None:

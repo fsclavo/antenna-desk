@@ -171,6 +171,21 @@ REPORT_SPANISH: dict[str, str] = {
         "eléctrica inferior extra es solo del modelo. Colocá un choke de modo común "
         "en la alimentación; su impedancia no está modelada."
     ),
+    "The physical feed is at the bottom of the {choke} m choke. Above it, "
+    "cut {bottom} m of full coax for the lower arm and {top} m of "
+    "center-only conductor for the upper arm. The lower cut starts at "
+    "{lower_cut} m. The solver uses a 1.087-scaled center-fed equivalent "
+    "with its source at the junction, {junction} m above ground, not at "
+    "the physical feed; the extra electrical tail is model-only. The "
+    "choke is ideal and its impedance is not modeled.": (
+        "El feed físico está en el fondo del choke de {choke} m. Por encima, "
+        "cortá {bottom} m de coaxil completo para el brazo inferior y {top} m de "
+        "conductor solo central para el brazo superior. El corte inferior empieza "
+        "a {lower_cut} m. El solver usa un equivalente centro-alimentado escalado "
+        "por 1,087, con fuente en la unión, a {junction} m sobre el suelo, no en "
+        "el feed físico; la cola eléctrica extra es solo del modelo. El choke es "
+        "ideal y su impedancia no está modelada."
+    ),
     "Use the published coax and a non-conductive conduit. Leave a drain path at "
     "the lower end, seal the feedpoint, and do not add a separate balun; the choke "
     "is integrated.": (
@@ -419,6 +434,10 @@ REPORT_SPANISH: dict[str, str] = {
         "El choking de modo común no está modelado."
     ),
     "Feed wire": "Hilo de alimentación",
+    "NEC source wire": "Hilo de la fuente NEC",
+    "NEC source offset": "Desplazamiento de la fuente NEC",
+    "NEC source coordinates": "Coordenadas de la fuente NEC",
+    "NEC source height above ground": "Altura de la fuente NEC sobre el suelo",
     "Feed/base height": "Altura de alimentación/base",
     "First leg (from wire start)": "Primer tramo (desde el inicio del hilo)",
     "Fold spacing": "Separación del plegado",
@@ -657,6 +676,14 @@ REPORT_SPANISH: dict[str, str] = {
     "scaled electrical model; use the cut list above": (
         "modelo eléctrico escalado; usá la lista de cortes de arriba"
     ),
+    "Physical feed": "Feed físico",
+    "Physical feed height": "Altura del feed físico",
+    "Choke height": "Altura del choke",
+    "Lower cut height": "Altura del corte inferior",
+    "Junction / NEC source height": "Altura de la unión / fuente NEC",
+    "Physical bottom cut": "Corte físico inferior",
+    "Physical top cut": "Corte físico superior",
+    "Electrical model total": "Total del modelo eléctrico",
     "Physical top": "Corte físico superior",
     "Physical bottom": "Corte físico inferior",
     "Physical total": "Total físico",

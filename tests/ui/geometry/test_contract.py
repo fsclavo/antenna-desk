@@ -30,7 +30,7 @@ from antennadesk.domain.antennas.endfed import (
 )
 from antennadesk.domain.antennas.fan_dipole import FanDipoleParameters, FanElement
 from antennadesk.domain.antennas.feed import FeedPoint
-from antennadesk.domain.antennas.flower_pot import FlowerPotParameters
+from antennadesk.domain.antennas.flower_pot import flower_pot_2m
 from antennadesk.domain.antennas.folded_dipole import FoldedDipoleParameters
 from antennadesk.domain.antennas.geometry import Point3D
 from antennadesk.domain.antennas.hexbeam import published_hexbeam_parameters
@@ -478,16 +478,11 @@ def _cases() -> tuple[FamilyCase, ...]:
         ),
         FamilyCase(
             "flower_pot",
-            FlowerPotParameters(
-                frequency_hz=146_000_000.0,
-                top_length_m=0.457,
-                bottom_length_m=0.447,
-                base_height_m=1.0,
-            ),
+            flower_pot_2m(),
             "flower_pot",
             2,
             GeometryViewMode.ELEVATION,
-            ("Flower Pot", "top cut length", "electrical total"),
+            ("Flower Pot", "top cut length", "choke height 0.045 m", "electrical total"),
         ),
         FamilyCase(
             "half_square",
@@ -849,6 +844,33 @@ def test_family_layout_is_inside_safe_area_without_label_overlap(
         assert safe.contains(first.text_rect)
         for second in placed[index + 1 :]:
             assert not first.text_rect.intersects(second.text_rect)
+
+
+def test_flower_pot_scene_separates_the_physical_feed_from_the_nec_source() -> None:
+    parameters = flower_pot_2m()
+    scene = build_scene(
+        parameters.to_antenna(),
+        antenna_type="flower_pot",
+        parameters=parameters,
+        display_name=None,
+        mode=GeometryViewMode.ELEVATION,
+        translator=TRANSLATOR,
+        unit_system=UnitSystem.METRIC,
+    )
+
+    feed_markers = [marker for marker in scene.markers if marker.kind == "feed"]
+    source_markers = [marker for marker in scene.markers if marker.kind == "source"]
+    assert len(feed_markers) == 1
+    assert len(source_markers) == 1
+    assert feed_markers[0].label == "Feed"
+    assert source_markers[0].label == "NEC equivalent source"
+    assert source_markers[0].point.y_m - feed_markers[0].point.y_m == pytest.approx(
+        parameters.physical_junction_height_m - parameters.physical_feed_height_m
+    )
+    assert any(
+        dimension.label and "choke height" in dimension.label.lower()
+        for dimension in scene.dimensions
+    )
 
 
 def test_loop_shape_signature_tracks_the_side_count() -> None:

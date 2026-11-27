@@ -309,7 +309,8 @@ def test_design_from_frequency_preserves_flower_pot_model_context(
     assert parameters.frequency_hz == pytest.approx(52_700_000.0)
     assert parameters.top_length_m == pytest.approx(estimated.top_length_m)
     assert parameters.bottom_length_m == pytest.approx(estimated.bottom_length_m)
-    assert parameters.base_height_m >= estimated.lower_tip_extension_m + 0.05
+    assert parameters.lower_cut_height_m >= estimated.lower_tip_extension_m + 0.05
+    assert parameters.choke_height_m == pytest.approx(estimated.choke_height_m)
     assert parameters.top_radius_m == pytest.approx(initial.top_radius_m)
     assert parameters.bottom_radius_m == pytest.approx(initial.bottom_radius_m)
     assert parameters.construction_shortening_factor == pytest.approx(0.9)

@@ -43,6 +43,9 @@ def test_form_keeps_the_physical_cuts_and_the_electrical_model_separate(
 
     assert parameters.top_length_m == pytest.approx(FLOWER_POT_2M_TOP_LENGTH_M)
     assert parameters.bottom_length_m == pytest.approx(FLOWER_POT_2M_BOTTOM_LENGTH_M)
+    assert parameters.choke_height_m == pytest.approx(0.045)
+    assert parameters.base_height_m == pytest.approx(1.0)
+    assert parameters.choke_height_m == pytest.approx(0.045)
     assert parameters.physical_total_length_m == pytest.approx(0.904)
     assert parameters.electrical_total_length_m == pytest.approx(
         0.904 * FLOWER_POT_ELECTRICAL_LENGTH_SCALE
@@ -50,6 +53,7 @@ def test_form_keeps_the_physical_cuts_and_the_electrical_model_separate(
     summary = form._geometry.text().lower()
     assert "physical" in summary
     assert "electrical" in summary
+    assert "choke" in summary
 
 
 def test_form_loads_the_published_2m_and_6m_rows(qtbot: QtBot) -> None:
@@ -61,6 +65,7 @@ def test_form_loads_the_published_2m_and_6m_rows(qtbot: QtBot) -> None:
     assert parameters.top_length_m == pytest.approx(FLOWER_POT_6M_TOP_LENGTH_M)
     assert parameters.bottom_length_m == pytest.approx(FLOWER_POT_6M_BOTTOM_LENGTH_M)
     assert parameters.base_height_m == pytest.approx(1.0)
+    assert parameters.choke_height_m == pytest.approx(0.063)
 
     form.load_2m_example()
     parameters = form.parameters()
@@ -96,6 +101,7 @@ def test_form_switches_units_without_losing_both_radii(qtbot: QtBot) -> None:
     assert form._bottom_radius.suffix().strip() == "in"
     assert after.top_length_m == pytest.approx(before.top_length_m, rel=1e-3)
     assert after.bottom_length_m == pytest.approx(before.bottom_length_m, rel=1e-3)
+    assert after.choke_height_m == pytest.approx(before.choke_height_m, abs=2e-4)
     assert radius_to_m(form._top_radius.value(), UnitSystem.IMPERIAL) == pytest.approx(
         before.top_radius_m,
         abs=2e-6,
@@ -111,6 +117,7 @@ def test_form_rejects_a_base_height_that_puts_the_scaled_tip_below_ground(
 ) -> None:
     form = _form(qtbot)
     form._base_height_field.configure(0.01)
+    form._choke_height_field.configure(0.0)
 
     with pytest.raises(ValueError, match="scaled electrical lower tip"):
         form.parameters()
@@ -127,6 +134,8 @@ def test_form_applies_bilingual_help_to_physical_cut_fields(qtbot: QtBot) -> Non
     assert "not the 1.087 NEC electrical scale" in (
         labels["flower_pot.construction_factor"].toolTip()
     )
+    assert "45 mm" in labels["flower_pot.choke_height"].toolTip()
+    assert "physical feed connector" in labels["flower_pot.base_height"].toolTip()
 
     translator.set_language(Language.SPANISH)
     form.retranslate()

@@ -22,8 +22,15 @@ def test_2m_published_row_keeps_physical_and_electrical_lengths_separate() -> No
     assert parameters.electrical_top_length_m == pytest.approx(0.457 * 1.087)
     assert parameters.electrical_bottom_length_m == pytest.approx(0.447 * 1.087)
     assert parameters.electrical_total_length_m == pytest.approx(0.904 * 1.087)
-    assert parameters.physical_feed_height_m == pytest.approx(1.0 + 0.447)
-    assert parameters.electrical_feed_height_m == pytest.approx(parameters.physical_feed_height_m)
+    assert parameters.physical_feed_height_m == pytest.approx(1.0)
+    assert parameters.choke_height_m == pytest.approx(0.045)
+    assert parameters.lower_cut_height_m == pytest.approx(1.045)
+    assert parameters.physical_junction_height_m == pytest.approx(1.045 + 0.447)
+    assert parameters.electrical_feed_height_m == pytest.approx(
+        parameters.physical_junction_height_m
+    )
+    assert parameters.physical_top_tip_m == pytest.approx(1.492 + 0.457)
+    assert parameters.electrical_lower_tip_m == pytest.approx(1.492 - 0.447 * 1.087)
     assert parameters.lower_tip_extension_m == pytest.approx(0.447 * 0.087)
     assert parameters.top_extension_m == pytest.approx(0.457 * 0.087)
 
@@ -33,8 +40,24 @@ def test_6m_published_row_keeps_physical_and_electrical_lengths_separate() -> No
 
     assert parameters.physical_total_length_m == pytest.approx(2.518)
     assert parameters.electrical_total_length_m == pytest.approx(2.518 * 1.087)
+    assert parameters.choke_height_m == pytest.approx(0.063)
+    assert parameters.lower_cut_height_m == pytest.approx(1.063)
+    assert parameters.physical_junction_height_m == pytest.approx(1.063 + 1.245)
+    assert parameters.electrical_lower_tip_m == pytest.approx(2.308 - 1.245 * 1.087)
     assert parameters.lower_tip_extension_m == pytest.approx(1.245 * 0.087)
     assert parameters.top_extension_m == pytest.approx(1.273 * 0.087)
+
+
+def test_a_zero_choke_preserves_the_legacy_lower_cut_height() -> None:
+    parameters = FlowerPotParameters(
+        frequency_hz=146_000_000.0,
+        top_length_m=0.457,
+        bottom_length_m=0.447,
+    )
+
+    assert parameters.choke_height_m == pytest.approx(0.0)
+    assert parameters.lower_cut_height_m == pytest.approx(parameters.base_height_m)
+    assert parameters.physical_junction_height_m == pytest.approx(1.447)
 
 
 def test_to_antenna_uses_two_collinear_wires_and_the_scaled_feed_height() -> None:
@@ -64,6 +87,25 @@ def test_parameters_reject_a_base_height_that_puts_the_scaled_tip_below_ground()
             top_length_m=0.457,
             bottom_length_m=0.447,
             base_height_m=0.01,
+        )
+    # The choke lifts the lower cut, so the same feed height becomes valid.
+    parameters = FlowerPotParameters(
+        frequency_hz=146_000_000.0,
+        top_length_m=0.457,
+        bottom_length_m=0.447,
+        base_height_m=0.01,
+        choke_height_m=0.045,
+    )
+    assert parameters.electrical_lower_tip_m > 0.0
+
+
+def test_parameters_reject_a_negative_choke_height() -> None:
+    with pytest.raises(ValueError):
+        FlowerPotParameters(
+            frequency_hz=146_000_000.0,
+            top_length_m=0.457,
+            bottom_length_m=0.447,
+            choke_height_m=-0.01,
         )
 
 

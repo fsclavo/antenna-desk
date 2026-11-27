@@ -223,3 +223,14 @@ The family must not collapse them into one field.
 - The published VSWR behaviour is used only as a qualitative band target.
 - A measured build is still required before claiming a validated match or
   pattern.
+
+## Post-spike implementation note (2026-11-27)
+
+The physical coax connector is at the bottom of the choke, not at the arm
+junction. The two radiating arms are the full-coax lower section and the
+center-only upper section; the choke is between the feedline and the lower arm.
+The implementation now carries `base_height_m` as the physical feed height and a
+construction-only `choke_height_m` (45 mm on the published 2 m row, 63 mm on
+6 m), with the lower cut above the choke. The 1.087 scale remains centered on
+the NEC equivalent source at the arm junction; the spike comparison and the
+selected Option A are otherwise unchanged.

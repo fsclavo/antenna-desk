@@ -255,7 +255,7 @@ class ProjectContainerRepository:
     """Read and write versioned ZIP project containers.
 
     The reader accepts container version 1 and the current schema, plus the
-    migration path for schemas 59 through 71. Previous gzip/plain-JSON files
+    migration path for schemas 59 through 72. Previous gzip/plain-JSON files
     are rejected deliberately; the project has not shipped to users yet.
     """
 
@@ -514,6 +514,7 @@ class ProjectContainerRepository:
             69,
             70,
             71,
+            72,
             SCHEMA_VERSION,
         ):
             raise UnsupportedSchemaVersion(
@@ -921,6 +922,7 @@ class ProjectContainerRepository:
             69,
             70,
             71,
+            72,
         ):
             return payload
         migrated_from = data["schema_version"]

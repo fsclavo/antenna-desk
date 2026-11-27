@@ -617,6 +617,7 @@ def render_construction_sheet(
         if figures
         else ""
     )
+    source_term = "NEC source" if isinstance(parameters, FlowerPotParameters) else "Feed"
     schedule_section = f"""
 <h2>Wire schedule</h2>
 <table class="schedule">
@@ -628,10 +629,10 @@ def render_construction_sheet(
 </tbody>
 </table>
 <table>
-<tr><th>Feed wire</th><td><code>{_escape(feed.wire_id)}</code></td></tr>
-<tr><th>Feed offset</th><td>{_escape(tr("{offset} from the wire start", offset=_length(feed.offset_m, display_units)))}</td></tr>
-<tr><th>Feed coordinates</th><td>{feed.point.x_m:.4f}, {feed.point.y_m:.4f}, {_length(feed.point.z_m, display_units)}</td></tr>
-<tr><th>Feed height above ground</th><td>{_length(feed.height_m, display_units)}</td></tr>
+<tr><th>{source_term} wire</th><td><code>{_escape(feed.wire_id)}</code></td></tr>
+<tr><th>{source_term} offset</th><td>{_escape(tr("{offset} from the wire start", offset=_length(feed.offset_m, display_units)))}</td></tr>
+<tr><th>{source_term} coordinates</th><td>{feed.point.x_m:.4f}, {feed.point.y_m:.4f}, {_length(feed.point.z_m, display_units)}</td></tr>
+<tr><th>{source_term} height above ground</th><td>{_length(feed.height_m, display_units)}</td></tr>
 </table>
 """
     if isinstance(parameters, DipoleParameters):
@@ -1118,11 +1119,13 @@ def render_construction_sheet(
         )
     elif isinstance(parameters, FlowerPotParameters):
         feed_rows = f"""
-<tr><th>Physical top cut</th><td>{_length(parameters.top_length_m, display_units)}</td></tr>
+<tr><th>Physical feed height</th><td>{_length(parameters.physical_feed_height_m, display_units)}</td></tr>
+<tr><th>Choke height</th><td>{_length(parameters.choke_height_m, display_units)}</td></tr>
+<tr><th>Lower cut height</th><td>{_length(parameters.lower_cut_height_m, display_units)}</td></tr>
 <tr><th>Physical bottom cut</th><td>{_length(parameters.bottom_length_m, display_units)}</td></tr>
+<tr><th>Physical top cut</th><td>{_length(parameters.top_length_m, display_units)}</td></tr>
 <tr><th>Physical total</th><td>{_length(parameters.physical_total_length_m, display_units)}</td></tr>
-<tr><th>Bottom cut height</th><td>{_length(parameters.base_height_m, display_units)}</td></tr>
-<tr><th>Feed height above ground</th><td>{_length(parameters.physical_feed_height_m, display_units)}</td></tr>
+<tr><th>Junction / NEC source height</th><td>{_length(parameters.physical_junction_height_m, display_units)}</td></tr>
 <tr><th>Electrical model total</th><td>{_length(parameters.electrical_total_length_m, display_units)}</td></tr>
 <tr><th>Electrical lower tip</th><td>{_length(parameters.electrical_lower_tip_m, display_units)}</td></tr>
 <tr><th>Wire schedule</th><td>{_escape(tr("scaled electrical model; use the cut list above"))}</td></tr>
@@ -1130,14 +1133,18 @@ def render_construction_sheet(
 """
         construction_note = _note(
             tr,
-            "Cut the top coax section to {top} m and the bottom section to "
-            "{bottom} m. Mount the lower cut {base} m above ground. The solver "
-            "uses 1.087-scaled electrical lengths centered on the feed; the extra "
-            "lower electrical tail is model-only. Fit a common-mode choke at the "
-            "feed; its impedance is not modeled.",
+            "The physical feed is at the bottom of the {choke} m choke. Above it, "
+            "cut {bottom} m of full coax for the lower arm and {top} m of "
+            "center-only conductor for the upper arm. The lower cut starts at "
+            "{lower_cut} m. The solver uses a 1.087-scaled center-fed equivalent "
+            "with its source at the junction, {junction} m above ground, not at "
+            "the physical feed; the extra electrical tail is model-only. The "
+            "choke is ideal and its impedance is not modeled.",
             top=f"{parameters.top_length_m:.4f}",
             bottom=f"{parameters.bottom_length_m:.4f}",
-            base=f"{parameters.base_height_m:.4f}",
+            choke=f"{parameters.choke_height_m:.4f}",
+            lower_cut=f"{parameters.lower_cut_height_m:.4f}",
+            junction=f"{parameters.physical_junction_height_m:.4f}",
         )
         construction_note += _note(
             tr,

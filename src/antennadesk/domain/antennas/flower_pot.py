@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..common.units import ensure_positive
+from ..common.units import ensure_non_negative, ensure_positive
 from ..environment.environment import Environment
 from ..environment.ground import FREE_SPACE, GroundModel
 from .antenna import AntennaModel
@@ -27,15 +27,22 @@ BOTTOM_RADIATOR_ID = "bottom-radiator"
 FLOWER_POT_2M_FREQUENCY_HZ = 146_000_000.0
 FLOWER_POT_2M_TOP_LENGTH_M = 0.457
 FLOWER_POT_2M_BOTTOM_LENGTH_M = 0.447
+FLOWER_POT_2M_CHOKE_HEIGHT_M = 0.045
 FLOWER_POT_6M_FREQUENCY_HZ = 52_700_000.0
 FLOWER_POT_6M_TOP_LENGTH_M = 1.273
 FLOWER_POT_6M_BOTTOM_LENGTH_M = 1.245
+FLOWER_POT_6M_CHOKE_HEIGHT_M = 0.063
 
 FLOWER_POT_CONSTRUCTION_SHORTENING_FACTOR = 0.88
 FLOWER_POT_ELECTRICAL_LENGTH_SCALE = 1.087
 FLOWER_POT_DEFAULT_TOP_RADIUS_M = 0.0005
 FLOWER_POT_DEFAULT_BOTTOM_RADIUS_M = 0.0015
+# ``base_height_m`` is the physical feed connector at the bottom of the choke.
+# The default choke length is zero so a project created before schema 73 keeps
+# its original lower-cut geometry; the published 2 m/6 m rows set the measured
+# construction lengths explicitly.
 FLOWER_POT_DEFAULT_BASE_HEIGHT_M = 1.0
+FLOWER_POT_DEFAULT_CHOKE_HEIGHT_M = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,9 +50,12 @@ class FlowerPotParameters:
     """Half-wave Flower Pot with physical cut lengths and a NEC equivalent.
 
     ``top_length_m`` and ``bottom_length_m`` are the physical coax cut lengths
-    that the builder must use. ``electrical_length_scale`` is applied only by
-    :meth:`to_antenna` to obtain the NEC equivalent; it is not a velocity factor
-    and must not be used as a construction dimension.
+    that the builder must use. ``base_height_m`` is the physical feed connector
+    at the bottom of the choke; ``choke_height_m`` is the construction-only
+    distance from that feed to the lower cut (the top of the choke). The lower
+    radiating arm starts at ``lower_cut_height_m``. ``electrical_length_scale``
+    is applied only by :meth:`to_antenna` to obtain the NEC equivalent; it is
+    not a velocity factor and must not be used as a construction dimension.
     """
 
     frequency_hz: float
@@ -54,6 +64,7 @@ class FlowerPotParameters:
     top_radius_m: float = FLOWER_POT_DEFAULT_TOP_RADIUS_M
     bottom_radius_m: float = FLOWER_POT_DEFAULT_BOTTOM_RADIUS_M
     base_height_m: float = FLOWER_POT_DEFAULT_BASE_HEIGHT_M
+    choke_height_m: float = FLOWER_POT_DEFAULT_CHOKE_HEIGHT_M
     construction_shortening_factor: float = FLOWER_POT_CONSTRUCTION_SHORTENING_FACTOR
     electrical_length_scale: float = FLOWER_POT_ELECTRICAL_LENGTH_SCALE
     material: ConductorMaterial = COPPER
@@ -66,6 +77,7 @@ class FlowerPotParameters:
         ensure_positive(self.top_radius_m, name="top_radius_m")
         ensure_positive(self.bottom_radius_m, name="bottom_radius_m")
         ensure_positive(self.base_height_m, name="base_height_m")
+        ensure_non_negative(self.choke_height_m, name="choke_height_m")
         if not 0.5 <= self.construction_shortening_factor <= 1.0:
             raise ValueError("construction_shortening_factor must be between 0.5 and 1.0")
         if not 0.5 <= self.electrical_length_scale <= 1.5:
@@ -73,7 +85,8 @@ class FlowerPotParameters:
         if self.electrical_lower_tip_m <= 0.0:
             raise ValueError(
                 f"base_height_m={self.base_height_m:.4f} m places the scaled electrical "
-                f"lower tip at {self.electrical_lower_tip_m:.4f} m; increase the base height"
+                f"lower tip at {self.electrical_lower_tip_m:.4f} m; increase the feed "
+                "or choke height"
             )
 
     @property
@@ -93,12 +106,28 @@ class FlowerPotParameters:
         return self.electrical_top_length_m + self.electrical_bottom_length_m
 
     @property
+    def lower_cut_height_m(self) -> float:
+        """Height of the bottom of the lower radiating arm (top of the choke)."""
+
+        return self.base_height_m + self.choke_height_m
+
+    @property
     def physical_feed_height_m(self) -> float:
-        return self.base_height_m + self.bottom_length_m
+        """Height of the physical feed connector at the bottom of the choke."""
+
+        return self.base_height_m
+
+    @property
+    def physical_junction_height_m(self) -> float:
+        """Height of the lower/upper arm junction and the NEC equivalent source."""
+
+        return self.lower_cut_height_m + self.bottom_length_m
 
     @property
     def electrical_feed_height_m(self) -> float:
-        return self.physical_feed_height_m
+        """Height of the feed in the canonical NEC equivalent."""
+
+        return self.physical_junction_height_m
 
     @property
     def electrical_lower_tip_m(self) -> float:
@@ -110,7 +139,7 @@ class FlowerPotParameters:
 
     @property
     def physical_top_tip_m(self) -> float:
-        return self.physical_feed_height_m + self.top_length_m
+        return self.physical_junction_height_m + self.top_length_m
 
     @property
     def lower_tip_extension_m(self) -> float:
@@ -168,6 +197,7 @@ def flower_pot_2m() -> FlowerPotParameters:
         frequency_hz=FLOWER_POT_2M_FREQUENCY_HZ,
         top_length_m=FLOWER_POT_2M_TOP_LENGTH_M,
         bottom_length_m=FLOWER_POT_2M_BOTTOM_LENGTH_M,
+        choke_height_m=FLOWER_POT_2M_CHOKE_HEIGHT_M,
     )
 
 
@@ -178,4 +208,5 @@ def flower_pot_6m() -> FlowerPotParameters:
         frequency_hz=FLOWER_POT_6M_FREQUENCY_HZ,
         top_length_m=FLOWER_POT_6M_TOP_LENGTH_M,
         bottom_length_m=FLOWER_POT_6M_BOTTOM_LENGTH_M,
+        choke_height_m=FLOWER_POT_6M_CHOKE_HEIGHT_M,
     )

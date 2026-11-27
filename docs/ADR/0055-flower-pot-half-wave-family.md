@@ -72,9 +72,12 @@ The other published variants need new primitives:
    2 m and 6 m starting dimensions. Do not add the 5/8, double 5/8, dual-band
    sleeve, or high-gain variants in this ADR. Each needs its own spike and ADR.
 2. **Model the radiator as two collinear wires** with different radii and
-   materials: the top coax inner conductor and the bottom coax shield. The feed
-   is at their junction. The lower wire ends at the choke. The feedline below
-   the choke is the project `FeedLine`, not part of the antenna geometry.
+   materials: the top coax inner conductor and the bottom coax shield. The
+   physical feed connector is at the bottom of the choke; above it are the
+   full-coax lower arm and the center-only upper arm. The two arms meet at the
+   shield end, which is the **NEC equivalent source**, not the physical feed.
+   The lower wire ends at the choke. The feedline below the choke is the project
+   `FeedLine`, not part of the antenna geometry.
 3. **Use an ideal choke in the MVP.** The lower radiator ends at the choke and
    no feedline common-mode path is modeled. The UI, reports, and evidence must
    state that the real choke impedance, its self-resonance, the common-mode
@@ -103,8 +106,8 @@ The other published variants need new primitives:
    parameter; the family must not place the lower radiator endpoint at `z = 0`
    or let the NEC ground clearance silently move it. A positive base height is
    required, and validation uses the **scaled electrical lower tip**, which
-   extends about 38.9 mm (2 m) or 108.3 mm (6 m) below the physical lower cut
-   when the feed is kept at the physical junction height. A clear validation
+   extends about 38.9 mm (2 m) or 108.3 mm (6 m) below the physical lower cut.
+   The lower cut starts at the feed plus the choke height; a clear validation
    message must state that margin.
 8. **Classify the feed as a balanced antenna with an integrated choke.** The
    app must not require a separate current balun or classify the family as an
@@ -118,8 +121,10 @@ The other published variants need new primitives:
    catalog must not claim 50 Ω, a specific gain, or a validated choke. Scaled
    frequencies outside the published 2 m/6 m rows are heuristic.
 10. **Persist with the next schema bump after the completed spike** (schema 71
-    is current at this commit) and an additive/no-op migration for existing
-    files. The family payload is optional; old projects load unchanged.
+    was current when this decision was written) and an additive/no-op migration
+    for existing files. Schema 72 added the family payload; schema 73 adds the
+    construction-only choke height and the feed-height semantics. Old projects
+    load unchanged with a zero choke.
 11. **Add the estimator and optimizer coverage required by ADR-0013 and
     ADR-0026**, or record an explicit unavailable reason. The initial optimizer
     may vary the top and bottom physical lengths; the shortening factor and
@@ -226,6 +231,8 @@ The frequency-first estimator covers the published 2 m and 6 m starting points:
 - top/bottom split approximately `50.5 / 49.5` of the physical total;
 - default construction shortening factor `0.88` for grey PVC conduit,
   editable; this is not the electrical model scale;
+- base height is the physical feed at the bottom of the choke;
+- construction-only choke height: 45 mm at 146 MHz and 63 mm at 52.7 MHz;
 - published rows: 457/447 mm at 146 MHz and 1273/1245 mm at 52.7 MHz;
 - electrical model scale `1.087` for `to_antenna()`, separate from the
   construction factor and labelled as a NEC calibration;
@@ -246,8 +253,8 @@ different quantities.
 The initial descriptor may vary the top and bottom physical lengths with:
 
 - a target-impedance or minimum-SWR objective at the design frequency;
-- hard constraints for positive lengths, a positive base height, and the
-  top/bottom construction envelope;
+- hard constraints for positive lengths, a positive feed height, a non-negative
+  choke height, and the top/bottom construction envelope;
 - a deterministic seed and the normal budget profiles;
 - an Apply Best path through the family editor and a full simulation.
 
@@ -256,6 +263,24 @@ conduit, and feedline are context, not optimizer variables, unless a later ADR
 defines a traceable model for them. Constraints must include the scaled
 electrical lower-tip clearance as well as the physical cut geometry. The
 optimizer must not tune the model into a geometry that cannot be built.
+
+## Revision 2026-11-27 — physical feed and choke
+
+The first implementation placed the model feed marker and the reported feed
+height at the arm junction. That is the NEC equivalent source, but it is not the
+physical feed. The VK2ZOI construction places the coax connector at the bottom
+of the choke, then the choke, then the 447 mm full-coax lower arm, then the
+457 mm center-only upper arm. Schema 73 corrects the data model:
+
+- `base_height_m` is the physical feed connector at the bottom of the choke;
+- `choke_height_m` is construction-only, 45 mm for the published 2 m row and
+  63 mm for 6 m;
+- the lower cut starts at `base_height_m + choke_height_m`;
+- the arm junction remains the feed of the two-wire NEC equivalent, at
+  `base_height_m + choke_height_m + bottom_length_m`.
+
+The solver and the 1.087 scale are unchanged. The scale is still centered on the
+NEC equivalent source at the junction, not on the physical connector.
 
 ## Consequences
 
@@ -298,9 +323,11 @@ Costs:
   electrical model scale distinct and agree on which lengths are canonical
   and which are physical.
 - The scaled electrical lower-tip extension is visible and validated against
-  the base height.
-- The construction view preserves both wires and the feed; the choke inset and
-  conduit note are not canonical wires; dimensions are non-zero and anchored.
+  the feed plus choke heights.
+- The construction view preserves both wires, shows the physical feed below the
+  choke, and labels the junction as the NEC equivalent source; the choke inset
+  and conduit note are not canonical wires; dimensions are non-zero and
+  anchored.
 - The estimator reproduces the published 2 m and 6 m starting dimensions within
   the documented 5% physical-length tolerance and reports the
   choke/conduit/feedline limitations.

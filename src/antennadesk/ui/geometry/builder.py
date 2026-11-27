@@ -2295,23 +2295,27 @@ def _add_flower_pot_dimensions(
     bottom = next((wire for wire in model.wires if wire.id == BOTTOM_RADIATOR_ID), None)
     if top is None or bottom is None or not factory.projection.vertical:
         return
-    feed_z = max(top.start.z_m, bottom.end.z_m)
+    junction_z = max(top.start.z_m, bottom.end.z_m)
     if isinstance(parameters, FlowerPotParameters):
         top_cut = parameters.top_length_m
         bottom_cut = parameters.bottom_length_m
-        base_z = parameters.base_height_m
+        feed_z = parameters.physical_feed_height_m
+        lower_cut_z = parameters.lower_cut_height_m
+        choke_height = parameters.choke_height_m
         electrical_tip = parameters.electrical_lower_tip_m
     else:
         top_cut = abs(top.end.z_m - top.start.z_m)
         bottom_cut = abs(bottom.end.z_m - bottom.start.z_m)
-        base_z = min(bottom.start.z_m, bottom.end.z_m)
-        electrical_tip = base_z
+        lower_cut_z = min(bottom.start.z_m, bottom.end.z_m)
+        feed_z = lower_cut_z
+        choke_height = 0.0
+        electrical_tip = lower_cut_z
     x = factory.project(top.start).x_m
     dimensions.append(
         factory.vertical_dimension(
             x,
-            feed_z,
-            feed_z + top_cut,
+            junction_z,
+            junction_z + top_cut,
             top_cut,
             side="right",
             priority=90,
@@ -2321,8 +2325,8 @@ def _add_flower_pot_dimensions(
     dimensions.append(
         factory.vertical_dimension(
             x,
-            base_z,
-            feed_z,
+            lower_cut_z,
+            junction_z,
             bottom_cut,
             side="left",
             priority=85,
@@ -2340,13 +2344,25 @@ def _add_flower_pot_dimensions(
             label=translator.t("geometry.feed_height"),
         )
     )
-    if electrical_tip < base_z - 1e-9:
+    if choke_height > 1e-9:
+        dimensions.append(
+            factory.vertical_dimension(
+                x,
+                feed_z,
+                lower_cut_z,
+                choke_height,
+                side="left",
+                priority=80,
+                label=translator.t("geometry.choke_height"),
+            )
+        )
+    if electrical_tip < lower_cut_z - 1e-9:
         dimensions.append(
             factory.vertical_dimension(
                 x,
                 electrical_tip,
-                base_z,
-                base_z - electrical_tip,
+                lower_cut_z,
+                lower_cut_z - electrical_tip,
                 side="right",
                 priority=60,
                 label=translator.t("geometry.electrical_tail"),
@@ -3532,6 +3548,9 @@ def _summary(
             physical_total = parameters.physical_total_length_m
             electrical_total = parameters.electrical_total_length_m
             feed_height = parameters.physical_feed_height_m
+            choke_height = parameters.choke_height_m
+            lower_cut_height = parameters.lower_cut_height_m
+            junction_height = parameters.physical_junction_height_m
             lower_tip = parameters.electrical_lower_tip_m
         else:
             top_wire = next(
@@ -3546,8 +3565,11 @@ def _summary(
             bottom_length = bottom_wire.length_m
             physical_total = top_length + bottom_length
             electrical_total = physical_total
-            feed_height = max(top_wire.start.z_m, bottom_wire.end.z_m)
-            lower_tip = min(bottom_wire.start.z_m, bottom_wire.end.z_m)
+            lower_cut_height = min(bottom_wire.start.z_m, bottom_wire.end.z_m)
+            feed_height = lower_cut_height
+            choke_height = 0.0
+            junction_height = max(top_wire.start.z_m, bottom_wire.end.z_m)
+            lower_tip = lower_cut_height
         parts.extend(
             [
                 f"{translator.t('flower_pot.top_length').lower()} "
@@ -3560,6 +3582,12 @@ def _summary(
                 f"{_format_length(electrical_total, translator, display_units)}",
                 f"{translator.t('geometry.feed_height').lower()} "
                 f"{_format_length(feed_height, translator, display_units)}",
+                f"{translator.t('geometry.choke_height').lower()} "
+                f"{_format_length(choke_height, translator, display_units)}",
+                f"{translator.t('flower_pot.lower_cut_height').lower()} "
+                f"{_format_length(lower_cut_height, translator, display_units)}",
+                f"{translator.t('flower_pot.junction_height').lower()} "
+                f"{_format_length(junction_height, translator, display_units)}",
                 f"{translator.t('flower_pot.electrical_lower_tip').lower()} "
                 f"{_format_length(lower_tip, translator, display_units)}",
                 translator.t("flower_pot.choke_note"),
@@ -4470,7 +4498,25 @@ def build_scene(
         )
         for wire in model.wires
     ) + _transmission_line_polylines(model, factory)
-    markers: list[SceneMarker] = [_feed_marker(model, factory, translator)]
+    if effective_type == ANTENNA_TYPE_FLOWER_POT and isinstance(parameters, FlowerPotParameters):
+        feed_wire = model.feed_wire
+        feed_ratio = min(max(model.feed.offset_m / feed_wire.length_m, 0.0), 1.0)
+        markers: list[SceneMarker] = [
+            SceneMarker(
+                point=factory.project(Point3D(0.0, 0.0, parameters.physical_feed_height_m)),
+                kind="feed",
+                label=translator.t("geometry.feed"),
+                priority=95,
+            ),
+            SceneMarker(
+                point=factory.project(_wire_point(feed_wire, feed_ratio)),
+                kind="source",
+                label=translator.t("flower_pot.nec_source"),
+                priority=90,
+            ),
+        ]
+    else:
+        markers = [_feed_marker(model, factory, translator)]
     markers.extend(_source_markers(model, factory))
     markers.extend(_load_markers(model, factory))
     dimensions: list[Dimension] = []

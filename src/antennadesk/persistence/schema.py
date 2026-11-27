@@ -434,6 +434,7 @@ class FlowerPotParametersPayload(StrictModel):
     top_radius_m: float = Field(default=0.0005, gt=0.0)
     bottom_radius_m: float = Field(default=0.0015, gt=0.0)
     base_height_m: float = Field(default=1.0, gt=0.0)
+    choke_height_m: float = Field(default=0.0, ge=0.0)
     construction_shortening_factor: float = Field(default=0.88, ge=0.5, le=1.0)
     electrical_length_scale: float = Field(default=1.087, ge=0.5, le=1.5)
     material: MaterialPayload
@@ -1920,6 +1921,7 @@ def _flower_pot_parameters_from_domain(value: FlowerPotParameters) -> FlowerPotP
         top_radius_m=value.top_radius_m,
         bottom_radius_m=value.bottom_radius_m,
         base_height_m=value.base_height_m,
+        choke_height_m=value.choke_height_m,
         construction_shortening_factor=value.construction_shortening_factor,
         electrical_length_scale=value.electrical_length_scale,
         material=_material_from_domain(value.material),
@@ -3352,6 +3354,7 @@ def _flower_pot_parameters_to_domain(value: FlowerPotParametersPayload) -> Flowe
         top_radius_m=value.top_radius_m,
         bottom_radius_m=value.bottom_radius_m,
         base_height_m=value.base_height_m,
+        choke_height_m=value.choke_height_m,
         construction_shortening_factor=value.construction_shortening_factor,
         electrical_length_scale=value.electrical_length_scale,
         material=_material_to_domain(value.material),

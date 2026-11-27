@@ -10,6 +10,7 @@ from antennadesk.domain.antennas.balun import BalunLoss
 from antennadesk.domain.antennas.dipole import DipoleParameters
 from antennadesk.domain.antennas.endfed import shortened_efhw_80_10_parameters
 from antennadesk.domain.antennas.feed_line import FeedLine
+from antennadesk.domain.antennas.flower_pot import flower_pot_2m
 from antennadesk.domain.antennas.matching_network import LNetwork
 from antennadesk.domain.antennas.yagi import YagiElement, YagiParameters
 from antennadesk.domain.design.feed_connection import feed_connection_detail
@@ -102,6 +103,18 @@ def test_summary_shows_a_pi_design_network(qtbot: QtBot) -> None:
     assert "1.1 µH" in text
     assert "68 pF" in text
     assert "active" in text
+
+
+def test_flower_pot_reports_an_integrated_choke_not_a_separate_balun(
+    qtbot: QtBot,
+) -> None:
+    summary = FeedMatchingSummary(Translator(Language.ENGLISH), UnitSystem.METRIC)
+    qtbot.addWidget(summary)
+    summary.set_state(flower_pot_2m(), None, None, None)
+
+    assert "Integrated common-mode choke" in summary._balance_note.text()
+    assert "no separate current balun" in summary._balance_note.text().lower()
+    assert summary._balance_note.styleSheet() == ""
 
 
 def test_summary_reports_not_applicable_for_non_endfed_designs(qtbot: QtBot) -> None:

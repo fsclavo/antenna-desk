@@ -2883,6 +2883,10 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.ENGLISH: "feed height",
         Language.SPANISH: "altura de alimentación",
     },
+    "geometry.choke_height": {
+        Language.ENGLISH: "choke height",
+        Language.SPANISH: "altura del choke",
+    },
     "geometry.top_cut": {
         Language.ENGLISH: "top cut",
         Language.SPANISH: "corte superior",
@@ -4723,12 +4727,26 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "help.flower_pot.base_height": {
         Language.ENGLISH: (
-            "Height of the lower physical cut above ground. The scaled electrical "
-            "lower tip must stay above the ground plane."
+            "Height of the physical feed connector at the bottom of the choke. The "
+            "lower cut starts the choke height above it; the scaled NEC lower tip "
+            "must stay above the ground plane."
         ),
         Language.SPANISH: (
-            "Altura del corte físico inferior sobre el suelo. La punta eléctrica "
-            "escalada debe quedar sobre el plano de tierra."
+            "Altura del conector de alimentación en el fondo del choke. El corte "
+            "inferior empieza la altura del choke por encima; la punta NEC escalada "
+            "debe quedar sobre el plano de tierra."
+        ),
+    },
+    "help.flower_pot.choke_height": {
+        Language.ENGLISH: (
+            "Construction-only distance from the feed to the lower cut (top of the "
+            "choke): 45 mm for the published 2 m row and 63 mm for 6 m. It is not "
+            "an electrical length or an impedance model."
+        ),
+        Language.SPANISH: (
+            "Distancia de construcción desde el feed hasta el corte inferior (parte "
+            "superior del choke): 45 mm para 2 m y 63 mm para 6 m. No es una longitud "
+            "eléctrica ni un modelo de impedancia."
         ),
     },
     "help.flower_pot.construction_factor": {
@@ -7159,6 +7177,12 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     "feed_matching.current_balun": {
         Language.ENGLISH: "Current balun/choke installed",
         Language.SPANISH: "Balún/choke de corriente instalado",
+    },
+    "feed_matching.balance_integrated": {
+        Language.ENGLISH: ("Integrated common-mode choke: no separate current balun is required."),
+        Language.SPANISH: (
+            "Choke de modo común integrado: no se requiere un balún de corriente separado."
+        ),
     },
     "feed_matching.balance_required": {
         Language.ENGLISH: (
@@ -13133,8 +13157,24 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Largo del corte inferior",
     },
     "flower_pot.base_height": {
-        Language.ENGLISH: "Bottom cut height",
+        Language.ENGLISH: "Feed height",
+        Language.SPANISH: "Altura del feed",
+    },
+    "flower_pot.choke_height": {
+        Language.ENGLISH: "Choke height",
+        Language.SPANISH: "Altura del choke",
+    },
+    "flower_pot.lower_cut_height": {
+        Language.ENGLISH: "Lower cut height",
         Language.SPANISH: "Altura del corte inferior",
+    },
+    "flower_pot.junction_height": {
+        Language.ENGLISH: "Junction / NEC source height",
+        Language.SPANISH: "Altura de la unión / fuente NEC",
+    },
+    "flower_pot.nec_source": {
+        Language.ENGLISH: "NEC equivalent source",
+        Language.SPANISH: "Fuente NEC equivalente",
     },
     "flower_pot.construction_factor": {
         Language.ENGLISH: "Construction factor",
@@ -13157,31 +13197,42 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Punta eléctrica inferior",
     },
     "flower_pot.geometry": {
-        Language.ENGLISH: "Physical {physical} {unit} · electrical {electrical} {unit} · feed {feed} {unit}",
-        Language.SPANISH: "Físico {physical} {unit} · eléctrico {electrical} {unit} · alimentación {feed} {unit}",
+        Language.ENGLISH: (
+            "Physical {physical} {unit} · electrical {electrical} {unit} · "
+            "feed {feed} {unit} · choke {choke} {unit}"
+        ),
+        Language.SPANISH: (
+            "Físico {physical} {unit} · eléctrico {electrical} {unit} · "
+            "feed {feed} {unit} · choke {choke} {unit}"
+        ),
     },
     "flower_pot.model_note": {
         Language.ENGLISH: (
-            "Physical cuts drive construction. The solver uses 1.087-scaled "
-            "electrical lengths centered on the feed; the lower electrical tip "
-            "extends below the bottom cut."
+            "Physical cuts drive construction. The feed is at the bottom of the "
+            "choke; above it are the full-coax lower section and the center-only "
+            "upper section. The solver uses a 1.087-scaled center-fed equivalent "
+            "with its source at the junction, not at the physical feed."
         ),
         Language.SPANISH: (
-            "Los cortes físicos definen la construcción. El solver usa longitudes "
-            "eléctricas escaladas por 1,087 centradas en la alimentación; la punta "
-            "eléctrica inferior se extiende debajo del corte inferior."
+            "Los cortes físicos definen la construcción. El feed está en el fondo "
+            "del choke; arriba están el tramo inferior de coaxil completo y el "
+            "superior de solo centro. El solver usa un equivalente centro-alimentado "
+            "escalado por 1,087, con fuente en la unión, no en el feed físico."
         ),
     },
     "flower_pot.scene_note": {
         Language.ENGLISH: (
-            "Solid wires are the NEC model at 1.087 scale. The top and bottom cut "
-            "dimensions are physical; the extra electrical tail is model-only. "
-            "The common-mode choke is ideal and not drawn."
+            "Feed at the bottom of the choke; the choke isolates the feedline below "
+            "it from the full-coax lower arm and the center-only upper arm. Solid "
+            "wires are the 1.087-scaled NEC equivalent with its source at the "
+            "junction, not the physical feed. The choke is ideal and the electrical "
+            "tail is model-only."
         ),
         Language.SPANISH: (
-            "Los hilos sólidos son el modelo NEC a escala 1,087. Las cotas de corte "
-            "superior e inferior son físicas; la cola eléctrica extra es solo del "
-            "modelo. El choke de modo común es ideal y no se dibuja."
+            "Feed en el fondo del choke; arriba están el brazo inferior de coaxil "
+            "completo y el superior de solo centro. Los hilos sólidos son el "
+            "equivalente NEC escalado por 1,087, con fuente en la unión, no en el "
+            "feed físico. El choke es ideal y la cola eléctrica es solo del modelo."
         ),
     },
     "flower_pot.choke_inset": {
@@ -13194,27 +13245,31 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "flower_pot.hint": {
         Language.ENGLISH: (
-            "The half-wave Flower Pot is a coax vertical fed at the junction of two "
-            "collinear sections. Enter the physical cut lengths; the choke is ideal "
-            "and the feed line is outside the geometry."
+            "The half-wave Flower Pot is a coax vertical. The physical feed is at "
+            "the bottom of the choke; the choke isolates the feedline below it from "
+            "the full-coax lower arm and the center-only upper arm. Enter the "
+            "physical feed, choke, and cut lengths. The solver uses a center-fed "
+            "equivalent at the junction."
         ),
         Language.SPANISH: (
-            "El Flower Pot de media onda es una vertical de coaxil alimentada en la "
-            "unión de dos secciones colineales. Ingresá los cortes físicos; el choke "
-            "es ideal y la línea de alimentación queda fuera de la geometría."
+            "El Flower Pot de media onda es una vertical de coaxil. El feed físico "
+            "está en el fondo del choke; arriba están el brazo inferior de coaxil "
+            "completo y el superior de solo centro. Ingresá feed, choke y cortes "
+            "físicos. El solver usa un equivalente centro-alimentado en la unión."
         ),
     },
     "flower_pot.evidence": {
         Language.ENGLISH: (
-            "Published 2 m and 6 m construction rows are the starting cuts. The NEC "
-            "equivalent applies a separate 1.087 scale; impedance, gain, bandwidth "
-            "and choke behavior are not independently validated."
+            "Published 2 m and 6 m construction rows include the choke and physical "
+            "cuts. The NEC equivalent applies a separate 1.087 scale at the arm "
+            "junction; impedance, gain, bandwidth, and real choke behavior are not "
+            "independently validated."
         ),
         Language.SPANISH: (
-            "Las filas publicadas de 2 m y 6 m son los cortes iniciales. El "
-            "equivalente NEC aplica una escala separada de 1,087; impedancia, "
-            "ganancia, ancho de banda y comportamiento del choke no están "
-            "validados independientemente."
+            "Las filas publicadas de 2 m y 6 m incluyen el choke y los cortes "
+            "físicos. El equivalente NEC aplica una escala separada de 1,087 en la "
+            "unión de brazos; impedancia, ganancia, ancho de banda y comportamiento "
+            "real del choke no están validados independientemente."
         ),
     },
     "flower_pot.load_2m": {
@@ -13222,16 +13277,28 @@ _TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.SPANISH: "Cargar fila publicada de 2 m (146 MHz)",
     },
     "flower_pot.load_2m_hint": {
-        Language.ENGLISH: "Sets 146 MHz, 0.457 m top cut, 0.447 m bottom cut, and a 1.0 m base height.",
-        Language.SPANISH: "Configura 146 MHz, corte superior 0,457 m, corte inferior 0,447 m y altura de base 1,0 m.",
+        Language.ENGLISH: (
+            "Sets 146 MHz, a 0.457 m top cut, a 0.447 m bottom cut, a 45 mm choke, "
+            "and a 1.0 m feed height."
+        ),
+        Language.SPANISH: (
+            "Configura 146 MHz, corte superior 0,457 m, corte inferior 0,447 m, "
+            "choke de 45 mm y altura de feed 1,0 m."
+        ),
     },
     "flower_pot.load_6m": {
         Language.ENGLISH: "Load 6 m published row (52.7 MHz)",
         Language.SPANISH: "Cargar fila publicada de 6 m (52,7 MHz)",
     },
     "flower_pot.load_6m_hint": {
-        Language.ENGLISH: "Sets 52.7 MHz, 1.273 m top cut, 1.245 m bottom cut, and a 1.0 m base height.",
-        Language.SPANISH: "Configura 52,7 MHz, corte superior 1,273 m, corte inferior 1,245 m y altura de base 1,0 m.",
+        Language.ENGLISH: (
+            "Sets 52.7 MHz, a 1.273 m top cut, a 1.245 m bottom cut, a 63 mm choke, "
+            "and a 1.0 m feed height."
+        ),
+        Language.SPANISH: (
+            "Configura 52,7 MHz, corte superior 1,273 m, corte inferior 1,245 m, "
+            "choke de 63 mm y altura de feed 1,0 m."
+        ),
     },
     "ringo.title": {
         Language.ENGLISH: "Ringo Generator",

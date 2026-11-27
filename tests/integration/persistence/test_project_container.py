@@ -2536,6 +2536,34 @@ def test_schema_71_container_migrates_to_current(
     assert _manifest(target)["schema_version"] == SCHEMA_VERSION
 
 
+def test_schema_72_container_migrates_to_current(
+    repository: ProjectContainerRepository,
+    sample_project: Project,
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "schema-72.antennadesk"
+    repository.save(sample_project, source)
+    entries = _read_entries(source)
+    manifest = json.loads(entries["manifest.json"])
+    manifest["schema_version"] = 72
+    entries["manifest.json"] = json.dumps(manifest, separators=(",", ":")).encode("utf-8")
+    for name, payload in tuple(entries.items()):
+        if not name.endswith(".json"):
+            continue
+        document = json.loads(payload)
+        if isinstance(document, dict) and document.get("schema_version") == SCHEMA_VERSION:
+            document["schema_version"] = 72
+            entries[name] = json.dumps(document, separators=(",", ":")).encode("utf-8")
+    _write_container(source, entries)
+
+    loaded = repository.load(source)
+
+    assert loaded == sample_project
+    target = tmp_path / "schema-current-72.antennadesk"
+    repository.save(loaded, target)
+    assert _manifest(target)["schema_version"] == SCHEMA_VERSION
+
+
 def test_round_trip_preserves_run_site_ground(
     repository: ProjectContainerRepository,
     sample_project: Project,

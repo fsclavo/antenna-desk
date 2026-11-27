@@ -6513,7 +6513,10 @@ class MainWindow(QMainWindow):
                 base_height_m=max(
                     previous.base_height_m,
                     estimated.base_height_m,
-                    estimated.lower_tip_extension_m + 0.05,
+                    max(
+                        0.0,
+                        estimated.lower_tip_extension_m - estimated.choke_height_m + 0.05,
+                    ),
                 ),
                 top_radius_m=previous.top_radius_m,
                 bottom_radius_m=previous.bottom_radius_m,

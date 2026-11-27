@@ -1071,8 +1071,13 @@ def design_summary_rows(
                 ),
                 ("Construction factor", f"{parameters.construction_shortening_factor:g}"),
                 ("Electrical model scale", f"{parameters.electrical_length_scale:g}"),
-                ("Base height", _length(parameters.base_height_m, display_units)),
-                ("Feed height", _length(parameters.physical_feed_height_m, display_units)),
+                ("Physical feed", _length(parameters.physical_feed_height_m, display_units)),
+                ("Choke height", _length(parameters.choke_height_m, display_units)),
+                ("Lower cut height", _length(parameters.lower_cut_height_m, display_units)),
+                (
+                    "Junction / NEC source height",
+                    _length(parameters.physical_junction_height_m, display_units),
+                ),
                 (
                     "Electrical lower tip",
                     _length(parameters.electrical_lower_tip_m, display_units),

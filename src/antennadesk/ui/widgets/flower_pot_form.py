@@ -16,9 +16,11 @@ from PySide6.QtWidgets import (
 
 from ...domain.antennas.flower_pot import (
     FLOWER_POT_2M_BOTTOM_LENGTH_M,
+    FLOWER_POT_2M_CHOKE_HEIGHT_M,
     FLOWER_POT_2M_FREQUENCY_HZ,
     FLOWER_POT_2M_TOP_LENGTH_M,
     FLOWER_POT_6M_BOTTOM_LENGTH_M,
+    FLOWER_POT_6M_CHOKE_HEIGHT_M,
     FLOWER_POT_6M_FREQUENCY_HZ,
     FLOWER_POT_6M_TOP_LENGTH_M,
     FLOWER_POT_CONSTRUCTION_SHORTENING_FACTOR,
@@ -87,6 +89,9 @@ class FlowerPotForm(QWidget):
         self._base_height = QDoubleSpinBox(self)
         self._base_height.setDecimals(3)
         self._base_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
+        self._choke_height = QDoubleSpinBox(self)
+        self._choke_height.setDecimals(3)
+        self._choke_height.setSuffix(f" {translator.t(length_unit_key(unit_system))}")
 
         self._top_length_field = LengthField(
             self._top_length,
@@ -106,9 +111,16 @@ class FlowerPotForm(QWidget):
             translator,
             self._display_units,
         )
+        self._choke_height_field = LengthField(
+            self._choke_height,
+            LengthFieldSpec(0.0, 10_000.0, scale_hint="m"),
+            translator,
+            self._display_units,
+        )
         self._top_length_field.configure(FLOWER_POT_2M_TOP_LENGTH_M)
         self._bottom_length_field.configure(FLOWER_POT_2M_BOTTOM_LENGTH_M)
         self._base_height_field.configure(FLOWER_POT_DEFAULT_BASE_HEIGHT_M)
+        self._choke_height_field.configure(FLOWER_POT_2M_CHOKE_HEIGHT_M)
 
         self._construction_factor = QDoubleSpinBox(self)
         self._construction_factor.setRange(0.5, 1.0)
@@ -164,6 +176,7 @@ class FlowerPotForm(QWidget):
         form.addRow(self._labels.label("flower_pot.top_length"), self._top_length)
         form.addRow(self._labels.label("flower_pot.bottom_length"), self._bottom_length)
         form.addRow(self._labels.label("flower_pot.base_height"), self._base_height)
+        form.addRow(self._labels.label("flower_pot.choke_height"), self._choke_height)
         form.addRow(
             self._labels.label("flower_pot.construction_factor"),
             self._construction_factor,
@@ -252,6 +265,7 @@ class FlowerPotForm(QWidget):
             FLOWER_POT_2M_FREQUENCY_HZ,
             FLOWER_POT_2M_TOP_LENGTH_M,
             FLOWER_POT_2M_BOTTOM_LENGTH_M,
+            FLOWER_POT_2M_CHOKE_HEIGHT_M,
         )
 
     def load_6m_example(self) -> None:
@@ -261,6 +275,7 @@ class FlowerPotForm(QWidget):
             FLOWER_POT_6M_FREQUENCY_HZ,
             FLOWER_POT_6M_TOP_LENGTH_M,
             FLOWER_POT_6M_BOTTOM_LENGTH_M,
+            FLOWER_POT_6M_CHOKE_HEIGHT_M,
         )
 
     def _load_row(
@@ -268,6 +283,7 @@ class FlowerPotForm(QWidget):
         frequency_hz: float,
         top_length_m: float,
         bottom_length_m: float,
+        choke_height_m: float,
     ) -> None:
         self._updating = True
         try:
@@ -275,6 +291,7 @@ class FlowerPotForm(QWidget):
             self._top_length_field.configure(top_length_m)
             self._bottom_length_field.configure(bottom_length_m)
             self._base_height_field.configure(FLOWER_POT_DEFAULT_BASE_HEIGHT_M)
+            self._choke_height_field.configure(choke_height_m)
         finally:
             self._updating = False
         self._update_geometry()
@@ -301,6 +318,7 @@ class FlowerPotForm(QWidget):
         self._top_length_field.set_display_units(self._display_units)
         self._bottom_length_field.set_display_units(self._display_units)
         self._base_height_field.set_display_units(self._display_units)
+        self._choke_height_field.set_display_units(self._display_units)
         if parameters is not None:
             self.set_parameters(parameters)
 
@@ -313,6 +331,7 @@ class FlowerPotForm(QWidget):
             self._top_length_field.configure(parameters.top_length_m)
             self._bottom_length_field.configure(parameters.bottom_length_m)
             self._base_height_field.configure(parameters.base_height_m)
+            self._choke_height_field.configure(parameters.choke_height_m)
             self._top_radius.setValue(radius_from_m(parameters.top_radius_m, self._unit_system))
             self._bottom_radius.setValue(
                 radius_from_m(parameters.bottom_radius_m, self._unit_system)
@@ -345,12 +364,14 @@ class FlowerPotForm(QWidget):
         physical = length_from_m(parameters.physical_total_length_m, self._unit_system)
         electrical = length_from_m(parameters.electrical_total_length_m, self._unit_system)
         feed = length_from_m(parameters.physical_feed_height_m, self._unit_system)
+        choke = length_from_m(parameters.choke_height_m, self._unit_system)
         self._geometry.setText(
             self._translator.t(
                 "flower_pot.geometry",
                 physical=f"{physical:.2f}",
                 electrical=f"{electrical:.2f}",
                 feed=f"{feed:.2f}",
+                choke=f"{choke:.2f}",
                 unit=unit,
             )
         )
@@ -363,6 +384,7 @@ class FlowerPotForm(QWidget):
             top_radius_m=radius_to_m(self._top_radius.value(), self._unit_system),
             bottom_radius_m=radius_to_m(self._bottom_radius.value(), self._unit_system),
             base_height_m=self._base_height_field.value_m(),
+            choke_height_m=self._choke_height_field.value_m(),
             construction_shortening_factor=self._construction_factor.value(),
             electrical_length_scale=self._electrical_length_scale,
             material=self._selected_material(),

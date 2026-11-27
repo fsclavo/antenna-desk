@@ -158,11 +158,13 @@ def test_flower_pot_reports_an_integrated_choke_without_a_separate_balun() -> No
     assert detail.balun_requirement is BalunRequirement.NOT_REQUIRED
     assert detail.terminals[0].wire_id == TOP_RADIATOR_ID
     assert detail.terminals[1].wire_id == BOTTOM_RADIATOR_ID
-    assert "integrated resonant choke" in detail.summary
+    assert "Physical feed at the bottom of the choke" in detail.summary
+    assert "integrated resonant choke" in detail.summary.lower()
     assert "no separate balun" in detail.summary
     assert "integrated common-mode choke" in " ".join(detail.recommended)
     assert "Form the common-mode choke" in " ".join(detail.steps)
     assert "integrated choke is ideal" in " ".join(detail.limitations)
+    assert "physical feed is below the choke" in " ".join(detail.limitations)
 
 
 def test_endfed_uses_the_transformer_and_counterpoise() -> None:

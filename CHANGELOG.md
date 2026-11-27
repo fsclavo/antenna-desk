@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Flower Pot physical feed and choke (schema 73).** `base_height_m` now means
+  the physical feed connector at the bottom of the choke, and the new
+  construction-only `choke_height_m` places the lower radiating cut 45 mm above
+  the feed on the published 2 m row and 63 mm above it on 6 m. The lower
+  full-coax arm and upper center-only arm remain the two NEC equivalent wires,
+  but the equivalent source is now labeled at the arm junction rather than at
+  the physical feed. The scene dimensions the feed, choke, lower cut, junction,
+  and electrical tail; the form, reports, help, estimator, and optimizer follow
+  the same split. Schema 73 is additive: old payloads load with a zero choke and
+  unchanged lower-cut geometry. No solver or 1.087-scale change.
 - **3D lobe presentation corrections (UX56–UX57).** The schematic antenna
   overlay now centers on the beam symmetry plane for families with an explicit
   forward axis, while the feed marker keeps its real cross-boom offset;
@@ -17,8 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   gain (`max gain − F/B`) and is hidden when F/B is unavailable or the marker is
   below the legibility guard. No solver, domain, schema, or report change.
 - **Flower Pot half-wave family (FP1, schema 72).** A first-class VK2ZOI-style
-  coax vertical with two collinear wires, a feed at their junction, an ideal
-  common-mode choke, published 2 m/6 m physical cut rows, and an explicit
+  coax vertical with two radiating arms, a physical feed at the bottom of the
+  choke, an ideal common-mode choke, published 2 m/6 m physical cut rows, and an
   **1.087 NEC electrical model scale** kept separate from the 0.88 construction
   factor. The lower electrical tip is validated above ground, the catalog and
   editor work in both routes with EN/ES help, the estimator and bounded

@@ -667,6 +667,7 @@ def test_flower_pot_parameters_round_trip() -> None:
         top_radius_m=0.0005,
         bottom_radius_m=0.0015,
         base_height_m=1.2,
+        choke_height_m=0.045,
     )
     original = _project(parameters, "Flower Pot")
 

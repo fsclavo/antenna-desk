@@ -21,7 +21,9 @@ from ..antennas.fan_dipole import (
 )
 from ..antennas.flower_pot import (
     ANTENNA_TYPE_FLOWER_POT,
+    FLOWER_POT_2M_CHOKE_HEIGHT_M,
     FLOWER_POT_2M_FREQUENCY_HZ,
+    FLOWER_POT_6M_CHOKE_HEIGHT_M,
     FLOWER_POT_6M_FREQUENCY_HZ,
     FLOWER_POT_ELECTRICAL_LENGTH_SCALE,
     FlowerPotParameters,
@@ -481,20 +483,28 @@ def estimate_flower_pot(intent: DesignIntent) -> DimensionEstimate:
     physical_total = 0.44 * wavelength
     top = physical_total * 0.505
     bottom = physical_total * 0.495
-    # The NEC-equivalent lower tip extends below the physical cut by the
-    # electrical scale. Keep it clear of the ground plane even when the
-    # requested installation height is lower than that extension.
+    # The NEC-equivalent lower tip extends below the physical lower cut by the
+    # electrical scale. The feed sits below the choke; together they must keep
+    # that scaled tip clear of the ground plane.
     scaled_tip_extension = bottom * (FLOWER_POT_ELECTRICAL_LENGTH_SCALE - 1.0)
-    base_height = max(intent.base_height_m, 1.0, scaled_tip_extension + 0.05)
     reference = any(
         math.isclose(intent.frequency_hz, frequency, rel_tol=0.01)
         for frequency in (FLOWER_POT_2M_FREQUENCY_HZ, FLOWER_POT_6M_FREQUENCY_HZ)
     )
+    if math.isclose(intent.frequency_hz, FLOWER_POT_2M_FREQUENCY_HZ, rel_tol=0.01):
+        choke_height = FLOWER_POT_2M_CHOKE_HEIGHT_M
+    elif math.isclose(intent.frequency_hz, FLOWER_POT_6M_FREQUENCY_HZ, rel_tol=0.01):
+        choke_height = FLOWER_POT_6M_CHOKE_HEIGHT_M
+    else:
+        choke_height = FLOWER_POT_2M_CHOKE_HEIGHT_M
+    minimum_feed = max(0.0, scaled_tip_extension - choke_height + 0.05)
+    base_height = max(intent.base_height_m, 1.0, minimum_feed)
     parameters = FlowerPotParameters(
         frequency_hz=intent.frequency_hz,
         top_length_m=top,
         bottom_length_m=bottom,
         base_height_m=base_height,
+        choke_height_m=choke_height,
         material=intent.material,
         ground=intent.ground,
     )
@@ -519,6 +529,7 @@ def estimate_flower_pot(intent: DesignIntent) -> DimensionEstimate:
             _length_row("flower_pot.bottom_length", bottom),
             _length_row("field.length", physical_total),
             _length_row("flower_pot.base_height", base_height),
+            _length_row("flower_pot.choke_height", choke_height),
             _length_row(
                 "flower_pot.construction_factor", parameters.construction_shortening_factor
             ),

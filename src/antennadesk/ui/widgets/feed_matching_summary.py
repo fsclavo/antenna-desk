@@ -21,6 +21,7 @@ from ...domain.antennas.design import AntennaDesignParameters
 from ...domain.antennas.endfed import EndFedParameters
 from ...domain.antennas.feed_connection import FeedConnectionDetail
 from ...domain.antennas.feed_line import FeedLine
+from ...domain.antennas.flower_pot import FlowerPotParameters
 from ...domain.antennas.matching_network import (
     MatchingNetwork,
     MatchingNetworkPosition,
@@ -204,7 +205,9 @@ class FeedMatchingSummary(QGroupBox):
         self._current_balun.setChecked(self._current_balun_installed)
         self._current_balun.blockSignals(False)
         balance = feed_balance(parameters)
-        if balance is FeedBalance.BALANCED and self._current_balun_installed:
+        if isinstance(parameters, FlowerPotParameters):
+            balance_key = "feed_matching.balance_integrated"
+        elif balance is FeedBalance.BALANCED and self._current_balun_installed:
             balance_key = "feed_matching.balance_installed"
         elif balance is FeedBalance.BALANCED:
             balance_key = "feed_matching.balance_required"
@@ -215,7 +218,11 @@ class FeedMatchingSummary(QGroupBox):
         self._balance_note.setText(self._translator.t(balance_key))
         self._balance_note.setStyleSheet(
             "color: #8a5a00;"
-            if (balance is FeedBalance.BALANCED and not self._current_balun_installed)
+            if (
+                balance is FeedBalance.BALANCED
+                and not self._current_balun_installed
+                and not isinstance(parameters, FlowerPotParameters)
+            )
             or balance is FeedBalance.UNKNOWN
             else ""
         )

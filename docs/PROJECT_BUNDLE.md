@@ -18,7 +18,7 @@ Use **File → Export Project Bundle...** to write a
   export;
 - writes the ZIP atomically through a temporary file next to the destination.
 
-The project payload keeps the normal schema 72, simulation runs, the 64 MB
+The project payload keeps the normal schema 73, simulation runs, the 64 MB
 container limit, and the 256 MB total expanded limit. The bundle adds no
 project schema field.
 

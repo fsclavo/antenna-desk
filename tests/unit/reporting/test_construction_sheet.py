@@ -513,20 +513,30 @@ def test_flower_pot_construction_sheet_lists_physical_cuts_and_choke(
     flower_pot = design.with_parameters(flower_pot_2m())
     sheet = render_construction_sheet(sample_project, flower_pot, None)
 
+    assert "Physical feed height" in sheet
+    assert "1.0000 m" in sheet
+    assert "Choke height" in sheet
+    assert "0.0450 m" in sheet
+    assert "Lower cut height" in sheet
+    assert "1.0450 m" in sheet
     assert "Physical top cut" in sheet
     assert "0.4570 m" in sheet
     assert "Physical bottom cut" in sheet
     assert "0.4470 m" in sheet
     assert "Physical total" in sheet
     assert "0.9040 m" in sheet
+    assert "Junction / NEC source height" in sheet
+    assert "1.4920 m" in sheet
+    assert "NEC source wire" in sheet
+    assert "NEC source height above ground" in sheet
     assert "Electrical model total" in sheet
     assert "0.9826 m" in sheet
     assert "Electrical lower tip" in sheet
-    assert "0.9611 m" in sheet
+    assert "1.0061 m" in sheet
+    assert "The physical feed is at the bottom of the 0.0450 m choke" in sheet
     assert "scaled electrical model; use the cut list above" in sheet
     assert "Choke" in sheet
     assert "ideal, not modeled" in sheet
-    assert "Fit a common-mode choke" in sheet
     assert "Common-mode choke" in sheet
     assert "Use the published coax and a non-conductive conduit" in sheet
 
