@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from main_window_support import FakeSolver, export_nec_deck
-from PySide6.QtGui import QFont, QFontInfo, QPalette
+from PySide6.QtGui import QFont, QFontDatabase, QFontInfo, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
@@ -28,8 +28,17 @@ LAYOUT_BASELINE_MAX_POINT_SIZE = 10.0
 
 def _pin_layout_baseline_font(app: QApplication) -> None:
     font = QFont(app.font())
-    point_size = QFontInfo(font).pointSizeF()
-    if LAYOUT_BASELINE_MIN_POINT_SIZE <= point_size <= LAYOUT_BASELINE_MAX_POINT_SIZE:
+    info = QFontInfo(font)
+    if not info.family() or info.pointSizeF() <= 0:
+        # The Windows offscreen platform can expose an unresolved application
+        # font. Resolve a real system family before fixing the point size.
+        font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
+        info = QFontInfo(font)
+    if not info.family():
+        font = QFont("Sans Serif")
+        info = QFontInfo(font)
+    if LAYOUT_BASELINE_MIN_POINT_SIZE <= info.pointSizeF() <= LAYOUT_BASELINE_MAX_POINT_SIZE:
+        app.setFont(font)
         return
     font.setPointSizeF(LAYOUT_BASELINE_MIN_POINT_SIZE)
     app.setFont(font)
