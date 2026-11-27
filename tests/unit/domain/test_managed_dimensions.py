@@ -85,6 +85,37 @@ def test_t2fd_exposes_spacing_and_height() -> None:
     assert keys == ["primary", "height", "spacing"]
 
 
+def test_flower_pot_exposes_feed_and_choke_heights() -> None:
+    from antennadesk.domain.antennas.flower_pot import flower_pot_2m
+
+    parameters = flower_pot_2m()
+    dimensions = {item.key: item for item in managed_dimensions(parameters)}
+
+    assert list(dimensions) == ["primary", "feed_height", "choke_height"]
+    feed = dimensions["feed_height"]
+    choke = dimensions["choke_height"]
+    assert feed.read(parameters) == pytest.approx(parameters.base_height_m)
+    assert choke.read(parameters) == pytest.approx(parameters.choke_height_m)
+    changed = feed.write(parameters, 1.2)
+    assert isinstance(changed, type(parameters))
+    assert changed.base_height_m == pytest.approx(1.2)
+    assert changed.choke_height_m == pytest.approx(parameters.choke_height_m)
+
+
+def test_trapped_yagi_exposes_the_trap_inset() -> None:
+    from antennadesk.domain.antennas.trap_yagi import trap_yagi_parameters
+
+    parameters = trap_yagi_parameters()
+    dimensions = {item.key: item for item in managed_dimensions(parameters)}
+
+    assert "trap_inset" in dimensions
+    inset = dimensions["trap_inset"]
+    assert inset.read(parameters) == pytest.approx(parameters.trap_inset_m)
+    changed = inset.write(parameters, 0.25)
+    assert isinstance(changed, type(parameters))
+    assert changed.trap_inset_m == pytest.approx(0.25)
+
+
 def test_yagi_and_moxon_have_no_primary_dimension() -> None:
     from antennadesk.domain.antennas.moxon import moxon_20m_wire
     from antennadesk.domain.antennas.yagi import nbs_five_element

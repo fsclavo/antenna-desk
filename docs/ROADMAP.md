@@ -41,7 +41,7 @@ tolerance.
 
 **Latest published release:** `0.11.1` (2026-11-27). The 1.0 Confidence wave is
 complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
-1.2 has DL3 implemented, DL6 first-slice work, and a bounded DL7 implementation. DL4 is canceled.
+1.2 has DL3 closed, DL6 first-slice work, and a bounded DL7 implementation. DL4 is canceled.
 See [`STATUS.md`](STATUS.md)
 and the [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md).
 
@@ -278,7 +278,7 @@ decide-build-measure workflow; the new track is below.
 
 | Priority | Item | Evidence | Status |
 |---|---|---|---|
-| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; 1.1 done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 partial (DL3/DL6, DL7 implemented bounded; DL4 canceled); see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave) |
+| P0 | 1.0 trust, 1.1 station, and 1.2 site track (TS1–TS7, DL1–DL9; DL8 post-1.2) | B/C | wave 0 done 2026-11-19; 1.1 done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 partial (DL3 closed; DL6 first slice, DL7 bounded; DL4 canceled); see [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#product-trust-and-station-wave) |
 | P1 | Independent references for remaining experimental templates | A/B | partial: `delta_loop`, `vertical`, `loaded_vertical` (published preset), `inverted_v`, `j_pole`, `slim_jim`, `endfed`, `trap_dipole`, `sloper`, `doublet`, `zepp`, `biquad`, and `beverage` promoted to B for starting dimensions. Inverted L, Ringo, double biquad, and loaded dipole remain C; see [`EVIDENCE_AUDIT.md`](EVIDENCE_AUDIT.md) |
 | P1 | Fan dipole V-angle calibration and angle optimization | B | investigated; lengths and angles are now searched jointly by the family optimizer, but the calibration warning remains |
 | P1 | Optional ideal transformer/4:1 balun for OCFD | B | done |
@@ -549,7 +549,7 @@ and new catalog presets) waits until this track closes.
 | 1.1 Station | DL1 | Smith chart and matching workbench | Interactive locus, reference planes, measured overlay, editable feed-line preview, automatic L/Pi/T preview, export | M–L | n/a | done 2026-11-19; manual component entry remains |
 | 1.1 Station | DL2 | Tuner matchability and realizable components | Bounded L/Pi/T check, E12/E24, Q loss, limiting part, best effort/bypass, band-center rows, port ratings | M–L | B/C | done 2026-11-20; per-component branch ratings optional |
 | 1.1 Station | DL5 | Support structures | Yagi mast and guy wires done; boom, tower, attachments, and hardware deferred pending ADR/spike | M–L | B/C | narrowed 2026-11-24 |
-| 1.2 Site and exploration | DL3 | Live tuning preview | Managed length/non-length dimensions and optional coarse pattern preview implemented; Apply closes; optional non-modal remains | M–L | n/a | implemented 2026-11-24 |
+| 1.2 Site and exploration | DL3 | Live tuning preview | Managed length/non-length dimensions, Flower Pot feed/choke heights, trapped-Yagi trap inset, and optional coarse pattern preview implemented; Apply closes; optional non-modal remains | M–L | n/a | closed 2026-11-27 |
 | 1.2 Site and exploration | DL4 | Near-field and RF exposure | Canceled 2026-11-24; not relevant to the amateur design workflow | — | — | canceled |
 | 1.2 Site and exploration | DL6 | Stacked Yagi arrays | First slice done 2026-11-25: form, schema 71, catalog, per-port sources, scene/reports, splitter + phase-line specification, co-simulated TL network with the reference line, a matched line loss plus a per-port mismatch correction, one shared mast, a Wilkinson N-port divider mode with a reconstructed pattern and per-level L/Pi/T matching networks, and bounded spacing/phase optimization, plus optional per-level transformer ratios, matched branch loss, isolation-resistor series/parallel parasitics, and a deterministic tolerance corner check; a measured broadband splitter/isolation model remains | L | C | partial 2026-11-26 |
 | 1.2 Site and exploration | DL7 | Native ground screen and cliff | Bounded cliff/second-medium far-field profile implemented; native screen still unvalidated for SWR | M–L | B/C | implemented 2026-11-24 |
@@ -585,7 +585,7 @@ Product track:
    first slice (bounded tuner check, E12/E24, Q loss, limiting part, L/Pi/T
    best effort, bypass, band-center rows, and port ratings) is done; only
    per-component branch ratings remain optional. DL5 is narrowed. Wave 2 is in
-   progress: DL3 is partial, DL6 has its first slice implemented (per-level
+   progress: DL3 is closed, DL6 has its first slice implemented (per-level
    matching remain), and DL7 is implemented as a bounded
    cliff slice; DL4 is canceled by product decision. DL8 stays
    post-1.2 until a validated terrain ADR exists. Execution and acceptance criteria are in
@@ -620,7 +620,7 @@ Release track:
    `v0.10.1`, `v0.11.0`, and `v0.11.1` are published; see [`CHANGELOG.md`](../CHANGELOG.md)
    and the archived release QA records in [`archive/releases/`](archive/releases/).
 9. The 2026-11-19 trust/station track completed 1.0 Confidence. 1.1 Station is
-   done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has DL3 implemented,
+   done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has DL3 closed,
    DL6 first-slice work, and a bounded DL7 implementation, with DL4 canceled. There are no committed
    dates, and each release is gated by the acceptance criteria in the backlog.
 

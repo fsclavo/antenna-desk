@@ -87,7 +87,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | C7i | HexBeam feed harness and inter-band coupling | L | traceable harness data or measurement | Model the parallel coax feed harness/jumper lengths and inter-band coupling, or keep it explicitly unavailable; no invented values. Blocked until a source or measurement exists. |
 | G27 | Optional transformer, common-mode choke, and coaxial loss models | L | G25; measured transformer insertion loss/core data; common-mode current model or measurement; manufacturer coax attenuation data | **Partially delivered.** EF7b added the measured transformer-loss table (`BalunLoss`); EF8 added the bounded feedpoint common-mode choke; ADR-0039 adds frequency-dependent feed-line attenuation with source-backed RG-58A/RG-213 tables, log-frequency interpolation, endpoint clamping, and a preflight range warning. The loss-accounting audit is also done (ADR-0040): the feed-chain sum must match the transducer gain, and NEC conductor/load losses including the feedpoint choke stay in the antenna power budget. Still deferred: analytical ferrite core loss with complex permeability/core geometry/winding/load data; frequency-interpolated `Zcm(f)` and shack-end choke placement; the remaining coax/choke evidence audit. All loss fields stay optional and off/zero by default; no invented loss numbers. |
 | U6 | Documentation, help audit, and visual QA | S–M | U2–U5 | **Done 2026-11-24.** The user guide, roadmap, units spec, README, changelog, help tests, automated font-scaling/geometry checks, and the manual desktop light/dark/font-scaling checklist are complete. [`QA_PASS_2026-11-18.md`](archive/qa/QA_PASS_2026-11-18.md) and [`QA_PASS_2026-11-24.md`](archive/qa/QA_PASS_2026-11-24.md) record the gate and closure. |
-| DL3 | Live tuning preview | M–L | none | **Partially done 2026-11-20.** Primary-dimension slider, coarse single-frequency preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. Other managed dimensions and pattern preview remain. See §DL3. |
+| DL3 | Live tuning preview | M–L | none | **Done 2026-11-27.** Primary and managed dimension sliders, coarse single-frequency preview, optional pattern preview, debounce/cancel, stale-result guard, preview badge, and apply/full-run path. The final follow-up adds Flower Pot feed/choke heights and the trapped-Yagi trap inset. See §DL3. |
 | DL5 | Support structures | M–L | ADR | **Done as narrowed 2026-11-24.** Yagi mast conductor plus 2–4 guy wires, geometry, BOM, scene, and schema 57–58. Conductive boom, tower, attachments, and structural hardware are deferred pending ADR/spike; no further 1.1 work. See §DL5. |
 | DL6 | Stacked Yagi arrays | L | DL5 (soft), ADR | **First slice implemented 2026-11-25.** 2–4 identical Yagis, schema 71, form and catalog routes, per-port **Sources**, front elevation scene, reports/BOM, a real nec2c two-port test, splitter + phase-line specification, a co-simulated lossless TL network, and a bounded spacing/phase optimizer inside the maximum top-height envelope. A matched line loss plus a per-port mismatch correction is applied to realized gain, one shared mast/guy set is modeled across every level, and a beta/hairpin match is built at every driven element. A pure-Python N-port feed-network solver, antenna Y-matrix extraction, a user-facing Wilkinson divider mode, and per-level L/Pi/T matching networks are implemented. A folded driven element is copied to every level as geometry-only, with optional ideal per-level transformer ratios, matched branch loss, isolation-resistor series/parallel parasitics, and a deterministic tolerance corner check in Wilkinson mode; a measured broadband splitter/isolation model remains explicitly unavailable. Network mode includes the reference line. Evidence C; no gain claim. See ADR-0049 and §DL6. |
 | DL7 | Native ground screen and cliff ground | M–L | ADR, spike | **Bounded slice implemented 2026-11-24; evidence B/C.** Cliff/second-medium far-field profile, schema 60, Site Ground dialog, and `GN`/`RP 2`/`RP 3` adapter. No external site reference is available; the native radial screen stays unvalidated for SWR and is not exposed. See ADR-0051, `spikes/dl7-ground-gn-spike.md`, and §DL7. |
@@ -1067,14 +1067,14 @@ labels and a visible limitation.
 
 ### DL3 — Live tuning preview
 
-**Status:** **Partially done 2026-11-24.** A managed-dimension selector covers
-the primary dimension plus family-specific length dimensions such as height,
-spacing, radial length, feed height, and reflector spacing. The coarse
-single-frequency preview, debounce/cancel, stale-result guard, preview badge,
-optional coarse elevation-cut pattern preview, and apply/full-run path are
-implemented. The selector also covers managed angles, counts, and
-transformer/feed ratios. **Apply and simulate** closes the dialog and starts the
-full simulation.
+**Status:** **Done 2026-11-27.** A managed-dimension selector covers the
+primary dimension plus family-specific length dimensions such as height,
+spacing, radial length, feed height, reflector spacing, the Flower Pot feed and
+choke heights, and the trapped-Yagi trap inset. The coarse single-frequency
+preview, debounce/cancel, stale-result guard, preview badge, optional coarse
+elevation-cut pattern preview, and apply/full-run path are implemented. The
+selector also covers managed angles, counts, and transformer/feed ratios.
+**Apply and simulate** closes the dialog and starts the full simulation.
 
 **Goal:** make geometry exploration immediate without replacing the full
 simulation.

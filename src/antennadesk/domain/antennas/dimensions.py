@@ -18,6 +18,7 @@ from .design import (
 from .dipole import DipoleParameters
 from .discone import DisconeParameters
 from .endfed import EndFedParameters
+from .flower_pot import FlowerPotParameters
 from .folded_dipole import FoldedDipoleParameters
 from .hexbeam import HexbeamParameters
 from .inverted_v import InvertedVParameters
@@ -372,6 +373,25 @@ def managed_dimensions(
                 ManagedValueKind.RATIO,
             )
         )
+    elif isinstance(parameters, FlowerPotParameters):
+        dimensions.extend(
+            (
+                _field_dimension(
+                    "feed_height",
+                    "flower_pot.base_height",
+                    "base_height_m",
+                    0.0001,
+                    100.0,
+                ),
+                _field_dimension(
+                    "choke_height",
+                    "flower_pot.choke_height",
+                    "choke_height_m",
+                    0.0,
+                    10.0,
+                ),
+            )
+        )
     elif isinstance(parameters, TrapDipoleParameters):
         dimensions.append(_height())
     elif isinstance(parameters, PhasedVerticalParameters):
@@ -450,6 +470,15 @@ def managed_dimensions(
                     100.0,
                 )
             )
+        dimensions.append(
+            _field_dimension(
+                "trap_inset",
+                "trap_yagi.trap_inset",
+                "trap_inset_m",
+                0.0001,
+                100.0,
+            )
+        )
     elif isinstance(parameters, TransmissionLineDoubletParameters):
         dimensions.extend(
             (

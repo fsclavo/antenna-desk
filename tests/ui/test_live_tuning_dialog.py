@@ -13,6 +13,7 @@ from pytestqt.qtbot import QtBot
 
 from antennadesk.application.cancellation import EventCancelToken
 from antennadesk.domain.antennas.dipole import DipoleParameters
+from antennadesk.domain.antennas.flower_pot import flower_pot_2m
 from antennadesk.domain.antennas.inverted_v import InvertedVParameters
 from antennadesk.domain.antennas.vertical import VerticalParameters
 from antennadesk.domain.common.reflection import calculate_swr
@@ -168,6 +169,34 @@ def test_live_tuning_can_switch_to_a_secondary_dimension(qtbot: QtBot) -> None:
     assert applied[-1].height_m != parameters.height_m
     assert applied[-1].total_length_m == parameters.total_length_m
     assert dialog.result() == QDialog.DialogCode.Accepted
+
+
+def test_live_tuning_exposes_flower_pot_feed_and_choke_heights(qtbot: QtBot) -> None:
+    parameters = flower_pot_2m()
+    spec = SimulationSpec(frequency_plan=FrequencyPlan.single(parameters.frequency_hz))
+    applied = []
+    dialog = LiveTuningDialog(
+        Translator(Language.ENGLISH),
+        parameters,
+        spec,
+        _FakeSolver(),
+        applied.append,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+
+    choke_index = dialog._dimension_combo.findData("choke_height")
+    assert choke_index >= 0
+    dialog._dimension_combo.setCurrentIndex(choke_index)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+    dialog._slider.setValue(dialog._slider.value() + 5)
+    qtbot.waitUntil(lambda: not dialog._busy, timeout=3000)
+    dialog._apply_clicked()
+
+    assert applied
+    assert applied[-1].choke_height_m != parameters.choke_height_m
+    assert applied[-1].base_height_m == parameters.base_height_m
 
 
 def test_live_tuning_can_tune_an_angle_dimension(qtbot: QtBot) -> None:

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Live tuning for Flower Pot and trapped-Yagi trap inset.** The live tuning
+  selector now exposes the Flower Pot physical feed and choke heights and the
+  trapped-Yagi trap inset, in addition to each family's primary and existing
+  managed values. The new controls use the normal debounced preview,
+  cancellation, stale-result guard, and apply/full-run path.
+
 ## [0.11.1] - 2026-11-27
 
 ### Fixed
