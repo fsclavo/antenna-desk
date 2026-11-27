@@ -2989,9 +2989,12 @@ decision:
   icon and the live-tuning GUI-thread worker fix. Windows 3.11/3.12/3.13 and
   Linux CI pass; the Release workflow built and checksum-verified every
   artifact. See [`RELEASE_QA_0.10.1.md`](archive/releases/RELEASE_QA_0.10.1.md).
-- Release candidate: **0.11.1** prepared on 2026-11-27 with the optimizer
-  dialog close/cancel lifecycle fix. Full gate: 4,790 passed, 1 skipped; real
-  `nec2c` integration: 186 passed. Tag and published assets are pending. See
+- Release: **0.11.1** published on 2026-11-27 with the optimizer dialog
+  close/cancel lifecycle fix. Full gate: 4,790 passed, 1 skipped; real `nec2c`
+  integration: 186 passed. The tag workflow
+  [`46052575256`](https://github.com/fsclavo/antenna-desk/actions/runs/46052575256)
+  built and published the wheel/sdist, Linux packages, Windows packages, and
+  checksums. See
   [`RELEASE_QA_0.11.1.md`](archive/releases/RELEASE_QA_0.11.1.md).
 - Release: **0.11.0** published on 2026-11-27 with the UX46–UX57 3D/pattern
   and dialog-layout work, the extended DL6 stacked-Yagi feed network, and FP1

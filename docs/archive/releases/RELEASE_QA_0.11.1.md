@@ -4,7 +4,7 @@
 - **Date:** 2026-11-27
 - **Tag:** `v0.11.1`
 - **Release:** <https://github.com/fsclavo/antenna-desk/releases/tag/v0.11.1>
-- **Status:** release candidate; tag and asset publication pending
+- **Status:** published 2026-11-27
 - **Schema:** 73 (unchanged from 0.11.0)
 - **Previous release:** `0.11.0` (2026-11-27)
 
@@ -51,6 +51,16 @@ No solver, electromagnetic model, schema, or project-format change is included.
 - Wheel metadata and the application `--version` report `0.11.1`.
 - The tag workflow remains the publication step for the native packages and
   checksums.
+
+## Publication verification (2026-11-27)
+
+- Tag workflow
+  [`46052575256`](https://github.com/fsclavo/antenna-desk/actions/runs/46052575256)
+  completed successfully and published 12 assets.
+- All six published binary checksums verify with `sha256sum -c`.
+- Wheel, sdist, and AppImage report `0.11.1`; the Debian package reports
+  `0.11.1`.
+- The Debian package and Windows portable zip contain the bundled `nec2c`.
 
 ## Known limitations
 
