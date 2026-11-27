@@ -1444,10 +1444,13 @@ current 1.1/1.2 priorities.
 
 ## FP1 — Flower Pot half-wave family
 
-**Status:** **implemented 2026-11-26 (schema 72; feed/choke revision schema 73).** **Priority:** P2
-catalog/VHF. The length spike selected Option A, ADR-0055 is implemented, and
-the family is in the catalog with both routes, estimator, optimizer, scene,
-reports, and real `nec2c` 2 m/6 m coverage.
+**Status:** **implemented 2026-11-26 (schema 72; feed/choke revision schema
+73); QA closed 2026-11-27.** **Priority:** P2 catalog/VHF. The length spike
+selected Option A, ADR-0055 is implemented, and the family is in the catalog
+with both routes, estimator, optimizer, scene, reports, and real `nec2c`
+2 m/6 m coverage. The manual visual pass confirmed the physical feed/choke
+split and the pattern overlay anchor; see
+[`archive/qa/QA_PASS_2026-11-27_fp1.md`](archive/qa/QA_PASS_2026-11-27_fp1.md).
 **Decision:** [ADR-0055](ADR/0055-flower-pot-half-wave-family.md), with the
 spike in [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
 
@@ -1522,7 +1525,10 @@ wire.
 reported feed. VK2ZOI and VK4PK place the physical feed at the bottom of the
 choke; the junction is the NEC equivalent source. The family now reports the
 physical feed and the choke separately, with published construction heights of
-45 mm (2 m) and 63 mm (6 m). The solver and the 1.087 scale are unchanged.
+45 mm (2 m) and 63 mm (6 m). The solver and the 1.087 scale are unchanged. The
+3D pattern overlay is anchored at the physical feed. Manual QA confirmed the
+corrected behavior; see
+[`archive/qa/QA_PASS_2026-11-27_fp1.md`](archive/qa/QA_PASS_2026-11-27_fp1.md).
 
 **Explicitly out of scope:** single 5/8 (needs a shorted one-port stub), double
 5/8 (needs a coax/TL radiator), dual-band sleeve (needs a sleeve/cylinder and

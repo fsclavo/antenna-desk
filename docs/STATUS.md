@@ -137,6 +137,12 @@
   regression. No 50 Ω, gain, bandwidth, or choke-impedance claim is made. See
   [ADR-0055](ADR/0055-flower-pot-half-wave-family.md) and
   [`spikes/fp1-flower-pot-length-representation.md`](spikes/fp1-flower-pot-length-representation.md).
+- FP1 QA is **closed 2026-11-27**. The manual pass confirmed the physical feed
+  below the choke, the 45/63 mm choke heights, the scene and report split, and
+  the 3D pattern overlay anchored at the physical feed. Automated gate:
+  **4,787 passed, 1 skipped**; real `nec2c` simulation integration: **186
+  passed**. See
+  [`archive/qa/QA_PASS_2026-11-27_fp1.md`](archive/qa/QA_PASS_2026-11-27_fp1.md).
 - DL7 is implemented as the bounded cliff/second-medium far-field profile
   (ADR-0051): project-level Site Ground dialog, schema 60 metadata migration,
   `GN`/`RP 2`/`RP 3` adapter, and far-field-only/SWR-unchanged notes. No
