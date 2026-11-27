@@ -1,8 +1,8 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline,
-  UX59 wrapping, and UX60 layout-based sizing added 2026-11-27; UX61 pending
-  Windows verification
+- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58–UX61 automated
+  guards added 2026-11-27; real Windows CI and the manual desktop checklist
+  remain the closure conditions
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, UX58, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX61
 
@@ -166,6 +166,27 @@ All 26 registry dialogs remain free of horizontal scrolling at 920 px and at
 their narrow initial widths with Large font locally. No 1000 px exception or
 one-column collapse was required. The real Windows run remains the closure
 condition.
+
+## UX61 final guard (2026-11-27)
+
+The fast layout batch now runs a compact matrix rather than a full
+light/dark × size × language × font Cartesian product:
+
+- 26 registry dialogs;
+- English and Spanish;
+- Medium and Large font presets;
+- 920×640 and each dialog's documented initial size.
+
+Every check asserts no horizontal scrollbar, the action box visible and inside
+the dialog, and the action box outside the form scroll. Scroll-heavy forms may
+scroll vertically; compact forms must fit their minimum width. The Yagi
+Large-font test also asserts no horizontal scrollbar, and the Flower Pot test
+is parametrized over both languages and both font presets at 600 px.
+
+Local result: **355 layout tests passed**. The Windows 3.12/3.13 run and the
+manual Linux/Windows light-dark and 125%/150% checklist remain pending; see
+[`QA_CHECKLIST_2026-11-27_ux61.md`](../archive/qa/QA_CHECKLIST_2026-11-27_ux61.md).
+This is not a pass record.
 
 ## UX54 audit: scroll-heavy generator dialogs
 

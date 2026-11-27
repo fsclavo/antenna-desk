@@ -174,15 +174,19 @@ def test_results_view_anchors_the_pattern_overlay_at_the_physical_feed(
     assert parameters.physical_junction_height_m > parameters.physical_feed_height_m
 
 
-def test_dialog_keeps_actions_visible_with_large_spanish(
+@pytest.mark.parametrize("font_size", [FontSize.MEDIUM, FontSize.LARGE])
+@pytest.mark.parametrize("language", [Language.ENGLISH, Language.SPANISH])
+def test_dialog_keeps_actions_visible_at_the_initial_width(
     qtbot: QtBot,
+    language: Language,
+    font_size: FontSize,
 ) -> None:
     app = QApplication.instance()
     assert isinstance(app, QApplication)
     controller = FontSizeController(QFont("Sans Serif", 10))
-    controller.apply(FontSize.LARGE)
+    controller.apply(font_size)
     try:
-        dialog = FlowerPotDialog(Translator(Language.SPANISH), UnitSystem.METRIC)
+        dialog = FlowerPotDialog(Translator(language), UnitSystem.METRIC)
         qtbot.addWidget(dialog)
         dialog.resize(600, 640)
         dialog.show()

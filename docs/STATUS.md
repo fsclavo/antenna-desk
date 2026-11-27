@@ -223,6 +223,13 @@
   UI suite: **2,024 passed**. No width exception or column collapse was needed.
   Windows 3.12/3.13 verification is pending. See
   [`ADR-0056`](ADR/0056-antenna-dialog-layout.md).
+- UX61 final layout guard is **implemented locally 2026-11-27**. The fast batch
+  covers 26 dialogs × English/Spanish × Medium/Large × (920×640 and each
+  initial size), with no horizontal scrollbar and the action box visible and
+  outside the form scroll. Local layout batch: **355 passed**; full gate:
+  **4,966 passed, 1 skipped**. The Windows 3.12/3.13 run and the manual
+  Linux/Windows light-dark and 125%/150% checklist are still pending; see
+  [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md).
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.
@@ -235,10 +242,10 @@
 
 ## Next
 
-1. Close the P1 Windows layout/CI track with **UX61**. UX58–UX60 are
-   implemented locally; UX61 adds the Large-font guard, updates the QA record,
-   and records the real Windows run. The README `tests` badge remains red until
-   that Windows verification passes. No schema or solver change.
+1. Close the P1 Windows layout/CI track: UX58–UX61 are implemented locally.
+   Run the real Windows 3.12/3.13 layout batch, execute the pending manual
+   Linux/Windows light-dark and 125%/150% checklist, and confirm the README
+   `tests` badge is green on `main`. No schema or solver change.
 2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
 3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision

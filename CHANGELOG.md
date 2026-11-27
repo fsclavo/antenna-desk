@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   form/chrome minimum only when needed and keeps the 90%-screen cap. The Yagi
   element table no longer drives the dialog width, and Basic Antenna's
   family/template values have a compact policy at narrow widths and Large font.
+- **Medium/Large generator layout guard.** The fast UI batch covers 26 dialogs
+  in English and Spanish at Medium and Large fonts, at 920×640 and each
+  dialog's initial size, with no horizontal scrollbar and the action box
+  visible and outside the form scroll. Windows CI and the manual desktop
+  checklist remain the closure conditions.
 
 ## [0.11.1] - 2026-11-27
 

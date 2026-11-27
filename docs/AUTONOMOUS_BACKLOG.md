@@ -124,7 +124,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
 | UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Implemented locally 2026-11-27; Windows CI verification pending.** Shared `configure_form_layout()` applies `WrapLongRows`, growing fields, zero margins, and explicit spacing to every family `QFormLayout`; single-column labels wrap. Local guard at 920/initial widths and Large font: no horizontal bars; layout batch 226 passed. See §UX59. |
 | UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Implemented locally 2026-11-27; Windows CI verification pending.** Initial width grows to the form minimum only when needed and stays under the `scaled_dialog_size()` screen cap; the Yagi table no longer uses `AdjustToContents`; the Basic Antenna template value has a compact policy. All 26 dialogs remain free of horizontal scrolling at 920 px and Large font locally; no 1000 px exception or column collapse was needed. See §UX60. |
-| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Proposed; P1.** Add the compact Medium/Large EN/ES guard (no horizontal at 920, actions visible, vertical allowed only at Large), update ADR-0056/STATUS/CHANGELOG and the manual QA record, and confirm the README `tests` badge is green on `main` with no platform exclusions. See §UX61. |
+| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Automated guard implemented locally 2026-11-27; Windows CI and manual QA pending.** 26 dialogs × EN/ES × Medium/Large × (920×640 + initial size); no horizontal scrollbar, actions visible/outside the scroll. Layout batch: 355 passed. Checklist added at `archive/qa/QA_CHECKLIST_2026-11-27_ux61.md`; the README badge stays red until the real Windows run. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -3124,7 +3124,8 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 
 ### UX61 — Large-font layout guard, Windows closure, and docs
 
-**Status:** proposed; P1. **Depends on:** UX58–UX60. **Effort:** S–M
+**Status:** automated guard implemented locally 2026-11-27; Windows CI and
+manual desktop QA pending. **Depends on:** UX58–UX60. **Effort:** S–M
 (1–2 days).
 
 **Scope:**
@@ -3160,11 +3161,33 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 - ADR-0056, STATUS, CHANGELOG, and the QA record are consistent with the code
   and with the actual CI run.
 
-**Track order:** UX58 → UX59 → UX60 → UX61. UX58–UX60 are implemented
-locally; UX61 remains. The Windows signal still has to be recorded on the real
-runner before the track closes. UX61 closes the track only after the real
-Windows run is green. Do not start with a Windows skip or a test-only width
-increase: both hide the user-facing issue.
+**Implementation (2026-11-27, automated portion):**
+
+- `test_dialog_layout.py` now runs a compact matrix: 26 dialogs × English/
+  Spanish × Medium/Large × (920×640 and the documented initial size). Each
+  check asserts no horizontal scrollbar, the action box visible and inside the
+  dialog, and the action box outside the form scroll. Scroll-heavy forms may
+  scroll vertically; compact forms must fit their minimum width.
+- The matrix adds the documented initial sizes for every registry entry and a
+  coverage test that keeps the size map complete.
+- `test_flower_pot_dialog.py` is parametrized over English/Spanish and
+  Medium/Large at the 600 px initial width.
+- The Yagi Large-font test now also asserts no horizontal scrollbar; the table
+  policy and growth tests remain.
+- Local results: layout batch **355 passed**; full gate **4,966 passed, 1
+  skipped**; real `nec2c` integration: **186 passed**.
+- [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md)
+  records the pending Linux/Windows desktop matrix. It is a checklist, not a
+  pass record.
+- Still required for closure: the real Windows 3.12/3.13 run, the manual
+  light/dark and 125%/150% desktop pass on Linux and Windows, and a green
+  README `tests` badge on `main`. No platform exclusion or weakened assertion
+  was added.
+
+**Track order:** UX58 → UX59 → UX60 → UX61. All four are implemented locally;
+the Windows signal and manual checklist still have to be recorded before the
+track closes. Do not start with a Windows skip or a test-only width increase:
+both hide the user-facing issue.
 
 **Cross-cutting acceptance:**
 
@@ -3371,8 +3394,8 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,858 passed, 1 skipped** on 2026-11-27 after PF2 streaming
-  write, the DL3 managed-value closure, and the UX58–UX60 local layout work.
+- Full gate: **4,966 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write, the DL3 managed-value closure, and the UX58–UX61 local layout work.
   The 0.11.1 release covers the optimizer close/cancel lifecycle fix. Real
   `nec2c` integration: **186 passed**. The suite also covers the QA and
   technical-debt closure,

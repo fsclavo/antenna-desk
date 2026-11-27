@@ -92,6 +92,38 @@ REGISTRY: tuple[DialogCase, ...] = (
     DialogCase("inverted_l", InvertedLDialog),
 )
 LANGUAGES = [Language.ENGLISH, Language.SPANISH]
+FONT_SIZES = (FontSize.MEDIUM, FontSize.LARGE)
+
+# The documented initial narrow/default size for each dialog. UX61 checks this
+# size as well as the 920x640 budget with Medium and Large fonts.
+INITIAL_SIZES: dict[str, tuple[int, int]] = {
+    "yagi": (920, 860),
+    "loaded_dipole": (920, 640),
+    "biquad": (920, 640),
+    "moxon": (920, 640),
+    "magnetic_loop": (920, 640),
+    "beverage": (920, 640),
+    "scv": (920, 640),
+    "j_pole": (920, 640),
+    "ocfd": (920, 640),
+    "stacked_yagi": (940, 900),
+    "endfed": (620, 780),
+    "vertical": (560, 700),
+    "log_periodic": (640, 900),
+    "hexbeam": (580, 820),
+    "trap_yagi": (580, 860),
+    "phased_vertical": (560, 820),
+    "quad_beam": (560, 780),
+    "trap_dipole": (600, 760),
+    "t2fd": (620, 780),
+    "discone": (560, 780),
+    "basic_antenna": (560, 740),
+    "fan_dipole": (620, 620),
+    "ringo": (560, 620),
+    "flower_pot": (600, 760),
+    "inverted_v": (560, 560),
+    "inverted_l": (560, 600),
+}
 
 
 def _form_scroll(dialog: QDialog, form: QWidget) -> QScrollArea | None:
@@ -193,6 +225,49 @@ def test_ux59_large_font_at_920_has_no_horizontal_bar(
         assert buttons.geometry().bottom() <= dialog.rect().bottom()
     finally:
         controller.apply(FontSize.MEDIUM)
+
+
+@pytest.mark.parametrize("font_size", FONT_SIZES, ids=[size.value for size in FONT_SIZES])
+@pytest.mark.parametrize("language", LANGUAGES, ids=[language.value for language in LANGUAGES])
+@pytest.mark.parametrize("case", REGISTRY, ids=[case.name for case in REGISTRY])
+def test_ux61_medium_large_layout_matrix(
+    qtbot: QtBot,
+    case: DialogCase,
+    language: Language,
+    font_size: FontSize,
+) -> None:
+    app = QApplication.instance()
+    assert isinstance(app, QApplication)
+    controller = FontSizeController(QFont("Sans Serif", 10))
+    controller.apply(font_size)
+    try:
+        dialog = case.dialog_type(Translator(language), UnitSystem.METRIC)
+        qtbot.addWidget(dialog)
+        for size_name, size in (
+            ("budget", (WIDTH_BUDGET_PX, HEIGHT_BUDGET_PX)),
+            ("initial", INITIAL_SIZES[case.name]),
+        ):
+            dialog.resize(*size)
+            dialog.show()
+            QApplication.processEvents()
+            context = f"{case.name}/{language.value}/{font_size.value}/{size_name}"
+            buttons = dialog.findChild(QDialogButtonBox)
+            assert buttons is not None, context
+            assert buttons.isVisible() is True, context
+            assert buttons.geometry().top() >= 0, context
+            assert buttons.geometry().bottom() <= dialog.rect().bottom(), context
+            if dialog._scroll is not None:
+                assert not dialog._scroll.isAncestorOf(buttons), context
+                assert dialog._scroll.horizontalScrollBar().maximum() == 0, context
+            else:
+                assert not dialog._form.isAncestorOf(buttons), context
+                assert dialog._form.minimumSizeHint().width() <= dialog.width(), context
+    finally:
+        controller.apply(FontSize.MEDIUM)
+
+
+def test_ux61_initial_sizes_cover_every_registry_dialog() -> None:
+    assert set(INITIAL_SIZES) == {case.name for case in REGISTRY}
 
 
 def test_registry_covers_every_family_generator_dialog() -> None:
