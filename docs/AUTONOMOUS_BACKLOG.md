@@ -2989,6 +2989,11 @@ decision:
   icon and the live-tuning GUI-thread worker fix. Windows 3.11/3.12/3.13 and
   Linux CI pass; the Release workflow built and checksum-verified every
   artifact. See [`RELEASE_QA_0.10.1.md`](archive/releases/RELEASE_QA_0.10.1.md).
+- Release candidate: **0.11.0** prepared on 2026-11-27 with the UX46–UX57
+  3D/pattern and dialog-layout work, the extended DL6 stacked-Yagi feed network,
+  and FP1 with schema 73. Full gate: 4,787 passed, 1 skipped; real `nec2c`
+  integration: 186 passed. Tag and published assets are pending. See
+  [`RELEASE_QA_0.11.0.md`](archive/releases/RELEASE_QA_0.11.0.md).
 - Known CI residue: Windows Python 3.11 runs acceptance, integration, and unit
   tests only. Its UI suite is excluded because PySide6/pyqtgraph can corrupt
   the native heap during view teardown; Windows 3.12/3.13 and Linux

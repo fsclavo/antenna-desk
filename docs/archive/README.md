@@ -11,7 +11,7 @@ current state; they are not the current source of truth.
 
 ### Releases
 
-- [`releases/`](releases/) — release QA records from 0.4.0 through 0.10.1.
+- [`releases/`](releases/) — release QA records from 0.4.0 through 0.11.0.
   Each record describes the checks and artifacts at that release.
 
 ### Quality assurance
@@ -22,7 +22,7 @@ current state; they are not the current source of truth.
   technical-debt sweep; no functional defect found.
 - [`qa/QA_PASS_2026-11-24.md`](qa/QA_PASS_2026-11-24.md) — post-VR1 QA and
   technical-debt closure; U6 manual QA completed separately.
-- [`qa/`](qa/) — QA pass records from 2026-11-13 through 2026-11-24.
+- [`qa/`](qa/) — QA pass records from 2026-11-13 through 2026-11-27, including the FP1 closure.
 
 ### Plans
 
