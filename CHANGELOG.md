@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   of materializing them. The output remains byte-identical, the exact
   compressed/expanded sizes and atomic replacement are unchanged, and the
   copy-entry save/compact benchmark peak RSS fell from 174/84 MB to 45 MB.
+- **Deterministic offscreen UI layout baseline.** UI tests now pin the offscreen
+  96 DPI / 1× environment, normalize and restore a 9–10 pt test font, record the
+  resolved font/DPI/style metrics, and run the dense generator-layout guard in
+  an isolated 180 s CI batch. Production font and dialog sizing are unchanged.
 
 ## [0.11.1] - 2026-11-27
 

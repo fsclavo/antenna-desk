@@ -1,8 +1,9 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
-- **Status:** accepted 2026-11-26; implemented and closed by UX50–UX55
+- **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58 baseline added
+  2026-11-27; UX59–UX61 pending Windows verification
 - **Date:** 2026-11-26
-- **Related:** UX50, UX51, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX55
+- **Related:** UX50, UX51, UX58, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX61
 
 ## Context
 
@@ -100,6 +101,28 @@ tests prove the guard is not a no-op:
 
 - a deliberately tall 1087 px fake form without a scroll area fails;
 - the old single-column Yagi shape in a frame without a scroll area fails.
+
+## UX58 deterministic test baseline (2026-11-27)
+
+The offscreen layout guard now runs on one documented platform baseline:
+
+- `tests/conftest.py` sets `QT_QPA_PLATFORM=offscreen`, `QT_FONT_DPI=96`, and
+  `QT_SCALE_FACTOR=1` before `QApplication` is created. These are test defaults,
+  not production settings.
+- `tests/ui/conftest.py` normalizes the test application font to 9–10 pt when
+  the platform resolves outside that range, and restores the original font,
+  palette, style, and S/M/L scale after every UI test. Production font sizing
+  and `scaled_dialog_size()` are unchanged.
+- `tests/ui/test_qt_layout_baseline.py` records the resolved family, point and
+  pixel size, logical DPI, device pixel ratio, style, font height, a mixed-width
+  text advance, and the available screen. It asserts the 9–10 pt range and
+  finite, positive metrics, so the next environment change is visible.
+- `.github/workflows/ci.yml` runs the dense generator-layout files in a
+  separate batch with a 180 s timeout and `-s`, and excludes them from the
+  general UI batch. No `skip`, `xfail`, or Windows exclusion is used.
+- The `WrapLongRows` rule in the accessibility section remains the contract for
+  single-column forms; the deterministic baseline makes it testable, and UX59
+  applies it across the forms.
 
 ## UX54 audit: scroll-heavy generator dialogs
 

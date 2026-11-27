@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 from main_window_support import FakeSolver, export_nec_deck
-from PySide6.QtGui import QFont, QPalette
+from PySide6.QtGui import QFont, QFontInfo, QPalette
 from PySide6.QtWidgets import QApplication
 from pytestqt.qtbot import QtBot
 
@@ -19,6 +19,21 @@ from antennadesk.ui.i18n import Language, Translator
 from antennadesk.ui.main_window import MainWindow
 from antennadesk.ui.units import UnitSystem
 
+# UX58: the offscreen layout tests share one documented 9-10 pt baseline.
+# The fixture normalizes only the test application; production keeps the
+# platform font and the user's S/M/L preference.
+LAYOUT_BASELINE_MIN_POINT_SIZE = 9.0
+LAYOUT_BASELINE_MAX_POINT_SIZE = 10.0
+
+
+def _pin_layout_baseline_font(app: QApplication) -> None:
+    font = QFont(app.font())
+    point_size = QFontInfo(font).pointSizeF()
+    if LAYOUT_BASELINE_MIN_POINT_SIZE <= point_size <= LAYOUT_BASELINE_MAX_POINT_SIZE:
+        return
+    font.setPointSizeF(LAYOUT_BASELINE_MIN_POINT_SIZE)
+    app.setFont(font)
+
 
 @pytest.fixture(autouse=True)
 def _restore_application_appearance(qtbot: QtBot) -> Iterator[None]:
@@ -27,6 +42,8 @@ def _restore_application_appearance(qtbot: QtBot) -> Iterator[None]:
     original_palette = QPalette(app.palette()) if isinstance(app, QApplication) else None
     original_style = app.style().name() if isinstance(app, QApplication) else None
     original_scale = current_font_scale()
+    if isinstance(app, QApplication):
+        _pin_layout_baseline_font(app)
     try:
         yield
     finally:

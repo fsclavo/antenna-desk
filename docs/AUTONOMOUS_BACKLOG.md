@@ -71,6 +71,19 @@ solver, domain model, project schema, container, report, or numerical
 reference. It is not part of the active 1.2 sequence; see §Antenna generator
 dialog layout standard.
 
+UX58–UX61 are a P1 CI and layout-quality track opened 2026-11-27. UX58 is
+implemented locally 2026-11-27; UX59–UX61 remain proposed and the Windows
+verification is pending. The README `tests` badge has been red since the 0.11.0
+publication: the Windows 3.12/3.13 jobs fail 22 dialog-layout assertions while
+Linux passes the same 1,203 tests, and the 3.12 job then stalls until its
+10-minute batch timeout. The track first makes the offscreen test baseline
+deterministic, then implements the single-column and nested `WrapLongRows`
+behavior already promised by ADR-0056, makes dialog and table sizing
+layout-based, and closes with a Large-font guard and a real Windows run. It
+changes no solver, domain model, project schema, report, or numerical
+reference. It is not part of the active 1.2 sequence; see §Windows layout
+baseline and cross-platform generator wrapping.
+
 FP1 is a VHF/portable catalog addition, not part of the active 1.2 sequence.
 Its length-representation spike is complete and ADR-0055 is updated;
 implementation is the next bounded slice. The 5/8, double 5/8, dual-band
@@ -108,6 +121,10 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX55 | Compact families, visual QA, and track closure | S–M | UX51 for start; UX52–UX54 for closure | **Implemented 2026-11-26.** Fan dipole, Ringo, inverted V, and inverted L use `FormDialogFrame` without scroll and stay compact/single-column. All 25 family dialogs are in the guard with no exceptions. A 400-check offscreen matrix (light/dark, Medium/Large, EN/ES, 1366×768/1920×1080) passed with no action outside the dialog and no horizontal scrollbar. The manual desktop 125%/150% check passed, including Large font. See §UX55 and `archive/qa/QA_PASS_2026-11-26_ux55.md`. |
 | UX56 | 3D overlay centered on the beam symmetry plane | S–M | UX46; UX48 | **Implemented 2026-11-26.** The overlay is centered on the feed projected onto the beam symmetry plane for families with an explicit forward axis; the feed marker keeps its real cross-boom offset. Verticals, dipoles, loops without a declared axis, and custom models remain feed-centered. The uniform 35% scale is measured from the new center. No solver, domain, schema, or report change. See §UX56. |
 | UX57 | 3D back ray at the actual rear gain | S | UX46 | **Implemented 2026-11-26.** The same-elevation back ray ends at `max gain − F/B`, not at the forward peak radius. A missing or non-finite F/B hides the ray and label, and the minimum-distance guard hides a degenerate marker. No solver, domain, schema, or report change. See §UX57. |
+| UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
+| UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Proposed; P1.** Apply `WrapLongRows` and explicit spacing to single-column `SectionedForm` and every plain `QFormLayout` in the family forms, including nested groups. No horizontal scrollbar at 920 px or the initial 560–620 px widths in EN/ES; Large font keeps no horizontal bar and actions visible. Add a synthetic long-label regression test. See §UX59. |
+| UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Proposed; P1.** Grow the initial dialog width to the form minimum only when needed, capped by `scaled_dialog_size()`; remove or constrain the Yagi table's `AdjustToContents`; fix the Basic Antenna template control. All 26 dialogs stay free of horizontal scrolling at 920 px and Large font. Document any 1000 px exception or one-column collapse. See §UX60. |
+| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Proposed; P1.** Add the compact Medium/Large EN/ES guard (no horizontal at 920, actions visible, vertical allowed only at Large), update ADR-0056/STATUS/CHANGELOG and the manual QA record, and confirm the README `tests` badge is green on `main` with no platform exclusions. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -2845,6 +2862,328 @@ listed above, new shared widgets under `src/antennadesk/ui/widgets/`,
 `docs/ADR/0056-antenna-dialog-layout.md`, `docs/ARCHITECTURE.md`,
 `docs/USER_GUIDE.md`, and `CHANGELOG.md`.
 
+## Windows layout baseline and cross-platform generator wrapping (proposed 2026-11-27)
+
+**Status:** proposed; P1 quality/release track. **Release:** unassigned;
+candidate for a 0.11.2 patch after the layout fixes pass on Windows.
+**Depends on:** none. **Blocks:** a green README `tests` badge on `main`.
+**Decision:** follow-up to ADR-0056; update that ADR with the deterministic
+test baseline and the single-column wrapping rule. No new numerical, solver,
+domain, schema, or report decision.
+
+**Motivation:** The README `tests` badge points at `ci.yml` on `main` and has
+been red since the 0.11.0 publication. The latest run
+[#46053347823](https://github.com/fsclavo/antenna-desk/actions/runs/46053347823)
+on commit `d342027` fails two of twelve jobs:
+
+- `Tests (windows-latest, Python 3.13)`: 22 failed, 1,181 passed.
+- `Tests (windows-latest, Python 3.12)`: the same 22 failures, then the pytest
+  batch stalls until the 10-minute step timeout (exit code 124).
+
+Every other job passes, including all three `Tests (ubuntu-latest, Python
+3.11/3.12/3.13)` jobs, where the same 1,203 tests pass. The failures are
+layout assertions, not domain or solver failures:
+
+| File | Tests | Example failure |
+|---|---:|---|
+| `tests/ui/test_dialog_layout.py` | 4 | `loaded_dipole`, `scv`, `stacked_yagi`, `endfed` in Spanish: "a scroll area needs a horizontal scrollbar" |
+| `tests/ui/test_dialog_layout_ux54.py` | 12 | `endfed`, `vertical`, `phased_vertical`, `quad_beam`, `trap_dipole`, `basic_antenna` at the 691/972 px target heights (560–620 px dialog widths): horizontal bar maxima 4–184 px |
+| `tests/ui/test_dialog_layout_wave1.py` | 1 | `loaded_dipole-es`: 32 px |
+| `tests/ui/test_dialog_layout_wave2.py` | 1 | `scv-es`: 8 px |
+| `tests/ui/test_flower_pot_dialog.py` | 1 | Large Spanish: 324 px |
+| `tests/ui/test_yagi_dialog_layout.py` | 3 | default-height vertical scroll 86/142 px; Large Spanish form width 1058 px vs 884 px viewport |
+
+The same Windows UI batch fails in the 0.11.0 and 0.11.1 release runs and in
+the main runs since 2026-11-27. CI was green at 0.10.1 on 2026-11-25. The
+layout tests and the shared scaffold landed on 2026-11-26 (`229ae79`,
+`fa8a019`, `ad93e10`, `68dbea7`), and the Flower Pot dialog was added the same
+day (`40436ad`), after the last green Windows run.
+
+**Working hypothesis:** the Windows offscreen platform is reporting wider
+font/layout metrics than Linux. A read-only local simulation with the Qt
+`Windows` style shows:
+
+- at 1.0–1.5× the intended base font, the 920×640 guard passes for all 26
+  registry dialogs;
+- at 2×, the six UX54 dialogs overflow by values in the same range as CI, and
+  `WrapLongRows` removes the horizontal scrollbar in five of the six;
+- Basic Antenna still needs a control-width fix after wrapping.
+
+The exact DPI, font, and style must be confirmed on the runner (UX58) before
+pinning a baseline. The track must not turn an environment artefact into a
+blanket Windows skip.
+
+**Code gaps already identified:**
+
+- `SectionedForm` sets `QFormLayout.RowWrapPolicy.WrapLongRows` only when
+  `column_count == 2`; single-column generator forms have no wrapping, even
+  though ADR-0056 says they do.
+- Several family forms use plain `QFormLayout` instances without the policy:
+  `EndFedForm` (including its nested group forms), `FlowerPotForm`,
+  `VerticalForm`, `PhasedVerticalForm`, `QuadBeamForm`, `TrapDipoleForm`,
+  `StackedYagiForm`, and `DipoleForm` (Basic Antenna).
+- `YagiForm` sets `QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents` on
+  the element table in the wide layout, which can let table content drive the
+  form width.
+- `FormDialogFrame` uses fixed initial widths and does not grow to the form's
+  minimum size hint, so a wider platform font can open a dialog with a
+  horizontal scrollbar.
+- The Windows 3.12 stall is a separate symptom. It must be isolated so it
+  cannot hide the layout result; it is not evidence that the layout tests are
+  invalid.
+
+**Goals:**
+
+- Make the Windows and Linux layout tests evaluate the same documented 9–10 pt
+  / 100% baseline.
+- Keep every generator dialog free of horizontal scrolling at 920 px in
+  English and Spanish, including `FontSize.LARGE`, with vertical scrolling
+  allowed only as ADR-0056 already permits.
+- Keep the action box outside the scroll and visible at every tested size.
+- Leave a fast, bounded CI signal that cannot hide a 10-minute teardown stall.
+
+**Non-goals:** no solver, domain-model, schema, project-container, report,
+help-copy, or numerical-reference change; no forced two-column layout; no
+change to the narrow main-window sidebar; no new dependency; no `skip`,
+`xfail`, or Windows exclusion to make the badge green.
+
+### UX58 — Deterministic Windows UI layout baseline and batch isolation
+
+**Status:** implemented locally 2026-11-27; Windows CI verification pending.
+**Depends on:** none. **Blocks:** UX59–UX61 verification on Windows.
+**Effort:** S (0.5–1 day).
+
+**Scope:**
+
+1. Add a diagnostic that records, in the Windows UI job:
+   - `QFontInfo(QApplication.font()).family()`, `pointSizeF()`, and
+     `pixelSize()`;
+   - `QFontMetrics(QApplication.font()).height()` and the advance of a fixed
+     mixed-width string such as `"Frecuencia (MHz)"`;
+   - `QGuiApplication.primaryScreen().logicalDotsPerInch()`,
+     `devicePixelRatio()`, and `availableGeometry()`;
+   - `QApplication.style().name()`.
+   Put it in a small test (for example `tests/ui/test_qt_layout_baseline.py`)
+   that prints the resolved baseline values, then asserts the pinned font is in
+   the documented 9–10 pt range and that DPI, device pixel ratio, and metrics
+   are finite and positive. Keep it in the suite so the next environment
+   change is visible.
+2. Decide and document the baseline. Prefer pinning the UI test environment
+   before `QApplication` is created (`QT_FONT_DPI=96`, `QT_SCALE_FACTOR=1`)
+   and adding a session or autouse fixture that normalizes the base font to
+   9–10 pt and restores the original font, palette, and style. Do not pin the
+   production application font or change `scaled_dialog_size()`.
+3. Split the layout files into their own pytest batch in
+   `.github/workflows/ci.yml`: `test_dialog_layout*.py`,
+   `test_yagi_dialog_layout.py`, and `test_flower_pot_dialog.py`, with
+   `timeout 180s`. Keep the existing Windows 3.12/3.13 UI jobs; do not exclude
+   the batch.
+4. Re-run the 22 failing tests on Windows. Classify any remaining failure as
+   a production layout defect for UX59/UX60, not as a reason to relax an
+   assertion.
+
+**Acceptance:**
+
+- The diagnostic is visible in the Windows log and records the actual font,
+  DPI, device pixel ratio, style, and key font metrics.
+- At the pinned baseline, the layout batch runs to completion in under 180 s
+  on Windows 3.12 and 3.13 and reports the same pass/fail set as Linux.
+- If the 22 failures disappear only because of the baseline pin, the track
+  records that explicitly and still completes UX59/UX60 against a simulated
+  2× font.
+- No production behavior, schema, solver, or report change.
+
+**Implementation (2026-11-27):**
+
+- `tests/conftest.py` sets the offscreen platform and the 96 DPI / 1× test
+  baseline before `QApplication` is created.
+- `tests/ui/conftest.py` normalizes the shared test font to 9–10 pt and restores
+  the original font, palette, style, and S/M/L scale after every UI test.
+- `tests/ui/test_qt_layout_baseline.py` prints and asserts the resolved family,
+  point/pixel size, DPI, device pixel ratio, style, font metrics, and screen.
+- `.github/workflows/ci.yml` sets the baseline at job level and runs the dense
+  layout files in a separate `-s` batch with a 180 s timeout; the general UI
+  batch excludes them.
+- Local verification: `182 passed` for the isolated layout batch; the baseline
+  prints `Noto Sans 9.00pt / 96 DPI / DPR 1.00 / fusion / 17 px height`.
+- Pending: the Windows 3.12/3.13 run must classify any remaining failure for
+  UX59/UX60 instead of relaxing an assertion.
+
+### UX59 — Wrap long form rows across generator dialogs
+
+**Status:** proposed; P1. **Depends on:** UX58. **Effort:** M (2–4 days).
+
+**Scope:**
+
+1. Add one shared helper, for example `configure_form_layout()` in
+   `sectioned_form.py` or a small `form_layout.py`, that sets
+   `WrapLongRows`, `AllNonFixedFieldsGrow`, zero content margins, and explicit
+   horizontal/vertical spacing. Use it from `SectionedForm` for both
+   single-column and two-column modes so Windows, Fusion, and Windows 11
+   styles do not silently change the width contract.
+2. Apply the helper to every `QFormLayout` in the family forms that can
+   overflow: EndFed (main form and the loading-coil, design-network, and
+   nested network forms), FlowerPot, Vertical (main, coil, top-hat),
+   PhasedVertical, QuadBeam, TrapDipole, StackedYagi, DipoleForm (Basic
+   Antenna), Yagi, and the two-column LoadedDipole/SCV forms where a long
+   label or combo still exceeds the viewport.
+3. Audit long labels and notes for `setWordWrap(True)`. Keep the existing
+   `FormLabels` binding and help application; do not rename label keys or
+   change field order.
+4. Add a regression test with a synthetic single-column form containing a
+   very long English and Spanish label: at 560 px and 920 px it must not
+   produce a horizontal scrollbar.
+5. Extend `tests/ui/test_flower_pot_dialog.py` (or the new baseline test) to
+   cover the Large Spanish case at the dialog's initial 600 px width.
+
+**Acceptance:**
+
+- At the UX58 baseline, every registry dialog at 920×640 and at its initial
+  560–620 px width has no horizontal scrollbar in English or Spanish.
+- At `FontSize.LARGE`, 920 px still has no horizontal scrollbar; vertical
+  scrolling is allowed, and the action box remains visible.
+- The existing UX54 primary-control checks and the UX52/UX53 budget tests
+  pass without weakening their horizontal assertions.
+- Parameter round-trips, tab order, help labels, and help coverage are
+  unchanged.
+- `ruff`, both `mypy` passes, and the full pytest gate are green.
+
+### UX60 — Layout-based dialog sizing and Yagi table width
+
+**Status:** proposed; P1. **Depends on:** UX59. **Effort:** S–M (1–3 days).
+
+**Scope:**
+
+1. In `FormDialogFrame`, choose the initial width from the requested size and
+   the form's minimum size hint, capped by the existing
+   `scaled_dialog_size()` screen cap. The 920 px target and the 560–940 px
+   per-dialog defaults remain the first choice; the frame only grows when the
+   content cannot otherwise fit. Re-check the resize/show path so a late
+   layout does not immediately add a horizontal bar.
+2. In `YagiForm`, remove `AdjustToContents` from the wide element table or
+   constrain its minimum width. Keep the 140 px minimum height, stretch the
+   four columns, and let the table scroll internally if a cell cannot shrink.
+   Verify that the table still grows when extra height is available.
+3. In Basic Antenna/DipoleForm, give the template/family control an explicit
+   compact policy or elide its text so the 560 px dialog and Large font do not
+   force a horizontal bar.
+4. If a two-column form still cannot fit at 920 px with Large font, choose one
+   of the documented options in ADR-0056: collapse to one column for that
+   dialog or use the 1000 px width allowance. Record the decision in the ADR;
+   do not add a silent per-platform exception.
+
+**Acceptance:**
+
+- All 26 registry dialogs at 920×640, English and Spanish, baseline and Large
+  font: no horizontal scrollbar; action box visible; primary control visible
+  at the initial narrow sizes covered by UX54/UX55.
+- Yagi opens at its default size without a vertical scrollbar at the baseline
+  font; at Large font only vertical scrolling is allowed.
+- The Yagi table grows with extra height, headers remain readable, and no
+  horizontal form scrollbar appears.
+- The Windows 3.12/3.13 layout batch is green.
+- No change to solver specs, schema, reports, or parameter defaults.
+
+### UX61 — Large-font layout guard, Windows closure, and docs
+
+**Status:** proposed; P1. **Depends on:** UX58–UX60. **Effort:** S–M
+(1–2 days).
+
+**Scope:**
+
+1. Extend the layout guard with a compact Medium/Large matrix:
+   - all 26 dialogs, English and Spanish;
+   - 920×640 and the documented initial narrow sizes;
+   - assert no horizontal scrollbar at Medium and Large;
+   - assert the action box is visible and outside the scroll at both;
+   - allow a vertical scrollbar only at Large, as ADR-0056 states.
+   Reuse the existing registry and keep the runtime bounded; do not add a
+   full light/dark × size × language Cartesian product to the fast batch.
+2. Add the Large-font case to `test_yagi_dialog_layout.py` and the Flower Pot
+   dialog test. Remove a now-redundant special-case exception only when the
+   assertion is genuinely covered.
+3. Update `docs/ADR/0056-antenna-dialog-layout.md` with the deterministic
+   test baseline, the single-column and nested `WrapLongRows` rule, the
+   layout-based initial width, and the final width decision for Yagi/Large.
+4. Update `docs/STATUS.md` and `CHANGELOG.md` with the user-visible fix and
+   the CI outcome. Add a short QA record under `docs/archive/qa/` for the
+   manual light/dark and 125%/150% check.
+5. Run the full gate on Linux and the real Windows CI. Confirm the README
+   `tests` badge is green on `main` after merge.
+
+**Acceptance:**
+
+- Windows 3.12/3.13 and Linux 3.11–3.13 are green; the layout batch finishes
+  under its timeout; no `skip`, `xfail`, or platform exclusion was added.
+- The guard fails if a future change reintroduces a horizontal scrollbar at
+  920 px or hides the action box.
+- The manual QA record covers English/Spanish, light/dark, Medium/Large, and
+  125%/150% scaling on at least one Windows and one Linux desktop.
+- ADR-0056, STATUS, CHANGELOG, and the QA record are consistent with the code
+  and with the actual CI run.
+
+**Track order:** UX58 → UX59 → UX60 → UX61. UX58 must land first so the
+Windows signal is trustworthy. UX59 and UX60 may share a change set if the
+diff stays small, but their acceptance stays separate. UX61 closes the track
+only after the real Windows run is green. Do not start with a Windows skip or
+a test-only width increase: both hide the user-facing issue.
+
+**Cross-cutting acceptance:**
+
+- The full gate passes: `ruff check`, `ruff format --check`, both `mypy`
+  passes, and the complete `NEC2C=... uv run pytest`.
+- No solver, domain, schema, project-container, report, or numerical
+  reference changes.
+- No new dependency and no `pickle`.
+- The action box remains outside the form scroll at every tested size.
+- Light/dark and font-scaling QA is recorded; offscreen tests are not a
+  substitute for the manual check.
+- No commit or push unless explicitly requested.
+
+**Risks and mitigation:**
+
+- **Pinning DPI hides a real high-DPI defect.** Mitigate with the simulated
+  2× guard, the real Windows runner, and the manual 125%/150% check. Keep the
+  production font and `scaled_dialog_size()` unchanged.
+- **Wrapping increases form height.** Mitigate with the existing form scroll
+  and by asserting that the primary control and action box stay visible;
+  vertical scrolling at Large is already allowed by ADR-0056.
+- **A two-column collapse changes field order or tab order.** Mitigate by
+  keeping sections atomic, preserving the documented reading order, and
+  testing tab order in both modes.
+- **CI runtime or a repeated teardown stall.** Mitigate with the dedicated
+  180 s layout batch. If the stall persists after the failures are fixed,
+  capture the last test and the Qt teardown state and open a separate blocker;
+  do not let it mask the layout result.
+- **Cross-platform style drift.** Mitigate with explicit margins and spacing
+  in the shared helper instead of relying on style defaults.
+
+**Effort and likely files:** UX58 S, UX59 M, UX60 S–M, UX61 S–M; total roughly
+1–2 weeks including Windows iterations and manual QA. Likely files:
+`.github/workflows/ci.yml`, `tests/conftest.py`, `tests/ui/conftest.py`, a new
+`tests/ui/test_qt_layout_baseline.py`,
+`src/antennadesk/ui/widgets/sectioned_form.py`,
+`src/antennadesk/ui/widgets/form_dialog.py`,
+`src/antennadesk/ui/widgets/yagi_form.py`,
+`src/antennadesk/ui/widgets/dipole_form.py`,
+`src/antennadesk/ui/widgets/endfed_form.py`,
+`src/antennadesk/ui/widgets/flower_pot_form.py`,
+`src/antennadesk/ui/widgets/vertical_form.py`,
+`src/antennadesk/ui/widgets/phased_vertical_form.py`,
+`src/antennadesk/ui/widgets/quad_beam_form.py`,
+`src/antennadesk/ui/widgets/trap_dipole_form.py`,
+`src/antennadesk/ui/widgets/stacked_yagi_form.py`,
+`src/antennadesk/ui/dialogs/yagi_dialog.py`,
+`tests/ui/test_dialog_layout.py`,
+`tests/ui/test_dialog_layout_ux54.py`,
+`tests/ui/test_dialog_layout_wave1.py`,
+`tests/ui/test_dialog_layout_wave2.py`,
+`tests/ui/test_dialog_layout_ux55.py`,
+`tests/ui/test_yagi_dialog_layout.py`,
+`tests/ui/test_flower_pot_dialog.py`,
+`docs/ADR/0056-antenna-dialog-layout.md`, `docs/STATUS.md`, and
+`CHANGELOG.md`.
+
 ## Adaptive length display units (implemented 2026-11-18; QA closed 2026-11-24)
 
 **Status:** U0–U6 are complete. The manual desktop light/dark and font-scaling
@@ -2994,10 +3333,11 @@ decision:
 ## Current baseline
 
 - Schema: **73**; container version 1.
-- Full gate: **4,806 passed, 1 skipped** on 2026-11-27 after PF2 streaming
-  write and the DL3 managed-value closure; the 0.11.1 release covers the
-  optimizer close/cancel lifecycle fix. Real `nec2c` integration: **186
-  passed**. The suite also covers the QA and technical-debt closure,
+- Full gate: **4,807 passed, 1 skipped** on 2026-11-27 after PF2 streaming
+  write, the DL3 managed-value closure, and the UX58 local layout baseline.
+  The 0.11.1 release covers the optimizer close/cancel lifecycle fix. Real
+  `nec2c` integration: **186 passed**. The suite also covers the QA and
+  technical-debt closure,
   main-window extractions, the save/load size invariant fix, PF1 container,
   lazy open/save/compact, PreparedProject, DL7 site ground, and VR1 radial
   droop (typed simulation specs, pattern presets, and
@@ -3058,4 +3398,10 @@ decision:
   3.11–3.13 run the full UI suite. See
   [`ADR/0025`](ADR/0025-pyside6-version-pin.md). Do not weaken the remaining
   gates.
+- Known red CI (2026-11-27): the README `tests` badge is failing on Windows
+  Python 3.12/3.13 because of 22 generator-dialog layout assertions; Linux is
+  green. The Windows 3.12 batch also stalls at its 10-minute timeout after the
+  failures. Tracked as UX58–UX61 in §Windows layout baseline and
+  cross-platform generator wrapping. Do not skip the Windows jobs or weaken
+  the assertions while that track is open.
 - Recent work: use `git log --oneline`; do not maintain a commit list in this document.

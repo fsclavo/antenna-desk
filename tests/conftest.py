@@ -7,6 +7,11 @@ import os
 from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# UX58: keep the offscreen layout baseline deterministic across platforms.
+# These are test-environment defaults only; production font sizing is
+# controlled by the user's system and the in-app S/M/L preference.
+os.environ.setdefault("QT_FONT_DPI", "96")
+os.environ.setdefault("QT_SCALE_FACTOR", "1")
 
 from datetime import UTC, datetime
 from uuid import UUID

@@ -181,8 +181,9 @@
   **closed**; the remaining UI-construction debt is left for extract-on-touch
   work, not another standalone refactor.
 - PF1 is **closed 2026-11-24** after manual validation of the incident-scale
-  project. `.antennadesk` is a deterministic ZIP container (container 1, schema
-  64) with separate project, design, run, raw-text, and optimization entries;
+  project. `.antennadesk` is a deterministic ZIP container (container 1,
+  current schema 73) with separate project, design, run, raw-text, and
+  optimization entries;
   per-entry limits, CRC32/SHA-256 checks, atomic writes, and no
   gzip/plain-JSON reader or migration from schema 58 and older. Opening is
   lazy through a `ProjectSession`; saving and compaction stream unchanged run
@@ -201,6 +202,13 @@
   from 174/84 MB to 45 MB; materialized saves remain dominated by the
   materialized domain runs. See
   [`ADR-0057`](ADR/0057-streaming-container-write.md).
+- UX58 deterministic layout baseline is **implemented locally 2026-11-27**.
+  Tests pin the offscreen 96 DPI / 1× environment, normalize and restore a
+  9–10 pt test font, print the resolved font/DPI/DPR/style metrics, and run the
+  dense generator-layout files in an isolated 180 s CI batch. The local layout
+  batch passes 182 tests; Windows 3.12/3.13 verification is pending. See
+  [`ADR-0056`](ADR/0056-antenna-dialog-layout.md) and
+  [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md#windows-layout-baseline-and-cross-platform-generator-wrapping-proposed-2026-11-27).
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.
@@ -213,11 +221,19 @@
 
 ## Next
 
-1. Verify the published 0.11.1 artifacts and checksums on the target desktops.
-2. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
-3. Choose the next bounded family or release slice after 0.11.0; keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until their own spikes and ADRs exist.
-4. Keep DL8 blocked until a validated terrain model or second engine exists.
-5. Keep the optional PF2/PF3 maintenance items separate from the release gate.
+1. Continue the P1 Windows layout/CI track with **UX59–UX61**. UX58 is
+   implemented locally; the next slice applies `WrapLongRows` to single-column
+   and nested forms, then makes dialog/table sizing layout-based, and closes
+   with the Large-font guard and the Windows run. The README `tests` badge
+   remains red until that Windows verification passes. No schema or solver
+   change.
+2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
+3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
+4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision
+   exist; PF2 is done and closed.
+5. Keep the FP1 5/8, double 5/8, sleeve, and high-gain variants blocked until
+   their own spikes and ADRs exist.
+6. Keep DL8 blocked until a validated terrain model or second engine exists.
 
 Active execution details, acceptance criteria, and blockers live in
 [`AUTONOMOUS_BACKLOG.md`](AUTONOMOUS_BACKLOG.md). Product direction lives in

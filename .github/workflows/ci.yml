@@ -47,6 +47,9 @@ jobs:
     name: Quality (Linux, Python 3.12)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      QT_FONT_DPI: "96"
+      QT_SCALE_FACTOR: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -135,6 +138,9 @@ jobs:
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      QT_FONT_DPI: "96"
+      QT_SCALE_FACTOR: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -188,7 +194,10 @@ jobs:
           timeout 180s uv run pytest tests/ui/test_journal_dialogs.py -q
           timeout 180s uv run pytest tests/ui/test_live_tuning_dialog.py -q
           timeout 300s uv run pytest tests/ui/geometry -q
-          timeout 600s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' --ignore=tests/ui/test_font_scaling.py --ignore=tests/ui/test_preferences.py --ignore=tests/ui/test_journal_dialogs.py --ignore=tests/ui/test_live_tuning_dialog.py --ignore=tests/ui/geometry -q
+          # UX58: keep the dense 26-dialog layout guard in its own bounded
+          # process. The baseline line is printed with -s for the Windows log.
+          timeout 180s uv run pytest -s tests/ui/test_qt_layout_baseline.py tests/ui/test_dialog_layout.py tests/ui/test_dialog_layout_ux54.py tests/ui/test_dialog_layout_ux55.py tests/ui/test_dialog_layout_wave1.py tests/ui/test_dialog_layout_wave2.py tests/ui/test_yagi_dialog_layout.py tests/ui/test_flower_pot_dialog.py -q
+          timeout 600s uv run pytest tests/ui --ignore=tests/ui/test_results_view.py --ignore-glob='*test_main_window_*.py' --ignore=tests/ui/test_font_scaling.py --ignore=tests/ui/test_preferences.py --ignore=tests/ui/test_journal_dialogs.py --ignore=tests/ui/test_live_tuning_dialog.py --ignore=tests/ui/geometry --ignore=tests/ui/test_qt_layout_baseline.py --ignore-glob='*test_dialog_layout*.py' --ignore=tests/ui/test_yagi_dialog_layout.py --ignore=tests/ui/test_flower_pot_dialog.py -q
           timeout 600s uv run pytest tests/acceptance tests/integration tests/unit -q
 
   tests-windows-311-non-ui:
