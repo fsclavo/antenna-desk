@@ -1,8 +1,8 @@
 # ADR-0056 — Antenna generator dialog layout and height budget
 
 - **Status:** accepted 2026-11-26; UX50–UX55 implemented; UX58–UX61 automated
-  guards and the real Windows CI are green 2026-11-27; only the manual desktop
-  checklist remains
+  guards, real Windows CI, and manual desktop checklist are green 2026-11-27;
+  track closed
 - **Date:** 2026-11-26
 - **Related:** UX50, UX51, UX58, `docs/AUTONOMOUS_BACKLOG.md` §UX50–§UX61
 
@@ -191,10 +191,9 @@ Local result: **356 layout tests passed**. Windows 3.12/3.13 run
 [`46081455154`](https://github.com/fsclavo/antenna-desk/actions/runs/46081455154)
 is green with **330 layout tests passed** on both jobs, using the resolved
 `Segoe UI 9.00pt / 96 DPI / DPR 1.00` baseline. The README `tests` badge is
-passing. Only the manual Linux/Windows light-dark and 125%/150% checklist
-remains; see
+passing. The project owner also reported the manual Linux/Windows light-dark
+and 125%/150% checklist passed; see
 [`QA_CHECKLIST_2026-11-27_ux61.md`](../archive/qa/QA_CHECKLIST_2026-11-27_ux61.md).
-This is not a manual pass record.
 
 ## UX54 audit: scroll-heavy generator dialogs
 

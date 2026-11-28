@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-11-27
+
 ### Added
 
 - **Live tuning for Flower Pot and trapped-Yagi trap inset.** The live tuning
@@ -40,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   in English and Spanish at Medium and Large fonts, at 920×640 and each
   dialog's initial size, with no horizontal scrollbar and the action box
   visible and outside the form scroll. Windows 3.12/3.13 and Linux are green;
-  the README `tests` badge is passing. The manual desktop checklist remains.
+  the README `tests` badge is passing and the manual Linux/Windows light-dark
+  and 125%/150% checklist passed.
 
 ## [0.11.1] - 2026-11-27
 

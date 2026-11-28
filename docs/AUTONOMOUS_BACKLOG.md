@@ -71,16 +71,15 @@ solver, domain model, project schema, container, report, or numerical
 reference. It is not part of the active 1.2 sequence; see §Antenna generator
 dialog layout standard.
 
-UX58–UX61 are a P1 CI and layout-quality track opened 2026-11-27. The
-automated guards and the real Windows CI are green 2026-11-27; only the manual
-desktop checklist remains before the track closes. The README `tests` badge,
-red since 0.11.0 on Windows 3.12/3.13, is passing again. The track made the
-offscreen baseline deterministic, applied single-column and nested
-`WrapLongRows`, moved dialog and table sizing to the layout, added the
-Medium/Large guard, and resolved the Windows offscreen font. It changes no
-solver, domain model, project schema, report, or numerical reference. It is not
-part of the active 1.2 sequence; see §Windows layout baseline and
-cross-platform generator wrapping.
+UX58–UX61 are a P1 CI and layout-quality track opened and **closed
+2026-11-27**. The automated guards, the real Windows CI, and the manual desktop
+checklist are green. The README `tests` badge, red since 0.11.0 on Windows
+3.12/3.13, is passing again. The track made the offscreen baseline
+deterministic, applied single-column and nested `WrapLongRows`, moved dialog
+and table sizing to the layout, added the Medium/Large guard, and resolved the
+Windows offscreen font. It changes no solver, domain model, project schema,
+report, or numerical reference. It is not part of the active 1.2 sequence; see
+§Windows layout baseline and cross-platform generator wrapping.
 
 FP1 is a VHF/portable catalog addition, not part of the active 1.2 sequence.
 Its length-representation spike is complete and ADR-0055 is updated;
@@ -122,7 +121,7 @@ Completed rows are archived in [`archive/backlog-completed-2026-11-20.md`](archi
 | UX58 | Deterministic Windows UI layout baseline | S | none | **Implemented locally 2026-11-27; Windows CI verification pending.** Pins `QT_FONT_DPI=96`/`QT_SCALE_FACTOR=1`, normalizes and restores the test font at 9–10 pt, records the resolved font/DPI/DPR/style/metrics, and isolates the dense layout files under a 180 s CI batch. No `skip`/`xfail`. Local layout batch: 182 passed. See §UX58. |
 | UX59 | Wrap long form rows across generator dialogs | M | UX58 | **Implemented locally 2026-11-27; Windows CI verification pending.** Shared `configure_form_layout()` applies `WrapLongRows`, growing fields, zero margins, and explicit spacing to every family `QFormLayout`; single-column labels wrap. Local guard at 920/initial widths and Large font: no horizontal bars; layout batch 226 passed. See §UX59. |
 | UX60 | Layout-based dialog sizing and Yagi table width | S–M | UX59 | **Implemented locally 2026-11-27; Windows CI verification pending.** Initial width grows to the form minimum only when needed and stays under the `scaled_dialog_size()` screen cap; the Yagi table no longer uses `AdjustToContents`; the Basic Antenna template value has a compact policy. All 26 dialogs remain free of horizontal scrolling at 920 px and Large font locally; no 1000 px exception or column collapse was needed. See §UX60. |
-| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Automated guard and Windows CI green 2026-11-27; manual desktop checklist pending.** 26 dialogs × EN/ES × Medium/Large × (920×640 + initial size); no horizontal scrollbar, actions visible/outside the scroll. Windows 3.12/3.13 layout batch: 330 passed. README `tests` badge passing. Checklist: `archive/qa/QA_CHECKLIST_2026-11-27_ux61.md`. See §UX61. |
+| UX61 | Large-font layout guard, Windows closure, and docs | S–M | UX58–UX60 | **Done 2026-11-27.** 26 dialogs × EN/ES × Medium/Large × (920×640 + initial size); no horizontal scrollbar, actions visible/outside the scroll. Windows 3.12/3.13 layout batch: 330 passed. README `tests` badge passing. Manual Linux/Windows light-dark and 125%/150% checklist passed. See §UX61. |
 | D1 | Live VNA/hardware control | L | hardware | Blocked/deferred; do not start without a device |
 | D2 | Additional full-wave engines | L | engine choice | Deferred until a concrete engine is selected |
 | D3 | GPG/Authenticode signing | M | release credentials | Deferred; requires signing keys and a release decision |
@@ -3122,8 +3121,8 @@ change to the narrow main-window sidebar; no new dependency; no `skip`,
 
 ### UX61 — Large-font layout guard, Windows closure, and docs
 
-**Status:** automated guard and Windows CI green 2026-11-27; manual desktop
-checklist pending. **Depends on:** UX58–UX60. **Effort:** S–M (1–2 days).
+**Status:** **Done 2026-11-27.** **Depends on:** UX58–UX60. **Effort:** S–M
+(1–2 days).
 
 **Scope:**
 
@@ -3181,13 +3180,15 @@ checklist pending. **Depends on:** UX58–UX60. **Effort:** S–M (1–2 days).
 - [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md)
   records the pending Linux/Windows desktop matrix. It is a checklist, not a
   pass record.
-- Still required for closure: the manual light/dark and 125%/150% desktop pass
-  on Linux and Windows. No platform exclusion or weakened assertion was added.
+- Manual confirmation: the project owner reported the Linux/Windows
+  light-dark and 125%/150% checklist passed on 2026-11-27. The record is
+  [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md).
+  No platform exclusion or weakened assertion was added.
 
-**Track order:** UX58 → UX59 → UX60 → UX61. All four are implemented; the
-Windows CI signal is green and the badge is passing. Only the manual desktop
-checklist remains before the track closes. Do not start with a Windows skip or
-a test-only width increase: both hide the user-facing issue.
+**Track order:** UX58 → UX59 → UX60 → UX61, **closed 2026-11-27**. All four
+are implemented, the Windows CI signal is green, the badge is passing, and the
+manual desktop checklist is recorded. Do not start with a Windows skip or a
+test-only width increase: both hide the user-facing issue.
 
 **Cross-cutting acceptance:**
 

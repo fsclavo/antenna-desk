@@ -7,6 +7,11 @@
 
 ## Where we are
 
+- 0.11.2 is **prepared 2026-11-27** and awaits the tag/publication step. It
+  packages UX58–UX61 (deterministic layout baseline, long-label wrapping,
+  layout-based sizing, Medium/Large guard), PF2 streaming container writes,
+  and the DL3 managed-value follow-up. Full gate: **4,967 passed, 1 skipped**;
+  real `nec2c` integration: **186 passed**. The wheel and sdist report `0.11.2`.
 - 0.11.1 is **published 2026-11-27** as a patch release. It prevents optimizer
   dialogs from closing while their worker thread is running: Cancel is enabled
   during the run, Close is disabled, and the Close/Esc path cancels instead of
@@ -223,14 +228,15 @@
   UI suite: **2,024 passed**. No width exception or column collapse was needed.
   Windows 3.12/3.13 verification is pending. See
   [`ADR-0056`](ADR/0056-antenna-dialog-layout.md).
-- UX61 final layout guard is **green in CI 2026-11-27**. The fast batch covers
-  26 dialogs × English/Spanish × Medium/Large × (920×640 and each initial
-  size), with no horizontal scrollbar and the action box visible and outside
-  the form scroll. Windows 3.12/3.13 layout batch: **330 passed** on both jobs;
-  local layout batch: **356 passed**; full gate: **4,967 passed, 1 skipped**.
-  The README `tests` badge is passing. Only the manual Linux/Windows light-dark
-  and 125%/150% checklist remains; see
+- UX61 final layout guard is **closed 2026-11-27**. The fast batch covers 26
+  dialogs × English/Spanish × Medium/Large × (920×640 and each initial size),
+  with no horizontal scrollbar and the action box visible and outside the form
+  scroll. Windows 3.12/3.13 layout batch: **330 passed** on both jobs; local
+  layout batch: **356 passed**; full gate: **4,967 passed, 1 skipped**. The
+  README `tests` badge is passing and the manual Linux/Windows light-dark and
+  125%/150% checklist passed; see
   [`QA_CHECKLIST_2026-11-27_ux61.md`](archive/qa/QA_CHECKLIST_2026-11-27_ux61.md).
+  The UX58–UX61 track is closed.
 - The adaptive length display-units track is **closed (U1–U6)**; the manual
   desktop light/dark and font-scaling QA was completed on 2026-11-24 with no
   blocking findings.
@@ -243,10 +249,9 @@
 
 ## Next
 
-1. Close the P1 Windows layout/CI track: UX58–UX61 automated guards and the
-   real Windows 3.12/3.13 run are green, and the README `tests` badge is
-   passing. Execute the pending manual Linux/Windows light-dark and 125%/150%
-   checklist, then prepare the 0.11.2 patch. No schema or solver change.
+1. Tag and publish **0.11.2** after approval. The version bump, changelog,
+   full gate, and wheel/sdist build are ready; the UX58–UX61 track and its
+   manual checklist are closed. No schema or solver change.
 2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
 3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision
