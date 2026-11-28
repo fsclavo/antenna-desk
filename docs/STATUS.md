@@ -1,17 +1,22 @@
 # Project status
 
 **Updated:** 2026-11-27
-**Latest published release:** `0.11.1` (2026-11-27)
+**Latest published release:** `0.11.2` (2026-11-27)
 **Development schema:** `73`
 **Current product track:** 1.2 Site and exploration
 
 ## Where we are
 
-- 0.11.2 is **prepared 2026-11-27** and awaits the tag/publication step. It
-  packages UX58–UX61 (deterministic layout baseline, long-label wrapping,
-  layout-based sizing, Medium/Large guard), PF2 streaming container writes,
-  and the DL3 managed-value follow-up. Full gate: **4,967 passed, 1 skipped**;
-  real `nec2c` integration: **186 passed**. The wheel and sdist report `0.11.2`.
+- 0.11.2 is **published 2026-11-27**. It packages UX58–UX61 (deterministic
+  layout baseline, long-label wrapping, layout-based sizing, Medium/Large
+  guard), PF2 streaming container writes, and the DL3 managed-value follow-up.
+  Full gate: **4,967 passed, 1 skipped**; real `nec2c` integration: **186
+  passed**. The tag workflow
+  [`46085721824`](https://github.com/fsclavo/antenna-desk/actions/runs/46085721824)
+  published 12 assets; all six checksums verify. Windows 3.12/3.13 and Linux
+  are green, the README `tests` badge is passing, and the manual layout
+  checklist passed. See
+  [`RELEASE_QA_0.11.2.md`](archive/releases/RELEASE_QA_0.11.2.md).
 - 0.11.1 is **published 2026-11-27** as a patch release. It prevents optimizer
   dialogs from closing while their worker thread is running: Cancel is enabled
   during the run, Close is disabled, and the Close/Esc path cancels instead of
@@ -249,10 +254,9 @@
 
 ## Next
 
-1. Tag and publish **0.11.2** after approval. The version bump, changelog,
-   full gate, and wheel/sdist build are ready; the UX58–UX61 track and its
-   manual checklist are closed. No schema or solver change.
-2. Verify the published 0.11.1 artifacts and checksums on the target desktops.
+1. Verify the published 0.11.2 artifacts and checksums on the target desktops.
+2. Choose the next bounded product slice after 0.11.2. DL3 is closed, DL6 has
+   its first slice, DL7 is bounded, and DL4 is canceled.
 3. Keep the measured broadband splitter/isolation model blocked until measured S3P/S4P data and an embedded-data ADR exist; see the [measured-splitter spike](spikes/dl6-measured-splitter-spike.md).
 4. Keep PF3 deferred until its pattern-entry ADR and container/schema decision
    exist; PF2 is done and closed.

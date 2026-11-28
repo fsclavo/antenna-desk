@@ -39,7 +39,7 @@ tolerance.
 
 ## Current state
 
-**Latest published release:** `0.11.1` (2026-11-27). The 1.0 Confidence wave is
+**Latest published release:** `0.11.2` (2026-11-27). The 1.0 Confidence wave is
 complete; 1.1 Station is done as narrowed (DL1/DL2 done, DL5 narrowed), and
 1.2 has DL3 closed, DL6 first-slice work, and a bounded DL7 implementation. DL4 is canceled.
 See [`STATUS.md`](STATUS.md)
@@ -617,7 +617,7 @@ Release track:
    including the Windows bundle and installer QA.
 7. Add GPG/Authenticode signing in a later release if required.
 8. `v0.7.0`, `v0.7.1`, `v0.8.0`, `v0.8.1`, `v0.8.2`, `v0.9.0`, `v0.10.0`,
-   `v0.10.1`, `v0.11.0`, and `v0.11.1` are published; see [`CHANGELOG.md`](../CHANGELOG.md)
+   `v0.10.1`, `v0.11.0`, `v0.11.1`, and `v0.11.2` are published; see [`CHANGELOG.md`](../CHANGELOG.md)
    and the archived release QA records in [`archive/releases/`](archive/releases/).
 9. The 2026-11-19 trust/station track completed 1.0 Confidence. 1.1 Station is
    done as narrowed (DL1/DL2 done, DL5 narrowed); 1.2 has DL3 closed,
